@@ -28,7 +28,10 @@ changelog:
   - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
   - Each poster style declares which settings it uses, so the Designs page offers only the settings that do something
   - Episodes can have a generated thumb, alongside series and seasons
+  - The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning
+  - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   fixes:
+  - A static graphic could be stretched, because its width and height were set independently; it now keeps its proportions inside a single size
   - Fade drew a series name flat in the number's corner; it now runs sideways like every other Fade title, sized to fill the poster
   - Frame left the bottom of its border bare on a series; the title moves down into it when there is no season and episode line
   - Numeral drew its title across the numeral instead of above it

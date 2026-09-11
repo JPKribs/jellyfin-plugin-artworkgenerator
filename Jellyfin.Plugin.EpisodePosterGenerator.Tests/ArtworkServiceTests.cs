@@ -38,7 +38,7 @@ public class ArtworkServiceTests
     [Fact]
     public void ShapeAdjust_PortraitScalesTheText()
     {
-        var design = new PosterSettings { TitleFontSize = 10f, EpisodeFontSize = 7f, PortraitTextScale = 80f };
+        var design = new PosterSettings { TitleFontSize = 10f, EpisodeFontSize = 7f };
 
         var portrait = ArtworkService.ShapeAdjust(design, ArtworkShape.Portrait);
         var landscape = ArtworkService.ShapeAdjust(design, ArtworkShape.Landscape);

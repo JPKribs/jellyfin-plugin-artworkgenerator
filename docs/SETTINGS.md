@@ -44,8 +44,6 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 ## Letterbox
 
 * **Enable Letterbox Detection**: crop black bars off an extracted frame. Default on.
-* **Black Threshold**: brightness below which a pixel counts as black, 0 to 255. Default 25.
-* **Detection Confidence (%)**: confidence required before cropping detected bars. Default 85.
 
 ## Poster
 
@@ -55,7 +53,6 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Fill Strategy**: how the canvas fits the poster. Original, Fill, or Fit. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape. Default Original.
 * **Landscape Aspect Ratio**: output aspect ratio for landscape images. Default 16:9.
 * **Portrait Aspect Ratio**: output aspect ratio for portrait images. Default 2:3.
-* **Portrait Text Size (%)**: title and number sizes for portrait images, as a percent of the sizes set below. Every size is measured from the poster's short side, and a portrait crop has a shorter one, so the same percent reads larger there. Default 80.
 * **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short side and the same pixel amount is used on all four sides. Default 5.
 * **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short side. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
 
@@ -104,8 +101,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 ## Graphic
 
 * **Graphic File Path**: path to an image drawn on the poster.
-* **Graphic Width (%)**: graphic width as a percent of the poster. Default 25.
-* **Graphic Height (%)**: graphic height as a percent of the poster. Default 25.
+* **Graphic Size (%)**: size of the graphic as a percent of the poster's short side. The graphic keeps its own proportions inside that size, so it is never stretched. Default 25.
 * **Graphic Position**: vertical placement. Top, Center, or Bottom. Default Center.
 * **Graphic Alignment**: horizontal placement. Left, Center, or Right. Default Center.
 

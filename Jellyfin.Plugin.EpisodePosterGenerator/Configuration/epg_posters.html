@@ -181,16 +181,17 @@
                             </div>
 
                             <div class="nested-settings" data-depends-on-canvas="Extract">
-                                <div class="inputContainer">
-                                    <label for="txtExtractWindowStart">Extraction Start (%):</label>
-                                    <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-setting="ExtractWindowStart" data-type="number" />
-                                    <div class="fieldDescription">Skip this percent of each episode before extracting, avoiding intros.</div>
+                                <div class="jpk-field-row">
+                                    <div class="jpk-field">
+                                        <label for="txtExtractWindowStart">Extraction Start (%):</label>
+                                        <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-setting="ExtractWindowStart" data-type="number" />
+                                    </div>
+                                    <div class="jpk-field">
+                                        <label for="txtExtractWindowEnd">Extraction End (%):</label>
+                                        <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-setting="ExtractWindowEnd" data-type="number" />
+                                    </div>
                                 </div>
-                                <div class="inputContainer">
-                                    <label for="txtExtractWindowEnd">Extraction End (%):</label>
-                                    <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-setting="ExtractWindowEnd" data-type="number" />
-                                    <div class="fieldDescription">Stop extracting at this percent of each episode, avoiding credits.</div>
-                                </div>
+                                <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
                                 <div class="inputContainer">
                                     <label for="txtBrightenHDR">Brighten HDR (%):</label>
                                     <input is="emby-input" type="number" id="txtBrightenHDR" min="0" max="100" data-setting="BrightenHDR" data-type="number" />
@@ -206,19 +207,6 @@
                                 <div class="fieldDescription">Detect and crop black bars from extracted frames.</div>
                             </div>
 
-                            <div class="nested-settings" data-depends-on="chkEnableLetterboxDetection" data-depends-on-canvas="Extract">
-                                <div class="inputContainer">
-                                    <label for="txtLetterboxBlackThreshold">Black Threshold:</label>
-                                    <input is="emby-input" type="number" id="txtLetterboxBlackThreshold" min="0" max="255" data-setting="LetterboxBlackThreshold" data-type="number" />
-                                    <div class="fieldDescription">Brightness below which a pixel counts as black, 0 to 255.</div>
-                                </div>
-                                <div class="inputContainer">
-                                    <label for="txtLetterboxConfidence">Detection Confidence (%):</label>
-                                    <input is="emby-input" type="number" id="txtLetterboxConfidence" min="50" max="100" step="1" data-setting="LetterboxConfidence" data-type="number" />
-                                    <div class="fieldDescription">Percent of pixels that must be black to count as letterboxing, 50 to 100.</div>
-                                </div>
-                            </div>
-
                             <div class="inputContainer">
                                 <label for="selectPosterFill">Fill Strategy:</label>
                                 <select is="emby-select" id="selectPosterFill" data-setting="PosterFill" data-default="Original">
@@ -229,23 +217,17 @@
                                 <div class="fieldDescription">How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.</div>
                             </div>
 
-                            <div class="inputContainer nested-settings" data-hide-for-posterfill="Original">
-                                <label for="txtPosterDimensionRatio">Landscape Aspect Ratio:</label>
-                                <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
-                                <div class="fieldDescription">Aspect ratio for landscape images, such as 16:9.</div>
+                            <div class="jpk-field-row">
+                                <div class="jpk-field">
+                                    <label for="txtPosterDimensionRatio">Landscape Aspect Ratio:</label>
+                                    <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
+                                </div>
+                                <div class="jpk-field">
+                                    <label for="txtPortraitDimensionRatio">Portrait Aspect Ratio:</label>
+                                    <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
+                                </div>
                             </div>
-
-                            <div class="inputContainer">
-                                <label for="txtPortraitDimensionRatio">Portrait Aspect Ratio:</label>
-                                <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
-                                <div class="fieldDescription">Aspect ratio for portrait images, such as 2:3. Used whenever a profile asks this design for a portrait.</div>
-                            </div>
-
-                            <div class="inputContainer">
-                                <label for="txtPortraitTextScale">Portrait Text Size (%):</label>
-                                <input is="emby-input" type="number" id="txtPortraitTextScale" min="25" max="200" step="5" data-setting="PortraitTextScale" data-type="number" />
-                                <div class="fieldDescription">Title and number sizes for portrait images, as a percent of the sizes below. Every size is measured from the poster's short side, and a portrait crop has a shorter one, so the same percent reads larger there. Default is 80.</div>
-                            </div>
+                            <div id="ratioNote" class="fieldDescription">The shape each image is cropped to, such as 16:9 and 2:3.</div>
 
                             <div class="inputContainer">
                                 <label for="txtPosterSafeArea">Safe Area:</label>
@@ -351,14 +333,9 @@
                                     <div class="fieldDescription">Horizontal alignment of the static graphic on the poster.</div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="txtGraphicWidth">Graphic Width (%):</label>
-                                    <input is="emby-input" type="number" id="txtGraphicWidth" min="1.0" max="100.0" data-setting="GraphicWidth" data-type="number" />
-                                    <div class="fieldDescription">Graphic width as a percent of the poster width, 1 to 100.</div>
-                                </div>
-                                <div class="inputContainer">
-                                    <label for="txtGraphicHeight">Graphic Height (%):</label>
-                                    <input is="emby-input" type="number" id="txtGraphicHeight" min="1.0" max="100.0" data-setting="GraphicHeight" data-type="number" />
-                                    <div class="fieldDescription">Graphic height as a percent of the poster height, 1 to 100.</div>
+                                    <label for="txtGraphicSize">Graphic Size (%):</label>
+                                    <input is="emby-input" type="number" id="txtGraphicSize" min="1.0" max="100.0" data-setting="GraphicSize" data-type="number" />
+                                    <div class="fieldDescription">Size of the graphic as a percent of the poster's short side, 1 to 100. It keeps its own proportions inside that size.</div>
                                 </div>
                             </div>
 

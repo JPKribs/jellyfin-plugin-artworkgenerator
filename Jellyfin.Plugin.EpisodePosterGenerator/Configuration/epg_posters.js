@@ -464,8 +464,7 @@ export default function (view) {
                     OverlaySecondaryColor: '#66000000',
                     PaletteDerivedColors: false,
                     GraphicPath: '',
-                    GraphicWidth: 25.0,
-                    GraphicHeight: 25.0,
+                    GraphicSize: 25.0,
                     GraphicPosition: 'Center',
                     GraphicAlignment: 'Center'
                 },
@@ -1005,6 +1004,14 @@ export default function (view) {
         }
 
         applyStyleRules(posterStyle);
+
+        // Both ratios stay on screen, and the note says which one the chosen fill actually uses.
+        var ratioNote = view.querySelector('#ratioNote');
+        if (ratioNote) {
+            ratioNote.textContent = posterFill === 'Original'
+                ? 'Portrait images always crop to the portrait ratio. Landscape images keep the frame\'s own shape, so the landscape ratio applies only with the Fill or Fit strategy.'
+                : 'The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.';
+        }
 
         // Hide elements for specific fill modes
         view.querySelectorAll('[data-hide-for-posterfill]').forEach(function (el) {

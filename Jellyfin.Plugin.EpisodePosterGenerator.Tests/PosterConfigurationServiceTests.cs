@@ -232,4 +232,25 @@ public class PosterConfigurationServiceTests
 
         Assert.Throws<ArgumentException>(() => service.SaveLogoDesigns(config, Array.Empty<LogoConfiguration>()));
     }
+
+    /// <summary>
+    /// A graphic used to be sized on each axis, which could stretch it. The larger of the two
+    /// becomes the box it is now fitted inside.
+    /// </summary>
+    [Fact]
+    public void Initialize_FoldsAPerAxisGraphicSizeIntoOne()
+    {
+        var config = new PluginConfiguration();
+        var design = new PosterConfiguration { Name = "Default", IsDefault = true };
+        design.Settings.GraphicPath = "/graphics/badge.png";
+        design.Settings.GraphicWidth = 40f;
+        design.Settings.GraphicHeight = 25f;
+        config.PosterConfigurations.Add(design);
+
+        Service().Initialize(config);
+
+        Assert.Equal(40f, design.Settings.GraphicSize);
+        Assert.Null(design.Settings.GraphicWidth);
+        Assert.Null(design.Settings.GraphicHeight);
+    }
 }

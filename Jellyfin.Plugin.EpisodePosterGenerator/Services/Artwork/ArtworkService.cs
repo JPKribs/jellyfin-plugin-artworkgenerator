@@ -28,6 +28,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         /// </summary>
         public const int MaxCandidates = 10;
 
+        /// <summary>
+        /// How much of a design's text size a portrait render uses. Sizes are measured from the
+        /// poster's short side, and a portrait crop has a shorter one, so the same percent reads
+        /// larger there. This keeps the two shapes in proportion without asking the user.
+        /// </summary>
+        private const float PortraitTextScale = 0.8f;
+
         private readonly ILogger<ArtworkService> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly CanvasService _canvasService;
@@ -102,9 +109,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                     settings.PosterDimensionRatio = "2:3";
                 }
 
-                var textScale = Math.Clamp(settings.PortraitTextScale, 25f, 200f) / 100f;
-                settings.TitleFontSize *= textScale;
-                settings.EpisodeFontSize *= textScale;
+                settings.TitleFontSize *= PortraitTextScale;
+                settings.EpisodeFontSize *= PortraitTextScale;
                 settings.PosterFill = PosterFill.Fit;
             }
             else if (ratio < 1f)

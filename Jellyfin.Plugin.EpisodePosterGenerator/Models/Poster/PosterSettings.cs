@@ -72,14 +72,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// </summary>
         public string PortraitDimensionRatio { get; set; } = "2:3";
 
-        /// <summary>
-        /// Gets or sets the title and number sizes for portrait renders, as a percent of the sizes
-        /// set for landscape. Every size is measured from the poster's short side, and a portrait
-        /// crop has a shorter one, so the same percent reads larger there; 80 keeps both shapes in
-        /// proportion.
-        /// </summary>
-        public float PortraitTextScale { get; set; } = 80.0f;
-
         public float PosterSafeArea { get; set; } = 5.0f;
 
         /// <summary>
@@ -137,9 +129,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         public string GraphicPath { get; set; } = string.Empty;
 
-        public float GraphicWidth { get; set; } = 25.0f;
+        /// <summary>
+        /// Gets or sets the graphic's size as a percent of the poster's short side. The graphic is
+        /// fitted inside a box that size, so it always keeps its own proportions.
+        /// </summary>
+        public float GraphicSize { get; set; } = 25.0f;
 
-        public float GraphicHeight { get; set; } = 25.0f;
+        /// <summary>
+        /// Legacy per-axis width, retained only to migrate designs that sized the graphic on each
+        /// axis independently, which could stretch it. Null on new designs.
+        /// </summary>
+        public float? GraphicWidth { get; set; }
+
+        /// <summary>Legacy per-axis height. See <see cref="GraphicWidth"/>.</summary>
+        public float? GraphicHeight { get; set; }
 
         public Position GraphicPosition { get; set; } = Position.Center;
 

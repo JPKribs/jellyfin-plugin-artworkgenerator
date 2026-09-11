@@ -471,26 +471,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(graphicBitmap);
             ArgumentNullException.ThrowIfNull(settings);
 
-            var maxWidth = posterWidth * (settings.GraphicWidth / 100f);
-            var maxHeight = posterHeight * (settings.GraphicHeight / 100f);
-
+            // One size, measured from the short side like every other size, and the graphic is
+            // fitted inside a box that size. Two independent percentages could stretch it and made
+            // the same design look different in each shape.
+            var box = SizeUnit(posterWidth, posterHeight) * (Math.Max(1f, settings.GraphicSize) / 100f);
             var originalAspect = (float)graphicBitmap.Width / graphicBitmap.Height;
-            var constraintAspect = maxWidth / maxHeight;
 
-            float finalWidth, finalHeight;
-
-            // Image is wider than constraint - fit to width
-            if (originalAspect > constraintAspect)
-            {
-                finalWidth = maxWidth;
-                finalHeight = maxWidth / originalAspect;
-            }
-            // Image is taller than constraint - fit to height
-            else
-            {
-                finalHeight = maxHeight;
-                finalWidth = maxHeight * originalAspect;
-            }
+            float finalWidth = originalAspect >= 1f ? box : box * originalAspect;
+            float finalHeight = originalAspect >= 1f ? box / originalAspect : box;
 
             var x = CalculateGraphicX(settings.GraphicAlignment, safeLeft, safeWidth, finalWidth);
             var y = CalculateGraphicY(settings.GraphicPosition, safeTop, safeHeight, finalHeight);

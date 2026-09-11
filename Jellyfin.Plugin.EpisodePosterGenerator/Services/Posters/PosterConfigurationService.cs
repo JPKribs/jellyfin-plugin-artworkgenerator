@@ -145,7 +145,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         }
 
         // MigrateLegacySettings
-        // Migrates the pre-10.11.23 ExtractPoster boolean to the CanvasSource enum, in memory.
+        // Brings older designs forward in memory: the pre-10.11.23 ExtractPoster boolean becomes a
+        // CanvasSource, and a per-axis graphic size becomes the single box size.
         private void MigrateLegacySettings(PluginConfiguration config)
         {
             var migrated = false;
@@ -157,6 +158,21 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 {
                     settings.CanvasSource = settings.ExtractPoster.Value ? CanvasSource.Extract : CanvasSource.None;
                     settings.ExtractPoster = null;
+                    migrated = true;
+                }
+
+                // A graphic used to be sized per axis, which could stretch it. The larger of the two
+                // becomes the box it is now fitted inside.
+                if (settings.GraphicWidth.HasValue || settings.GraphicHeight.HasValue)
+                {
+                    var size = Math.Max(settings.GraphicWidth ?? 0f, settings.GraphicHeight ?? 0f);
+                    if (size > 0f)
+                    {
+                        settings.GraphicSize = size;
+                    }
+
+                    settings.GraphicWidth = null;
+                    settings.GraphicHeight = null;
                     migrated = true;
                 }
             }
