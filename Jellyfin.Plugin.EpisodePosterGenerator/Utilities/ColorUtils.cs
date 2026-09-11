@@ -91,9 +91,8 @@ public static class ColorUtils
 
         using var sample = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         using (var canvas = new SKCanvas(sample))
-        using (var paint = new SKPaint { FilterQuality = SKFilterQuality.Low })
         {
-            canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+            PaintFactory.DrawBitmap(canvas, bitmap, SKRect.Create(bitmap.Width, bitmap.Height), SKRect.Create(width, height), null, RenderConstants.FastSampling);
         }
 
         var pixels = sample.Pixels;

@@ -1,5 +1,4 @@
 using System;
-using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using SkiaSharp;
@@ -17,6 +16,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Large episode code cut out of the image. Bold and minimal.";
 
+        // Baseline-to-baseline spacing between stacked cutout words, relative to the font size.
+        private const float WordLineSpacing = 1.1f;
+
+        // The title never squeezes the cutout below this share of the safe height.
+        private const float MinimumCutoutAreaRatio = 0.6f;
+
         private readonly ILogger<CutoutPosterGenerator> _logger;
         private static readonly char[] WordSeparators = { ' ', '-' };
 
@@ -28,9 +33,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderOverlay
-        // Creates an overlay with transparent cutout text revealing the canvas beneath.
+        // Draws the overlay into its own layer and punches the episode text out of it, so the
+        // canvas shows through the letters. The layer replaces a full-size scratch bitmap that
+        // used to be allocated and blitted for every poster.
         protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(skCanvas);
+            ArgumentNullException.ThrowIfNull(settings);
+
             if (string.IsNullOrEmpty(settings.OverlayColor))
                 return;
 
@@ -38,69 +48,35 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             if (overlayColor.Alpha == 0)
                 return;
 
-            using var overlayBitmap = new SKBitmap(width, height);
-            using var overlayCanvas = new SKCanvas(overlayBitmap);
+            skCanvas.SaveLayer();
 
-            using var overlayPaint = new SKPaint
+            using (var overlayPaint = PaintFactory.CreateFillPaint(overlayColor))
             {
-                Color = overlayColor,
-                Style = SKPaintStyle.Fill
-            };
-            overlayCanvas.DrawRect(SKRect.Create(width, height), overlayPaint);
+                skCanvas.DrawRect(SKRect.Create(width, height), overlayPaint);
+            }
 
-            DrawCutoutText(overlayCanvas, episodeMetadata, settings, width, height, overlayColor);
+            DrawCutoutText(skCanvas, episodeMetadata, settings, width, height, overlayColor);
 
-            using var finalPaint = new SKPaint { IsAntialias = true };
-            skCanvas.DrawBitmap(overlayBitmap, 0, 0, finalPaint);
+            skCanvas.Restore();
         }
 
         // RenderTypography
-        // Renders optional episode title text at the bottom of the poster.
+        // Renders the optional episode title in the zone reserved beneath the cutout.
         protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
+
             if (!settings.ShowTitle || string.IsNullOrEmpty(episodeMetadata.EpisodeName))
                 return;
 
             var safeArea = GetSafeAreaBounds(width, height, settings);
+            using var titleStyle = CreateTitleStyle(settings, height);
 
-            var titleY = safeArea.Bottom - (safeArea.Height * 0.1f);
-
-            using var titlePaint = new SKPaint
+            var column = BuildColumn(safeArea, settings, height, titleStyle);
+            if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                Color = ColorUtils.ParseHexColor(settings.TitleFontColor),
-                TextSize = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, height),
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = FontUtils.ResolveTypeface(settings.EffectiveTitleFontPath, settings.TitleFontFamily, FontUtils.GetFontStyle(settings.TitleFontStyle)),
-                TextAlign = SKTextAlign.Center
-            };
-
-            using var shadowPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(180),
-                TextSize = titlePaint.TextSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = titlePaint.Typeface,
-                TextAlign = SKTextAlign.Center,
-                MaskFilter = PaintFactory.ShadowBlur
-            };
-
-            var centerX = safeArea.MidX;
-
-            // Wrap long titles to at most two lines, anchored so the bottom line stays
-            // at titleY and extra lines stack upward into the reserved title space.
-            var availableWidth = safeArea.Width * RenderConstants.TextWidthMultiplier;
-            var lines = TextUtils.FitTitleLines(episodeMetadata.EpisodeName, titlePaint, availableWidth, settings.LongTitleHandling);
-            var lineHeight = titlePaint.TextSize * RenderConstants.LineHeightMultiplier;
-
-            for (int i = 0; i < lines.Count; i++)
-            {
-                var lineY = titleY - ((lines.Count - 1 - i) * lineHeight);
-                skCanvas.DrawText(lines[i], centerX + 2, lineY + 2, shadowPaint);
-                skCanvas.DrawText(lines[i], centerX, lineY, titlePaint);
+                DrawTitleInSlot(skCanvas, episodeMetadata.EpisodeName, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -111,9 +87,35 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             _logger.LogError(ex, "Failed to generate cutout poster for {EpisodeName}", episodeName);
         }
 
+        // BuildColumn
+        // The one description of the vertical layout: a fixed two line title zone against the
+        // bottom of the safe area. The cutout takes whatever the column leaves, so the title and
+        // the letters are measured from the same numbers and cannot collide.
+        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int height, TextStyle titleStyle)
+        {
+            return new LayoutColumn(safeArea, GetElementSpacing(settings, height), LayoutAnchor.Bottom)
+                .Add(TitleBlock, settings.ShowTitle ? titleStyle.BlockHeight(2) : 0f);
+        }
+
+        // CalculateCutoutArea
+        // The area left for the cutout text once the title zone is reserved.
+        private static SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int height)
+        {
+            if (!config.ShowTitle)
+                return safeArea;
+
+            using var titleStyle = CreateTitleStyle(config, height);
+            var remaining = BuildColumn(safeArea, config, height, titleStyle).Remaining;
+
+            var minHeight = safeArea.Height * MinimumCutoutAreaRatio;
+            return remaining.Height >= minHeight
+                ? remaining
+                : SKRect.Create(safeArea.Left, safeArea.Top, safeArea.Width, minHeight);
+        }
+
         // DrawCutoutText
-        // Draws the episode code text as transparent cutouts in the overlay.
-        private void DrawCutoutText(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, int canvasWidth, int canvasHeight, SKColor overlayColor)
+        // Draws the episode code as transparent cutouts in the overlay, with an optional outline.
+        private static void DrawCutoutText(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, int canvasWidth, int canvasHeight, SKColor overlayColor)
         {
             var safeArea = GetSafeAreaBounds(canvasWidth, canvasHeight, config);
 
@@ -122,13 +124,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 episodeMetadata.EpisodeNumberStart ?? 0);
             var words = episodeText.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
 
-            var cutoutArea = CalculateCutoutArea(safeArea, config.ShowTitle, config, canvasHeight);
-            var fontStyle = FontUtils.GetFontStyle(config.EpisodeFontStyle);
-            // Not disposed: ResolveTypeface returns a cached instance owned by FontUtils.
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveEpisodeFontPath, config.EpisodeFontFamily, fontStyle);
+            var cutoutArea = CalculateCutoutArea(safeArea, config, canvasHeight);
+            var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
             float fontSize = CalculateOptimalCutoutFontSize(words, typeface, cutoutArea);
 
-            // Draw border if enabled
+            using var font = PaintFactory.CreateFont(typeface, fontSize);
+
+            // The outline is drawn first, then the punch erases everything inside the glyphs,
+            // leaving only the half of the stroke that lies outside the letter edge.
             if (config.CutoutBorder)
             {
                 using var borderPaint = new SKPaint
@@ -137,51 +140,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                     Style = SKPaintStyle.Stroke,
                     StrokeWidth = Math.Max(1f, fontSize * 0.015f),
                     IsAntialias = true,
-                    SubpixelText = true,
-                    LcdRenderText = true,
                     StrokeCap = SKStrokeCap.Round,
-                    StrokeJoin = SKStrokeJoin.Round,
-                    Typeface = typeface,
-                    TextAlign = SKTextAlign.Center,
-                    TextSize = fontSize
+                    StrokeJoin = SKStrokeJoin.Round
                 };
-                DrawCutoutTextCentered(canvas, words, borderPaint, cutoutArea);
+                DrawCutoutTextCentered(canvas, words, font, borderPaint, cutoutArea);
             }
 
             using var cutoutPaint = new SKPaint
             {
                 BlendMode = SKBlendMode.DstOut,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center,
-                TextSize = fontSize
+                IsAntialias = true
             };
-            DrawCutoutTextCentered(canvas, words, cutoutPaint, cutoutArea);
-        }
-
-
-        // CalculateCutoutArea
-        // Calculates the available area for cutout text, reserving space for title if needed.
-        private SKRect CalculateCutoutArea(SKRect safeArea, bool hasTitle, PosterSettings config, float canvasHeight)
-        {
-            if (!hasTitle)
-                return safeArea;
-
-            float titleFontSize = FontUtils.CalculateFontSizeFromPercentage(config.TitleFontSize, canvasHeight);
-            // Reserve room for a wrapped two-line title (line height 1.2x + the base line).
-            float titleSpace = titleFontSize * 2.4f;
-            float cutoutBuffer = GetElementSpacing(config, canvasHeight);
-
-            float availableHeight = Math.Max(safeArea.Height - titleSpace - cutoutBuffer, safeArea.Height * 0.6f);
-
-            return new SKRect(safeArea.Left, safeArea.Top, safeArea.Right, safeArea.Top + availableHeight);
+            DrawCutoutTextCentered(canvas, words, font, cutoutPaint, cutoutArea);
         }
 
         // CalculateOptimalCutoutFontSize
         // Calculates the largest font size that fits all words within the available area.
-        private float CalculateOptimalCutoutFontSize(string[] words, SKTypeface typeface, SKRect availableArea)
+        private static float CalculateOptimalCutoutFontSize(string[] words, SKTypeface typeface, SKRect availableArea)
         {
             float maxWidth = availableArea.Width;
             float maxHeight = availableArea.Height;
@@ -189,8 +164,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             if (words.Length == 1)
                 return FontUtils.CalculateOptimalFontSize(words[0], typeface, maxWidth, maxHeight, 50f);
 
-            float lineSpacing = 1.1f;
-            float maxFont = maxHeight / (words.Length * lineSpacing);
+            float maxFont = maxHeight / (words.Length * WordLineSpacing);
             float minFont = 30f;
             float low = minFont;
             float high = maxFont;
@@ -199,7 +173,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             while (high - low > 1f)
             {
                 float test = (low + high) / 2f;
-                if (DoAllWordsFit(words, typeface, test, maxWidth, maxHeight, lineSpacing))
+                if (DoAllWordsFit(words, typeface, test, maxWidth, maxHeight))
                 {
                     optimal = test;
                     low = test;
@@ -209,12 +183,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                     high = test;
                 }
             }
+
             return optimal;
         }
 
         // DoAllWordsFit
         // Checks if all words fit within the specified dimensions at the given font size.
-        private bool DoAllWordsFit(string[] words, SKTypeface typeface, float fontSize, float maxWidth, float maxHeight, float lineSpacing)
+        private static bool DoAllWordsFit(string[] words, SKTypeface typeface, float fontSize, float maxWidth, float maxHeight)
         {
             float maxWordWidth = 0;
             foreach (var word in words)
@@ -224,37 +199,34 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                     maxWordWidth = bounds.Width;
             }
 
-            float totalHeight = words.Length * fontSize * lineSpacing;
+            float totalHeight = words.Length * fontSize * WordLineSpacing;
             return maxWordWidth <= maxWidth && totalHeight <= maxHeight;
         }
 
         // DrawCutoutTextCentered
-        // Draws text words centered vertically and horizontally in the specified area.
-        private void DrawCutoutTextCentered(SKCanvas canvas, string[] words, SKPaint paint, SKRect area)
+        // Draws the words centred horizontally and vertically in the area, stacked when there
+        // is more than one.
+        private static void DrawCutoutTextCentered(SKCanvas canvas, string[] words, SKFont font, SKPaint paint, SKRect area)
         {
             float centerX = area.MidX;
             float centerY = area.MidY;
 
-            // Single word case
             if (words.Length == 1)
             {
-                var bounds = FontUtils.MeasureTextDimensions(words[0], paint.Typeface!, paint.TextSize);
-                float y = centerY + (bounds.Height / 2f);
-                canvas.DrawText(words[0], centerX, y, paint);
+                // Centre the glyphs' actual ink rather than the em box.
+                font.MeasureText(words[0], out SKRect bounds);
+                canvas.DrawText(words[0], centerX, centerY - bounds.MidY, SKTextAlign.Center, font, paint);
+                return;
             }
-            // Multiple words case
-            else
-            {
-                float lineSpacing = 1.1f;
-                float lineHeight = paint.TextSize * lineSpacing;
-                float totalHeight = words.Length * lineHeight - (lineHeight - paint.TextSize);
-                float startY = centerY - (totalHeight / 2f) + paint.TextSize;
 
-                foreach (var word in words)
-                {
-                    canvas.DrawText(word, centerX, startY, paint);
-                    startY += lineHeight;
-                }
+            float lineHeight = font.Size * WordLineSpacing;
+            float totalHeight = (words.Length * lineHeight) - (lineHeight - font.Size);
+            float baseline = centerY - (totalHeight / 2f) + font.Size;
+
+            foreach (var word in words)
+            {
+                canvas.DrawText(word, centerX, baseline, SKTextAlign.Center, font, paint);
+                baseline += lineHeight;
             }
         }
     }

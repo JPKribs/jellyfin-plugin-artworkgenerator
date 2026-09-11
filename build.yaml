@@ -2,7 +2,7 @@
 name: "Episode Poster Generator"
 guid: "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e"
 imageUrl: "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-episodepostergenerator/refs/heads/master/Jellyfin.Plugin.EpisodePosterGenerator/Assets/Logo.png"
-version: "12.0.0.1"
+version: "12.0.1.0"
 targetAbi: "12.0.0.0"
 framework: "net10.0"
 overview: "Generate Custom Episode Posters"
@@ -14,36 +14,19 @@ artifacts:
 - "Jellyfin.Plugin.EpisodePosterGenerator.dll"
 changelog:
   features:
-  - Generated posters now appear in an episode's Edit Images dialog, so you can pick the frame you want instead of refreshing until you get a good one
-  - Choose how many alternate posters to offer in Edit Images, from 1 to 10 (default 3)
-  - Brush style can outline its stroke, sharing the Cutout style's outline toggle
-  - Element Spacing setting controls the gap between stacked poster elements, so every style spaces them the same way
-  - The font dropdown now lists the fonts actually installed on your server, and a font that is not installed is called out in the log instead of silently rendering in a substitute face
-  - Overlay colors collapse to an opacity control when Palette-Derived Colors is on, since the color itself comes from the image
-  breaking:
-  - The scheduled task has been removed. Poster generation now runs entirely as a metadata provider - use a library metadata refresh, or pick a poster from Edit Images
-  - Processing history and its database have been removed, along with the Reset Processing History button. Jellyfin's own refresh options now decide what gets regenerated
+  - Shadows, rules, and the Frame border now scale with the poster, so they read the same on a 4K frame as on a DVD rip instead of turning into a hairline or a slab
+  - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
   fixes:
-  - Deleting an episode poster no longer left it permanently blank; there is no tracking state left to say the episode was already done
-  - Changing a custom font now takes effect; it used to be left out of the change detection entirely
-  - A tall logo no longer overlaps the episode code beneath it
-  - Long episode titles wrap to two lines again instead of being shortened to one
-  - Short titles no longer leave a gap between the episode code and the title
-  - Cancelling a refresh now stops frame extraction instead of letting it run to completion
-  - Generated posters are no longer written to the transcode directory and left behind
-  - Aspect ratios like 2.35:1 now parse correctly on servers with a comma decimal separator
-  - Saving the Posters tab no longer hangs on a spinner when the save fails, and no longer overwrites the settings on the other tab
-  - Settings added in a newer version no longer break saving for configurations written by an older one
+  - Frame drew no border at all for an episode without a name, and ignored the Show Title setting
+  - Cutout no longer lets a two line title run into the bottom of the cutout letters
+  - Split centre-crops the series poster into its panel instead of stretching artwork that is not 2:3
+  - Brush honours the Show Episode setting and keeps a wrapped title inside the area the strokes leave clear
+  - Timeline keeps the marker dot inside the safe area on the first and last episode
+  - Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area
   developer:
-  - The frosted panel shape and the brush stroke paths are disposed even when an exception unwinds
-  - Poster elements are positioned by a shared measure-then-place layout column instead of each style walking its own offsets, and titles are fitted to the height they are given as well as the width
-  - Poster configuration is never written back during plugin startup, so a failed config load can no longer overwrite good settings with defaults
-  - Poster rendering returns encoded bytes rather than temp files
-  - Removed the scheduled task, tracking database, configuration hashing, and around 900 lines of superseded code
-  - Shaders, mask filters, and image filters are disposed rather than left to finalization; HDR brightening no longer round-trips the whole bitmap through managed memory
-  - Example templates carry every current setting, and the bundled examples were regenerated
-  - Test suite grown from 21 to 39 cases, covering layout, title fitting, aspect ratio parsing, font resolution, and the generated image cache
-  - Bump Base to 2026.7.31
-  - Rebuilt for Jellyfin 12.0 on .NET 10, with the target ABI raised to 12.0.0.0
-  - The dashboard menu entry now shows a image icon instead of the generic folder
-  - CI builds, tests, and CodeQL now run on .NET 10, and label sync has the token scope it needs
+  - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 packages Jellyfin 12.0 ships, since the plugin binds to the server's copies at runtime
+  - Text drawing moved from the removed SKPaint text members to SKFont, wrapped in a shared TextStyle so every style measures and draws with the same objects
+  - Standard and Split share one text stack; Numeral, Cutout, Brush, and Frame no longer hand-build their own paints
+  - Cutout renders through a canvas layer instead of a full-size scratch bitmap per poster; Split and Brush dispose their gradient shaders
+  - Letterbox detection scans the pixel buffer directly instead of a native call per pixel
+  - Bitmap scaling uses explicit cubic resampling now that FilterQuality is gone

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using SkiaSharp;
 
@@ -14,20 +13,29 @@ public static class TextUtils
     // Divider between title segments: a spaced dash of any kind, or a colon.
     private static readonly Regex SegmentSeparator = new Regex(@"(\s+[-–—]\s+|:\s*)", RegexOptions.Compiled);
 
+    private const string UnicodeEllipsis = "…";
+    private const string AsciiEllipsis = "...";
+
+    // A word-boundary cut is only taken when it keeps at least this share of the available
+    // width; below that the cut would leave a stub that reads worse than a mid-word trim.
+    private const float MinimumWordCutShare = 0.5f;
+
     // FitTitleLines
     // Applies the configured long title handling and returns the lines to draw.
     // Returns an empty list when the handling drops a title that does not fit.
-    public static IReadOnlyList<string> FitTitleLines(string title, SKPaint paint, float maxWidth, LongTitleHandling handling)
+    public static IReadOnlyList<string> FitTitleLines(string title, SKFont font, float maxWidth, LongTitleHandling handling)
     {
+        ArgumentNullException.ThrowIfNull(font);
+
         if (string.IsNullOrWhiteSpace(title))
             return Array.Empty<string>();
 
         if (handling == LongTitleHandling.Ellipsis)
-            return FitTextToWidth(title, paint, maxWidth);
+            return FitTextToWidth(title, font, maxWidth);
 
         // Abbreviate and DropName only engage when the title would otherwise be cut:
         // a title that fits on one line, or wraps to two whole lines, renders as normal.
-        if (TryFitWhole(title, paint, maxWidth, out var lines))
+        if (TryFitWhole(title, font, maxWidth, out var lines))
             return lines;
 
         if (handling == LongTitleHandling.DropName)
@@ -35,11 +43,11 @@ public static class TextUtils
 
         foreach (var candidate in ShorterCandidates(title))
         {
-            if (TryFitWhole(candidate, paint, maxWidth, out var candidateLines))
+            if (TryFitWhole(candidate, font, maxWidth, out var candidateLines))
                 return candidateLines;
         }
 
-        var abbreviation = FitAbbreviation(AbbreviateTitle(title), paint, maxWidth);
+        var abbreviation = FitAbbreviation(AbbreviateTitle(title), font, maxWidth);
         return abbreviation != null ? new[] { abbreviation } : Array.Empty<string>();
     }
 
@@ -47,66 +55,69 @@ public static class TextUtils
     // Height-aware variant: fits the title to the width, then checks the resulting block against
     // the vertical space it has been given and re-fits if it would overflow.
     //
-    // The width-only overload can return two lines for a slot that only has room for one, which is
-    // why styles used to reserve a fixed two lines whether or not two were used — a guess that left
-    // a hole when the title was short and still overflowed when it was not. Passing the real height
-    // lets long title handling engage on vertical overflow the same way it does on horizontal.
+    // A run of n lines occupies one line box (ascent plus descent) plus (n-1) line heights, which
+    // is how the styles draw them; measuring that way rather than n * lineHeight is what lets the
+    // last line that genuinely fits be kept.
     public static IReadOnlyList<string> FitTitleLines(
         string title,
-        SKPaint paint,
+        SKFont font,
         float maxWidth,
         float maxHeight,
         float lineHeight,
         LongTitleHandling handling)
     {
-        var lines = FitTitleLines(title, paint, maxWidth, handling);
+        ArgumentNullException.ThrowIfNull(font);
+
+        var lines = FitTitleLines(title, font, maxWidth, handling);
         if (lines.Count == 0 || lineHeight <= 0f || maxHeight <= 0f)
         {
             return lines;
         }
 
-        // A run of n lines occupies fontSize + (n-1) * lineHeight, not n * lineHeight: the first
-        // line contributes only its own height, and each line after it adds the leading. Dividing
-        // the block height by lineHeight undercounts and would refuse the last line that fits.
-        var fontSize = paint.TextSize;
+        var metrics = font.Metrics;
+        var lineBox = -metrics.Ascent + metrics.Descent;
         var slack = lineHeight * 0.01f;
-        var maxLines = maxHeight + slack < fontSize
+        var maxLines = maxHeight + slack < lineBox
             ? 1
-            : 1 + (int)Math.Floor((maxHeight - fontSize + slack) / lineHeight);
+            : 1 + (int)Math.Floor((maxHeight - lineBox + slack) / lineHeight);
 
         if (lines.Count <= maxLines)
         {
             return lines;
         }
 
-        // Too tall. Ellipsis keeps as many lines as fit and trims the last; the other modes are
-        // asking for a shorter title, so re-run them against the width a single line really has.
+        // Too tall. Ellipsis keeps as many lines as fit and trims whatever is left into the
+        // last one; the other modes are asking for a shorter title, so re-run them against
+        // the width a single line really has.
         if (handling == LongTitleHandling.Ellipsis)
         {
-            var kept = lines.Take(maxLines).ToList();
-            kept[^1] = TruncateWithEllipsis(kept[^1] + "…", paint, maxWidth);
+            var kept = lines.Take(maxLines - 1).ToList();
+            var rest = string.Join(" ", lines.Skip(maxLines - 1));
+            kept.Add(TruncateWithEllipsis(rest, font, maxWidth));
             return kept;
         }
 
-        var single = FitTitleLine(title, paint, maxWidth * maxLines, handling);
+        var single = FitTitleLine(title, font, maxWidth * maxLines, handling);
         if (single == null)
         {
             return Array.Empty<string>();
         }
 
-        var refit = FitTitleLines(single, paint, maxWidth, handling);
+        var refit = FitTitleLines(single, font, maxWidth, handling);
         return refit.Count <= maxLines ? refit : refit.Take(maxLines).ToList();
     }
 
     // FitTitleLine
     // Single line variant of FitTitleLines for styles that cannot wrap.
     // Returns null when the handling drops a title that does not fit.
-    public static string? FitTitleLine(string title, SKPaint paint, float maxWidth, LongTitleHandling handling)
+    public static string? FitTitleLine(string title, SKFont font, float maxWidth, LongTitleHandling handling)
     {
+        ArgumentNullException.ThrowIfNull(font);
+
         if (string.IsNullOrWhiteSpace(title))
             return null;
 
-        if (paint.MeasureText(title) <= maxWidth)
+        if (font.MeasureText(title) <= maxWidth)
             return title;
 
         if (handling == LongTitleHandling.DropName)
@@ -116,22 +127,22 @@ public static class TextUtils
         {
             foreach (var candidate in ShorterCandidates(title))
             {
-                if (paint.MeasureText(candidate) <= maxWidth)
+                if (font.MeasureText(candidate) <= maxWidth)
                     return candidate;
             }
 
-            return FitAbbreviation(AbbreviateTitle(title), paint, maxWidth);
+            return FitAbbreviation(AbbreviateTitle(title), font, maxWidth);
         }
 
-        return TruncateWithEllipsis(title, paint, maxWidth);
+        return TruncateWithEllipsis(title, font, maxWidth);
     }
 
     // TryFitWhole
     // Returns true when the text fits untouched, either on one line or split
     // across two whole lines, and outputs those lines.
-    private static bool TryFitWhole(string text, SKPaint paint, float maxWidth, out IReadOnlyList<string> lines)
+    private static bool TryFitWhole(string text, SKFont font, float maxWidth, out IReadOnlyList<string> lines)
     {
-        if (paint.MeasureText(text) <= maxWidth)
+        if (font.MeasureText(text) <= maxWidth)
         {
             lines = new[] { text };
             return true;
@@ -140,12 +151,10 @@ public static class TextUtils
         var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (words.Length > 1)
         {
-            int split = FindOptimalSplitPoint(words, paint, maxWidth);
-            var line1 = string.Join(" ", words[..split]);
-            var line2 = string.Join(" ", words[split..]);
-            if (paint.MeasureText(line1) <= maxWidth && paint.MeasureText(line2) <= maxWidth)
+            int split = FindBalancedSplitPoint(words, font, maxWidth);
+            if (split > 0)
             {
-                lines = new[] { line1, line2 };
+                lines = new[] { string.Join(" ", words[..split]), string.Join(" ", words[split..]) };
                 return true;
             }
         }
@@ -173,6 +182,8 @@ public static class TextUtils
     // or null when the title has no divider. Hyphenated words do not count.
     public static string? LeftOfSeparator(string title)
     {
+        ArgumentNullException.ThrowIfNull(title);
+
         var match = SegmentSeparator.Match(title);
         if (!match.Success || match.Index == 0)
             return null;
@@ -187,6 +198,8 @@ public static class TextUtils
     // treated as sentences.
     public static string? FirstSentence(string title)
     {
+        ArgumentNullException.ThrowIfNull(title);
+
         for (int i = 0; i < title.Length - 1; i++)
         {
             var c = title[i];
@@ -209,6 +222,8 @@ public static class TextUtils
     // case, so all lowercase titles abbreviate too.
     public static string AbbreviateTitle(string title)
     {
+        ArgumentNullException.ThrowIfNull(title);
+
         var parts = SegmentSeparator.Split(title);
         var pieces = new List<string>();
         string? pendingSeparator = null;
@@ -270,9 +285,12 @@ public static class TextUtils
     // and middle initials drop one at a time until it fits, always keeping
     // the first and the last. Returns null when even the shortest form does
     // not fit, so the caller drops the title entirely.
-    public static string? FitAbbreviation(string abbreviation, SKPaint paint, float maxWidth)
+    public static string? FitAbbreviation(string abbreviation, SKFont font, float maxWidth)
     {
-        if (paint.MeasureText(abbreviation) <= maxWidth)
+        ArgumentNullException.ThrowIfNull(abbreviation);
+        ArgumentNullException.ThrowIfNull(font);
+
+        if (font.MeasureText(abbreviation) <= maxWidth)
             return abbreviation;
 
         var units = new List<string>();
@@ -282,86 +300,85 @@ public static class TextUtils
                 units.Add(string.Concat(c, "."));
         }
 
-        while (units.Count > 2 && paint.MeasureText(string.Concat(units)) > maxWidth)
+        while (units.Count > 2 && font.MeasureText(string.Concat(units)) > maxWidth)
         {
             units.RemoveAt(units.Count / 2);
         }
 
         var reduced = string.Concat(units);
-        return reduced.Length > 0 && paint.MeasureText(reduced) <= maxWidth ? reduced : null;
+        return reduced.Length > 0 && font.MeasureText(reduced) <= maxWidth ? reduced : null;
     }
 
     // FitTextToWidth
-    // Fits text within width constraints using wrapping and ellipsis truncation.
-    public static IReadOnlyList<string> FitTextToWidth(string text, SKPaint paint, float maxWidth)
+    // Wraps text to at most two lines, trimming with an ellipsis when it still does not fit.
+    //
+    // A balanced split is used when both halves fit, because it reads best. When they cannot,
+    // the first line is packed with as many whole words as fit and only the second line is
+    // trimmed. Splitting evenly and then trimming both halves produced posters reading
+    // "The One Where Ev… / Out What Happen…", with a cut in the middle of the thought.
+    public static IReadOnlyList<string> FitTextToWidth(string text, SKFont font, float maxWidth)
     {
-        var lines = new List<string>();
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(font);
 
-        if (paint.MeasureText(text) <= maxWidth)
-        {
-            lines.Add(text);
-            return lines;
-        }
+        if (TryFitWhole(text, font, maxWidth, out var whole))
+            return whole;
 
         var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length <= 1)
+            return new[] { TruncateWithEllipsis(text, font, maxWidth) };
 
-        if (words.Length == 1)
+        int count = GreedyLineWordCount(words, font, maxWidth);
+        var line1 = string.Join(" ", words[..count]);
+        var line2 = string.Join(" ", words[count..]);
+
+        return new[]
         {
-            lines.Add(TruncateWithEllipsis(text, paint, maxWidth));
-            return lines;
-        }
-
-        int splitPoint = FindOptimalSplitPoint(words, paint, maxWidth);
-
-        var line1 = string.Join(" ", words.Take(splitPoint));
-        var line2 = string.Join(" ", words.Skip(splitPoint));
-
-        if (paint.MeasureText(line1) > maxWidth)
-        {
-            line1 = TruncateWithEllipsis(line1, paint, maxWidth);
-        }
-
-        if (!string.IsNullOrWhiteSpace(line2))
-        {
-            if (paint.MeasureText(line2) > maxWidth)
-            {
-                line2 = TruncateWithEllipsis(line2, paint, maxWidth);
-            }
-            lines.Add(line1);
-            lines.Add(line2);
-        }
-        else
-        {
-            lines.Add(line1);
-        }
-
-        return lines;
+            font.MeasureText(line1) <= maxWidth ? line1 : TruncateWithEllipsis(line1, font, maxWidth),
+            TruncateWithEllipsis(line2, font, maxWidth)
+        };
     }
 
-    // FindOptimalSplitPoint
-    // Finds the optimal word split point for balanced two-line text layouts.
-    private static int FindOptimalSplitPoint(string[] words, SKPaint paint, float maxWidth)
+    // GreedyLineWordCount
+    // The most leading words that fit on one line, always leaving at least one word for the
+    // next line and taking at least one even when it alone is too wide.
+    private static int GreedyLineWordCount(string[] words, SKFont font, float maxWidth)
     {
-        int bestSplit = words.Length / 2;
+        int count = 1;
+        for (int i = 2; i < words.Length; i++)
+        {
+            if (font.MeasureText(string.Join(" ", words[..i])) > maxWidth)
+                break;
+
+            count = i;
+        }
+
+        return count;
+    }
+
+    // FindBalancedSplitPoint
+    // The word index that splits the text into the two most even lines that both fit, or
+    // zero when no split fits both lines.
+    private static int FindBalancedSplitPoint(string[] words, SKFont font, float maxWidth)
+    {
+        int bestSplit = 0;
         float bestDifference = float.MaxValue;
 
         for (int i = 1; i < words.Length; i++)
         {
-            string firstPart = string.Join(" ", words[..i]);
-            string secondPart = string.Join(" ", words[i..]);
+            float firstWidth = font.MeasureText(string.Join(" ", words[..i]));
+            if (firstWidth > maxWidth)
+                break;
 
-            float firstWidth = paint.MeasureText(firstPart);
-            float secondWidth = paint.MeasureText(secondPart);
+            float secondWidth = font.MeasureText(string.Join(" ", words[i..]));
+            if (secondWidth > maxWidth)
+                continue;
 
-            if (firstWidth <= maxWidth && secondWidth <= maxWidth)
+            float difference = Math.Abs(firstWidth - secondWidth);
+            if (difference < bestDifference)
             {
-                float difference = Math.Abs(firstWidth - secondWidth);
-
-                if (difference < bestDifference)
-                {
-                    bestDifference = difference;
-                    bestSplit = i;
-                }
+                bestDifference = difference;
+                bestSplit = i;
             }
         }
 
@@ -369,26 +386,55 @@ public static class TextUtils
     }
 
     // TruncateWithEllipsis
-    // Truncates text and appends ellipsis to fit within width constraints.
-    public static string TruncateWithEllipsis(string text, SKPaint paint, float maxWidth)
+    // Trims text to fit the width and appends an ellipsis. The cut lands after a whole word
+    // when that keeps a reasonable share of the line ("Everybody…" rather than "Everybody Fi…"),
+    // and falls back to a character cut for a single long word.
+    public static string TruncateWithEllipsis(string text, SKFont font, float maxWidth)
     {
-        const string ellipsis = "...";
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(font);
 
-        if (paint.MeasureText(text) <= maxWidth)
+        if (font.MeasureText(text) <= maxWidth)
             return text;
 
-        var ellipsisWidth = paint.MeasureText(ellipsis);
-        var availableWidth = maxWidth - ellipsisWidth;
+        var ellipsis = Ellipsis(font);
+        var available = maxWidth - font.MeasureText(ellipsis);
+        if (available <= 0f)
+            return ellipsis;
 
-        for (int i = text.Length - 1; i >= 0; i--)
+        for (int i = text.Length - 1; i > 0; i--)
         {
-            var substring = text.Substring(0, i);
-            if (paint.MeasureText(substring) <= availableWidth)
-            {
+            if (!char.IsWhiteSpace(text[i]))
+                continue;
+
+            var candidate = text[..i].TrimEnd();
+            if (candidate.Length == 0)
+                break;
+
+            var width = font.MeasureText(candidate);
+            if (width > available)
+                continue;
+
+            if (width >= available * MinimumWordCutShare)
+                return candidate + ellipsis;
+
+            break;
+        }
+
+        for (int i = text.Length - 1; i > 0; i--)
+        {
+            var substring = text[..i].TrimEnd();
+            if (substring.Length > 0 && font.MeasureText(substring) <= available)
                 return substring + ellipsis;
-            }
         }
 
         return ellipsis;
+    }
+
+    // Ellipsis
+    // The single ellipsis glyph when the face has one, otherwise three periods.
+    private static string Ellipsis(SKFont font)
+    {
+        return font.ContainsGlyphs(UnicodeEllipsis) ? UnicodeEllipsis : AsciiEllipsis;
     }
 }

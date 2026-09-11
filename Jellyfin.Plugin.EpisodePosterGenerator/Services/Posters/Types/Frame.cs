@@ -1,5 +1,5 @@
 using System;
-using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
+using System.Linq;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using SkiaSharp;
@@ -17,6 +17,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Episode image inside a decorative border. Polished gallery look.";
 
+        // Border geometry at the 1080 pixel reference height; scaled to the poster being drawn.
+        private const float BorderStrokeReference = 4f;
+        private const float BorderShadowStrokeReference = 6f;
+        private const float CornerRadiusReference = 20f;
+
+        // Gap between the frame line and the text set into it, as a share of poster height.
+        private const float TextPaddingRatio = 0.01f;
+
         private readonly ILogger<FramePosterGenerator> _logger;
 
         // FramePosterGenerator
@@ -27,26 +35,29 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders episode title, info, and decorative frame border on the poster.
+        // Renders the title set into the top edge of the frame, the episode info set into the
+        // bottom edge, and the border itself, which closes over any edge with no text in it.
         protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
-            if (string.IsNullOrEmpty(episodeMetadata.EpisodeName))
-                return;
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
 
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            float spacing = height * 0.02f;
+            float spacing = GetElementSpacing(settings, height);
 
-            // Null when the long title handling drops a title that does not fit;
-            // the border then draws with a closed top edge.
-            var titleInfo = DrawEpisodeTitle(skCanvas, episodeMetadata.EpisodeName, settings, width, height, safeArea);
-
-            TextInfo? episodeInfo = null;
-            if (settings.ShowEpisode && episodeMetadata.SeasonNumber.HasValue && episodeMetadata.EpisodeNumberStart.HasValue)
+            TextInfo? titleInfo = null;
+            if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
             {
-                episodeInfo = DrawEpisodeInfo(skCanvas, episodeMetadata.SeasonNumber.Value, episodeMetadata.EpisodeNumberStart.Value, settings, width, height, safeArea);
+                titleInfo = DrawEpisodeTitle(skCanvas, episodeMetadata.EpisodeName, settings, height, safeArea);
             }
 
-            DrawFrameBorder(skCanvas, safeArea, titleInfo, episodeInfo, spacing);
+            TextInfo? episodeInfo = null;
+            if (settings.ShowEpisode)
+            {
+                episodeInfo = DrawEpisodeInfo(skCanvas, episodeMetadata.SeasonNumber ?? 0, episodeMetadata.EpisodeNumberStart ?? 0, settings, height, safeArea);
+            }
+
+            DrawFrameBorder(skCanvas, safeArea, titleInfo, episodeInfo, spacing, height);
         }
 
         // LogError
@@ -57,260 +68,129 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawEpisodeTitle
-        // Draws the episode title at the top of the safe area and returns positioning info,
+        // Draws the uppercase title across the top of the safe area and returns its extent,
         // or null when the long title handling drops a title that does not fit.
-        private TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int width, int height, SKRect safeArea)
+        private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int height, SKRect safeArea)
         {
-            title = title.ToUpperInvariant();
+            using var style = CreateTitleStyle(config, height);
 
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.TitleFontSize, height);
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
-
-            using var titlePaint = new SKPaint
-            {
-                Color = ColorUtils.ParseHexColor(config.TitleFontColor),
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center
-            };
-
-            using var shadowPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(180),
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center
-            };
-
-            var availableWidth = safeArea.Width * 0.9f;
-            var lines = TextUtils.FitTitleLines(title, titlePaint, availableWidth, config.LongTitleHandling);
+            var lines = TextUtils.FitTitleLines(title.ToUpperInvariant(), style.Font, safeArea.Width * RenderConstants.TextWidthMultiplier, config.LongTitleHandling);
             if (lines.Count == 0)
                 return null;
 
-            var lineHeight = fontSize * 1.2f;
-            var centerX = safeArea.MidX;
-
-            var fontMetrics = titlePaint.FontMetrics;
-            var textActualHeight = Math.Abs(fontMetrics.Ascent) + Math.Abs(fontMetrics.Descent);
-            var textPadding = height * 0.01f;
-            var startY = safeArea.Top + textPadding + Math.Abs(fontMetrics.Ascent);
-
-            float maxTextWidth = 0;
-            for (int i = 0; i < lines.Count; i++)
-            {
-                var lineY = startY + (i * lineHeight);
-                canvas.DrawText(lines[i], centerX + 2, lineY + 2, shadowPaint);
-                canvas.DrawText(lines[i], centerX, lineY, titlePaint);
-
-                var textWidth = titlePaint.MeasureText(lines[i]);
-                if (textWidth > maxTextWidth)
-                    maxTextWidth = textWidth;
-            }
-
-            var totalActualHeight = (lines.Count - 1) * lineHeight + textActualHeight;
+            var top = safeArea.Top + (height * TextPaddingRatio);
+            style.DrawLines(canvas, lines, safeArea.MidX, top + style.Ascent);
 
             return new TextInfo
             {
-                Height = totalActualHeight,
-                Width = maxTextWidth,
-                CenterX = centerX,
-                Y = safeArea.Top + textPadding
+                Height = style.BlockHeight(lines.Count),
+                Width = lines.Max(line => style.MeasureWidth(line)),
+                CenterX = safeArea.MidX,
+                Y = top
             };
         }
 
         // DrawEpisodeInfo
-        // Draws the episode info at the bottom of the safe area and returns positioning info.
-        private TextInfo DrawEpisodeInfo(SKCanvas canvas, int seasonNumber, int episodeNumber, PosterSettings config, int width, int height, SKRect safeArea)
+        // Draws the season and episode label across the bottom of the safe area and returns its extent.
+        private static TextInfo DrawEpisodeInfo(SKCanvas canvas, int seasonNumber, int episodeNumber, PosterSettings config, int height, SKRect safeArea)
         {
-            var episodeFontSize = FontUtils.CalculateFontSizeFromPercentage(config.EpisodeFontSize, height);
-            var episodeColor = ColorUtils.ParseHexColor(config.EpisodeFontColor ?? "#FFFFFF");
-            var shadowColor = SKColors.Black.WithAlpha(180);
-
-            using var episodePaint = new SKPaint
-            {
-                Color = episodeColor,
-                TextSize = episodeFontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = FontUtils.ResolveTypeface(config.EffectiveEpisodeFontPath, config.EpisodeFontFamily, FontUtils.GetFontStyle(config.EpisodeFontStyle)),
-                TextAlign = SKTextAlign.Center,
-                TextEncoding = SKTextEncoding.Utf8
-            };
-
-            using var shadowPaint = new SKPaint
-            {
-                Color = shadowColor,
-                TextSize = episodeFontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = FontUtils.ResolveTypeface(config.EffectiveEpisodeFontPath, config.EpisodeFontFamily, FontUtils.GetFontStyle(config.EpisodeFontStyle)),
-                TextAlign = SKTextAlign.Center,
-                TextEncoding = SKTextEncoding.Utf8
-            };
+            using var style = CreateEpisodeStyle(config, height);
 
             var episodeText = EpisodeCodeUtils.FormatFullText(seasonNumber, episodeNumber, true, true);
-            var centerX = safeArea.MidX;
+            var bottom = safeArea.Bottom - (height * TextPaddingRatio);
 
-            var fontMetrics = episodePaint.FontMetrics;
-            var textActualHeight = Math.Abs(fontMetrics.Ascent) + Math.Abs(fontMetrics.Descent);
-            var textPadding = height * 0.01f;
-            var y = safeArea.Bottom - textPadding - Math.Abs(fontMetrics.Descent);
-
-            canvas.DrawText(episodeText, centerX + 2, y + 2, shadowPaint);
-            canvas.DrawText(episodeText, centerX, y, episodePaint);
-
-            var textWidth = episodePaint.MeasureText(episodeText);
+            style.Draw(canvas, episodeText, safeArea.MidX, bottom - style.Descent);
 
             return new TextInfo
             {
-                Height = textActualHeight,
-                Width = textWidth,
-                CenterX = centerX,
-                Y = safeArea.Bottom - textPadding - textActualHeight
+                Height = style.LineBox,
+                Width = style.MeasureWidth(episodeText),
+                CenterX = safeArea.MidX,
+                Y = bottom - style.LineBox
             };
         }
 
         // DrawFrameBorder
-        // Draws a decorative rounded rectangle border with gaps for text elements.
-        // A null titleInfo draws a continuous top edge with no title gap.
-        private void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? titleInfo, TextInfo? episodeInfo, float spacing)
+        // Draws the rounded border with the top and bottom edges opened around whatever text sits
+        // in them. The stroke, its shadow, and the corner radius all scale with the poster.
+        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? titleInfo, TextInfo? episodeInfo, float spacing, int height)
         {
-            using var borderPaint = new SKPaint
-            {
-                Color = SKColors.White,
-                StrokeWidth = 4f,
-                Style = SKPaintStyle.Stroke,
-                IsAntialias = true,
-                StrokeCap = SKStrokeCap.Round,
-                StrokeJoin = SKStrokeJoin.Round
-            };
+            var radius = RenderConstants.Scaled(CornerRadiusReference, height);
 
-            using var shadowPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(200),
-                StrokeWidth = 6f,
-                Style = SKPaintStyle.Stroke,
-                IsAntialias = true,
-                StrokeCap = SKStrokeCap.Round,
-                StrokeJoin = SKStrokeJoin.Round
-            };
+            using var borderPaint = PaintFactory.CreateLinePaint(SKColors.White, RenderConstants.Scaled(BorderStrokeReference, height), SKStrokeCap.Round);
+            borderPaint.StrokeJoin = SKStrokeJoin.Round;
 
-            var cornerRadius = 20f;
+            using var shadowPaint = PaintFactory.CreateLinePaint(SKColors.Black.WithAlpha(200), RenderConstants.Scaled(BorderShadowStrokeReference, height), SKStrokeCap.Round);
+            shadowPaint.StrokeJoin = SKStrokeJoin.Round;
 
-            float titleLeftEdge = 0;
-            float titleRightEdge = 0;
-            float titleBottom = safeArea.Top + cornerRadius;
-
-            if (titleInfo.HasValue)
-            {
-                titleLeftEdge = titleInfo.Value.CenterX - (titleInfo.Value.Width / 2f) - spacing;
-                titleRightEdge = titleInfo.Value.CenterX + (titleInfo.Value.Width / 2f) + spacing;
-                titleBottom = titleInfo.Value.Y + titleInfo.Value.Height;
-            }
-
-            float episodeLeftEdge = 0;
-            float episodeRightEdge = 0;
-            float episodeTop = 0;
-
-            if (episodeInfo.HasValue)
-            {
-                episodeLeftEdge = episodeInfo.Value.CenterX - (episodeInfo.Value.Width / 2f) - spacing;
-                episodeRightEdge = episodeInfo.Value.CenterX + (episodeInfo.Value.Width / 2f) + spacing;
-                episodeTop = episodeInfo.Value.Y;
-            }
-
-            using var path = new SKPath();
-
-            // Top-left corner arc
-            path.AddArc(
-                new SKRect(safeArea.Left, safeArea.Top, safeArea.Left + cornerRadius * 2, safeArea.Top + cornerRadius * 2),
-                180, 90);
-
-            // Top horizontal line, split around the title when one is drawn
-            if (titleInfo.HasValue)
-            {
-                path.MoveTo(safeArea.Left + cornerRadius, safeArea.Top);
-                path.LineTo(titleLeftEdge, safeArea.Top);
-
-                path.MoveTo(titleRightEdge, safeArea.Top);
-                path.LineTo(safeArea.Right - cornerRadius, safeArea.Top);
-            }
-            else
-            {
-                path.MoveTo(safeArea.Left + cornerRadius, safeArea.Top);
-                path.LineTo(safeArea.Right - cornerRadius, safeArea.Top);
-            }
-
-            // Top-right corner arc
-            path.AddArc(
-                new SKRect(safeArea.Right - cornerRadius * 2, safeArea.Top, safeArea.Right, safeArea.Top + cornerRadius * 2),
-                270, 90);
-
-            // Right vertical line (top section)
-            path.MoveTo(safeArea.Right, safeArea.Top + cornerRadius);
-            path.LineTo(safeArea.Right, titleBottom);
-
-            // Episode info present branch
-            if (episodeInfo.HasValue)
-            {
-                path.LineTo(safeArea.Right, episodeTop);
-
-                path.MoveTo(safeArea.Right, episodeTop);
-                path.LineTo(safeArea.Right, safeArea.Bottom - cornerRadius);
-
-                path.AddArc(
-                    new SKRect(safeArea.Right - cornerRadius * 2, safeArea.Bottom - cornerRadius * 2, safeArea.Right, safeArea.Bottom),
-                    0, 90);
-
-                path.MoveTo(safeArea.Right - cornerRadius, safeArea.Bottom);
-                path.LineTo(episodeRightEdge, safeArea.Bottom);
-
-                path.MoveTo(episodeLeftEdge, safeArea.Bottom);
-                path.LineTo(safeArea.Left + cornerRadius, safeArea.Bottom);
-
-                path.AddArc(
-                    new SKRect(safeArea.Left, safeArea.Bottom - cornerRadius * 2, safeArea.Left + cornerRadius * 2, safeArea.Bottom),
-                    90, 90);
-
-                path.MoveTo(safeArea.Left, safeArea.Bottom - cornerRadius);
-                path.LineTo(safeArea.Left, episodeTop);
-
-                path.MoveTo(safeArea.Left, episodeTop);
-                path.LineTo(safeArea.Left, titleBottom);
-            }
-            // No episode info branch
-            else
-            {
-                path.LineTo(safeArea.Right, safeArea.Bottom - cornerRadius);
-
-                path.AddArc(
-                    new SKRect(safeArea.Right - cornerRadius * 2, safeArea.Bottom - cornerRadius * 2, safeArea.Right, safeArea.Bottom),
-                    0, 90);
-
-                path.MoveTo(safeArea.Right - cornerRadius, safeArea.Bottom);
-                path.LineTo(safeArea.Left + cornerRadius, safeArea.Bottom);
-
-                path.AddArc(
-                    new SKRect(safeArea.Left, safeArea.Bottom - cornerRadius * 2, safeArea.Left + cornerRadius * 2, safeArea.Bottom),
-                    90, 90);
-
-                path.MoveTo(safeArea.Left, safeArea.Bottom - cornerRadius);
-                path.LineTo(safeArea.Left, titleBottom);
-            }
-
-            path.LineTo(safeArea.Left, safeArea.Top + cornerRadius);
+            using var path = BuildFramePath(safeArea, radius, GapFor(titleInfo, spacing), GapFor(episodeInfo, spacing));
 
             canvas.DrawPath(path, shadowPaint);
-
             canvas.DrawPath(path, borderPaint);
+        }
+
+        // GapFor
+        // The horizontal span an edge leaves open for a piece of text, or null for a closed edge.
+        private static (float Left, float Right)? GapFor(TextInfo? info, float spacing)
+        {
+            if (!info.HasValue)
+                return null;
+
+            var half = info.Value.Width / 2f;
+            return (info.Value.CenterX - half - spacing, info.Value.CenterX + half + spacing);
+        }
+
+        // BuildFramePath
+        // One continuous outline, clockwise from the top edge, so the corners flow into the
+        // edges without seams. An edge with a gap is drawn as two segments either side of it;
+        // a gap that reaches a corner simply leaves that segment out.
+        private static SKPath BuildFramePath(SKRect r, float radius, (float Left, float Right)? topGap, (float Left, float Right)? bottomGap)
+        {
+            var path = new SKPath();
+            var d = radius * 2f;
+
+            // Top edge, left to right.
+            var topStart = r.Left + radius;
+            var topEnd = r.Right - radius;
+            path.MoveTo(topStart, r.Top);
+            if (topGap.HasValue)
+            {
+                var gapLeft = Math.Clamp(topGap.Value.Left, topStart, topEnd);
+                var gapRight = Math.Clamp(topGap.Value.Right, topStart, topEnd);
+                if (gapLeft > topStart) path.LineTo(gapLeft, r.Top);
+                path.MoveTo(gapRight, r.Top);
+                if (topEnd > gapRight) path.LineTo(topEnd, r.Top);
+            }
+            else
+            {
+                path.LineTo(topEnd, r.Top);
+            }
+
+            path.ArcTo(new SKRect(r.Right - d, r.Top, r.Right, r.Top + d), 270, 90, false);
+            path.LineTo(r.Right, r.Bottom - radius);
+            path.ArcTo(new SKRect(r.Right - d, r.Bottom - d, r.Right, r.Bottom), 0, 90, false);
+
+            // Bottom edge, right to left.
+            var bottomStart = r.Right - radius;
+            var bottomEnd = r.Left + radius;
+            if (bottomGap.HasValue)
+            {
+                var gapRight = Math.Clamp(bottomGap.Value.Right, bottomEnd, bottomStart);
+                var gapLeft = Math.Clamp(bottomGap.Value.Left, bottomEnd, bottomStart);
+                if (gapRight < bottomStart) path.LineTo(gapRight, r.Bottom);
+                path.MoveTo(gapLeft, r.Bottom);
+                if (gapLeft > bottomEnd) path.LineTo(bottomEnd, r.Bottom);
+            }
+            else
+            {
+                path.LineTo(bottomEnd, r.Bottom);
+            }
+
+            path.ArcTo(new SKRect(r.Left, r.Bottom - d, r.Left + d, r.Bottom), 90, 90, false);
+            path.LineTo(r.Left, r.Top + radius);
+            path.ArcTo(new SKRect(r.Left, r.Top, r.Left + d, r.Top + d), 180, 90, false);
+
+            return path;
         }
     }
 }

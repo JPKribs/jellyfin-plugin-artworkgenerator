@@ -16,6 +16,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private const float PinstripeHeightRatio = 0.018f;
         private const float PinstripeGapRatio = 0.018f;
 
+        // The band caps the text size so it never spills off the sash.
+        private const float BandTextHeightRatio = 0.55f;
+
         // Style
         // The poster style this generator produces.
         public override PosterStyle Style => PosterStyle.Striped;
@@ -38,6 +41,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // using the overlay color for the band and the secondary color for the pinstripes.
         protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(skCanvas);
+            ArgumentNullException.ThrowIfNull(settings);
+
             if (string.IsNullOrEmpty(settings.OverlayColor))
                 return;
 
@@ -76,6 +82,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // corner. When the title is disabled the episode code rides the sash instead.
         protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
+
             var safeArea = GetSafeAreaBounds(width, height, settings);
             var episodeCode = EpisodeCodeUtils.FormatEpisodeCode(
                 episodeMetadata.SeasonNumber ?? 0,
@@ -84,9 +93,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             bool titleOnBand = false;
             if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
             {
-                titleOnBand = DrawBandText(skCanvas, episodeMetadata.EpisodeName!, settings, width, height,
-                    settings.EffectiveTitleFontPath, settings.TitleFontFamily, settings.TitleFontStyle,
-                    settings.TitleFontSize, settings.TitleFontColor, safeArea);
+                using var titleStyle = CreateBandStyle(settings, height, true);
+                titleOnBand = DrawBandText(skCanvas, episodeMetadata.EpisodeName, titleStyle, settings, width, height, safeArea);
             }
 
             // When there is no title on the band (disabled, or dropped by the long
@@ -95,9 +103,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             {
                 if (settings.ShowEpisode)
                 {
-                    DrawBandText(skCanvas, episodeCode, settings, width, height,
-                        settings.EffectiveEpisodeFontPath, settings.EpisodeFontFamily, settings.EpisodeFontStyle,
-                        settings.EpisodeFontSize, settings.EpisodeFontColor, safeArea);
+                    using var episodeStyle = CreateBandStyle(settings, height, false);
+                    DrawBandText(skCanvas, episodeCode, episodeStyle, settings, width, height, safeArea);
                 }
 
                 return;
@@ -109,37 +116,44 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
         }
 
-        // DrawBandText
-        // Draws a single line of text centered along the tilted sash, sized to fit the
-        // band height and fitted to the safe width using the long title handling.
-        // Returns false when the handling drops the text instead of drawing it.
-        private static bool DrawBandText(SKCanvas canvas, string text, PosterSettings settings, int width, int height,
-            string? fontPath, string fontFamily, string fontStyle, float fontSizePercent, string fontColor, SKRect safeArea)
+        // CreateBandStyle
+        // The title or episode style with its configured size capped by the band height.
+        private static TextStyle CreateBandStyle(PosterSettings settings, int height, bool title)
         {
-            var typeface = FontUtils.ResolveTypeface(fontPath, fontFamily, FontUtils.GetFontStyle(fontStyle));
+            float bandCap = height * BandHeightRatio * BandTextHeightRatio;
 
+            if (title)
+            {
+                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, height);
+                var typeface = FontUtils.ResolveTypeface(settings.EffectiveTitleFontPath, settings.TitleFontFamily, FontUtils.GetFontStyle(settings.TitleFontStyle));
+                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.TitleFontColor), Math.Min(configured, bandCap), typeface, height);
+            }
+            else
+            {
+                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
+                var typeface = ResolveEpisodeTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
+                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), Math.Min(configured, bandCap), typeface, height);
+            }
+        }
+
+        // DrawBandText
+        // Draws a single line of text centred along the tilted sash, fitted to the safe width
+        // using the long title handling. Returns false when the handling drops the text.
+        private static bool DrawBandText(SKCanvas canvas, string text, TextStyle style, PosterSettings settings, int width, int height, SKRect safeArea)
+        {
             float bandCenterY = height * BandCenterYRatio;
-            float bandHeight = height * BandHeightRatio;
             float maxTextWidth = safeArea.Width * RenderConstants.TextWidthMultiplier;
 
-            // The configured size is a ceiling; the band height caps it so text never
-            // spills off the sash.
-            float configuredSize = FontUtils.CalculateFontSizeFromPercentage(fontSizePercent, height);
-            float fontSize = Math.Min(configuredSize, bandHeight * 0.55f);
-
-            using var textPaint = PaintFactory.CreateTextPaint(ColorUtils.ParseHexColor(fontColor), fontSize, typeface);
-            using var shadowPaint = PaintFactory.CreateShadowTextPaint(fontSize, typeface);
-
-            var line = TextUtils.FitTitleLine(text, textPaint, maxTextWidth, settings.LongTitleHandling);
+            var line = TextUtils.FitTitleLine(text, style.Font, maxTextWidth, settings.LongTitleHandling);
             if (line == null)
                 return false;
 
-            var metrics = textPaint.FontMetrics;
-            float baselineY = bandCenterY - ((metrics.Ascent + metrics.Descent) / 2f);
+            // Centre the ascent-to-descent box on the band's centre line.
+            float baselineY = bandCenterY + ((style.Ascent - style.Descent) / 2f);
 
             canvas.Save();
             canvas.RotateDegrees(BandAngleDegrees, width / 2f, bandCenterY);
-            PaintFactory.DrawTextWithShadow(canvas, line, width / 2f, baselineY, textPaint, shadowPaint);
+            style.Draw(canvas, line, width / 2f, baselineY);
             canvas.Restore();
             return true;
         }
@@ -149,14 +163,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // deliberately unrotated to contrast with the tilted sash.
         private static void DrawCornerEpisodeCode(SKCanvas canvas, string episodeCode, PosterSettings settings, int height, SKRect safeArea)
         {
-            var typeface = FontUtils.ResolveTypeface(settings.EffectiveEpisodeFontPath, settings.EpisodeFontFamily, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
-
-            using var textPaint = PaintFactory.CreateTextPaint(ColorUtils.ParseHexColor(settings.EpisodeFontColor), fontSize, typeface, SKTextAlign.Right);
-            using var shadowPaint = PaintFactory.CreateShadowTextPaint(fontSize, typeface, SKTextAlign.Right);
-
-            float baselineY = safeArea.Top - textPaint.FontMetrics.Ascent;
-            PaintFactory.DrawTextWithShadow(canvas, episodeCode, safeArea.Right, baselineY, textPaint, shadowPaint);
+            using var style = CreateEpisodeStyle(settings, height, SKTextAlign.Right);
+            style.Draw(canvas, episodeCode, safeArea.Right, style.BaselineAtTop(safeArea));
         }
 
         // LogError

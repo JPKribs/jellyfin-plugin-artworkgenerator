@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using SkiaSharp;
-using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using Microsoft.Extensions.Logging;
@@ -18,6 +16,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Brush strokes reveal the image through a flat overlay. Painted, editorial look.";
 
+        // Share of the safe width the text may use. The stroke keep-clear zone is measured from
+        // the same figure, so a wrapped title can never run under a stroke edge.
+        private const float TextWidthRatio = 0.6f;
+
         private readonly ILogger<BrushPosterGenerator> _logger;
 
         // BrushPosterGenerator
@@ -31,6 +33,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Creates an overlay with brush stroke cutouts revealing the canvas beneath.
         protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(skCanvas);
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
+
             if (string.IsNullOrEmpty(settings.OverlayColor))
                 return;
 
@@ -52,15 +58,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             // Draw the overlay into its own layer, then erase the stroke mask out of it with
             // a slightly blurred punch. The feathered edge reads as paint on canvas; a hard
             // ClipPath edge reads as a digital cut.
-            skCanvas.SaveLayer(null);
+            skCanvas.SaveLayer();
 
             if (settings.OverlayGradient == OverlayGradient.None)
             {
-                using var overlayPaint = new SKPaint
-                {
-                    Color = primaryColor,
-                    Style = SKPaintStyle.Fill
-                };
+                using var overlayPaint = PaintFactory.CreateFillPaint(primaryColor);
                 skCanvas.DrawRect(rect, overlayPaint);
             }
             else
@@ -68,7 +70,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 var secondaryColor = ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
                 if (secondaryColor.Alpha == 0) secondaryColor = primaryColor;
 
-                var gradient = CreateOverlayGradient(settings.OverlayGradient, rect, primaryColor, secondaryColor);
+                using var gradient = CreateOverlayGradient(settings.OverlayGradient, rect, primaryColor, secondaryColor);
                 if (gradient != null)
                 {
                     using var overlayPaint = new SKPaint
@@ -81,7 +83,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 }
             }
 
-            // Sigma scales with the poster, so this one cannot use the shared cached filter.
             // SKPaint does not own its mask filter, hence the explicit using.
             using var punchBlur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, Math.Max(2f, height * 0.002f));
             using var punchPaint = new SKPaint
@@ -150,158 +151,62 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             return fallback;
         }
 
-        // CalculateTextKeepClearArea
-        // Calculates the area that should remain clear for text elements.
-        private SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int height, EpisodeMetadata episodeMetadata)
+        // BuildTextColumn
+        // The one description of the text layout: episode code above a fixed two line title
+        // zone, packed against the bottom left of the safe area.
+        private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int height, EpisodeMetadata episodeMetadata, TextStyle episodeStyle, TextStyle titleStyle)
         {
-            var episodeFontSize = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
+            var titleHeight = settings.ShowTitle && !string.IsNullOrWhiteSpace(episodeMetadata.EpisodeName)
+                ? titleStyle.BlockHeight(2)
+                : 0f;
 
-            var episodeHeight = episodeFontSize;
-            var spacing = GetElementSpacing(settings, height);
-            var titleHeight = MeasureTitleHeight(episodeMetadata, settings, safeArea, height);
-            var totalTextHeight = episodeHeight + spacing + titleHeight;
-            
-            var textWidth = safeArea.Width * 0.5f;
-            
+            return new LayoutColumn(safeArea, GetElementSpacing(settings, height), LayoutAnchor.Bottom)
+                .Add(EpisodeBlock, settings.ShowEpisode ? episodeStyle.LineBox : 0f)
+                .Add(TitleBlock, titleHeight);
+        }
+
+        // CalculateTextKeepClearArea
+        // The area the strokes must leave alone: exactly the block the text column occupies,
+        // measured from the same styles that draw it.
+        private static SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int height, EpisodeMetadata episodeMetadata)
+        {
+            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Left);
+            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Left);
+
+            var consumed = BuildTextColumn(safeArea, settings, height, episodeMetadata, episodeStyle, titleStyle).Consumed;
+
             return new SKRect(
                 safeArea.Left,
-                safeArea.Bottom - totalTextHeight,
-                safeArea.Left + textWidth,
-                safeArea.Bottom
-            );
+                safeArea.Bottom - consumed,
+                safeArea.Left + (safeArea.Width * TextWidthRatio),
+                safeArea.Bottom);
         }
 
         // RenderTypography
-        // Renders the episode code and title text on the poster.
+        // Renders the episode code and title in the bottom left corner of the poster.
         protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
+
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            
-            DrawEpisodeCode(skCanvas, episodeMetadata, settings, safeArea, height);
-            DrawTitle(skCanvas, episodeMetadata, settings, safeArea, height);
-        }
 
-        // DrawEpisodeCode
-        // Draws the episode code in the bottom-left corner of the poster.
-        private void DrawEpisodeCode(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, SKRect safeArea, int height)
-        {
-            var episodeCode = EpisodeCodeUtils.FormatEpisodeCode(
-                episodeMetadata.SeasonNumber ?? 0,
-                episodeMetadata.EpisodeNumberStart ?? 0);
-            
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.EpisodeFontSize, height);
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveEpisodeFontPath, config.EpisodeFontFamily, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Left);
+            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Left);
 
-            var textColor = ColorUtils.ParseHexColor(config.EpisodeFontColor);
-            var shadowColor = SKColors.Black.WithAlpha(180);
-            
-            using var textPaint = new SKPaint
+            var column = BuildTextColumn(safeArea, settings, height, episodeMetadata, episodeStyle, titleStyle);
+
+            if (column.TryGetSlot(EpisodeBlock, out var codeSlot))
             {
-                Color = textColor,
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Left
-            };
-            
-            using var shadowPaint = new SKPaint
+                var episodeCode = EpisodeCodeUtils.FormatEpisodeCode(
+                    episodeMetadata.SeasonNumber ?? 0,
+                    episodeMetadata.EpisodeNumberStart ?? 0);
+                episodeStyle.Draw(skCanvas, episodeCode, safeArea.Left, episodeStyle.BaselineAtBottom(codeSlot));
+            }
+
+            if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                Color = shadowColor,
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Left,
-                MaskFilter = PaintFactory.ShadowBlur
-            };
-            
-            var metrics = textPaint.FontMetrics;
-            var spacing = GetElementSpacing(config, height);
-
-            // Sits above a fixed two line reservation rather than the title's actual height,
-            // so the code lands in the same place on every episode regardless of how long its
-            // title is. DrawTitle fills that block from the top, so a one line title still
-            // renders directly beneath this.
-            var titleHeight = MeasureTitleHeight(episodeMetadata, config, safeArea, height);
-
-            float x = safeArea.Left;
-            float y = safeArea.Bottom - titleHeight - spacing - Math.Abs(metrics.Descent);
-            
-            canvas.DrawText(episodeCode, x + 2f, y + 2f, shadowPaint);
-            canvas.DrawText(episodeCode, x, y, textPaint);
-        }
-
-        // MeasureTitleHeight
-        // Returns a fixed two line title reservation so the episode code and the stroke
-        // keep clear area sit at the same spot no matter how many lines the title used
-        // or whether a long title was dropped. Returns 0 when there is no title.
-        private float MeasureTitleHeight(EpisodeMetadata episodeMetadata, PosterSettings config, SKRect safeArea, int height)
-        {
-            if (!config.ShowTitle || string.IsNullOrWhiteSpace(episodeMetadata.EpisodeName))
-                return 0f;
-
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.TitleFontSize, height);
-            return 2f * fontSize * 1.2f;
-        }
-
-        // DrawTitle
-        // Draws the episode title in the bottom-left corner of the poster.
-        private void DrawTitle(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, SKRect safeArea, int height)
-        {
-            var title = episodeMetadata.EpisodeName;
-            if (!config.ShowTitle || string.IsNullOrWhiteSpace(title))
-                return;
-
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.TitleFontSize, height);
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
-            
-            using var titlePaint = new SKPaint
-            {
-                Color = ColorUtils.ParseHexColor(config.TitleFontColor),
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Left
-            };
-            
-            using var shadowPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(180),
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Left,
-                MaskFilter = PaintFactory.ShadowBlur
-            };
-            
-            var maxTextWidth = safeArea.Width * 0.6f;
-            var lines = TextUtils.FitTitleLines(title, titlePaint, maxTextWidth, config.LongTitleHandling);
-            if (lines.Count == 0)
-                return;
-
-            var metrics = titlePaint.FontMetrics;
-            float lineHeight = fontSize * 1.2f;
-            float x = safeArea.Left;
-
-            // The block below the episode code is a fixed two lines tall so the code above it never
-            // shifts between episodes. A one line title leaves a line of slack, split evenly above
-            // and below by CenteredBaseline rather than pooled at one end.
-            float blockHeight = MeasureTitleHeight(episodeMetadata, config, safeArea, height);
-            var slot = SKRect.Create(safeArea.Left, safeArea.Bottom - blockHeight, safeArea.Width, blockHeight);
-            float y = CenteredBaseline(slot, lines.Count, fontSize, lineHeight) - Math.Abs(metrics.Descent);
-
-            foreach (var line in lines)
-            {
-                canvas.DrawText(line, x + 2f, y + 2f, shadowPaint);
-                canvas.DrawText(line, x, y, titlePaint);
-                y += lineHeight;
+                DrawTitleInSlot(skCanvas, episodeMetadata.EpisodeName!, titleStyle, titleSlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTitleHandling);
             }
         }
 

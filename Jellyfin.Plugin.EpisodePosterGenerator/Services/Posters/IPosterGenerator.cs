@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using SkiaSharp;
 using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
@@ -48,18 +49,134 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         protected static float GetElementSpacing(PosterSettings settings, float posterHeight)
             => posterHeight * (Math.Max(0f, settings.ElementSpacing) / 100f);
 
-        // CenteredBaseline
-        // First baseline for a run of text lines centred vertically inside its slot.
+        // Layout block keys shared by the styles that stack text against the bottom edge.
+        protected const string EpisodeBlock = "episode";
+        protected const string SeparatorBlock = "separator";
+        protected const string TitleBlock = "title";
+
+        // CreateTitleStyle
+        // The font and paints for the episode title, sized and coloured from the settings.
+        protected static TextStyle CreateTitleStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            var fontSize = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, height);
+            var typeface = FontUtils.ResolveTypeface(settings.EffectiveTitleFontPath, settings.TitleFontFamily, FontUtils.GetFontStyle(settings.TitleFontStyle));
+            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.TitleFontColor), fontSize, typeface, height, align, withShadow);
+        }
+
+        // CreateEpisodeStyle
+        // The font and paints for the episode code or number, sized and coloured from the settings.
+        protected static TextStyle CreateEpisodeStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            var fontSize = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
+            var typeface = ResolveEpisodeTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
+            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), fontSize, typeface, height, align, withShadow);
+        }
+
+        // ResolveEpisodeTypeface
+        // The episode face in the given weight. Not disposed by callers: FontUtils owns the cache.
+        protected static SKTypeface ResolveEpisodeTypeface(PosterSettings settings, SKFontStyle style)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            return FontUtils.ResolveTypeface(settings.EffectiveEpisodeFontPath, settings.EpisodeFontFamily, style);
+        }
+
+        // DrawTitleInSlot
+        // Fits the title to the slot's height and the given width, centres the resulting lines
+        // vertically in the slot, and draws them at x. Returns the number of lines drawn, which
+        // is zero when the long title handling drops the title.
         //
         // Title slots are reserved at a fixed two lines so the elements above them cannot shift
         // between episodes with short and long titles. A one line title therefore leaves a line
-        // of slack, and centring splits it evenly above and below rather than pooling it all at
-        // one end — which reads as the block floating high or hanging low. A full two line title
-        // fills the slot, so this is a no-op for it.
-        protected static float CenteredBaseline(SKRect slot, int lineCount, float fontSize, float lineHeight)
+        // of slack, and centring splits it evenly rather than pooling it at one end.
+        protected static int DrawTitleInSlot(SKCanvas canvas, string title, TextStyle style, SKRect slot, float x, float maxWidth, LongTitleHandling handling)
         {
-            var blockHeight = fontSize + (Math.Max(1, lineCount) - 1) * lineHeight;
-            return slot.Top + Math.Max(0f, (slot.Height - blockHeight) / 2f) + fontSize;
+            ArgumentNullException.ThrowIfNull(style);
+
+            var lines = TextUtils.FitTitleLines(title, style.Font, maxWidth, slot.Height, style.LineHeight, handling);
+            if (lines.Count == 0)
+            {
+                return 0;
+            }
+
+            style.DrawLines(canvas, lines, x, style.FirstBaselineCentered(slot, lines.Count));
+            return lines.Count;
+        }
+
+        // DrawBottomTextStack
+        // The layout Standard and Split share: season and episode numbers, a rule, and a two
+        // line title zone packed against the bottom of the area.
+        protected static void DrawBottomTextStack(SKCanvas canvas, SKRect area, int seasonNumber, int episodeNumber, string title, PosterSettings settings, int height)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            using var titleStyle = CreateTitleStyle(settings, height);
+            using var episodeStyle = CreateEpisodeStyle(settings, height);
+
+            var showSeparator = settings.ShowTitle && settings.ShowEpisode;
+
+            var column = new LayoutColumn(area, GetElementSpacing(settings, height), LayoutAnchor.Bottom)
+                .Add(EpisodeBlock, settings.ShowEpisode ? episodeStyle.LineBox : 0f)
+                .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(height) : 0f)
+                .Add(TitleBlock, settings.ShowTitle ? titleStyle.BlockHeight(2) : 0f);
+
+            if (column.TryGetSlot(EpisodeBlock, out var episodeSlot))
+            {
+                DrawSeasonEpisodeInfo(canvas, seasonNumber, episodeNumber, episodeStyle, settings, height, episodeSlot);
+            }
+
+            if (column.TryGetSlot(SeparatorBlock, out var separatorSlot))
+            {
+                DrawSeparatorLine(canvas, settings, height, separatorSlot);
+            }
+
+            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            {
+                DrawTitleInSlot(canvas, title, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+            }
+        }
+
+        // DrawSeasonEpisodeInfo
+        // Draws "season • episode" centred on the slot's bottom edge. The bullet uses the
+        // regular weight so it does not overpower the numbers beside it.
+        protected static void DrawSeasonEpisodeInfo(SKCanvas canvas, int seasonNumber, int episodeNumber, TextStyle episodeStyle, PosterSettings settings, int height, SKRect slot)
+        {
+            ArgumentNullException.ThrowIfNull(episodeStyle);
+            ArgumentNullException.ThrowIfNull(settings);
+
+            using var bulletStyle = PaintFactory.CreateTextStyle(
+                episodeStyle.Fill.Color, episodeStyle.Size, ResolveEpisodeTypeface(settings, SKFontStyle.Normal), height);
+
+            var seasonText = seasonNumber.ToString(CultureInfo.InvariantCulture);
+            var episodeText = episodeNumber.ToString(CultureInfo.InvariantCulture);
+            const string bulletText = " • ";
+
+            var baselineY = episodeStyle.BaselineAtBottom(slot);
+
+            var seasonWidth = episodeStyle.MeasureWidth(seasonText);
+            var episodeWidth = episodeStyle.MeasureWidth(episodeText);
+            var bulletWidth = bulletStyle.MeasureWidth(bulletText);
+
+            var bulletX = slot.MidX;
+            episodeStyle.Draw(canvas, seasonText, bulletX - (bulletWidth / 2f) - (seasonWidth / 2f), baselineY);
+            bulletStyle.Draw(canvas, bulletText, bulletX, baselineY);
+            episodeStyle.Draw(canvas, episodeText, bulletX + (bulletWidth / 2f) + (episodeWidth / 2f), baselineY);
+        }
+
+        // DrawSeparatorLine
+        // Draws a horizontal rule across the slot in the episode colour, with a shadow.
+        protected static void DrawSeparatorLine(SKCanvas canvas, PosterSettings settings, int height, SKRect slot)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            var stroke = RenderConstants.SeparatorStrokeWidth(height);
+            using var shadowPaint = PaintFactory.CreateShadowLinePaint(stroke);
+            using var linePaint = PaintFactory.CreateLinePaint(ColorUtils.ParseHexColor(settings.EpisodeFontColor), stroke);
+
+            PaintFactory.DrawLineWithShadow(canvas, slot.Left, slot.MidY, slot.Right, slot.MidY, linePaint, shadowPaint, RenderConstants.ShadowOffset(height));
         }
 
         // ApplySafeAreaConstraints
@@ -167,12 +284,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Draws the base canvas bitmap onto the surface.
         protected virtual void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
-            using var canvasPaint = new SKPaint
-            {
-                IsAntialias = true,
-                FilterQuality = SKFilterQuality.High
-            };
-            skCanvas.DrawBitmap(canvas, 0, 0, canvasPaint);
+            ArgumentNullException.ThrowIfNull(skCanvas);
+            skCanvas.DrawBitmap(canvas, 0, 0);
         }
 
         // RenderOverlay
@@ -275,13 +388,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 ApplySafeAreaConstraints(width, height, settings, out float safeWidth, out float safeHeight, out float safeLeft, out float safeTop);
                 var graphicRect = CalculateGraphicRect(graphicBitmap, safeLeft, safeTop, safeWidth, safeHeight, settings);
 
-                using var graphicPaint = new SKPaint
-                {
-                    IsAntialias = true,
-                    FilterQuality = SKFilterQuality.High
-                };
-
-                skCanvas.DrawBitmap(graphicBitmap, graphicRect, graphicPaint);
+                using var graphicPaint = new SKPaint { IsAntialias = true };
+                PaintFactory.DrawBitmap(skCanvas, graphicBitmap, graphicRect, graphicPaint);
             }
             catch
             {

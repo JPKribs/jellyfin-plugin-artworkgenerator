@@ -3,6 +3,7 @@ using System.Globalization;
 using SkiaSharp;
 using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
+using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
@@ -150,13 +151,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             var sourceRect = new SKRect(left, top, left + newWidth, top + newHeight);
             var destRect = new SKRect(0, 0, newWidth, newHeight);
 
-            using var paint = new SKPaint
-            {
-                FilterQuality = SKFilterQuality.High,
-                IsAntialias = true
-            };
-
-            canvas.DrawBitmap(source, sourceRect, destRect, paint);
+            PaintFactory.DrawBitmap(canvas, source, sourceRect, destRect, null, RenderConstants.HighQualitySampling);
 
             return cropped;
         }
@@ -166,7 +161,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         // For horizontal bars (top/bottom): scans rows, checks pixel ratio across width.
         // For vertical bars (left/right): scans columns, checks pixel ratio across height.
         // When scanReverse is true, scans from the far edge inward.
-        private int DetectEdgeBlackBar(
+        //
+        // Reads straight from the pixel buffer: a GetPixel call per pixel is a native
+        // transition each, and four half-frame scans of a 4K frame add up to millions of them.
+        private static int DetectEdgeBlackBar(
             SKBitmap bitmap,
             int blackThreshold,
             float confidence,
@@ -179,6 +177,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             var outerTotal = isHorizontal ? height : width;
             var innerMax = isHorizontal ? width : height;
 
+            // Both 8888 layouts keep the three colour channels in the first three bytes of each
+            // pixel (in either order), and the brightness is their mean, so the order is moot.
+            var fastPath = bitmap.ColorType is SKColorType.Rgba8888 or SKColorType.Bgra8888;
+            var pixels = fastPath ? bitmap.GetPixelSpan() : ReadOnlySpan<byte>.Empty;
+            var rowBytes = bitmap.RowBytes;
+
             for (int outer = 0; outer < outerMax; outer++)
             {
                 int actualOuter = scanReverse ? (outerTotal - 1 - outer) : outer;
@@ -189,7 +193,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                     int x = isHorizontal ? inner : actualOuter;
                     int y = isHorizontal ? actualOuter : inner;
 
-                    if (IsBlackPixel(bitmap.GetPixel(x, y), blackThreshold))
+                    int brightness = fastPath
+                        ? Brightness8888(pixels, (y * rowBytes) + (x * 4))
+                        : Brightness(bitmap.GetPixel(x, y));
+
+                    if (brightness <= blackThreshold)
                         blackPixels++;
                 }
 
@@ -203,12 +211,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             return outerMax;
         }
 
-        // IsBlackPixel
-        // Determines if a pixel is considered black based on a brightness threshold.
-        private bool IsBlackPixel(SKColor pixel, int threshold)
+        // Brightness8888
+        // Mean of the three colour channels of a 4 byte pixel at the given byte offset.
+        private static int Brightness8888(ReadOnlySpan<byte> pixels, int offset)
         {
-            var brightness = (pixel.Red + pixel.Green + pixel.Blue) / 3;
-            return brightness <= threshold;
+            return (pixels[offset] + pixels[offset + 1] + pixels[offset + 2]) / 3;
+        }
+
+        // Brightness
+        // Mean of the three colour channels of a pixel.
+        private static int Brightness(SKColor pixel)
+        {
+            return (pixel.Red + pixel.Green + pixel.Blue) / 3;
         }
 
         // ApplyPosterFill
@@ -259,11 +273,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
             var result = new SKBitmap(targetWidth, targetHeight, source.ColorType, source.AlphaType);
             using var canvas = new SKCanvas(result);
-            using var paint = new SKPaint
-            {
-                FilterQuality = SKFilterQuality.High,
-                IsAntialias = true
-            };
 
             SKRect sourceRect;
             var destRect = new SKRect(0, 0, targetWidth, targetHeight);
@@ -279,7 +288,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 sourceRect = new SKRect(0, 0, source.Width, source.Height);
             }
 
-            canvas.DrawBitmap(source, sourceRect, destRect, paint);
+            PaintFactory.DrawBitmap(canvas, source, sourceRect, destRect, null, RenderConstants.HighQualitySampling);
 
             return result;
         }

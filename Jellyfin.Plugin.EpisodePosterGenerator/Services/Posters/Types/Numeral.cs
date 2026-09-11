@@ -1,5 +1,4 @@
 using System;
-using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using SkiaSharp;
@@ -27,16 +26,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the Roman numeral and optional episode title centered on the poster.
+        // Renders the Roman numeral filling the safe area, with the optional title centred over it.
         protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
+
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            DrawRomanNumeral(skCanvas, episodeMetadata, settings, safeArea);
+            DrawRomanNumeral(skCanvas, episodeMetadata, settings, safeArea, height);
 
             if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
             {
-                DrawEpisodeTitle(skCanvas, episodeMetadata.EpisodeName, settings, width, height, safeArea);
+                using var titleStyle = CreateTitleStyle(settings, height);
+                DrawTitleInSlot(skCanvas, episodeMetadata.EpisodeName, titleStyle, safeArea, safeArea.MidX, safeArea.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -48,115 +51,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawRomanNumeral
-        // Draws the episode number as a Roman numeral centered in the safe area.
-        private void DrawRomanNumeral(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, SKRect area)
+        // Draws the episode number as a Roman numeral sized to fill, and centred on its ink in, the area.
+        private static void DrawRomanNumeral(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, SKRect area, int height)
         {
             var numeralText = NumberUtils.NumberToRomanNumeral(episodeMetadata.EpisodeNumberStart ?? 0);
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveEpisodeFontPath, config.EpisodeFontFamily, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
 
             float fontSize = FontUtils.CalculateOptimalFontSize(numeralText, typeface, area.Width, area.Height);
 
-            using var numeralPaint = new SKPaint
-            {
-                Color = ColorUtils.ParseHexColor(config.EpisodeFontColor),
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                TextSize = fontSize,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center
-            };
+            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, height);
 
-            using var shadowPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(180),
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                TextSize = fontSize,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center,
-                MaskFilter = PaintFactory.ShadowBlur
-            };
-
-            float centerX = area.MidX;
-            var bounds = FontUtils.MeasureTextDimensions(numeralText, typeface, fontSize);
-            float centerY = area.MidY + (bounds.Height / 2f);
-
-            canvas.DrawText(numeralText, centerX + 2, centerY + 2, shadowPaint);
-            canvas.DrawText(numeralText, centerX, centerY, numeralPaint);
-        }
-
-        // DrawEpisodeTitle
-        // Draws the episode title centered and overlapping the Roman numeral.
-        private void DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int width, int height, SKRect safeArea)
-        {
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.TitleFontSize, height);
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
-
-            using var titlePaint = new SKPaint
-            {
-                Color = ColorUtils.ParseHexColor(config.TitleFontColor),
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center
-            };
-
-            using var shadowPaint = new SKPaint
-            {
-                Color = SKColors.Black.WithAlpha(180),
-                TextSize = fontSize,
-                IsAntialias = true,
-                SubpixelText = true,
-                LcdRenderText = true,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center,
-                MaskFilter = PaintFactory.ShadowBlur
-            };
-
-            var availableWidth = safeArea.Width * 0.9f;
-            var lines = TextUtils.FitTitleLines(title, titlePaint, availableWidth, config.LongTitleHandling);
-            if (lines.Count == 0)
-                return;
-
-            var lineHeight = fontSize * 1.2f;
-            var totalHeight = (lines.Count - 1) * lineHeight + fontSize;
-            var centerX = safeArea.MidX;
-
-            var startY = safeArea.MidY - (totalHeight / 2f) + fontSize;
-
-            for (int i = 0; i < lines.Count; i++)
-            {
-                var lineY = startY + (i * lineHeight);
-                canvas.DrawText(lines[i], centerX + 2, lineY + 2, shadowPaint);
-                canvas.DrawText(lines[i], centerX, lineY, titlePaint);
-            }
-        }
-
-        // CalculateTitleHeight
-        // Calculates the total height needed for the episode title text.
-        private float CalculateTitleHeight(string title, PosterSettings config, int height, SKRect safeArea)
-        {
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.TitleFontSize, height);
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
-
-            using var paint = new SKPaint
-            {
-                TextSize = fontSize,
-                Typeface = typeface,
-                TextAlign = SKTextAlign.Center,
-                SubpixelText = true,
-                LcdRenderText = true
-            };
-
-            var availableWidth = safeArea.Width * 0.9f;
-            var lines = TextUtils.FitTextToWidth(title, paint, availableWidth);
-            var lineHeight = fontSize * 1.2f;
-
-            return (lines.Count - 1) * lineHeight + fontSize;
+            var bounds = style.MeasureBounds(numeralText);
+            style.Draw(canvas, numeralText, area.MidX, area.MidY - bounds.MidY);
         }
     }
 }

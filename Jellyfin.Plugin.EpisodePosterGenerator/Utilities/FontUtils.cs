@@ -143,18 +143,11 @@ public static class FontUtils
     }
 
     // MeasureTextDimensions
-    // Measures the bounding rectangle dimensions of the specified text.
+    // Measures the tight glyph bounding box of the specified text.
     public static SKRect MeasureTextDimensions(string text, SKTypeface typeface, float fontSize)
     {
-        using var paint = new SKPaint
-        {
-            Typeface = typeface,
-            TextSize = fontSize,
-            IsAntialias = true
-        };
-
-        var bounds = new SKRect();
-        paint.MeasureText(text, ref bounds);
+        using var font = PaintFactory.CreateFont(typeface, fontSize);
+        font.MeasureText(text, out SKRect bounds);
         return bounds;
     }
 

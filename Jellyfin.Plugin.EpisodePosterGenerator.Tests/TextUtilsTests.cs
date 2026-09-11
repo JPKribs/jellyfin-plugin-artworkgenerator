@@ -34,15 +34,15 @@ public class TextUtilsTests
     [Fact]
     public void FitAbbreviation_DropsMiddleInitialsThenGivesUp()
     {
-        using var paint = new SkiaSharp.SKPaint { TextSize = 20 };
+        using var font = new SKFont(SKTypeface.Default, 20f);
 
         var full = "T.P.T.B.F. - A.F.M.";
-        Assert.Equal(full, TextUtils.FitAbbreviation(full, paint, paint.MeasureText(full)));
+        Assert.Equal(full, TextUtils.FitAbbreviation(full, font, font.MeasureText(full)));
 
-        var reduced = TextUtils.FitAbbreviation(full, paint, paint.MeasureText("T.M."));
+        var reduced = TextUtils.FitAbbreviation(full, font, font.MeasureText("T.M."));
         Assert.Equal("T.M.", reduced);
 
-        Assert.Null(TextUtils.FitAbbreviation(full, paint, 1f));
+        Assert.Null(TextUtils.FitAbbreviation(full, font, 1f));
     }
 
     [Theory]
@@ -65,30 +65,30 @@ public class TextUtilsTests
     [Fact]
     public void FitTitleLines_RespectsTheHeightItIsGiven()
     {
-        using var paint = new SKPaint { TextSize = 20f };
+        using var font = new SKFont(SKTypeface.Default, 20f);
         const string longTitle = "A Fairly Long Episode Title That Wraps";
 
-        var twoLines = TextUtils.FitTitleLines(longTitle, paint, 150f, LongTitleHandling.Ellipsis);
+        var twoLines = TextUtils.FitTitleLines(longTitle, font, 150f, LongTitleHandling.Ellipsis);
         Assert.True(twoLines.Count > 1, "precondition: this title should wrap at that width");
 
         // Room for one line only.
-        var oneLine = TextUtils.FitTitleLines(longTitle, paint, 150f, 24f, 24f, LongTitleHandling.Ellipsis);
+        var oneLine = TextUtils.FitTitleLines(longTitle, font, 150f, 24f, 24f, LongTitleHandling.Ellipsis);
         Assert.Single(oneLine);
 
         // Room for two.
-        var fits = TextUtils.FitTitleLines(longTitle, paint, 150f, 60f, 24f, LongTitleHandling.Ellipsis);
+        var fits = TextUtils.FitTitleLines(longTitle, font, 150f, 60f, 24f, LongTitleHandling.Ellipsis);
         Assert.Equal(twoLines.Count, fits.Count);
     }
 
     [Fact]
     public void FitTitleLines_HeightAware_NeverExceedsTheAllowedLineCount()
     {
-        using var paint = new SKPaint { TextSize = 20f };
+        using var font = new SKFont(SKTypeface.Default, 20f);
         const string longTitle = "An Extremely Long Episode Title That Will Wrap Several Times Over";
 
         foreach (var handling in new[] { LongTitleHandling.Ellipsis, LongTitleHandling.Abbreviate, LongTitleHandling.DropName })
         {
-            var lines = TextUtils.FitTitleLines(longTitle, paint, 120f, 24f, 24f, handling);
+            var lines = TextUtils.FitTitleLines(longTitle, font, 120f, 24f, 24f, handling);
             Assert.True(lines.Count <= 1, $"{handling} returned {lines.Count} lines for a one line slot");
         }
     }
@@ -96,35 +96,89 @@ public class TextUtilsTests
     [Fact]
     public void FitTitleLines_HeightAware_IsAPassThroughWhenHeightIsUnconstrained()
     {
-        using var paint = new SKPaint { TextSize = 20f };
+        using var font = new SKFont(SKTypeface.Default, 20f);
         const string title = "Short Title";
 
-        var plain = TextUtils.FitTitleLines(title, paint, 500f, LongTitleHandling.Ellipsis);
-        var sized = TextUtils.FitTitleLines(title, paint, 500f, 0f, 0f, LongTitleHandling.Ellipsis);
+        var plain = TextUtils.FitTitleLines(title, font, 500f, LongTitleHandling.Ellipsis);
+        var sized = TextUtils.FitTitleLines(title, font, 500f, 0f, 0f, LongTitleHandling.Ellipsis);
 
         Assert.Equal(plain, sized);
     }
 
     /// <summary>
-    /// A run of n lines occupies fontSize + (n-1) * lineHeight. Dividing the block height by
-    /// lineHeight undercounts, which silently collapsed two line titles down to one.
+    /// A run of n lines occupies one line box (ascent plus descent) plus (n-1) line heights,
+    /// which is exactly how <see cref="TextStyle.BlockHeight"/> reserves it. A zone sized that
+    /// way must admit that many lines, and one line height less must admit one fewer.
     /// </summary>
     [Theory]
-    [InlineData(1.0f, 1)]    // room for exactly one line
-    [InlineData(2.2f, 2)]    // the styles' fixed "two line" reservation
-    [InlineData(3.4f, 3)]
-    public void FitTitleLines_CountsLinesTheWayTheStylesDrawThem(float zoneInFontSizes, int expectedMaxLines)
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void FitTitleLines_CountsLinesTheWayTheStylesDrawThem(int lineCount)
     {
-        using var paint = new SKPaint { TextSize = 20f };
-        var fontSize = paint.TextSize;
-        var lineHeight = fontSize * 1.2f;
+        using var style = PaintFactory.CreateTextStyle(SKColors.White, 20f, SKTypeface.Default, 1080f);
         const string longTitle = "One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve";
 
-        var lines = TextUtils.FitTitleLines(
-            longTitle, paint, 90f, fontSize * zoneInFontSizes, lineHeight, LongTitleHandling.Ellipsis);
+        var zone = style.BlockHeight(lineCount);
+        var lines = TextUtils.FitTitleLines(longTitle, style.Font, 90f, zone, style.LineHeight, LongTitleHandling.Ellipsis);
+        Assert.True(lines.Count <= lineCount, $"a {lineCount} line zone produced {lines.Count} lines");
 
-        Assert.True(
-            lines.Count <= expectedMaxLines,
-            $"zone of {zoneInFontSizes}x fontSize produced {lines.Count} lines, expected at most {expectedMaxLines}");
+        if (lineCount > 1)
+        {
+            var smaller = TextUtils.FitTitleLines(longTitle, style.Font, 90f, zone - style.LineHeight, style.LineHeight, LongTitleHandling.Ellipsis);
+            Assert.True(smaller.Count <= lineCount - 1, $"a {lineCount - 1} line zone produced {smaller.Count} lines");
+        }
+    }
+
+    /// <summary>
+    /// When a title cannot fit two whole lines, the first line is packed with whole words and
+    /// only the last line is trimmed. Splitting evenly and trimming both halves produced
+    /// "The One Where Ev… / Out What Happen…", cut in the middle of the thought.
+    /// </summary>
+    [Fact]
+    public void FitTextToWidth_TrimsOnlyTheLastLine()
+    {
+        using var font = new SKFont(SKTypeface.Default, 20f);
+        const string title = "The One Where Everybody Finds Out What Happened at the Wedding and Then Some";
+
+        var maxWidth = font.MeasureText("The One Where Everybody Finds") + 1f;
+        var lines = TextUtils.FitTextToWidth(title, font, maxWidth);
+
+        Assert.Equal(2, lines.Count);
+        Assert.Equal("The One Where Everybody Finds", lines[0]);
+        Assert.StartsWith("Out What", lines[1], System.StringComparison.Ordinal);
+        Assert.True(lines[1].EndsWith('…') || lines[1].EndsWith("...", System.StringComparison.Ordinal));
+        Assert.True(font.MeasureText(lines[1]) <= maxWidth);
+    }
+
+    /// <summary>
+    /// The trim lands after a whole word when that keeps a reasonable share of the line.
+    /// </summary>
+    [Fact]
+    public void TruncateWithEllipsis_PrefersAWordBoundary()
+    {
+        using var font = new SKFont(SKTypeface.Default, 20f);
+        const string text = "Everybody Finds Out What Happened";
+
+        var maxWidth = font.MeasureText("Everybody Finds Out Wha");
+        var trimmed = TextUtils.TruncateWithEllipsis(text, font, maxWidth);
+
+        Assert.StartsWith("Everybody Finds Out", trimmed, System.StringComparison.Ordinal);
+        Assert.DoesNotContain("Wha", trimmed, System.StringComparison.Ordinal);
+        Assert.True(font.MeasureText(trimmed) <= maxWidth);
+    }
+
+    [Fact]
+    public void TruncateWithEllipsis_CutsASingleLongWordByCharacter()
+    {
+        using var font = new SKFont(SKTypeface.Default, 20f);
+        const string text = "Supercalifragilisticexpialidocious";
+
+        var maxWidth = font.MeasureText("Supercalifrag");
+        var trimmed = TextUtils.TruncateWithEllipsis(text, font, maxWidth);
+
+        Assert.StartsWith("Super", trimmed, System.StringComparison.Ordinal);
+        Assert.True(trimmed.Length < text.Length);
+        Assert.True(font.MeasureText(trimmed) <= maxWidth);
     }
 }

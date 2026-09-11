@@ -17,9 +17,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Episode text on a frosted glass panel that blurs the image behind it.";
 
-        private const string EpisodeBlock = "episode";
-        private const string TitleBlock = "title";
-
         private readonly ILogger<FrostedGlassPosterGenerator> _logger;
 
         // The base canvas bitmap, captured during the canvas layer so the typography layer
@@ -43,22 +40,21 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the frosted panel with episode info and title centered inside it.
+        // Renders the frosted panel with episode info and title centered inside it. The text
+        // carries no drop shadow: the panel supplies the contrast.
         protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
         {
+            ArgumentNullException.ThrowIfNull(skCanvas);
+            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(settings);
+
             if (!settings.ShowTitle && !settings.ShowEpisode)
                 return;
 
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            // Measure the panel content: optional episode code line above optional title lines.
-            var titleFontSize = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, height);
-            var titleTypeface = FontUtils.ResolveTypeface(settings.EffectiveTitleFontPath, settings.TitleFontFamily, FontUtils.GetFontStyle(settings.TitleFontStyle));
-            var episodeFontSize = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
-            var episodeTypeface = FontUtils.ResolveTypeface(settings.EffectiveEpisodeFontPath, settings.EpisodeFontFamily, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
-
-            using var titlePaint = PaintFactory.CreateTextPaint(ColorUtils.ParseHexColor(settings.TitleFontColor), titleFontSize, titleTypeface);
-            using var episodePaint = PaintFactory.CreateTextPaint(ColorUtils.ParseHexColor(settings.EpisodeFontColor), episodeFontSize, episodeTypeface);
+            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Center, withShadow: false);
+            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Center, withShadow: false);
 
             float padX = width * 0.04f;
             float padY = height * 0.03f;
@@ -67,7 +63,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var titleLines = new List<string>();
             if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
             {
-                titleLines.AddRange(TextUtils.FitTitleLines(episodeMetadata.EpisodeName, titlePaint, maxTextWidth, settings.LongTitleHandling));
+                titleLines.AddRange(TextUtils.FitTitleLines(episodeMetadata.EpisodeName, titleStyle.Font, maxTextWidth, settings.LongTitleHandling));
             }
 
             string? episodeText = null;
@@ -81,24 +77,21 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             if (titleLines.Count == 0 && episodeText == null)
                 return;
 
-            float titleLineHeight = titleFontSize * RenderConstants.LineHeightMultiplier;
             float spacing = GetElementSpacing(settings, height);
 
             // The panel is sized from the same column that positions its contents, so the box can
             // never be measured from one set of numbers and filled from another.
             var content = new LayoutColumn(SKRect.Create(safeArea.Left, 0, safeArea.Width, 0), spacing, LayoutAnchor.Top)
-                .Add(EpisodeBlock, episodeText != null ? episodeFontSize : 0f)
-                .Add(TitleBlock, titleLines.Count > 0
-                    ? ((titleLines.Count - 1) * titleLineHeight) + titleFontSize
-                    : 0f);
+                .Add(EpisodeBlock, episodeText != null ? episodeStyle.LineBox : 0f)
+                .Add(TitleBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
 
             float contentHeight = content.Consumed;
 
             float contentWidth = 0;
             if (episodeText != null)
-                contentWidth = Math.Max(contentWidth, episodePaint.MeasureText(episodeText));
+                contentWidth = Math.Max(contentWidth, episodeStyle.MeasureWidth(episodeText));
             foreach (var line in titleLines)
-                contentWidth = Math.Max(contentWidth, titlePaint.MeasureText(line));
+                contentWidth = Math.Max(contentWidth, titleStyle.MeasureWidth(line));
 
             float panelWidth = Math.Min(safeArea.Width, contentWidth + (2 * padX));
             float panelHeight = contentHeight + (2 * padY);
@@ -110,29 +103,21 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             DrawFrostedPanel(skCanvas, roundedPanel, episodeMetadata, settings, width, height);
 
-            // Content, centered horizontally, placed from the column measured above.
             var placed = new LayoutColumn(
                 SKRect.Create(panelRect.Left, panelTop + padY, panelRect.Width, contentHeight),
                 spacing,
                 LayoutAnchor.Top)
-                .Add(EpisodeBlock, episodeText != null ? episodeFontSize : 0f)
-                .Add(TitleBlock, titleLines.Count > 0
-                    ? ((titleLines.Count - 1) * titleLineHeight) + titleFontSize
-                    : 0f);
+                .Add(EpisodeBlock, episodeText != null ? episodeStyle.LineBox : 0f)
+                .Add(TitleBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
 
             if (episodeText != null && placed.TryGetSlot(EpisodeBlock, out var episodeSlot))
             {
-                var metrics = episodePaint.FontMetrics;
-                skCanvas.DrawText(episodeText, panelRect.MidX, episodeSlot.Top - metrics.Ascent, episodePaint);
+                episodeStyle.Draw(skCanvas, episodeText, panelRect.MidX, episodeStyle.BaselineAtTop(episodeSlot));
             }
 
             if (placed.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                var metrics = titlePaint.FontMetrics;
-                for (int i = 0; i < titleLines.Count; i++)
-                {
-                    skCanvas.DrawText(titleLines[i], panelRect.MidX, titleSlot.Top + (i * titleLineHeight) - metrics.Ascent, titlePaint);
-                }
+                titleStyle.DrawLines(skCanvas, titleLines, panelRect.MidX, titleStyle.BaselineAtTop(titleSlot));
             }
         }
 
@@ -154,7 +139,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 using var blurPaint = new SKPaint
                 {
                     IsAntialias = true,
-                    FilterQuality = SKFilterQuality.High,
                     ImageFilter = blurFilter
                 };
                 skCanvas.DrawBitmap(_canvasBitmap, 0, 0, blurPaint);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
+using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Model.Entities;
@@ -292,8 +293,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
             var resized = new SKBitmap(newWidth, newHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             using var canvas = new SKCanvas(resized);
-            using var paint = new SKPaint { FilterQuality = SKFilterQuality.Low };
-            canvas.DrawBitmap(source, SKRect.Create(newWidth, newHeight), paint);
+            PaintFactory.DrawBitmap(canvas, source, SKRect.Create(source.Width, source.Height), SKRect.Create(newWidth, newHeight), null, RenderConstants.FastSampling);
 
             return resized;
         }
