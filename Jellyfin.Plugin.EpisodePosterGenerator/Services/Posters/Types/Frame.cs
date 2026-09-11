@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
@@ -16,6 +17,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Image inside a decorative border. Polished gallery look.";
+
+        // The frame is drawn around the title, so the title is always there.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.ShowTitle, PosterSettingState.Required));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
         private const float BorderStrokeReference = 4f;

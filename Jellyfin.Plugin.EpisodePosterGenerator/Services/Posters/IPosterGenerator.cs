@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using SkiaSharp;
@@ -35,6 +36,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Supports
         // Returns true when this style can lay out the given shape.
         bool Supports(ArtworkShape shape);
+
+        // SettingRules
+        // Which settings this style uses, and which it always draws, so the configuration page can
+        // offer exactly the settings that do something.
+        IReadOnlyDictionary<string, PosterSettingState> SettingRules { get; }
     }
 
     public abstract class BasePosterGenerator : IPosterGenerator
@@ -50,6 +56,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // SupportedShapes
         // Every style lays out both shapes unless it says otherwise.
         public virtual ArtworkShapes SupportedShapes => ArtworkShapes.All;
+
+        // SettingRules
+        // A style offers the shared settings and none of the style-specific ones unless it says
+        // otherwise. Overriding this is how a style adds its own settings, or insists on an element
+        // it always draws.
+        public virtual IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.None;
 
         // Supports
         // Returns true when this style can lay out the given shape.

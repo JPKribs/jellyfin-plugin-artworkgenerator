@@ -101,7 +101,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
                     value = g.Style.ToString(),
                     description = g.Description,
                     portrait = g.Supports(ArtworkShape.Portrait),
-                    landscape = g.Supports(ArtworkShape.Landscape)
+                    landscape = g.Supports(ArtworkShape.Landscape),
+                    settings = g.SettingRules.ToDictionary(rule => rule.Key, rule => rule.Value.ToString())
                 });
             return Ok(styles);
         }

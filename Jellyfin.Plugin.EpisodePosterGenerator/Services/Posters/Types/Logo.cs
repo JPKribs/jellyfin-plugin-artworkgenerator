@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
@@ -16,6 +17,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Series logo over the image. Puts branding first.";
+
+        // This style places the series logo, so the logo settings are its own.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.LogoPosition, PosterSettingState.Optional),
+            (PosterSettingRules.LogoAlignment, PosterSettingState.Optional),
+            (PosterSettingRules.LogoHeight, PosterSettingState.Optional));
 
         // The logo is never squeezed below this share of the safe height, however much text is configured.
         private const float MinimumLogoAreaRatio = 0.2f;

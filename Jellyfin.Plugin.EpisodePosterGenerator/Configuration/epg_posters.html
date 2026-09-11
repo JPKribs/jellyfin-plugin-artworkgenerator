@@ -112,7 +112,7 @@
                                 <div id="posterStyleDescription" class="fieldDescription"></div>
                             </div>
 
-                            <div class="cutout-logo-group" id="outlineOptions" data-poster-styles="Cutout,Brush">
+                            <div class="cutout-logo-group" id="outlineOptions">
                                 <div class="checkboxContainer">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkCutoutBorder" data-setting="CutoutBorder" />
@@ -122,7 +122,7 @@
                                 </div>
                             </div>
 
-                            <div class="cutout-logo-group" id="cutoutOptions" data-poster-styles="Cutout">
+                            <div class="cutout-logo-group" id="cutoutOptions">
                                 <div class="inputContainer">
                                     <label for="selectCutoutType">Type:</label>
                                     <select is="emby-select" id="selectCutoutType" data-setting="CutoutType" data-default="Code">
@@ -133,7 +133,7 @@
                                 </div>
                             </div>
 
-                            <div class="cutout-logo-group" id="logoOptions" data-poster-styles="Logo">
+                            <div class="cutout-logo-group" id="logoOptions">
                                 <div class="inputContainer">
                                     <label for="selectLogoAlignment">Logo Alignment:</label>
                                     <select is="emby-select" id="selectLogoAlignment" data-setting="LogoAlignment" data-default="Center">
@@ -443,13 +443,13 @@
                                 </div>
                             </div>
 
-                            <div class="inputContainer" data-hide-for-styles="Cutout,Numeral" data-depends-on="chkShowEpisode">
+                            <div class="inputContainer" data-depends-on="chkShowEpisode">
                                 <label for="txtEpisodeFontSize">Font Size:</label>
                                 <input is="emby-input" type="number" id="txtEpisodeFontSize" min="1.0" max="100.0" data-setting="EpisodeFontSize" data-type="number" />
                                 <div class="fieldDescription">Text size as a percent of the poster's short edge, 1 to 100.</div>
                             </div>
 
-                            <div class="inputContainer" data-hide-for-styles="Cutout" data-depends-on="chkShowEpisode">
+                            <div class="inputContainer" data-depends-on="chkShowEpisode">
                                 <label for="txtEpisodeFontColor">Font Color:</label>
                                 <div class="color-control-group">
                                     <input type="color" id="colorEpisodeFontColor" class="color-picker" />

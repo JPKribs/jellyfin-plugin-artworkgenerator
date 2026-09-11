@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SkiaSharp;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
@@ -15,6 +16,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Brush strokes reveal the image through a flat overlay. Painted, editorial look.";
+
+        // The stroke carries the title and the code, so both are always drawn, and the stroke can
+        // take the same outline the cutout uses.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.CutoutBorder, PosterSettingState.Optional),
+            (PosterSettingRules.ShowTitle, PosterSettingState.Required),
+            (PosterSettingRules.ShowEpisode, PosterSettingState.Required));
 
         // Share of the safe width the text may use. The stroke keep-clear zone is measured from
         // the same figure, so a wrapped title can never run under a stroke edge.

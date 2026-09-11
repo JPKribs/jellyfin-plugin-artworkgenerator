@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Progress bar with the code, position, and optional title. Clean and data driven.";
+
+        // The bar and its labels are the style, so the code line is always drawn.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.ShowEpisode, PosterSettingState.Required));
 
         private const string LabelsBlock = "labels";
         private const string BarBlock = "bar";

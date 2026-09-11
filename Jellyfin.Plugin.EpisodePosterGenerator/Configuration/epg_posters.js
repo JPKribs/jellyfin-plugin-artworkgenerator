@@ -723,6 +723,7 @@ export default function (view) {
 
     var posterStyleDescriptions = {};
     var posterStyleShapes = {};
+    var posterStyleSettings = {};
 
     // Pull each style's description from the generators (Plugins/EpisodePosterGenerator/PosterStyles)
     function loadPosterStyles() {
@@ -734,6 +735,7 @@ export default function (view) {
             (styles || []).forEach(function (s) {
                 posterStyleDescriptions[s.value] = s.description;
                 posterStyleShapes[s.value] = { Portrait: s.portrait !== false, Landscape: s.landscape !== false };
+                posterStyleSettings[s.value] = s.settings || {};
             });
             updateStyleAvailability();
             updateStyleDescription();
@@ -957,13 +959,39 @@ export default function (view) {
     // ── Visibility ──────────────────────────────────────────
 
     // Styles that REQUIRE a given toggle to be on (the style always renders that element).
-    // For these, the checkbox is force-checked and its row hidden — single source of truth,
-    // so the checkbox state and visibility can never disagree. This must run BEFORE the
-    // dependency rules below, which read checkbox state to decide what to show.
-    var forcedToggles = [
-        { checkbox: 'chkShowEpisode', row: 'showEpisodeRow', styles: ['Cutout', 'Numeral', 'Brush', 'Timeline'] },
-        { checkbox: 'chkShowTitle', row: 'showTitleRow', styles: ['Frame', 'Brush'] }
-    ];
+    // Which settings a style uses comes from the server, where each generator declares its own
+    // rules, so a new style needs no change here. A required setting is switched on and its toggle
+    // taken away; a hidden one is a setting the style ignores.
+    function settingState(style, setting) {
+        var rules = posterStyleSettings[style];
+        return (rules && rules[setting]) || 'Optional';
+    }
+
+    // applyStyleRules
+    // Runs before the dependency rules below, which read checkbox state to decide what to show.
+    function applyStyleRules(posterStyle) {
+        view.querySelectorAll('[data-setting]').forEach(function (el) {
+            var state = settingState(posterStyle, el.getAttribute('data-setting'));
+            var container = el.closest('.inputContainer, .checkboxContainer');
+
+            if (el.type === 'checkbox' && state === 'Required') {
+                el.checked = true;
+            }
+
+            if (container) {
+                container.hidden = state !== 'Optional';
+            }
+        });
+
+        // A group whose settings are all gone would otherwise leave an empty box behind.
+        view.querySelectorAll('.cutout-logo-group').forEach(function (group) {
+            var shown = group.querySelectorAll('[data-setting]');
+            var anyVisible = Array.prototype.some.call(shown, function (el) {
+                return settingState(posterStyle, el.getAttribute('data-setting')) === 'Optional';
+            });
+            group.style.display = anyVisible ? 'block' : 'none';
+        });
+    }
 
     function updateVisibility() {
         var posterStyle = view.querySelector('#selectPosterStyle').value;
@@ -976,28 +1004,11 @@ export default function (view) {
             return !allowed || allowed.split(',').includes(canvasSource);
         }
 
-        // Apply forced toggles first so dependency rules see the corrected checkbox state.
-        forcedToggles.forEach(function (rule) {
-            var cb = view.querySelector('#' + rule.checkbox);
-            var row = view.querySelector('#' + rule.row);
-            var forced = rule.styles.includes(posterStyle);
-            if (cb && forced) cb.checked = true;
-            if (row) row.style.display = forced ? 'none' : 'block';
-        });
-
-        // Show/hide elements based on supported poster styles
-        view.querySelectorAll('[data-poster-styles]').forEach(function (el) {
-            el.style.display = el.getAttribute('data-poster-styles').split(',').includes(posterStyle) ? 'block' : 'none';
-        });
+        applyStyleRules(posterStyle);
 
         // Hide elements for specific fill modes
         view.querySelectorAll('[data-hide-for-posterfill]').forEach(function (el) {
             el.style.display = el.getAttribute('data-hide-for-posterfill').split(',').includes(posterFill) ? 'none' : 'block';
-        });
-
-        // Hide elements for specific styles
-        view.querySelectorAll('[data-hide-for-styles]').forEach(function (el) {
-            el.style.display = el.getAttribute('data-hide-for-styles').split(',').includes(posterStyle) ? 'none' : 'block';
         });
 
         // Canvas source dependency (elements with only a canvas constraint)
@@ -1013,8 +1024,9 @@ export default function (view) {
                 return dep && dep.checked;
             });
 
-            var hideForStyles = el.getAttribute('data-hide-for-styles');
-            var hiddenByStyle = hideForStyles && hideForStyles.split(',').includes(posterStyle);
+            // A container the style rules already took away stays away.
+            var hiddenByStyle = el.hidden || (el.querySelector('[data-setting]')
+                && settingState(posterStyle, el.querySelector('[data-setting]').getAttribute('data-setting')) !== 'Optional');
             el.style.display = (met && !hiddenByStyle && canvasOk(el)) ? 'block' : 'none';
         });
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using SkiaSharp;
@@ -15,6 +16,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Large Roman numeral as the focal element. Minimal and distinctive.";
+
+        // The numeral is the poster and is sized to fill it, so it is always drawn and its size
+        // setting would do nothing.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.ShowEpisode, PosterSettingState.Required),
+            (PosterSettingRules.EpisodeFontSize, PosterSettingState.Hidden));
 
         private readonly ILogger<NumeralPosterGenerator> _logger;
 
@@ -36,21 +43,30 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            if (subject.Number.HasValue)
+            // A series has no number, so its name is the focal element and is not drawn twice.
+            if (!subject.Number.HasValue)
             {
-                DrawFocalText(skCanvas, NumberUtils.NumberToRomanNumeral(subject.Number.Value), settings, safeArea, unit);
-            }
-            else if (!string.IsNullOrEmpty(subject.Title))
-            {
-                // Drawn once, as the focal text, rather than again as the overlapping title.
-                DrawFocalText(skCanvas, subject.Title, settings, safeArea, unit);
+                if (!string.IsNullOrEmpty(subject.Title))
+                {
+                    DrawFocalText(skCanvas, subject.Title, settings, safeArea, unit);
+                }
+
                 return;
             }
 
-            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
+            using var titleStyle = CreateTitleStyle(settings, unit);
+            var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
+
+            // The title's zone is reserved before the numeral is sized, so the numeral fills what is
+            // left rather than being drawn across the title.
+            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+                .Add(TitleBlock, showTitle ? titleStyle.BlockHeight(2) : 0f);
+
+            DrawFocalText(skCanvas, NumberUtils.NumberToRomanNumeral(subject.Number.Value), settings, column.Remaining, unit);
+
+            if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                using var titleStyle = CreateTitleStyle(settings, unit);
-                DrawTitleInSlot(skCanvas, subject.Title, titleStyle, safeArea, safeArea.MidX, safeArea.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Title!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 

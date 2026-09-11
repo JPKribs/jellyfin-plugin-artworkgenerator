@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -67,12 +68,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.DemoGenerator
                     var exampleName = Path.GetFileName(templateDir);
                     _logger.LogInformation($"Processing template: {exampleName}");
 
-                    // Generate 10 examples (episodes 1 through 10)
+                    // Ten landscape episodes, then the same design as a portrait series poster,
+                    // since every design now draws both shapes.
                     for (int episodeNumber = 1; episodeNumber <= 10; episodeNumber++)
                     {
                         await GenerateDemoForTemplateAsync(templateFile, templateDir!, episodeNumber);
-                        _logger.LogInformation($"  ✓ Generated example{episodeNumber}.png");
+                        _logger.LogInformation($"  ✓ Generated Example{episodeNumber}.png");
                     }
+
+                    await GenerateDemoForTemplateAsync(templateFile, templateDir!, null);
+                    _logger.LogInformation("  ✓ Generated Series.png");
 
                     _logger.LogInformation($"✓ Generated all demos for: {exampleName}");
                 }
@@ -85,7 +90,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.DemoGenerator
             _logger.LogInformation("Demo generation complete!");
         }
 
-        private async Task GenerateDemoForTemplateAsync(string templatePath, string templateDir, int episodeNumber)
+        // GenerateDemoForTemplateAsync
+        // Renders one demo: a landscape episode when given an episode number, and the portrait
+        // series poster when given none.
+        private async Task GenerateDemoForTemplateAsync(string templatePath, string templateDir, int? episodeNumber)
         {
             // Load template with case-insensitive property matching and enum converter
             var templateJson = await File.ReadAllTextAsync(templatePath);
@@ -117,22 +125,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.DemoGenerator
                 VideoHeight = baseImage.Height
             };
 
-            // Set logo for Logo poster styles
-            if (settings.PosterStyle == PosterStyle.Logo)
+            // The series art every style may reach for: the Logo style draws the logo, Split the
+            // poster, and any style can fall back to the backdrop.
+            if (File.Exists(_logoImagePath))
             {
-                if (File.Exists(_logoImagePath))
-                {
-                    videoMetadata.SeriesLogoFilePath = _logoImagePath;
-                }
+                videoMetadata.SeriesLogoFilePath = _logoImagePath;
             }
 
-            // Set series poster for Split poster styles
-            if (settings.PosterStyle == PosterStyle.Split)
+            if (File.Exists(_seriesPosterPath))
             {
-                if (File.Exists(_seriesPosterPath))
-                {
-                    videoMetadata.SeriesPosterFilePath = _seriesPosterPath;
-                }
+                videoMetadata.SeriesPosterFilePath = _seriesPosterPath;
             }
 
             // For example generation WE supply the static graphic: if the template enables a
@@ -146,16 +148,25 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.DemoGenerator
                 }
             }
 
-            // Create mock episode metadata with current episode number
-            var metadata = new ArtworkSubject
-            {
-                EpisodeName = EpisodeName,
-                SeriesName = ShowName,
-                SeasonNumber = SeasonNumber,
-                EpisodeNumberStart = episodeNumber,
-                SeasonEpisodeCount = 10,
-                VideoMetadata = videoMetadata
-            };
+            var metadata = episodeNumber.HasValue
+                ? new ArtworkSubject
+                {
+                    Kind = ArtworkItemKind.Episode,
+                    EpisodeName = EpisodeName,
+                    SeriesName = ShowName,
+                    SeasonNumber = SeasonNumber,
+                    EpisodeNumberStart = episodeNumber.Value,
+                    SeasonEpisodeCount = 10,
+                    VideoMetadata = videoMetadata
+                }
+                : new ArtworkSubject
+                {
+                    Kind = ArtworkItemKind.Series,
+                    SeriesName = ShowName,
+                    VideoMetadata = videoMetadata
+                };
+
+            settings.Shape = episodeNumber.HasValue ? ArtworkShape.Landscape : ArtworkShape.Portrait;
 
             // Render using the shared crop + generate pipeline (the same code path the live
             // preview and runtime use), so demos and previews can never drift apart.
@@ -163,12 +174,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.DemoGenerator
 
             if (imageBytes == null)
             {
-                throw new InvalidOperationException($"Failed to generate poster for episode {episodeNumber}");
+                throw new InvalidOperationException($"Failed to generate poster for {(episodeNumber.HasValue ? "episode " + episodeNumber.Value.ToString(CultureInfo.InvariantCulture) : "the series")}");
             }
 
             // The generator encodes JPEG; the .png extension is kept because every README and
             // docs page already links these filenames.
-            var outputPath = Path.Combine(templateDir, $"Example{episodeNumber}.png");
+            var outputPath = Path.Combine(templateDir, episodeNumber.HasValue ? $"Example{episodeNumber.Value}.png" : "Series.png");
             await File.WriteAllBytesAsync(outputPath, imageBytes).ConfigureAwait(false);
         }
 

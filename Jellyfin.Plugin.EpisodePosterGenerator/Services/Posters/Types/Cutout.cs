@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using SkiaSharp;
@@ -16,10 +18,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Large code cut out of the image. Bold and minimal.";
 
+        // The cutout letters are the poster, so the code or number is always drawn, and its size and
+        // colour come from the cutout itself rather than the text settings.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.CutoutType, PosterSettingState.Optional),
+            (PosterSettingRules.CutoutBorder, PosterSettingState.Optional),
+            (PosterSettingRules.ShowEpisode, PosterSettingState.Required),
+            (PosterSettingRules.EpisodeFontSize, PosterSettingState.Hidden),
+            (PosterSettingRules.EpisodeFontColor, PosterSettingState.Hidden));
+
         // Baseline-to-baseline spacing between stacked cutout words, relative to the font size.
         private const float WordLineSpacing = 1.1f;
 
         // The title never squeezes the cutout below this share of the safe height.
+        // The cutout may shrink this far before the fit gives up. The old floor of 50 was taller
+        // than a narrow portrait area allows, so the letters overflowed instead of shrinking.
+        private const float MinimumCutoutFontSize = 12f;
+
         private const float MinimumCutoutAreaRatio = 0.6f;
 
         private readonly ILogger<CutoutPosterGenerator> _logger;
@@ -174,11 +189,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (words.Length == 1)
             {
-                return FontUtils.CalculateOptimalFontSize(words[0], typeface, maxWidth, maxHeight, 50f);
+                return ClampToWidth(words, typeface, FontUtils.CalculateOptimalFontSize(words[0], typeface, maxWidth, maxHeight, MinimumCutoutFontSize), maxWidth);
             }
 
             float maxFont = maxHeight / (words.Length * WordLineSpacing);
-            float minFont = 30f;
+            float minFont = MinimumCutoutFontSize;
             float low = minFont;
             float high = maxFont;
             float optimal = minFont;
@@ -197,7 +212,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 }
             }
 
-            return optimal;
+            return ClampToWidth(words, typeface, optimal, maxWidth);
+        }
+
+        // ClampToWidth
+        // The fit above measures the glyphs' ink, while the canvas draws them by their advance
+        // width, which is wider. A tall, narrow poster turns that difference into letters that run
+        // past the safe edge, so the size is scaled back by whatever the text really measures.
+        private static float ClampToWidth(string[] words, SKTypeface typeface, float fontSize, float maxWidth)
+        {
+            using var font = PaintFactory.CreateFont(typeface, fontSize);
+            float widest = words.Max(word => font.MeasureText(word));
+
+            return widest > maxWidth && widest > 0f ? fontSize * (maxWidth / widest) : fontSize;
         }
 
         // DoAllWordsFit
