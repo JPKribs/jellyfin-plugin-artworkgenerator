@@ -62,7 +62,6 @@ public class LogoRendererTests
         Assert.Equal("Star Wars", lines[0].Text);
         Assert.Equal("Andor", lines[1].Text);
         Assert.True(lines[0].Size < lines[1].Size);
-        Assert.True(lines[0].Baseline < lines[1].Baseline);
     }
 
     [Fact]

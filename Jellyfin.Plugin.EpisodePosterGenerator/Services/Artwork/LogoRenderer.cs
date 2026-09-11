@@ -25,8 +25,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         // Probe size for measuring. Text metrics scale linearly, so one measurement sizes any layout.
         private const float ProbeSize = 100f;
 
-        // Gap between the large and the small line, as a share of the large line's size.
-        private const float SecondaryGap = 0.12f;
+        // Gap between stacked lines, as a share of the larger line's size. Measured between the
+        // letters themselves, so it is the gap the eye actually sees.
+        private const float LineGap = 0.18f;
 
         // A logo has to read over dark backdrops, and a frame straight from an episode is usually
         // too dark for that once it is cut down to the inside of the letters.
@@ -98,23 +99,22 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         }
 
         // Layout
-        // Sizes and stacks the logo's lines. The large line takes one line or a balanced two-line
-        // split; the small line, when there is one, is a fixed share of the large line's size and
-        // shrinks on its own when it is too wide, rather than shrinking the large line with it.
-        // Baselines are measured from the first line's baseline.
+        // Sizes the logo's lines and puts them in drawing order. The large line takes one line or a
+        // balanced two-line split; the small line, when there is one, is a fixed share of the large
+        // line's size and shrinks on its own when it is too wide, rather than shrinking the large
+        // line with it.
         internal static IReadOnlyList<LogoLine> Layout(LogoLines text, SKTypeface typeface, float maxWidth, float maxHeight, int maxLines, float secondaryScale)
         {
             using var probe = PaintFactory.CreateFont(typeface, ProbeSize);
             var metrics = probe.Metrics;
-            float ascent = -metrics.Ascent / ProbeSize;
-            float descent = metrics.Descent / ProbeSize;
+            float lineBox = (-metrics.Ascent + metrics.Descent) / ProbeSize;
 
             var secondary = string.IsNullOrWhiteSpace(text.Secondary) ? null : text.Secondary;
 
             // The height the small line and its gap add, measured at the probe size.
             float secondaryExtra = secondary == null
                 ? 0f
-                : (SecondaryGap + ((ascent + descent) * secondaryScale)) * ProbeSize;
+                : (LineGap + (lineBox * secondaryScale)) * ProbeSize;
 
             var mainLines = ChooseMainLines(text.Main, probe, maxWidth, maxHeight, maxLines, secondaryExtra, out float size);
 
@@ -129,30 +129,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 }
             }
 
+            // Only the order and the sizes are decided here. The lines are stacked when they are
+            // drawn, from the letters' own outlines.
             var lines = new List<LogoLine>(mainLines.Length + 1);
-            float gap = SecondaryGap * size;
-            float baseline = 0f;
 
             if (secondary != null && text.SecondaryFirst)
             {
-                lines.Add(new LogoLine(secondary, secondarySize, baseline));
-                baseline += (descent * secondarySize) + gap + (ascent * size);
+                lines.Add(new LogoLine(secondary, secondarySize));
             }
 
-            for (int i = 0; i < mainLines.Length; i++)
+            foreach (var main in mainLines)
             {
-                if (i > 0)
-                {
-                    baseline += size * RenderConstants.LineHeightMultiplier;
-                }
-
-                lines.Add(new LogoLine(mainLines[i], size, baseline));
+                lines.Add(new LogoLine(main, size));
             }
 
             if (secondary != null && !text.SecondaryFirst)
             {
-                baseline += (descent * size) + gap + (ascent * secondarySize);
-                lines.Add(new LogoLine(secondary, secondarySize, baseline));
+                lines.Add(new LogoLine(secondary, secondarySize));
             }
 
             return lines;
@@ -222,25 +215,41 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         }
 
         // BuildGlyphs
-        // Turns each line into an outline path, centred on the canvas by its ink rather than its
-        // em box, so capitals sit visually centred instead of low.
+        // Turns each line into an outline path, then stacks and centres the run by the letters' ink
+        // rather than their em boxes. A line of capitals leaves a lot of empty space above its
+        // baseline, which as an em box opens a gap that grows with the font size and sits the whole
+        // run low on the canvas.
         private static List<LogoGlyphs> BuildGlyphs(IReadOnlyList<LogoLine> lines, SKTypeface typeface, int width, int height)
         {
             var glyphs = new List<LogoGlyphs>(lines.Count);
-            var bounds = SKRect.Empty;
 
             foreach (var line in lines)
             {
                 using var font = PaintFactory.CreateFont(typeface, line.Size);
                 float advance = font.MeasureText(line.Text);
-                var path = font.GetTextPath(line.Text, new SKPoint(-advance / 2f, line.Baseline));
-                glyphs.Add(new LogoGlyphs(path, line.Size));
+                glyphs.Add(new LogoGlyphs(font.GetTextPath(line.Text, new SKPoint(-advance / 2f, 0f)), line.Size));
+            }
 
-                var pathBounds = path.Bounds;
-                if (!pathBounds.IsEmpty)
+            var bounds = SKRect.Empty;
+            float inkBottom = 0f;
+
+            for (int i = 0; i < glyphs.Count; i++)
+            {
+                var path = glyphs[i].Path;
+                var ink = path.Bounds;
+                if (ink.IsEmpty)
                 {
-                    bounds = bounds.IsEmpty ? pathBounds : SKRect.Union(bounds, pathBounds);
+                    continue;
                 }
+
+                if (!bounds.IsEmpty)
+                {
+                    path.Offset(0f, inkBottom + (LineGap * Math.Max(glyphs[i - 1].Size, glyphs[i].Size)) - ink.Top);
+                    ink = path.Bounds;
+                }
+
+                inkBottom = ink.Bottom;
+                bounds = bounds.IsEmpty ? ink : SKRect.Union(bounds, ink);
             }
 
             float dx = (width / 2f) - bounds.MidX;
@@ -395,8 +404,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             }
         }
 
-        /// <summary>One line of a logo layout: its text, font size, and baseline.</summary>
-        internal readonly record struct LogoLine(string Text, float Size, float Baseline);
+        /// <summary>One line of a logo layout: its text and font size, in drawing order.</summary>
+        internal readonly record struct LogoLine(string Text, float Size);
 
         // One line's outline path and the font size it was built at, which sizes its stroke and shadow.
         private readonly record struct LogoGlyphs(SKPath Path, float Size);

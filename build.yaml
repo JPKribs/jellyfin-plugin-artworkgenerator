@@ -26,7 +26,13 @@ changelog:
   - Existing designs and series assignments migrate to a default profile automatically
   - Shadows, rules, and the Frame border now scale with the poster, so they read the same on a 4K frame as on a DVD rip instead of turning into a hairline or a slab
   - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
+  - Each poster style declares which settings it uses, so the Designs page offers only the settings that do something
+  - Episodes can have a generated thumb, alongside series and seasons
   fixes:
+  - Numeral drew its title across the numeral instead of above it
+  - Fade gave a series a hairline of vertical text where the episode number would be
+  - A logo's name and its subtitle sat far apart, because the lines were spaced by their em boxes rather than by the letters
+  - The logo colour control offered a swatch even when the colour is sampled from the series artwork; it now shows the opacity it actually controls
   - Frame drew no border at all for an episode without a name, and ignored the Show Title setting
   - Cutout no longer lets a two line title run into the bottom of the cutout letters
   - Split centre-crops the series poster into its panel instead of stretching artwork that is not 2:3

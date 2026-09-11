@@ -180,18 +180,18 @@
                                     <option value="SeriesPoster">Series Poster</option>
                                     <option value="SeriesBackdrop">Series Backdrop</option>
                                 </select>
-                                <div class="fieldDescription">Sample the main color of the series artwork, lifted to stay legible, or use the color below.</div>
+                                <div class="fieldDescription">Sample the main color of the series artwork, lifted to stay legible, or use a color you pick.</div>
                             </div>
 
                             <div class="inputContainer" data-hide-for-fill="Photo">
-                                <label for="txtLogoColor">Text Color:</label>
+                                <label for="txtLogoColor" class="color-control-label" data-color-label="Text Color:" data-opacity-label="Text Opacity:">Text Color:</label>
                                 <div class="color-control-group">
                                     <input type="color" id="colorLogoColor" class="color-picker" />
                                     <input type="range" id="alphaLogoColor" class="alpha-slider" min="0" max="255" value="255" />
                                     <span class="alpha-label">255</span>
                                     <input is="emby-input" type="text" id="txtLogoColor" placeholder="#FFFFFFFF" data-setting="Color" class="hex-input" />
                                 </div>
-                                <div id="descLogoColor" class="fieldDescription">ARGB hex color for the text. When sampling, this is the fallback and its opacity still applies.</div>
+                                <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn, 0 to 255. The color itself comes from the series artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
                             </div>
 
                             <div class="checkboxContainer">

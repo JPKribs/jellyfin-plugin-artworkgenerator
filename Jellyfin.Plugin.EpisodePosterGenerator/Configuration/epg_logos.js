@@ -381,6 +381,22 @@ export default function (view) {
         var twoSizes = mode === 'TitleLarge' || mode === 'SubtitleLarge';
         view.querySelector('#secondarySizeContainer').style.display = twoSizes ? 'block' : 'none';
 
+        // Sampling takes the colour from the artwork, so leaving a swatch on screen would imply the
+        // chosen colour still paints the text. The control collapses to the opacity it does control.
+        var sampling = view.querySelector('#selectColorSource').value !== 'Fixed';
+        var group = view.querySelector('#txtLogoColor').closest('.color-control-group');
+        if (group) group.classList.toggle('palette-derived', sampling);
+
+        var colorLabel = view.querySelector('label[for="txtLogoColor"]');
+        if (colorLabel) {
+            colorLabel.textContent = colorLabel.getAttribute(sampling ? 'data-opacity-label' : 'data-color-label');
+        }
+
+        var colorDesc = view.querySelector('#descLogoColor');
+        if (colorDesc) {
+            colorDesc.textContent = colorDesc.getAttribute(sampling ? 'data-opacity-desc' : 'data-color-desc');
+        }
+
         // A frame fill has no colour to pick, so the colour controls step aside for it.
         var fill = view.querySelector('#selectLogoFill').value;
         view.querySelectorAll('[data-hide-for-fill]').forEach(function (el) {

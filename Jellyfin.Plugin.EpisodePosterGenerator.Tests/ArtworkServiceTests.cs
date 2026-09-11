@@ -86,7 +86,8 @@ public class ArtworkServiceTests
     {
         Assert.True(ArtworkProfile.IsSupported(ArtworkItemKind.Series, ArtworkSlot.Logo));
         Assert.False(ArtworkProfile.IsSupported(ArtworkItemKind.Season, ArtworkSlot.Logo));
-        Assert.False(ArtworkProfile.IsSupported(ArtworkItemKind.Episode, ArtworkSlot.Thumb));
+        Assert.True(ArtworkProfile.IsSupported(ArtworkItemKind.Episode, ArtworkSlot.Thumb));
+        Assert.False(ArtworkProfile.IsSupported(ArtworkItemKind.Episode, ArtworkSlot.Logo));
     }
 
     [Fact]
@@ -97,5 +98,6 @@ public class ArtworkServiceTests
         Assert.Equal(ArtworkShape.Portrait, profile.GetShape(ArtworkItemKind.Series, ArtworkSlot.Primary));
         Assert.Equal(ArtworkShape.Landscape, profile.GetShape(ArtworkItemKind.Series, ArtworkSlot.Thumb));
         Assert.Equal(ArtworkShape.Landscape, profile.GetShape(ArtworkItemKind.Episode, ArtworkSlot.Primary));
+        Assert.Equal(ArtworkShape.Landscape, profile.GetShape(ArtworkItemKind.Episode, ArtworkSlot.Thumb));
     }
 }

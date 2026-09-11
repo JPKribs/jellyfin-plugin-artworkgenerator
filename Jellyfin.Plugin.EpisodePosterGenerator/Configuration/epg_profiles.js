@@ -26,11 +26,11 @@ export default function (view) {
     var SLOTS = ['Primary', 'Thumb', 'Logo', 'Backdrop'];
 
     // Mirrors ArtworkProfile.SupportedSlots on the server: Jellyfin clients never show logos for
-    // seasons or episodes, or thumbs for episodes, so those cells are not offered.
+    // seasons or episodes, so those cells are not offered.
     var SUPPORTED = {
         Series: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
         Season: ['Primary', 'Thumb', 'Backdrop'],
-        Episode: ['Primary', 'Backdrop']
+        Episode: ['Primary', 'Thumb', 'Backdrop']
     };
 
     function getTabs() {

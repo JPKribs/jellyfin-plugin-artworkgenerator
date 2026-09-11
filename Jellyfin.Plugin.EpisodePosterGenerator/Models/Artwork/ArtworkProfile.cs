@@ -25,6 +25,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             (ArtworkItemKind.Season, ArtworkSlot.Thumb),
             (ArtworkItemKind.Season, ArtworkSlot.Backdrop),
             (ArtworkItemKind.Episode, ArtworkSlot.Primary),
+            (ArtworkItemKind.Episode, ArtworkSlot.Thumb),
             (ArtworkItemKind.Episode, ArtworkSlot.Backdrop)
         };
 
@@ -39,7 +40,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         /// <summary>
         /// Gets every item kind and slot pairing the plugin can fill. Jellyfin clients do not show
-        /// logos for seasons or episodes, or thumbs for episodes, so those are not offered.
+        /// logos for seasons or episodes, so those are not offered.
         /// </summary>
         public static IReadOnlyList<(ArtworkItemKind Kind, ArtworkSlot Slot)> SupportedSlots => Supported;
 

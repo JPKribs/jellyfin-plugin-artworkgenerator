@@ -14,7 +14,7 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 * **Assigned Series**: the series that use the active profile. A series belongs to one profile at a time.
 * **Images**: one row each for series, seasons, and episodes. Tick an image to generate it whenever an item is missing one.
   * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series and seasons default to portrait and episodes to landscape. Any design can draw either shape.
-  * **Thumb**: a landscape poster for series and seasons.
+  * **Thumb**: a landscape image, offered for series, seasons, and episodes. An episode thumb is what many clients show in the next-up and resume rows.
   * **Logo**: a transparent text logo for series, drawn with a logo design.
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
 * **Backdrops**: aspect ratio, letterbox detection, HDR brightening, and extraction window for backdrop frames.
