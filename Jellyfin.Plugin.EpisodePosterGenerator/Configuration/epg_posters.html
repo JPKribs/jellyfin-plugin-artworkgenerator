@@ -43,20 +43,32 @@
                         <div class="jpk-section-content">
                             <div class="poster-preview-layout">
                                 <div class="poster-preview-main">
-                                    <div id="posterPreviewFrame" class="poster-preview-frame" title="Click to enlarge">
-                                        <img id="posterPreviewImage" class="poster-preview-image" alt="Live poster preview" />
-                                        <div id="posterPreviewStatus" class="poster-preview-status">Loading preview…</div>
+                                    <div class="poster-preview-pair">
+                                        <div class="poster-preview-shape">
+                                            <div id="posterPreviewFrameLandscape" class="poster-preview-frame" data-shape="Landscape" title="Click to enlarge">
+                                                <img id="posterPreviewImageLandscape" class="poster-preview-image" alt="Landscape preview" />
+                                                <div id="posterPreviewStatusLandscape" class="poster-preview-status">Loading preview…</div>
+                                            </div>
+                                            <div class="poster-preview-shape-label">Landscape</div>
+                                        </div>
+                                        <div class="poster-preview-shape">
+                                            <div id="posterPreviewFramePortrait" class="poster-preview-frame portrait" data-shape="Portrait" title="Click to enlarge">
+                                                <img id="posterPreviewImagePortrait" class="poster-preview-image" alt="Portrait preview" />
+                                                <div id="posterPreviewStatusPortrait" class="poster-preview-status">Loading preview…</div>
+                                            </div>
+                                            <div class="poster-preview-shape-label">Portrait</div>
+                                        </div>
                                     </div>
-                                    <div class="poster-preview-caption">Rendered from sample artwork. Updates live as you change settings.</div>
+                                    <div class="poster-preview-caption">Rendered from sample artwork. Every design draws both shapes, and a profile picks the one each image needs.</div>
+                                    <div id="posterShapeNote" class="poster-preview-note"></div>
                                     <div class="inputContainer poster-preview-kind">
                                         <label for="selectPreviewKind">Preview As:</label>
                                         <select is="emby-select" id="selectPreviewKind">
-                                            <option value="">Automatic</option>
-                                            <option value="Episode">Episode</option>
-                                            <option value="Season">Season</option>
                                             <option value="Series">Series</option>
+                                            <option value="Season">Season</option>
+                                            <option value="Episode">Episode</option>
                                         </select>
-                                        <div class="fieldDescription">Which kind of item the preview shows. Automatic uses a season for portrait designs and an episode for landscape ones.</div>
+                                        <div class="fieldDescription">Which kind of item the previews show. An episode shows its own name and code; a season or series shows the show's name.</div>
                                     </div>
                                 </div>
                                 <div class="poster-preview-components">
@@ -81,15 +93,6 @@
                     <div class="jpk-section">
                         <div class="jpk-section-title">Poster</div>
                         <div id="posterContent" class="jpk-section-content">
-
-                            <div class="inputContainer">
-                                <label for="selectShape">Shape:</label>
-                                <select is="emby-select" id="selectShape" data-setting="Shape" data-default="Landscape">
-                                    <option value="Landscape">Landscape</option>
-                                    <option value="Portrait">Portrait</option>
-                                </select>
-                                <div class="fieldDescription">The shape this design is laid out for. Profiles offer portrait designs for series and season posters, and landscape designs for episodes and thumbs.</div>
-                            </div>
 
                             <div class="inputContainer">
                                 <label for="selectPosterStyle">Style:</label>
@@ -223,13 +226,25 @@
                                     <option value="Fill">Fill</option>
                                     <option value="Fit">Fit</option>
                                 </select>
-                                <div class="fieldDescription">How the source image should be resized to fit the poster dimensions.</div>
+                                <div class="fieldDescription">How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.</div>
                             </div>
 
                             <div class="inputContainer nested-settings" data-hide-for-posterfill="Original">
-                                <label for="txtPosterDimensionRatio">Aspect Ratio:</label>
+                                <label for="txtPosterDimensionRatio">Landscape Aspect Ratio:</label>
                                 <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
-                                <div class="fieldDescription">Aspect ratio for the poster, such as 16:9.</div>
+                                <div class="fieldDescription">Aspect ratio for landscape images, such as 16:9.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtPortraitDimensionRatio">Portrait Aspect Ratio:</label>
+                                <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
+                                <div class="fieldDescription">Aspect ratio for portrait images, such as 2:3. Used whenever a profile asks this design for a portrait.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtPortraitTextScale">Portrait Text Size (%):</label>
+                                <input is="emby-input" type="number" id="txtPortraitTextScale" min="25" max="200" step="5" data-setting="PortraitTextScale" data-type="number" />
+                                <div class="fieldDescription">Title and number sizes for portrait images, as a percent of the sizes below. Sizes are measured from the short edge, which in portrait is the width, so the same percent reads larger there. Default is 80.</div>
                             </div>
 
                             <div class="inputContainer">

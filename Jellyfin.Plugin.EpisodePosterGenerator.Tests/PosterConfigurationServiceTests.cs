@@ -75,21 +75,47 @@ public class PosterConfigurationServiceTests
     }
 
     [Fact]
-    public void Initialize_AddsPortraitAndLogoDesignsForTheNewSlots()
+    public void Initialize_AddsALogoDesignAndPointsEveryPosterSlotAtTheDefaultDesign()
     {
         var config = LegacyConfig(Guid.NewGuid(), out _);
         Service().Initialize(config);
 
-        var portrait = Assert.Single(config.PosterConfigurations, c => c.Settings.Shape == ArtworkShape.Portrait);
-        Assert.Equal(PosterConfigurationService.DefaultPortraitDesignId, portrait.Id);
-        Assert.Equal("2:3", portrait.Settings.PosterDimensionRatio);
-
+        var design = config.PosterConfigurations.Single(c => c.IsDefault);
         var logo = Assert.Single(config.LogoConfigurations);
         var profile = config.Profiles.Single(p => p.IsDefault);
 
-        Assert.Equal(portrait.Id, profile.GetSlot(ArtworkItemKind.Series, ArtworkSlot.Primary)!.DesignId);
-        Assert.Equal(portrait.Id, profile.GetSlot(ArtworkItemKind.Season, ArtworkSlot.Primary)!.DesignId);
+        Assert.Equal(design.Id, profile.GetSlot(ArtworkItemKind.Series, ArtworkSlot.Primary)!.DesignId);
+        Assert.Equal(design.Id, profile.GetSlot(ArtworkItemKind.Season, ArtworkSlot.Primary)!.DesignId);
+        Assert.Equal(design.Id, profile.GetSlot(ArtworkItemKind.Series, ArtworkSlot.Thumb)!.DesignId);
         Assert.Equal(logo.Id, profile.GetSlot(ArtworkItemKind.Series, ArtworkSlot.Logo)!.DesignId);
+    }
+
+    /// <summary>
+    /// An earlier build created a separate portrait design. Now that every design renders both
+    /// shapes it is dropped, and slots that used it move to the default design.
+    /// </summary>
+    [Fact]
+    public void Initialize_RetiresTheSeparatePortraitDesign()
+    {
+        var config = new PluginConfiguration();
+        var design = new PosterConfiguration { Name = "Default", IsDefault = true };
+        config.PosterConfigurations.Add(design);
+        config.PosterConfigurations.Add(new PosterConfiguration { Id = PosterConfigurationService.DefaultPortraitDesignId, Name = "Default Portrait" });
+
+        var profile = new ArtworkProfile { Name = "Default", IsDefault = true };
+        profile.Slots.Add(new SlotAssignment
+        {
+            Kind = ArtworkItemKind.Series,
+            Slot = ArtworkSlot.Primary,
+            Enabled = true,
+            DesignId = PosterConfigurationService.DefaultPortraitDesignId
+        });
+        config.Profiles.Add(profile);
+
+        Service().Initialize(config);
+
+        Assert.Single(config.PosterConfigurations);
+        Assert.Equal(design.Id, profile.GetSlot(ArtworkItemKind.Series, ArtworkSlot.Primary)!.DesignId);
     }
 
     /// <summary>
@@ -105,7 +131,7 @@ public class PosterConfigurationServiceTests
         service.Initialize(config);
         service.Initialize(config);
 
-        Assert.Equal(3, config.PosterConfigurations.Count);
+        Assert.Equal(2, config.PosterConfigurations.Count);
         Assert.Single(config.LogoConfigurations);
         Assert.Equal(2, config.Profiles.Count);
         Assert.All(config.Profiles, p => Assert.Equal(ArtworkProfile.SupportedSlots.Count, p.Slots.Count));
@@ -129,7 +155,7 @@ public class PosterConfigurationServiceTests
     }
 
     [Fact]
-    public void GetDesignForSlot_FallsBackToTheDefaultForItsShape()
+    public void GetDesignForSlot_FallsBackToTheDefaultDesign()
     {
         var config = LegacyConfig(Guid.NewGuid(), out _);
         var service = Service();
@@ -137,7 +163,6 @@ public class PosterConfigurationServiceTests
 
         var dangling = new SlotAssignment { DesignId = Guid.NewGuid() };
 
-        Assert.Equal(ArtworkShape.Portrait, service.GetDesignForSlot(dangling, ArtworkShape.Portrait).Shape);
-        Assert.Same(config.PosterConfigurations.Single(c => c.IsDefault).Settings, service.GetDesignForSlot(dangling, ArtworkShape.Landscape));
+        Assert.Same(config.PosterConfigurations.Single(c => c.IsDefault).Settings, service.GetDesignForSlot(dangling));
     }
 }

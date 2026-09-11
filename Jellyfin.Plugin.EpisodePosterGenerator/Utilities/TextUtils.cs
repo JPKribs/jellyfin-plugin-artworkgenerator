@@ -13,6 +13,30 @@ public static class TextUtils
     // Divider between title segments: a spaced dash of any kind, or a colon.
     private static readonly Regex SegmentSeparator = new Regex(@"(\s+[-–—]\s+|:\s*)", RegexOptions.Compiled);
 
+    // TrySplitAtSeparator
+    // Splits a name at its first colon or spaced dash into the title and the subtitle, as in
+    // "Star Wars: Andor". False when there is no separator or either side would be empty.
+    public static bool TrySplitAtSeparator(string text, out string title, out string subtitle)
+    {
+        title = string.Empty;
+        subtitle = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var match = SegmentSeparator.Match(text);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        title = text[..match.Index].Trim();
+        subtitle = text[(match.Index + match.Length)..].Trim();
+        return title.Length > 0 && subtitle.Length > 0;
+    }
+
     private const string UnicodeEllipsis = "…";
     private const string AsciiEllipsis = "...";
 

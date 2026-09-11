@@ -13,7 +13,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
     /// </summary>
     public class PosterConfigurationService
     {
-        /// <summary>Id of the portrait design synthesized for configurations that have none.</summary>
+        /// <summary>Id of the separate portrait design an earlier build synthesized. Every design now renders both shapes, so it is retired on load.</summary>
         public static readonly Guid DefaultPortraitDesignId = new("6f1c2a4e-3b7d-4e21-9a55-0c8d7e1f2a01");
 
         /// <summary>Id of the logo design synthesized for configurations that have none.</summary>
@@ -35,7 +35,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
         // Initialize
         // Builds the lookups from the plugin configuration, first filling in anything an older
-        // configuration lacks: a portrait design, a logo design, and profiles.
+        // configuration lacks: a logo design and profiles.
         //
         // Deliberately never writes the configuration back. This runs from the plugin constructor,
         // before anything has established that the file on disk loaded correctly, and saving here
@@ -48,20 +48,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
             MigrateLegacySettings(config);
 
-            var landscape = EnsureDefaultDesign(config);
-            var portrait = EnsurePortraitDesign(config, landscape);
+            var design = EnsureDefaultDesign(config);
+            RetireSynthesizedPortraitDesign(config, design);
             var logo = EnsureLogoDesign(config);
 
-            EnsureProfiles(config, landscape, portrait, logo);
+            EnsureProfiles(config, design, logo);
             foreach (var profile in config.Profiles)
             {
-                EnsureSlots(profile, landscape, portrait, logo);
+                EnsureSlots(profile, design, logo);
             }
 
             var designs = new Dictionary<Guid, PosterSettings>();
-            foreach (var design in config.PosterConfigurations)
+            foreach (var poster in config.PosterConfigurations)
             {
-                designs.TryAdd(design.Id, design.Settings);
+                designs.TryAdd(poster.Id, poster.Settings);
             }
 
             var logos = new Dictionary<Guid, LogoSettings>();
@@ -88,8 +88,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             _snapshot = new Snapshot(
                 designs,
                 logos,
-                landscape.Settings,
-                portrait.Settings,
+                design.Settings,
                 logo.Settings,
                 config.Profiles.First(p => p.IsDefault),
                 bySeries);
@@ -115,19 +114,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         }
 
         /// <summary>
-        /// Returns the poster design a slot points at, or the default design for its shape when the
-        /// design has been deleted. Any design can render at any shape; the fallback only matters
-        /// when the reference is dangling.
+        /// Returns the poster design a slot points at, or the default design when the design has
+        /// been deleted.
         /// </summary>
-        public PosterSettings GetDesignForSlot(SlotAssignment assignment, ArtworkShape shape)
+        public PosterSettings GetDesignForSlot(SlotAssignment assignment)
         {
             var snapshot = _snapshot;
-            if (assignment != null && snapshot.Designs.TryGetValue(assignment.DesignId, out var design))
-            {
-                return design;
-            }
-
-            return shape == ArtworkShape.Portrait ? snapshot.DefaultPortraitDesign : snapshot.DefaultDesign;
+            return assignment != null && snapshot.Designs.TryGetValue(assignment.DesignId, out var design)
+                ? design
+                : snapshot.DefaultDesign;
         }
 
         /// <summary>
@@ -186,36 +181,24 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             return defaults[0];
         }
 
-        // EnsurePortraitDesign
-        // A portrait design for series and season posters, derived from the default design when the
-        // configuration predates portrait support. Text is sized from the poster's short edge, which
-        // for portrait is the width, so the defaults are scaled down to suit the narrower frame.
-        private PosterConfiguration EnsurePortraitDesign(PluginConfiguration config, PosterConfiguration landscape)
+        // RetireSynthesizedPortraitDesign
+        // An earlier build of this version created a separate "Default Portrait" design, before
+        // every design learned to render both shapes. It is dropped in memory and anything that
+        // pointed at it points at the default design instead; the user's next save persists that.
+        private void RetireSynthesizedPortraitDesign(PluginConfiguration config, PosterConfiguration design)
         {
-            var existing = config.PosterConfigurations.FirstOrDefault(c => c.Settings?.Shape == ArtworkShape.Portrait);
-            if (existing != null)
+            var removed = config.PosterConfigurations.RemoveAll(c => c.Id == DefaultPortraitDesignId && !c.IsDefault);
+            if (removed == 0)
             {
-                return existing;
+                return;
             }
 
-            var settings = landscape.Settings.Clone();
-            settings.Shape = ArtworkShape.Portrait;
-            settings.PosterFill = PosterFill.Fit;
-            settings.PosterDimensionRatio = "2:3";
-            settings.TitleFontSize = 8.0f;
-            settings.EpisodeFontSize = 5.0f;
-            settings.GenerateBackdrop = false;
-
-            var created = new PosterConfiguration
+            foreach (var slot in config.Profiles.SelectMany(p => p.Slots).Where(s => s.DesignId == DefaultPortraitDesignId))
             {
-                Id = DefaultPortraitDesignId,
-                Name = "Default Portrait",
-                Settings = settings
-            };
+                slot.DesignId = design.Id;
+            }
 
-            config.PosterConfigurations.Add(created);
-            _logger.LogInformation("No portrait design found, creating one in memory");
-            return created;
+            _logger.LogInformation("Retired the separate portrait design; every design now renders both shapes");
         }
 
         // EnsureLogoDesign
@@ -237,17 +220,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         // the old behaviour for episodes and turns on the new slots with the default designs; every
         // design that had series assigned becomes a profile carrying those series, so each series
         // keeps the episode poster design it had.
-        private void EnsureProfiles(PluginConfiguration config, PosterConfiguration landscape, PosterConfiguration portrait, LogoConfiguration logo)
+        private void EnsureProfiles(PluginConfiguration config, PosterConfiguration design, LogoConfiguration logo)
         {
             if (config.Profiles.Count == 0)
             {
-                config.Profiles.Add(CreateProfile(DefaultProfileId, "Default", true, landscape, landscape, portrait, logo));
+                config.Profiles.Add(CreateProfile(DefaultProfileId, "Default", true, design, design, logo));
 
-                foreach (var design in config.PosterConfigurations.Where(c => !c.IsDefault && c.SeriesIds.Count > 0))
+                foreach (var legacy in config.PosterConfigurations.Where(c => !c.IsDefault && c.SeriesIds.Count > 0))
                 {
-                    var profile = CreateProfile(design.Id, design.Name, false, design, landscape, portrait, logo);
-                    profile.SeriesIds.AddRange(design.SeriesIds);
-                    design.SeriesIds.Clear();
+                    var profile = CreateProfile(legacy.Id, legacy.Name, false, legacy, design, logo);
+                    profile.SeriesIds.AddRange(legacy.SeriesIds);
+                    legacy.SeriesIds.Clear();
                     config.Profiles.Add(profile);
                 }
 
@@ -273,8 +256,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             string name,
             bool isDefault,
             PosterConfiguration episodeDesign,
-            PosterConfiguration landscape,
-            PosterConfiguration portrait,
+            PosterConfiguration design,
             LogoConfiguration logo)
         {
             var source = episodeDesign.Settings;
@@ -294,12 +276,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 }
             };
 
-            Add(profile, ArtworkItemKind.Series, ArtworkSlot.Primary, true, portrait.Id);
-            Add(profile, ArtworkItemKind.Series, ArtworkSlot.Thumb, true, landscape.Id);
+            Add(profile, ArtworkItemKind.Series, ArtworkSlot.Primary, true, design.Id);
+            Add(profile, ArtworkItemKind.Series, ArtworkSlot.Thumb, true, design.Id);
             Add(profile, ArtworkItemKind.Series, ArtworkSlot.Logo, true, logo.Id);
             Add(profile, ArtworkItemKind.Series, ArtworkSlot.Backdrop, true, Guid.Empty);
-            Add(profile, ArtworkItemKind.Season, ArtworkSlot.Primary, true, portrait.Id);
-            Add(profile, ArtworkItemKind.Season, ArtworkSlot.Thumb, true, landscape.Id);
+            Add(profile, ArtworkItemKind.Season, ArtworkSlot.Primary, true, design.Id);
+            Add(profile, ArtworkItemKind.Season, ArtworkSlot.Thumb, true, design.Id);
             Add(profile, ArtworkItemKind.Season, ArtworkSlot.Backdrop, false, Guid.Empty);
             Add(profile, ArtworkItemKind.Episode, ArtworkSlot.Primary, true, episodeDesign.Id);
             Add(profile, ArtworkItemKind.Episode, ArtworkSlot.Backdrop, source.GenerateBackdrop, Guid.Empty);
@@ -310,7 +292,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         // EnsureSlots
         // Adds any cell a profile is missing, switched off, so a profile saved by an older version
         // gains new slots without silently starting to generate them.
-        private static void EnsureSlots(ArtworkProfile profile, PosterConfiguration landscape, PosterConfiguration portrait, LogoConfiguration logo)
+        private static void EnsureSlots(ArtworkProfile profile, PosterConfiguration design, LogoConfiguration logo)
         {
             profile.Backdrop ??= new BackdropSettings();
 
@@ -325,8 +307,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 {
                     ArtworkSlot.Logo => logo.Id,
                     ArtworkSlot.Backdrop => Guid.Empty,
-                    ArtworkSlot.Primary when profile.GetPrimaryShape(kind) == ArtworkShape.Portrait => portrait.Id,
-                    _ => landscape.Id
+                    _ => design.Id
                 };
 
                 Add(profile, kind, slot, false, designId);
@@ -342,7 +323,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             IReadOnlyDictionary<Guid, PosterSettings> Designs,
             IReadOnlyDictionary<Guid, LogoSettings> Logos,
             PosterSettings DefaultDesign,
-            PosterSettings DefaultPortraitDesign,
             LogoSettings DefaultLogo,
             ArtworkProfile DefaultProfile,
             IReadOnlyDictionary<Guid, ArtworkProfile> BySeries)
@@ -351,7 +331,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 new Dictionary<Guid, PosterSettings>(),
                 new Dictionary<Guid, LogoSettings>(),
                 new PosterSettings(),
-                new PosterSettings { Shape = ArtworkShape.Portrait },
                 new LogoSettings(),
                 new ArtworkProfile { IsDefault = true },
                 new Dictionary<Guid, ArtworkProfile>());

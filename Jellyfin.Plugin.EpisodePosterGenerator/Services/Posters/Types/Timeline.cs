@@ -43,6 +43,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
             using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
 
+            // A series has no position to mark, so it gets the title alone rather than a bar that
+            // would mean nothing.
+            var hasProgress = subject.ProgressPosition.HasValue;
             var position = subject.ProgressPosition ?? 0;
             // When the length is unknown the bar renders full rather than guessing.
             var total = subject.ProgressTotal ?? position;
@@ -51,10 +54,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 .Add(TitleBlock, settings.ShowTitle && !string.IsNullOrEmpty(subject.Title)
                     ? titleStyle.BlockHeight(2)
                     : 0f)
-                .Add(LabelsBlock, settings.ShowEpisode ? episodeStyle.LineBox : 0f)
-                .Add(BarBlock, MeasureProgressBar(unit));
+                .Add(LabelsBlock, settings.ShowEpisode && hasProgress ? episodeStyle.LineBox : 0f)
+                .Add(BarBlock, hasProgress ? MeasureProgressBar(unit) : 0f);
 
-            DrawProgressBar(skCanvas, settings, column.Slot(BarBlock), unit, position, total);
+            if (column.TryGetSlot(BarBlock, out var barSlot))
+            {
+                DrawProgressBar(skCanvas, settings, barSlot, unit, position, total);
+            }
 
             if (column.TryGetSlot(LabelsBlock, out var labelsSlot))
             {

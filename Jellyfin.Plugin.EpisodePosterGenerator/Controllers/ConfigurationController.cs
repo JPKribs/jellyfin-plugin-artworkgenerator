@@ -109,10 +109,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
         }
 
         // MARK: Preview
-        // Renders a design against the sample artwork. The item kind decides which text the
-        // preview shows; it defaults to a season for portrait designs and an episode otherwise.
+        // Renders a design against the sample artwork at one shape. Every design renders both
+        // shapes, so the Designs page asks for each. The item kind decides which text is shown.
         [HttpPost("Preview")]
-        public IActionResult GeneratePreview([FromBody] PosterSettings settings, [FromQuery] ArtworkItemKind? kind = null)
+        public IActionResult GeneratePreview(
+            [FromBody] PosterSettings settings,
+            [FromQuery] ArtworkItemKind kind = ArtworkItemKind.Series,
+            [FromQuery] ArtworkShape shape = ArtworkShape.Landscape)
         {
             if (settings == null)
             {
@@ -128,7 +131,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
 
             try
             {
-                var imageBytes = plugin.PreviewService.GeneratePreview(settings, kind);
+                var imageBytes = plugin.PreviewService.GeneratePreview(settings, kind, shape);
                 if (imageBytes == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, "Failed to render preview.");
@@ -144,9 +147,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
         }
 
         // MARK: Preview/Logo
-        // Renders a logo design for the sample series, as a transparent PNG.
+        // Renders a logo design as a transparent PNG, for the sample series or a sample name.
         [HttpPost("Preview/Logo")]
-        public IActionResult GenerateLogoPreview([FromBody] LogoSettings settings)
+        public IActionResult GenerateLogoPreview([FromBody] LogoSettings settings, [FromQuery] string? name = null)
         {
             if (settings == null)
             {
@@ -162,7 +165,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
 
             try
             {
-                var imageBytes = plugin.PreviewService.GenerateLogoPreview(settings);
+                var imageBytes = plugin.PreviewService.GenerateLogoPreview(settings, name?.Length > 200 ? name[..200] : name);
                 if (imageBytes == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, "Failed to render logo preview.");

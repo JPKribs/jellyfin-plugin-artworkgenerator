@@ -59,11 +59,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // GeneratePreview
-        // Renders a design against the demo artwork and returns JPEG bytes, or null on failure. The
-        // design's shape decides the crop; the item kind decides the text.
-        public byte[]? GeneratePreview(PosterSettings settings, ArtworkItemKind? kind = null)
+        // Renders a design against the demo artwork at one shape and returns JPEG bytes, or null on
+        // failure. The shape decides the crop; the item kind decides the text.
+        public byte[]? GeneratePreview(PosterSettings settings, ArtworkItemKind kind = ArtworkItemKind.Series, ArtworkShape shape = ArtworkShape.Landscape)
         {
             ArgumentNullException.ThrowIfNull(settings);
+
+            var shaped = settings.Clone();
+            shaped.Shape = shape;
 
             var assetDir = EnsureAssetsExtracted();
             var basePath = Path.Combine(assetDir, "demo-base.png");
@@ -75,11 +78,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 return null;
             }
 
-            var subject = CreateDemoSubject(kind ?? DefaultKindFor(settings.Shape), assetDir, baseImage.Width, baseImage.Height);
+            var subject = CreateDemoSubject(kind, assetDir, baseImage.Width, baseImage.Height);
 
-            var bytes = settings.CanvasSource == CanvasSource.None
-                ? RenderTransparentPoster(baseImage.Width, baseImage.Height, subject, settings)
-                : RenderPoster(baseImage, subject, settings);
+            var bytes = shaped.CanvasSource == CanvasSource.None
+                ? RenderTransparentPoster(baseImage.Width, baseImage.Height, subject, shaped)
+                : RenderPoster(baseImage, subject, shaped);
 
             if (bytes == null)
             {
@@ -90,14 +93,31 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // GenerateLogoPreview
-        // Renders a logo design for the demo series as PNG bytes.
-        public byte[]? GenerateLogoPreview(LogoSettings settings)
+        // Renders a logo design as PNG bytes, for the demo series or a sample name typed on the
+        // Logos page so subtitle layouts can be tried. A photo fill uses the demo frame.
+        public byte[]? GenerateLogoPreview(LogoSettings settings, string? sampleName = null)
         {
             ArgumentNullException.ThrowIfNull(settings);
 
             var assetDir = EnsureAssetsExtracted();
             var subject = CreateDemoSubject(ArtworkItemKind.Series, assetDir, 1920, 1080);
-            return _logoRenderer.Render(subject, settings);
+
+            if (!string.IsNullOrWhiteSpace(sampleName))
+            {
+                var name = sampleName.Trim();
+                subject.SeriesName = name;
+                subject.OriginalTitle = name;
+                subject.SortTitle = name;
+                subject.FolderName = name + " (2024) [tvdbid-000000]";
+            }
+
+            if (settings.Fill != LogoFill.Photo)
+            {
+                return _logoRenderer.Render(subject, settings);
+            }
+
+            using var photo = SKBitmap.Decode(Path.Combine(assetDir, "demo-base.png"));
+            return _logoRenderer.Render(subject, settings, photo);
         }
 
         // RenderPoster
@@ -137,7 +157,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var adjusted = ArtworkService.ShapeAdjust(settings, settings.Shape);
             if (adjusted.Shape == ArtworkShape.Portrait)
             {
-                width = height * 2 / 3;
+                var ratio = CroppingService.ParseAspectRatio(adjusted.PosterDimensionRatio);
+                width = (int)Math.Round(height * (ratio > 0f && ratio < 1f ? ratio : 2f / 3f));
             }
 
             using var canvas = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -232,13 +253,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         public string GetDemoAssetDirectory()
         {
             return EnsureAssetsExtracted();
-        }
-
-        // DefaultKindFor
-        // Portrait designs are mostly for series and season posters; landscape for episodes.
-        private static ArtworkItemKind DefaultKindFor(ArtworkShape shape)
-        {
-            return shape == ArtworkShape.Portrait ? ArtworkItemKind.Season : ArtworkItemKind.Episode;
         }
 
         // CreateDemoSubject

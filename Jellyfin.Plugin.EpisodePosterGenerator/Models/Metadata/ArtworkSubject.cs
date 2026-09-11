@@ -82,25 +82,25 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         };
 
         /// <summary>
-        /// Gets the compact code: S01E05 for an episode, S01 for a season, the premiere year for a
-        /// series. Empty when there is nothing meaningful to show.
+        /// Gets the compact code: S01E05 for an episode, S01 for a season. A series has none: its
+        /// name is its whole identity, so a series poster carries no season count or year.
         /// </summary>
         public string Code => Kind switch
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatEpisodeCode(SeasonNumber ?? 0, EpisodeNumberStart ?? 0),
             ArtworkItemKind.Season => SeasonNumber.HasValue ? EpisodeCodeUtils.FormatSeasonCode(SeasonNumber.Value) : string.Empty,
-            _ => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty
+            _ => string.Empty
         };
 
         /// <summary>
-        /// Gets the spelled-out identity line: SEASON 1 • EPISODE 5, SEASON 1 (or the season's own
-        /// name), or the number of seasons for a series.
+        /// Gets the spelled-out identity line: SEASON 1 • EPISODE 5, or SEASON 1 (or the season's own
+        /// name). Empty for a series.
         /// </summary>
         public string Label => Kind switch
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatFullText(SeasonNumber ?? 0, EpisodeNumberStart ?? 0, true, true),
             ArtworkItemKind.Season => SeasonLabel,
-            _ => SeriesLabel
+            _ => string.Empty
         };
 
         /// <summary>
@@ -159,27 +159,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             }
         }
 
-        private string SeriesLabel
-        {
-            get
-            {
-                if (SeasonCount is > 0)
-                {
-                    return SeasonCount == 1
-                        ? "1 SEASON"
-                        : string.Format(CultureInfo.InvariantCulture, "{0} SEASONS", SeasonCount.Value);
-                }
-
-                return ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
-            }
-        }
+        /// <summary>
+        /// Gets a value indicating whether a cutout style punches out the title itself. A series has
+        /// no code or number, so its name becomes the cutout and is not drawn a second time.
+        /// </summary>
+        public bool CutoutIsTitle => Kind == ArtworkItemKind.Series;
 
         /// <summary>
-        /// Returns the text a cutout style punches out: the <see cref="Code"/>, or the featured number
-        /// spelled out as a word.
+        /// Returns the text a cutout style punches out: the <see cref="Code"/>, the featured number
+        /// spelled out as a word, or a series' name.
         /// </summary>
         public string CutoutText(CutoutType type)
         {
+            if (CutoutIsTitle)
+            {
+                return (Title ?? string.Empty).ToUpperInvariant();
+            }
+
             if (type == CutoutType.Text && Number.HasValue)
             {
                 return EpisodeCodeUtils.FormatEpisodeText(CutoutType.Text, 0, Number.Value);

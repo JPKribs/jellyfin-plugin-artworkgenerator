@@ -49,6 +49,29 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
             return Clean(raw, settings, fromFolder);
         }
 
+        // Compose
+        // The lines a logo draws: the cleaned name, split at its subtitle when the subtitle mode asks
+        // for it. A name with no colon or spaced dash is always drawn whole.
+        public static LogoLines Compose(ArtworkSubject subject, LogoSettings settings)
+        {
+            var text = Resolve(subject, settings);
+
+            if (settings.SubtitleMode == LogoSubtitleMode.Keep
+                || !TextUtils.TrySplitAtSeparator(text, out var title, out var subtitle))
+            {
+                return new LogoLines(text, null, false);
+            }
+
+            return settings.SubtitleMode switch
+            {
+                LogoSubtitleMode.TitleOnly => new LogoLines(title, null, false),
+                LogoSubtitleMode.SubtitleOnly => new LogoLines(subtitle, null, false),
+                LogoSubtitleMode.TitleLarge => new LogoLines(title, subtitle, false),
+                LogoSubtitleMode.SubtitleLarge => new LogoLines(subtitle, title, true),
+                _ => new LogoLines(text, null, false)
+            };
+        }
+
         // Clean
         // Applies the configured cleanup to a name. Each rule only ever removes text, and if the
         // rules would remove everything the original is kept rather than drawing an empty logo.
@@ -71,11 +94,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
                 {
                     text = TrailingYear.Replace(text, string.Empty);
                 }
-            }
-
-            if (settings.CutAtSeparator)
-            {
-                text = TextUtils.LeftOfSeparator(text) ?? text;
             }
 
             if (!string.IsNullOrWhiteSpace(settings.CustomRegex))
@@ -103,4 +121,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
             return settings.Uppercase ? text.ToUpperInvariant() : text;
         }
     }
+
+    /// <summary>
+    /// The text of a logo: the large main line, and an optional small line drawn above or below it.
+    /// </summary>
+    /// <param name="Main">The large line.</param>
+    /// <param name="Secondary">The small line, or null when the name is drawn whole.</param>
+    /// <param name="SecondaryFirst">Whether the small line sits above the large one.</param>
+    public readonly record struct LogoLines(string Main, string? Secondary, bool SecondaryFirst);
 }

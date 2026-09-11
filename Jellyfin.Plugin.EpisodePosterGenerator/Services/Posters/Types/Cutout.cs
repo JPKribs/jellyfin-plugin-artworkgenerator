@@ -71,7 +71,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (!settings.ShowTitle || string.IsNullOrEmpty(subject.Title))
+            // A series' name is the cutout itself, so it is not drawn again beneath it.
+            if (!settings.ShowTitle || subject.CutoutIsTitle || string.IsNullOrEmpty(subject.Title))
             {
                 return;
             }
@@ -106,9 +107,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // CalculateCutoutArea
         // The area left for the cutout text once the title zone is reserved.
-        private static SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int unit)
+        private static SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int unit, bool reserveTitle)
         {
-            if (!config.ShowTitle)
+            if (!config.ShowTitle || !reserveTitle)
             {
                 return safeArea;
             }
@@ -134,7 +135,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
 
             var safeArea = GetSafeAreaBounds(canvasWidth, canvasHeight, config);
-            var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight));
+            var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight), !subject.CutoutIsTitle);
             var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
             float fontSize = CalculateOptimalCutoutFontSize(words, typeface, cutoutArea);
 

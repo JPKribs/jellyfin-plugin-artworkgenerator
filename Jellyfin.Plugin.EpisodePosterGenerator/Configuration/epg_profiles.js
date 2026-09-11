@@ -276,10 +276,6 @@ export default function (view) {
 
     // ── Designs ─────────────────────────────────────────────
 
-    function designShape(design) {
-        return (design && design.Settings && design.Settings.Shape) || 'Landscape';
-    }
-
     function sortedDesigns() {
         return fullConfig.PosterConfigurations.slice().sort(function (a, b) {
             if (a.IsDefault && !b.IsDefault) return -1;
@@ -292,22 +288,13 @@ export default function (view) {
         return fullConfig.PosterConfigurations.find(function (d) { return sameId(d.Id, id); });
     }
 
-    function designsForShape(shape) {
-        return sortedDesigns().filter(function (d) { return designShape(d) === shape; });
-    }
+    // Every design draws both shapes, so a slot may use any of them.
+    function designOptions(currentId) {
+        var options = sortedDesigns().map(function (d) {
+            return { value: d.Id, text: d.Name || 'Unnamed Design' };
+        });
 
-    // Designs made for the slot's shape, plus the assigned design when it was made for the other
-    // shape (any design can render either shape, so that is a valid, deliberate choice).
-    function designOptions(shape, currentId) {
-        var list = designsForShape(shape);
-        if (list.length === 0) list = sortedDesigns();
-
-        var options = list.map(function (d) { return { value: d.Id, text: d.Name || 'Unnamed Design' }; });
-        var current = findDesign(currentId);
-
-        if (current && !list.some(function (d) { return sameId(d.Id, current.Id); })) {
-            options.push({ value: current.Id, text: (current.Name || 'Unnamed Design') + ' (' + designShape(current).toLowerCase() + ' design)' });
-        } else if (!current && currentId && !sameId(currentId, EMPTY_GUID)) {
+        if (!findDesign(currentId) && currentId && !sameId(currentId, EMPTY_GUID)) {
             options.unshift({ value: currentId, text: 'Deleted design (uses the default)' });
         }
 
@@ -424,16 +411,7 @@ export default function (view) {
 
             shapeSelect.addEventListener('change', function () {
                 profile[k.shapeKey] = shapeSelect.value;
-
-                // Follow the shape with a design made for it, when there is one.
-                var design = findDesign(assignment.DesignId);
-                if (!design || designShape(design) !== shapeSelect.value) {
-                    var match = designsForShape(shapeSelect.value)[0];
-                    if (match) assignment.DesignId = match.Id;
-                }
-
                 checkDirty();
-                renderMatrix();
             });
 
             cell.appendChild(shapeSelect);
@@ -441,8 +419,7 @@ export default function (view) {
         }
 
         if (slot === 'Primary' || slot === 'Thumb') {
-            var designShapeForSlot = slot === 'Thumb' ? 'Landscape' : (profile[k.shapeKey] || k.defaultShape);
-            var options = designOptions(designShapeForSlot, assignment.DesignId);
+            var options = designOptions(assignment.DesignId);
             var designSelect = makeSelect(options, assignment.DesignId, k.label + ' ' + slot.toLowerCase() + ' design');
 
             if (sameId(assignment.DesignId, EMPTY_GUID) && options.length > 0) {

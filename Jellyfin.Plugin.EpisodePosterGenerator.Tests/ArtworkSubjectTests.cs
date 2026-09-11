@@ -70,28 +70,31 @@ public class ArtworkSubjectTests
         Assert.Equal("THE CROWN JEWELS", subject.Label);
     }
 
-    [Theory]
-    [InlineData(3, "3 SEASONS")]
-    [InlineData(1, "1 SEASON")]
-    public void Series_LabelCountsSeasons(int count, string expected)
+    /// <summary>
+    /// A series poster shows only its name: no season count and no year.
+    /// </summary>
+    [Fact]
+    public void Series_ShowsOnlyItsName()
     {
         var subject = Subject(ArtworkItemKind.Series);
-        subject.SeasonCount = count;
+        subject.SeasonCount = 3;
 
         Assert.Equal("The Show", subject.Title);
         Assert.Null(subject.Number);
-        Assert.Equal(expected, subject.Label);
+        Assert.Equal(string.Empty, subject.Label);
+        Assert.Equal(string.Empty, subject.Code);
+        Assert.Null(subject.ProgressPosition);
+        Assert.Empty(subject.NumberParts);
     }
 
     [Fact]
-    public void Series_WithoutSeasonCount_FallsBackToTheYear()
+    public void Series_CutoutPunchesTheName()
     {
         var subject = Subject(ArtworkItemKind.Series);
-        subject.SeasonCount = null;
 
-        Assert.Equal("2024", subject.Label);
-        Assert.Equal("2024", subject.Code);
-        Assert.Null(subject.ProgressPosition);
+        Assert.True(subject.CutoutIsTitle);
+        Assert.Equal("THE SHOW", subject.CutoutText(CutoutType.Code));
+        Assert.False(Subject(ArtworkItemKind.Episode).CutoutIsTitle);
     }
 
     [Fact]
@@ -99,7 +102,6 @@ public class ArtworkSubjectTests
     {
         Assert.Equal("FIVE", Subject(ArtworkItemKind.Episode).CutoutText(CutoutType.Text));
         Assert.Equal("TWO", Subject(ArtworkItemKind.Season).CutoutText(CutoutType.Text));
-        Assert.Equal("2024", Subject(ArtworkItemKind.Series).CutoutText(CutoutType.Text));
         Assert.Equal("S02E05", Subject(ArtworkItemKind.Episode).CutoutText(CutoutType.Code));
     }
 }

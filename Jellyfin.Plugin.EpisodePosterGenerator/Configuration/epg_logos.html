@@ -37,8 +37,13 @@
                                 <img id="logoPreviewImage" class="logo-preview-image" alt="Live logo preview" />
                                 <div id="logoPreviewStatus" class="poster-preview-status">Loading preview…</div>
                             </div>
+                            <div class="inputContainer logo-preview-sample">
+                                <label for="txtSampleName">Sample Name:</label>
+                                <input is="emby-input" type="text" id="txtSampleName" placeholder="Star Wars: Andor" />
+                                <div class="fieldDescription">A name to preview with. It is not saved, so try the names your own shows have.</div>
+                            </div>
                             <div class="poster-preview-caption">
-                                Generated for a sample series. The logo is a transparent image; the checkerboard shows where it is see-through.
+                                The logo is a transparent image; the checkerboard shows where it is see-through.
                                 <button is="emby-button" type="button" id="btnToggleLogoBackground" class="raised" style="margin-left: 0.5em;">
                                     <span>Light Background</span>
                                 </button>
@@ -69,12 +74,22 @@
                                 <div class="fieldDescription">Remove a year in brackets, such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345].</div>
                             </div>
 
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkCutAtSeparator" data-setting="CutAtSeparator" data-default-unchecked />
-                                    <span class="checkboxLabel">Stop at Subtitle</span>
-                                </label>
-                                <div class="fieldDescription">Keep only the text before a colon or spaced dash, so "Star Wars: Andor" becomes "Star Wars".</div>
+                            <div class="inputContainer">
+                                <label for="selectSubtitleMode">Names With a Subtitle:</label>
+                                <select is="emby-select" id="selectSubtitleMode" data-setting="SubtitleMode" data-default="Keep">
+                                    <option value="Keep">Draw the whole name</option>
+                                    <option value="TitleOnly">Title only</option>
+                                    <option value="SubtitleOnly">Subtitle only</option>
+                                    <option value="TitleLarge">Title large, subtitle small below</option>
+                                    <option value="SubtitleLarge">Subtitle large, title small above</option>
+                                </select>
+                                <div class="fieldDescription">How to treat a name split by a colon or spaced dash, such as "Star Wars: Andor". The last two draw both parts at two sizes, the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole.</div>
+                            </div>
+
+                            <div class="inputContainer" id="secondarySizeContainer">
+                                <label for="txtSecondarySize">Small Line Size (%):</label>
+                                <input is="emby-input" type="number" id="txtSecondarySize" min="20" max="90" step="5" data-setting="SecondarySize" data-type="number" />
+                                <div class="fieldDescription">The small line's size as a percent of the large one. Default is 45.</div>
                             </div>
 
                             <div class="inputContainer">
@@ -150,6 +165,15 @@
                         </button>
                         <div id="logoColorContent" class="jpk-collapsible-content collapsed">
                             <div class="inputContainer">
+                                <label for="selectLogoFill">Letters Filled With:</label>
+                                <select is="emby-select" id="selectLogoFill" data-setting="Fill" data-default="Color">
+                                    <option value="Color">A color</option>
+                                    <option value="Photo">A frame from the show</option>
+                                </select>
+                                <div class="fieldDescription">A frame fill cuts the letters out of a picture from the show, using the same frames its other images come from. A heavy font shows more of the picture, and an outline keeps the letters readable over a busy background.</div>
+                            </div>
+
+                            <div class="inputContainer" data-hide-for-fill="Photo">
                                 <label for="selectColorSource">Color From:</label>
                                 <select is="emby-select" id="selectColorSource" data-setting="ColorSource" data-default="Fixed">
                                     <option value="Fixed">Chosen Color</option>
@@ -159,7 +183,7 @@
                                 <div class="fieldDescription">Sample the main color of the series artwork, lifted to stay legible, or use the color below.</div>
                             </div>
 
-                            <div class="inputContainer">
+                            <div class="inputContainer" data-hide-for-fill="Photo">
                                 <label for="txtLogoColor">Text Color:</label>
                                 <div class="color-control-group">
                                     <input type="color" id="colorLogoColor" class="color-picker" />

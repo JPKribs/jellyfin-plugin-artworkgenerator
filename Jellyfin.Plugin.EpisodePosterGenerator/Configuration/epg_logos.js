@@ -18,7 +18,9 @@ export default function (view) {
     var LOGO_DEFAULTS = {
         TitleSource: 'Title',
         StripYear: true,
-        CutAtSeparator: false,
+        SubtitleMode: 'Keep',
+        SecondarySize: 45,
+        Fill: 'Color',
         CustomRegex: '',
         Uppercase: false,
         FontFamily: 'Arial',
@@ -365,6 +367,16 @@ export default function (view) {
     // ── Visibility ──────────────────────────────────────────
 
     function updateVisibility() {
+        var mode = view.querySelector('#selectSubtitleMode').value;
+        var twoSizes = mode === 'TitleLarge' || mode === 'SubtitleLarge';
+        view.querySelector('#secondarySizeContainer').style.display = twoSizes ? 'block' : 'none';
+
+        // A frame fill has no colour to pick, so the colour controls step aside for it.
+        var fill = view.querySelector('#selectLogoFill').value;
+        view.querySelectorAll('[data-hide-for-fill]').forEach(function (el) {
+            el.style.display = el.getAttribute('data-hide-for-fill') === fill ? 'none' : 'block';
+        });
+
         view.querySelectorAll('[data-depends-on]').forEach(function (el) {
             var cb = view.querySelector('#' + el.getAttribute('data-depends-on'));
             el.style.display = cb && cb.checked ? 'block' : 'none';
@@ -392,9 +404,13 @@ export default function (view) {
         // Only the latest request may update the image, so a slow older response cannot win.
         var seq = ++_previewSeq;
 
+        // The sample name is a preview aid only, so it travels in the query rather than the design.
+        var sample = view.querySelector('#txtSampleName').value.trim();
+        var url = ApiClient.getUrl('Plugins/EpisodePosterGenerator/Preview/Logo', sample ? { name: sample } : undefined);
+
         ApiClient.ajax({
             type: 'POST',
-            url: ApiClient.getUrl('Plugins/EpisodePosterGenerator/Preview/Logo'),
+            url: url,
             data: JSON.stringify(logo.Settings),
             contentType: 'application/json'
         }).then(function (response) {
@@ -537,6 +553,8 @@ export default function (view) {
         view.querySelector('#btnNewLogo').addEventListener('click', createNewLogo);
         view.querySelector('#btnRenameLogo').addEventListener('click', renameCurrentLogo);
         view.querySelector('#btnDeleteLogo').addEventListener('click', deleteCurrentLogo);
+
+        view.querySelector('#txtSampleName').addEventListener('input', schedulePreview);
 
         view.querySelector('#btnToggleLogoBackground').addEventListener('click', function () {
             var frame = view.querySelector('#logoPreviewFrame');

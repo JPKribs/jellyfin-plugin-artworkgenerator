@@ -13,8 +13,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// <summary>Gets or sets a value indicating whether a year such as (2019) is removed.</summary>
         public bool StripYear { get; set; } = true;
 
-        /// <summary>Gets or sets a value indicating whether text after a colon or spaced dash is removed.</summary>
-        public bool CutAtSeparator { get; set; }
+        /// <summary>Gets or sets how a name with a subtitle, such as "Star Wars: Andor", is laid out.</summary>
+        public LogoSubtitleMode SubtitleMode { get; set; } = LogoSubtitleMode.Keep;
+
+        /// <summary>
+        /// Gets or sets the small line's size as a percent of the large line, when the subtitle mode
+        /// draws the title and subtitle at two sizes.
+        /// </summary>
+        public float SecondarySize { get; set; } = 45.0f;
 
         /// <summary>Gets or sets an optional regular expression whose matches are removed from the text.</summary>
         public string CustomRegex { get; set; } = string.Empty;
@@ -30,7 +36,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         public string FontPath { get; set; } = string.Empty;
 
-        /// <summary>Gets or sets where the text colour comes from.</summary>
+        /// <summary>Gets or sets what fills the letters: a colour, or a frame from the series.</summary>
+        public LogoFill Fill { get; set; } = LogoFill.Color;
+
+        /// <summary>Gets or sets where the text colour comes from, when the fill is a colour.</summary>
         public LogoColorSource ColorSource { get; set; } = LogoColorSource.Fixed;
 
         /// <summary>Gets or sets the ARGB text colour, and the fallback when sampling fails.</summary>

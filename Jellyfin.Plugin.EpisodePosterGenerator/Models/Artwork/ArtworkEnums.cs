@@ -98,4 +98,37 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// <summary>The dominant colour of the series backdrop.</summary>
         SeriesBackdrop
     }
+
+    /// <summary>
+    /// How a logo lays out a name with a subtitle, such as "Star Wars: Andor".
+    /// </summary>
+    public enum LogoSubtitleMode
+    {
+        /// <summary>The whole name, as written.</summary>
+        Keep,
+
+        /// <summary>Only the part before the colon or dash.</summary>
+        TitleOnly,
+
+        /// <summary>Only the part after the colon or dash.</summary>
+        SubtitleOnly,
+
+        /// <summary>The title large, with the subtitle small beneath it.</summary>
+        TitleLarge,
+
+        /// <summary>The subtitle large, with the title small above it.</summary>
+        SubtitleLarge
+    }
+
+    /// <summary>
+    /// What fills a logo's letters.
+    /// </summary>
+    public enum LogoFill
+    {
+        /// <summary>A solid colour.</summary>
+        Color,
+
+        /// <summary>A frame from the series, as if the letters were cut out of a photo.</summary>
+        Photo
+    }
 }

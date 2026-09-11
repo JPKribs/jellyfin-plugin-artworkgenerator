@@ -29,11 +29,32 @@ public class LogoTextTests
         Assert.Equal(expected, LogoText.Clean(raw, new LogoSettings(), isFolderName: true));
     }
 
-    [Fact]
-    public void Clean_CutsAtASeparatorWhenAsked()
+    [Theory]
+    [InlineData(LogoSubtitleMode.Keep, "Star Wars: Andor", null, false)]
+    [InlineData(LogoSubtitleMode.TitleOnly, "Star Wars", null, false)]
+    [InlineData(LogoSubtitleMode.SubtitleOnly, "Andor", null, false)]
+    [InlineData(LogoSubtitleMode.TitleLarge, "Star Wars", "Andor", false)]
+    [InlineData(LogoSubtitleMode.SubtitleLarge, "Andor", "Star Wars", true)]
+    public void Compose_LaysOutASubtitle(LogoSubtitleMode mode, string main, string? secondary, bool secondaryFirst)
     {
-        var settings = new LogoSettings { CutAtSeparator = true };
-        Assert.Equal("Star Wars", LogoText.Clean("Star Wars: Andor", settings, isFolderName: false));
+        var subject = new ArtworkSubject { SeriesName = "Star Wars: Andor" };
+
+        var lines = LogoText.Compose(subject, new LogoSettings { SubtitleMode = mode });
+
+        Assert.Equal(main, lines.Main);
+        Assert.Equal(secondary, lines.Secondary);
+        Assert.Equal(secondaryFirst, lines.SecondaryFirst);
+    }
+
+    [Fact]
+    public void Compose_WithoutASeparator_DrawsTheWholeName()
+    {
+        var subject = new ArtworkSubject { SeriesName = "Andor" };
+
+        var lines = LogoText.Compose(subject, new LogoSettings { SubtitleMode = LogoSubtitleMode.SubtitleLarge });
+
+        Assert.Equal("Andor", lines.Main);
+        Assert.Null(lines.Secondary);
     }
 
     [Fact]

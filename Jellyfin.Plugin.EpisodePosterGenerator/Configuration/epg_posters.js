@@ -10,7 +10,7 @@ export default function (view) {
     var _initialized = false;
     var _dirty = false;
     var _savedConfigSnapshot = null;
-    var _previewObjectUrl = null;
+    var _previewUrls = { Landscape: null, Portrait: null };
     var _componentObjectUrls = [];
     var _saving = false;
     var _staticDataPromise = null;
@@ -434,7 +434,6 @@ export default function (view) {
                     ExtractWindowStart: 20.0,
                     ExtractWindowEnd: 80.0,
                     PosterStyle: 'Standard',
-                    Shape: currentShape(),
                     CutoutType: 'Code',
                     CutoutBorder: true,
                     LogoPosition: 'Center',
@@ -786,18 +785,8 @@ export default function (view) {
     function updateStyleDescription() {
         var style = view.querySelector('#selectPosterStyle').value;
         var el = view.querySelector('#posterStyleDescription');
-        if (!el) return;
-
-        var text = posterStyleDescriptions[style] || '';
-        if (!styleSupportsShape(style, currentShape())) {
-            text += (text ? ' ' : '') + 'This style cannot lay out ' + currentShape().toLowerCase() + ' posters, so Standard is drawn instead.';
-        }
-        el.textContent = text;
-    }
-
-    function currentShape() {
-        var el = view.querySelector('#selectShape');
-        return (el && el.value) || 'Landscape';
+        if (el) el.textContent = posterStyleDescriptions[style] || '';
+        updateStyleAvailability();
     }
 
     function styleSupportsShape(style, shape) {
@@ -805,20 +794,22 @@ export default function (view) {
         return !shapes || shapes[shape] !== false;
     }
 
-    // Styles that cannot lay out the chosen shape are labelled rather than removed, so a stored
-    // choice is never silently rewritten; the description explains the fallback.
+    // A style that cannot lay out one of the shapes still produces that image, drawn with
+    // Standard. The note says so rather than hiding the style, so a stored choice is never
+    // silently rewritten.
     function updateStyleAvailability() {
-        var shape = currentShape();
-        view.querySelectorAll('#selectPosterStyle option').forEach(function (option) {
-            var base = option.getAttribute('data-label') || option.textContent;
-            option.setAttribute('data-label', base);
-            option.textContent = styleSupportsShape(option.value, shape)
-                ? base
-                : base + ' (' + (shape === 'Portrait' ? 'landscape' : 'portrait') + ' only)';
+        var style = view.querySelector('#selectPosterStyle').value;
+        var note = view.querySelector('#posterShapeNote');
+        if (!note) return;
+
+        var missing = ['Landscape', 'Portrait'].filter(function (shape) {
+            return !styleSupportsShape(style, shape);
         });
 
-        var frame = view.querySelector('#posterPreviewFrame');
-        if (frame) frame.classList.toggle('portrait', shape === 'Portrait');
+        note.textContent = missing.length
+            ? 'This style cannot lay out ' + missing.join(' or ').toLowerCase() + ' images, so those are drawn with Standard instead.'
+            : '';
+        note.style.display = missing.length ? 'block' : 'none';
     }
 
     // ── Live Preview ────────────────────────────────────────
@@ -831,45 +822,53 @@ export default function (view) {
         var config = getCurrentConfig();
         if (!config || !config.Settings) return;
 
-        var img = view.querySelector('#posterPreviewImage');
-        var status = view.querySelector('#posterPreviewStatus');
+        // Renders can overlap while the user is editing; only the latest request may update an
+        // image so a slow older response can't overwrite a newer one.
+        var seq = ++_previewSeq;
+        var kindEl = view.querySelector('#selectPreviewKind');
+        var kind = (kindEl && kindEl.value) || 'Series';
+
+        renderPreviewShape('Landscape', config.Settings, kind, seq);
+        renderPreviewShape('Portrait', config.Settings, kind, seq);
+    }
+
+    // renderPreviewShape
+    // Both previews come from the same settings: the server adjusts the design for the shape the
+    // same way it does when it generates the real image.
+    function renderPreviewShape(shape, settings, kind, seq) {
+        var img = view.querySelector('#posterPreviewImage' + shape);
+        var status = view.querySelector('#posterPreviewStatus' + shape);
         if (!img || !status) return;
 
         status.textContent = 'Rendering…';
         status.style.display = 'block';
 
-        // Renders can overlap while the user is editing; only the latest request may
-        // update the image so a slow older response can't overwrite a newer one.
-        var seq = ++_previewSeq;
-
         // Use ApiClient.ajax so Jellyfin's auth headers are attached the same way the
         // working Configuration calls authenticate. Without a dataType it resolves to
         // the raw Response, so we can read the JPEG body as a blob.
-        var kindEl = view.querySelector('#selectPreviewKind');
-        var kind = kindEl ? kindEl.value : '';
-        var url = ApiClient.getUrl('Plugins/EpisodePosterGenerator/Preview', kind ? { kind: kind } : undefined);
+        var url = ApiClient.getUrl('Plugins/EpisodePosterGenerator/Preview', { kind: kind, shape: shape });
 
         ApiClient.ajax({
             type: 'POST',
             url: url,
-            data: JSON.stringify(config.Settings),
+            data: JSON.stringify(settings),
             contentType: 'application/json'
         }).then(function (response) {
             if (!response.ok) throw new Error('Preview failed: ' + response.status);
             return response.blob();
         }).then(function (blob) {
             if (seq !== _previewSeq) return;
-            if (_previewObjectUrl) URL.revokeObjectURL(_previewObjectUrl);
-            _previewObjectUrl = URL.createObjectURL(blob);
-            img.src = _previewObjectUrl;
+            if (_previewUrls[shape]) URL.revokeObjectURL(_previewUrls[shape]);
+            _previewUrls[shape] = URL.createObjectURL(blob);
+            img.src = _previewUrls[shape];
             img.style.display = 'block';
             status.style.display = 'none';
 
-            // Keep the enlarged modal in sync when it's open during live edits.
+            // Keep the enlarged modal in sync when it's open on this shape during live edits.
             var modal = view.querySelector('#previewModal');
             var modalImg = view.querySelector('#posterPreviewModalImage');
-            if (modal && modalImg && modal.style.display !== 'none') {
-                modalImg.src = _previewObjectUrl;
+            if (modal && modalImg && modal.style.display !== 'none' && modal.getAttribute('data-shape') === shape) {
+                modalImg.src = _previewUrls[shape];
             }
         }).catch(function (error) {
             if (seq !== _previewSeq) return;
@@ -1092,22 +1091,21 @@ export default function (view) {
         view.querySelector('#btnExportConfig').addEventListener('click', exportCurrentConfig);
         view.querySelector('#btnImportConfig').addEventListener('click', importCurrentConfig);
 
-        // Clicking the inline live preview opens it enlarged in the shared modal.
-        var previewFrame = view.querySelector('#posterPreviewFrame');
-        if (previewFrame) {
-            previewFrame.addEventListener('click', function () {
-                if (!_previewObjectUrl) return;
-                openImageModal('previewModal', 'btnClosePreviewModal', 'posterPreviewModalImage',
-                    _previewObjectUrl, 'Poster Preview');
-            });
-        }
+        // Clicking either live preview opens it enlarged in the shared modal.
+        view.querySelectorAll('.poster-preview-frame').forEach(function (frame) {
+            frame.addEventListener('click', function () {
+                var shape = frame.getAttribute('data-shape');
+                if (!_previewUrls[shape]) return;
 
-        // Preview subject and shape
-        view.querySelector('#selectPreviewKind').addEventListener('change', renderPreview);
-        view.querySelector('#selectShape').addEventListener('change', function () {
-            updateStyleAvailability();
-            updateStyleDescription();
+                var modal = view.querySelector('#previewModal');
+                if (modal) modal.setAttribute('data-shape', shape);
+                openImageModal('previewModal', 'btnClosePreviewModal', 'posterPreviewModalImage',
+                    _previewUrls[shape], shape + ' Preview');
+            });
         });
+
+        // Preview subject
+        view.querySelector('#selectPreviewKind').addEventListener('change', renderPreview);
 
         // Controls that affect visibility
         var visibilityControls = [
@@ -1171,10 +1169,12 @@ export default function (view) {
 
     view.addEventListener('viewdestroy', function () {
         // Release the blobs backing the live preview and the component thumbnails.
-        if (_previewObjectUrl) {
-            URL.revokeObjectURL(_previewObjectUrl);
-            _previewObjectUrl = null;
-        }
+        Object.keys(_previewUrls).forEach(function (shape) {
+            if (_previewUrls[shape]) {
+                URL.revokeObjectURL(_previewUrls[shape]);
+                _previewUrls[shape] = null;
+            }
+        });
         _componentObjectUrls.forEach(URL.revokeObjectURL);
         _componentObjectUrls = [];
     });

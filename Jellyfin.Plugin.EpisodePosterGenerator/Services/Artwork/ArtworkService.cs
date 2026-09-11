@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,9 +77,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         };
 
         /// <summary>
-        /// Adjusts a design for the shape it is rendering at. A portrait cut from a landscape frame
-        /// has to be cropped, not stretched or left wide, so portrait always crops to a portrait
-        /// ratio. A landscape render never takes a portrait ratio.
+        /// Adjusts a design for the shape it is rendering at. Every design renders both shapes: a
+        /// portrait takes the design's portrait ratio and text scale, and always crops, since a
+        /// portrait cut from a landscape frame cannot be stretched or left wide. A landscape render
+        /// never takes a portrait ratio.
         /// </summary>
         public static PosterSettings ShapeAdjust(PosterSettings design, ArtworkShape shape)
         {
@@ -90,11 +92,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             var ratio = CroppingService.ParseAspectRatio(settings.PosterDimensionRatio);
             if (shape == ArtworkShape.Portrait)
             {
-                if (ratio >= 1f)
+                var portrait = CroppingService.ParseAspectRatio(settings.PortraitDimensionRatio);
+                if (portrait > 0f && portrait < 1f)
+                {
+                    settings.PosterDimensionRatio = settings.PortraitDimensionRatio;
+                }
+                else if (!(ratio > 0f && ratio < 1f))
                 {
                     settings.PosterDimensionRatio = "2:3";
                 }
 
+                var textScale = Math.Clamp(settings.PortraitTextScale, 25f, 200f) / 100f;
+                settings.TitleFontSize *= textScale;
+                settings.EpisodeFontSize *= textScale;
                 settings.PosterFill = PosterFill.Fit;
             }
             else if (ratio < 1f)
@@ -167,7 +177,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
 
             return slot.Value switch
             {
-                ArtworkSlot.Logo => RenderLogo(subject, assignment),
+                ArtworkSlot.Logo => await RenderLogosAsync(item, subject, profile, assignment, count, cancellationToken).ConfigureAwait(false),
                 ArtworkSlot.Backdrop => await RenderBackdropsAsync(item, subject, profile, count, cancellationToken).ConfigureAwait(false),
                 _ => await RenderPostersAsync(item, subject, profile, kind.Value, slot.Value, assignment, count, cancellationToken).ConfigureAwait(false)
             };
@@ -187,7 +197,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             CancellationToken cancellationToken)
         {
             var shape = profile.GetShape(kind, slot);
-            var settings = ShapeAdjust(_configService.GetDesignForSlot(assignment, shape), shape);
+            var settings = ShapeAdjust(_configService.GetDesignForSlot(assignment), shape);
             var generator = CreateGenerator(settings.PosterStyle, shape);
 
             var canvases = await _canvasService
@@ -259,12 +269,67 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             return results;
         }
 
-        // RenderLogo
-        // Logo: text only, so there is only ever one result.
-        private GeneratedArtwork[] RenderLogo(ArtworkSubject subject, SlotAssignment assignment)
+        // RenderLogosAsync
+        // Logo: a coloured logo is text only, so there is only ever one. A photo-filled logo takes
+        // its picture from the item's frame pool, one frame per alternate, so each choice differs;
+        // with no frames it uses the series backdrop, and with neither it falls back to the colour.
+        private async Task<IReadOnlyList<GeneratedArtwork>> RenderLogosAsync(
+            BaseItem item,
+            ArtworkSubject subject,
+            ArtworkProfile profile,
+            SlotAssignment assignment,
+            int count,
+            CancellationToken cancellationToken)
         {
             var settings = _configService.GetLogoForSlot(assignment);
-            var bytes = _logoRenderer.Render(subject, settings);
+            if (settings.Fill != LogoFill.Photo)
+            {
+                return RenderLogo(subject, settings, null);
+            }
+
+            var photos = await _canvasService
+                .GenerateBackdropCanvasesAsync(item, subject, profile.Backdrop ?? new BackdropSettings(), RankOffset(ArtworkSlot.Logo), count, cancellationToken)
+                .ConfigureAwait(false);
+
+            try
+            {
+                if (photos.Count == 0)
+                {
+                    using var backdrop = LoadSeriesBackdrop(subject);
+                    return RenderLogo(subject, settings, backdrop);
+                }
+
+                var results = new List<GeneratedArtwork>(photos.Count);
+                foreach (var photo in photos)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    results.AddRange(RenderLogo(subject, settings, photo));
+                }
+
+                return results;
+            }
+            finally
+            {
+                foreach (var photo in photos)
+                {
+                    photo.Dispose();
+                }
+            }
+        }
+
+        // LoadSeriesBackdrop
+        // The series backdrop as a photo for a logo, or null when there is none.
+        private static SKBitmap? LoadSeriesBackdrop(ArtworkSubject subject)
+        {
+            var path = subject.VideoMetadata.SeriesBackdropFilePath;
+            return !string.IsNullOrEmpty(path) && File.Exists(path) ? SKBitmap.Decode(path) : null;
+        }
+
+        // RenderLogo
+        // One logo, filled with the photo when there is one.
+        private GeneratedArtwork[] RenderLogo(ArtworkSubject subject, LogoSettings settings, SKBitmap? photo)
+        {
+            var bytes = _logoRenderer.Render(subject, settings, photo);
             if (bytes == null)
             {
                 return Array.Empty<GeneratedArtwork>();
@@ -289,11 +354,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
 
         // RankOffset
         // Each slot starts at a different rank of the shared pool, so a series' poster, backdrop,
-        // and thumb show three different frames rather than the same one three times.
+        // thumb, and photo logo show four different frames rather than the same one four times.
         private static int RankOffset(ArtworkSlot slot) => slot switch
         {
             ArtworkSlot.Backdrop => 1,
             ArtworkSlot.Thumb => 2,
+            ArtworkSlot.Logo => 3,
             _ => 0
         };
 

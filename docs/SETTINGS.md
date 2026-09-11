@@ -13,8 +13,8 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 * **Profile**: the profile being viewed and edited. The default profile applies to every series not assigned to another one. It cannot be renamed or deleted.
 * **Assigned Series**: the series that use the active profile. A series belongs to one profile at a time.
 * **Images**: one row each for series, seasons, and episodes. Tick an image to generate it whenever an item is missing one.
-  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series and seasons default to portrait and episodes to landscape.
-  * **Thumb**: a landscape poster for series and seasons, drawn with a landscape design.
+  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series and seasons default to portrait and episodes to landscape. Any design can draw either shape.
+  * **Thumb**: a landscape poster for series and seasons.
   * **Logo**: a transparent text logo for series, drawn with a logo design.
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
 * **Backdrops**: aspect ratio, letterbox detection, HDR brightening, and extraction window for backdrop frames.
@@ -23,13 +23,16 @@ Jellyfin only asks the plugin for series and season images in libraries where **
 
 ## Designs
 
-* **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design for their shape. The default design cannot be renamed or deleted.
+Every design draws both shapes. The profile decides which one each image uses, so a single design covers a portrait series poster and a landscape thumb without being set up twice. The live preview shows both side by side.
+
+* **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design. The default design cannot be renamed or deleted.
 * **New, Rename, Delete**: manage named designs.
 * **Export, Import**: save a design to JSON, or load one as a new design.
-* **Shape**: whether the design is laid out for portrait or landscape images. A portrait render always crops the frame to a portrait ratio. Split lays out landscape only, so a portrait Split image is drawn with Standard instead. Default Landscape.
-* **Preview As**: whether the live preview shows an episode, a season, or a series. Automatic uses a season for portrait designs and an episode for landscape ones.
+* **Preview As**: whether the previews show a series, a season, or an episode.
 
-What each design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows its name and its season count or premiere year.
+What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
+
+Split lays out landscape only, so its portrait images are drawn with Standard instead. The Designs page says so under the previews.
 
 ## Canvas
 
@@ -49,8 +52,10 @@ What each design draws depends on the item. An episode shows its name as the tit
 * **Style**: the layout. Standard, Brush, Cutout, Fade, Frame, Frosted Glass, Logo, Numeral, Split, Striped, or Timeline. Default Standard.
   * Timeline draws a season progress bar. It needs the season's episode count, so the bar renders full when the count is unknown, and it does not refresh on its own as more episodes are added to an airing season.
   * Striped draws its sash from the overlay colors. The main band uses Overlay Color and the pinstripes use Secondary Overlay Color.
-* **Fill Strategy**: how the canvas fits the poster. Original, Fill, or Fit. Default Original.
-* **Aspect Ratio**: output aspect ratio. Default 16:9.
+* **Fill Strategy**: how the canvas fits the poster. Original, Fill, or Fit. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape. Default Original.
+* **Landscape Aspect Ratio**: output aspect ratio for landscape images. Default 16:9.
+* **Portrait Aspect Ratio**: output aspect ratio for portrait images. Default 2:3.
+* **Portrait Text Size (%)**: title and number sizes for portrait images, as a percent of the sizes set below. Sizes are measured from the short edge, which in portrait is the width, so the same percent reads larger there. Default 80.
 * **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short edge and the same pixel amount is used on all four sides. Default 5.
 * **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short edge. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
 
@@ -107,13 +112,16 @@ What each design draws depends on the item. An episode shows its name as the tit
 ## Logos
 
 * **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
+* **Sample Name**: a name to preview with. It is not saved, so try the names your own shows have.
 * **Name From**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
 * **Remove Year**: remove a year in brackets such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345]. Default on.
-* **Stop at Subtitle**: keep only the text before a colon or spaced dash. Default off.
+* **Names With a Subtitle**: how to treat a name split by a colon or spaced dash, such as "Star Wars: Andor". Draw the whole name, keep only the title, keep only the subtitle, or draw both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
+* **Small Line Size (%)**: the small line's size as a percent of the large one, in the two-size layouts. Default 45.
 * **Remove Pattern**: an optional regular expression whose matches are removed. An invalid pattern is ignored.
 * **All Capitals**: draw the name in capitals. Default off.
 * **Lines**: one line, or up to two. A name splits onto two lines only when that lets the text grow noticeably. Default up to two.
 * **Font, Font Style, Use Custom Font, Font Path**: the typeface. Default Arial Bold.
+* **Letters Filled With**: a color, or a frame from the show. A frame fill cuts the letters out of a picture, taken from the same shared set of frames the show's other images come from, and brightened so it still reads on a dark background. A heavy font shows more of the picture and an outline helps it stand out. With a frame fill, the Edit Images dialog offers several logos, each cut from a different frame. Default a color.
 * **Color From**: Chosen Color, or the main color of the series poster or backdrop lifted to stay legible. Default Chosen Color.
 * **Text Color**: ARGB hex. When sampling, this is the fallback and its opacity still applies. Default #FFFFFFFF.
 * **Outline, Outline Color, Outline Width (%)**: an optional stroke around the letters, its width a percent of the font size. Default off, black, 4.

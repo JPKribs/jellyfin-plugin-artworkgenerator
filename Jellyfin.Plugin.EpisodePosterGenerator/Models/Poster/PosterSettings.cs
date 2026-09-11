@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 {
@@ -43,10 +44,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         public PosterStyle PosterStyle { get; set; } = PosterStyle.Standard;
 
         /// <summary>
-        /// The shape this design is laid out for. Profiles use it to offer the right designs for
-        /// each slot and the preview uses it to pick sample art. A design can still render at the
-        /// other shape; its text sizes are relative to the poster's short edge so they carry over.
+        /// Gets or sets the shape being rendered. Set at render time, never stored: every design
+        /// renders both shapes, and the profile slot decides which one an image needs.
         /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
         public ArtworkShape Shape { get; set; } = ArtworkShape.Landscape;
 
         public CutoutType CutoutType { get; set; } = CutoutType.Code;
@@ -64,6 +66,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         public PosterFill PosterFill { get; set; } = PosterFill.Original;
 
         public string PosterDimensionRatio { get; set; } = "16:9";
+
+        /// <summary>
+        /// Gets or sets the aspect ratio for portrait renders, such as series and season posters.
+        /// </summary>
+        public string PortraitDimensionRatio { get; set; } = "2:3";
+
+        /// <summary>
+        /// Gets or sets the title and number sizes for portrait renders, as a percent of the sizes
+        /// set for landscape. Sizes are measured from the short edge, which in portrait is the
+        /// width, so the same percent reads larger there; 80 keeps both shapes in proportion.
+        /// </summary>
+        public float PortraitTextScale { get; set; } = 80.0f;
 
         public float PosterSafeArea { get; set; } = 5.0f;
 

@@ -8,11 +8,13 @@ Episode Poster Generator scans episode files, evaluates multiple frames, and sel
 
 Configuration is split into three parts:
 
-* **Designs** set how a poster looks. Each design is laid out for portrait or landscape, and every style except Split can draw both.
-* **Logos** set how a text logo looks: which name it uses, how that name is cleaned up, and its font and color.
+* **Designs** set how a poster looks. Each design draws both portrait and landscape, so one design covers a tall series poster and a wide thumb, and the page previews both at once.
+* **Logos** set how a text logo looks: which name it uses, how that name is cleaned up, and its font and fill. A name like "Star Wars: Andor" can be drawn with either part large and the other small, and the letters can be filled with a frame from the show instead of a color.
 * **Profiles** choose which images are made for series, seasons, and episodes, and which design draws each. Series use the default profile unless assigned to another.
 
-Every image of one item draws from a shared set of frames, so a season's poster, thumb, and backdrop show different shots from the same pool. A fixed seed in Settings makes frame choice repeatable.
+Every image of one item draws from a shared set of frames, so a series' poster, thumb, backdrop, and photo logo show different shots from the same pool. A fixed seed in Settings makes frame choice repeatable.
+
+A series poster shows only the show's name. Styles built around an episode number adapt to that: Cutout punches the name itself out of the overlay, and Timeline drops its progress bar.
 
 The plugin runs entirely as a Jellyfin metadata provider. There are two ways to get a poster:
 
@@ -172,7 +174,7 @@ For an explanation of the settings, visit [SETTINGS.md](docs/SETTINGS.md).
 For additional template examples and downloadable configurations, visit [EXAMPLES.md](docs/EXAMPLES.md).
 
 ### Preview your poster
-A live preview at the top of the Designs page renders your current settings against sample artwork and updates as you change them. Choose whether it shows an episode, a season, or a series. The Logos page previews logos the same way. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
+A live preview at the top of the Designs page renders your current settings against sample artwork in both shapes at once, and updates as you change them. Choose whether it shows a series, a season, or an episode. The Logos page previews logos the same way, against a sample name you type. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
 ![Preview Modal](Jellyfin.Plugin.EpisodePosterGenerator/Assets/Preview-Modal.png)
 
 ---

@@ -22,6 +22,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A portrait poster is narrow, so the number may use more of the width.
         private const float PortraitNumberZoneWidthRatio = 0.7f;
 
+        // A series has no number, so its name takes that corner instead: a wider, shorter zone
+        // than the digits need.
+        private const float FocalTitleWidthRatio = 0.9f;
+        private const float FocalTitleHeightRatio = 0.32f;
+
         // Style
         // The poster style this generator produces.
         public override PosterStyle Style => PosterStyle.Fade;
@@ -99,7 +104,37 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
             {
-                DrawVerticalTitle(skCanvas, subject.Title, settings, unit, safeArea, numberTop);
+                // Without a number there is nothing for a thin vertical title to sit above, so the
+                // name becomes the focal element and takes the number's corner.
+                if (subject.Number.HasValue)
+                {
+                    DrawVerticalTitle(skCanvas, subject.Title, settings, unit, safeArea, numberTop);
+                }
+                else
+                {
+                    DrawFocalTitle(skCanvas, subject.Title, settings, safeArea, unit);
+                }
+            }
+        }
+
+        // DrawFocalTitle
+        // Draws the name where the number would go, sized to fill that corner and pinned to the
+        // same bottom-left anchor.
+        private static void DrawFocalTitle(SKCanvas canvas, string title, PosterSettings config, SKRect safeArea, int unit)
+        {
+            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
+
+            float maxWidth = safeArea.Width * FocalTitleWidthRatio;
+            float maxHeight = safeArea.Height * FocalTitleHeightRatio;
+            float fontSize = FontUtils.CalculateOptimalFontSize(title, typeface, maxWidth, maxHeight);
+
+            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.TitleFontColor), fontSize, typeface, unit, SKTextAlign.Left);
+            var lines = TextUtils.FitTitleLines(title, style.Font, maxWidth, config.LongTitleHandling);
+
+            float baseline = safeArea.Bottom - ((lines.Count - 1) * style.LineHeight);
+            for (int i = 0; i < lines.Count; i++)
+            {
+                style.Draw(canvas, lines[i], safeArea.Left, baseline + (i * style.LineHeight));
             }
         }
 

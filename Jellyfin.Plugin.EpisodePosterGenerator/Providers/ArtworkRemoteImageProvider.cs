@@ -100,9 +100,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Providers
                 // Jellyfin also queries remote providers during a metadata refresh, for items
                 // missing an image type, and nothing distinguishes that from a user opening the
                 // picker. The count is therefore bounded by what the item already has: with no
-                // image of this type the caller is filling a blank and keeps exactly one. A logo is
-                // text only, so there is never more than one to offer.
-                var count = type == ImageType.Logo || !item.HasImage(type)
+                // image of this type the caller is filling a blank and keeps exactly one. A colour
+                // logo is text only, so the artwork service returns just one whatever is asked.
+                var count = !item.HasImage(type)
                     ? 1
                     : Math.Clamp(plugin.Configuration.ImageChoiceCount, 1, ArtworkService.MaxCandidates);
 
