@@ -29,6 +29,8 @@ changelog:
   - Each poster style declares which settings it uses, so the Designs page offers only the settings that do something
   - Episodes can have a generated thumb, alongside series and seasons
   fixes:
+  - Fade drew a series name flat in the number's corner; it now runs sideways like every other Fade title, sized to fill the poster
+  - Frame left the bottom of its border bare on a series; the title moves down into it when there is no season and episode line
   - Numeral drew its title across the numeral instead of above it
   - Fade gave a series a hairline of vertical text where the episode number would be
   - A logo's name and its subtitle sat far apart, because the lines were spaced by their em boxes rather than by the letters

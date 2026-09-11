@@ -22,10 +22,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A portrait poster is narrow, so the number may use more of the width.
         private const float PortraitNumberZoneWidthRatio = 0.7f;
 
-        // A series has no number, so its name takes that corner instead: a wider, shorter zone
-        // than the digits need.
-        private const float FocalTitleWidthRatio = 0.9f;
-        private const float FocalTitleHeightRatio = 0.32f;
+        // A series has no number, so its name runs the full height instead. This is how much of
+        // the width the rotated letters may be tall.
+        private const float FocalTitleThicknessRatio = 0.35f;
 
         // Style
         // The poster style this generator produces.
@@ -104,37 +103,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
             {
-                // Without a number there is nothing for a thin vertical title to sit above, so the
-                // name becomes the focal element and takes the number's corner.
-                if (subject.Number.HasValue)
-                {
-                    DrawVerticalTitle(skCanvas, subject.Title, settings, unit, safeArea, numberTop);
-                }
-                else
-                {
-                    DrawFocalTitle(skCanvas, subject.Title, settings, safeArea, unit);
-                }
-            }
-        }
-
-        // DrawFocalTitle
-        // Draws the name where the number would go, sized to fill that corner and pinned to the
-        // same bottom-left anchor.
-        private static void DrawFocalTitle(SKCanvas canvas, string title, PosterSettings config, SKRect safeArea, int unit)
-        {
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
-
-            float maxWidth = safeArea.Width * FocalTitleWidthRatio;
-            float maxHeight = safeArea.Height * FocalTitleHeightRatio;
-            float fontSize = FontUtils.CalculateOptimalFontSize(title, typeface, maxWidth, maxHeight);
-
-            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.TitleFontColor), fontSize, typeface, unit, SKTextAlign.Left);
-            var lines = TextUtils.FitTitleLines(title, style.Font, maxWidth, config.LongTitleHandling);
-
-            float baseline = safeArea.Bottom - ((lines.Count - 1) * style.LineHeight);
-            for (int i = 0; i < lines.Count; i++)
-            {
-                style.Draw(canvas, lines[i], safeArea.Left, baseline + (i * style.LineHeight));
+                // The title is always sideways: that is the style. A series has no number to sit
+                // above, so its name runs the whole height and is sized to fill it.
+                DrawVerticalTitle(skCanvas, subject.Title, settings, unit, safeArea, numberTop, !subject.Number.HasValue);
             }
         }
 
@@ -162,22 +133,32 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawVerticalTitle
-        // Draws the uppercase title rotated 90 degrees, running upward along the left edge
-        // from just above the number. The title wraps to up to two vertical rows before the
-        // long title handling engages, matching the other styles.
-        private static void DrawVerticalTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, float numberTop)
+        // Draws the uppercase title rotated 90 degrees, running upward along the left edge from
+        // just above the number. The title wraps to up to two vertical rows before the long title
+        // handling engages, matching the other styles. A focal title, drawn when there is no number
+        // to share the poster with, is sized to fill the run rather than taking the set size.
+        private static void DrawVerticalTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, float numberTop, bool focal)
         {
-            using var style = CreateTitleStyle(config, unit, SKTextAlign.Left);
-
             float spacing = GetElementSpacing(config, unit);
             float startY = numberTop - spacing;
             float availableRun = startY - safeArea.Top;
+            if (availableRun <= 0f)
+            {
+                return;
+            }
+
+            var text = title.ToUpperInvariant();
+
+            using var style = focal
+                ? CreateFocalTitleStyle(config, unit, text, availableRun, safeArea.Width * FocalTitleThicknessRatio)
+                : CreateTitleStyle(config, unit, SKTextAlign.Left);
+
             if (availableRun <= style.Size)
             {
                 return;
             }
 
-            var lines = TextUtils.FitTitleLines(title.ToUpperInvariant(), style.Font, availableRun, config.LongTitleHandling);
+            var lines = TextUtils.FitTitleLines(text, style.Font, availableRun, config.LongTitleHandling);
             if (lines.Count == 0)
             {
                 return;
@@ -196,6 +177,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 style.Draw(canvas, lines[i], anchorX, startY);
                 canvas.Restore();
             }
+        }
+
+        // CreateFocalTitleStyle
+        // The title face sized to fill the vertical run: the name reads the length of the poster,
+        // and its letters are as tall across the width as the thickness budget allows.
+        private static TextStyle CreateFocalTitleStyle(PosterSettings config, int unit, string text, float run, float thickness)
+        {
+            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
+            float fontSize = FontUtils.CalculateOptimalFontSize(text, typeface, run, thickness);
+
+            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.TitleFontColor), fontSize, typeface, unit, SKTextAlign.Left);
         }
 
         // LogError

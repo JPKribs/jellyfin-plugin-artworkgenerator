@@ -40,8 +40,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the title set into the top edge of the frame, the label set into the bottom
-        // edge, and the border itself, which closes over any edge with no text in it.
+        // Renders the title and the label set into the frame's edges, and the border itself, which
+        // closes over any edge with no text in it. The bottom edge carries the label when there is
+        // one; a series has none, so its title sits there instead of leaving the bottom bare.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(subject);
@@ -51,16 +52,28 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float spacing = GetElementSpacing(settings, unit);
 
-            TextInfo? titleInfo = null;
-            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
-            {
-                titleInfo = DrawEpisodeTitle(skCanvas, subject.Title, settings, unit, safeArea);
-            }
+            var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
+            var showLabel = settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label);
 
+            TextInfo? titleInfo = null;
             TextInfo? episodeInfo = null;
-            if (settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label))
+
+            if (showLabel)
             {
                 episodeInfo = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea);
+            }
+
+            if (showTitle)
+            {
+                var info = DrawEpisodeTitle(skCanvas, subject.Title!, settings, unit, safeArea, !showLabel);
+                if (showLabel)
+                {
+                    titleInfo = info;
+                }
+                else
+                {
+                    episodeInfo = info;
+                }
             }
 
             DrawFrameBorder(skCanvas, safeArea, titleInfo, episodeInfo, spacing, unit);
@@ -74,9 +87,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawEpisodeTitle
-        // Draws the uppercase title across the top of the safe area and returns its extent,
-        // or null when the long title handling drops a title that does not fit.
-        private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea)
+        // Draws the uppercase title into the top edge of the safe area, or into the bottom edge
+        // when nothing else claims it, and returns its extent. Null when the long title handling
+        // drops a title that does not fit.
+        private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
             using var style = CreateTitleStyle(config, unit);
 
@@ -86,12 +100,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 return null;
             }
 
-            var top = safeArea.Top + (unit * TextPaddingRatio);
+            float blockHeight = style.BlockHeight(lines.Count);
+            float padding = unit * TextPaddingRatio;
+            float top = atBottom
+                ? safeArea.Bottom - padding - blockHeight
+                : safeArea.Top + padding;
+
             style.DrawLines(canvas, lines, safeArea.MidX, top + style.Ascent);
 
             return new TextInfo
             {
-                Height = style.BlockHeight(lines.Count),
+                Height = blockHeight,
                 Width = lines.Max(line => style.MeasureWidth(line)),
                 CenterX = safeArea.MidX,
                 Y = top
