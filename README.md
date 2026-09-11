@@ -6,13 +6,6 @@ A Jellyfin plugin that automatically generates custom episode posters using smar
 
 Episode Poster Generator scans each episode file, evaluates multiple frames, and selects a strong candidate while avoiding fades, black screens, and letterboxed shots. The selected frame is turned into a poster and optionally styled with configurable text such as episode title or numbering.
 
-The plugin runs entirely as a Jellyfin metadata provider. There are two ways to get a poster:
-
-* **Automatically** — a metadata refresh generates a poster for any episode that has no image. This is the default; it can be turned off in Settings.
-* **By hand** — open an episode, choose **Edit Images**, and press the search button on the Primary image. Generated posters appear alongside the usual providers, each rendered from a different frame, so you can pick the one you like instead of refreshing until a good frame comes up.
-
-There is no scheduled task. Use Jellyfin's own metadata refresh, on a library or a single item, to generate in bulk.
-
 ## Poster Styles
 
 ### Standard Style
