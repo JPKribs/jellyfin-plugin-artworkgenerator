@@ -38,23 +38,29 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         /// <summary>
         /// Stores an encoded image and returns the opaque token addressing it.
         /// </summary>
-        public string Add(byte[] imageBytes)
+        public string Add(byte[] imageBytes, string contentType = "image/jpeg")
         {
             ArgumentNullException.ThrowIfNull(imageBytes);
 
             Prune();
 
             var token = Guid.NewGuid().ToString("N");
-            _entries[token] = new CacheEntry(imageBytes, DateTimeOffset.UtcNow);
+            _entries[token] = new CacheEntry(imageBytes, contentType, DateTimeOffset.UtcNow);
             return token;
         }
 
         /// <summary>
         /// Looks up a stored image. Returns false for unknown or expired tokens.
         /// </summary>
-        public bool TryGet(string token, out byte[] imageBytes)
+        public bool TryGet(string token, out byte[] imageBytes) => TryGet(token, out imageBytes, out _);
+
+        /// <summary>
+        /// Looks up a stored image and its content type. Returns false for unknown or expired tokens.
+        /// </summary>
+        public bool TryGet(string token, out byte[] imageBytes, out string contentType)
         {
             imageBytes = Array.Empty<byte>();
+            contentType = "image/jpeg";
 
             if (string.IsNullOrEmpty(token) || !_entries.TryGetValue(token, out var entry))
             {
@@ -68,6 +74,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
 
             imageBytes = entry.Bytes;
+            contentType = entry.ContentType;
             return true;
         }
 
@@ -106,6 +113,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static bool IsExpired(CacheEntry entry)
             => DateTimeOffset.UtcNow - entry.CreatedAt > Lifetime;
 
-        private sealed record CacheEntry(byte[] Bytes, DateTimeOffset CreatedAt);
+        private sealed record CacheEntry(byte[] Bytes, string ContentType, DateTimeOffset CreatedAt);
     }
 }

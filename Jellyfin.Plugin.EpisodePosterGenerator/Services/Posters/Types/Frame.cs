@@ -15,14 +15,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Episode image inside a decorative border. Polished gallery look.";
+        public override string Description => "Image inside a decorative border. Polished gallery look.";
 
-        // Border geometry at the 1080 pixel reference height; scaled to the poster being drawn.
+        // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
         private const float BorderStrokeReference = 4f;
         private const float BorderShadowStrokeReference = 6f;
         private const float CornerRadiusReference = 20f;
 
-        // Gap between the frame line and the text set into it, as a share of poster height.
+        // Gap between the frame line and the text set into it, as a share of the size unit.
         private const float TextPaddingRatio = 0.01f;
 
         private readonly ILogger<FramePosterGenerator> _logger;
@@ -35,29 +35,30 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the title set into the top edge of the frame, the episode info set into the
-        // bottom edge, and the border itself, which closes over any edge with no text in it.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders the title set into the top edge of the frame, the label set into the bottom
+        // edge, and the border itself, which closes over any edge with no text in it.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
+            var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            float spacing = GetElementSpacing(settings, height);
+            float spacing = GetElementSpacing(settings, unit);
 
             TextInfo? titleInfo = null;
-            if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
+            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
             {
-                titleInfo = DrawEpisodeTitle(skCanvas, episodeMetadata.EpisodeName, settings, height, safeArea);
+                titleInfo = DrawEpisodeTitle(skCanvas, subject.Title, settings, unit, safeArea);
             }
 
             TextInfo? episodeInfo = null;
-            if (settings.ShowEpisode)
+            if (settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label))
             {
-                episodeInfo = DrawEpisodeInfo(skCanvas, episodeMetadata.SeasonNumber ?? 0, episodeMetadata.EpisodeNumberStart ?? 0, settings, height, safeArea);
+                episodeInfo = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea);
             }
 
-            DrawFrameBorder(skCanvas, safeArea, titleInfo, episodeInfo, spacing, height);
+            DrawFrameBorder(skCanvas, safeArea, titleInfo, episodeInfo, spacing, unit);
         }
 
         // LogError
@@ -70,15 +71,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // DrawEpisodeTitle
         // Draws the uppercase title across the top of the safe area and returns its extent,
         // or null when the long title handling drops a title that does not fit.
-        private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int height, SKRect safeArea)
+        private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea)
         {
-            using var style = CreateTitleStyle(config, height);
+            using var style = CreateTitleStyle(config, unit);
 
             var lines = TextUtils.FitTitleLines(title.ToUpperInvariant(), style.Font, safeArea.Width * RenderConstants.TextWidthMultiplier, config.LongTitleHandling);
             if (lines.Count == 0)
+            {
                 return null;
+            }
 
-            var top = safeArea.Top + (height * TextPaddingRatio);
+            var top = safeArea.Top + (unit * TextPaddingRatio);
             style.DrawLines(canvas, lines, safeArea.MidX, top + style.Ascent);
 
             return new TextInfo
@@ -91,20 +94,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawEpisodeInfo
-        // Draws the season and episode label across the bottom of the safe area and returns its extent.
-        private static TextInfo DrawEpisodeInfo(SKCanvas canvas, int seasonNumber, int episodeNumber, PosterSettings config, int height, SKRect safeArea)
+        // Draws the label across the bottom of the safe area and returns its extent.
+        private static TextInfo DrawEpisodeInfo(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea)
         {
-            using var style = CreateEpisodeStyle(config, height);
+            using var style = CreateEpisodeStyle(config, unit);
 
-            var episodeText = EpisodeCodeUtils.FormatFullText(seasonNumber, episodeNumber, true, true);
-            var bottom = safeArea.Bottom - (height * TextPaddingRatio);
-
-            style.Draw(canvas, episodeText, safeArea.MidX, bottom - style.Descent);
+            var bottom = safeArea.Bottom - (unit * TextPaddingRatio);
+            style.Draw(canvas, label, safeArea.MidX, bottom - style.Descent);
 
             return new TextInfo
             {
                 Height = style.LineBox,
-                Width = style.MeasureWidth(episodeText),
+                Width = style.MeasureWidth(label),
                 CenterX = safeArea.MidX,
                 Y = bottom - style.LineBox
             };
@@ -113,14 +114,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // DrawFrameBorder
         // Draws the rounded border with the top and bottom edges opened around whatever text sits
         // in them. The stroke, its shadow, and the corner radius all scale with the poster.
-        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? titleInfo, TextInfo? episodeInfo, float spacing, int height)
+        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? titleInfo, TextInfo? episodeInfo, float spacing, int unit)
         {
-            var radius = RenderConstants.Scaled(CornerRadiusReference, height);
+            var radius = RenderConstants.Scaled(CornerRadiusReference, unit);
 
-            using var borderPaint = PaintFactory.CreateLinePaint(SKColors.White, RenderConstants.Scaled(BorderStrokeReference, height), SKStrokeCap.Round);
+            using var borderPaint = PaintFactory.CreateLinePaint(SKColors.White, RenderConstants.Scaled(BorderStrokeReference, unit), SKStrokeCap.Round);
             borderPaint.StrokeJoin = SKStrokeJoin.Round;
 
-            using var shadowPaint = PaintFactory.CreateLinePaint(SKColors.Black.WithAlpha(200), RenderConstants.Scaled(BorderShadowStrokeReference, height), SKStrokeCap.Round);
+            using var shadowPaint = PaintFactory.CreateLinePaint(SKColors.Black.WithAlpha(200), RenderConstants.Scaled(BorderShadowStrokeReference, unit), SKStrokeCap.Round);
             shadowPaint.StrokeJoin = SKStrokeJoin.Round;
 
             using var path = BuildFramePath(safeArea, radius, GapFor(titleInfo, spacing), GapFor(episodeInfo, spacing));
@@ -134,7 +135,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static (float Left, float Right)? GapFor(TextInfo? info, float spacing)
         {
             if (!info.HasValue)
+            {
                 return null;
+            }
 
             var half = info.Value.Width / 2f;
             return (info.Value.CenterX - half - spacing, info.Value.CenterX + half + spacing);
@@ -157,9 +160,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             {
                 var gapLeft = Math.Clamp(topGap.Value.Left, topStart, topEnd);
                 var gapRight = Math.Clamp(topGap.Value.Right, topStart, topEnd);
-                if (gapLeft > topStart) path.LineTo(gapLeft, r.Top);
+                if (gapLeft > topStart)
+                {
+                    path.LineTo(gapLeft, r.Top);
+                }
+
                 path.MoveTo(gapRight, r.Top);
-                if (topEnd > gapRight) path.LineTo(topEnd, r.Top);
+                if (topEnd > gapRight)
+                {
+                    path.LineTo(topEnd, r.Top);
+                }
             }
             else
             {
@@ -177,9 +187,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             {
                 var gapRight = Math.Clamp(bottomGap.Value.Right, bottomEnd, bottomStart);
                 var gapLeft = Math.Clamp(bottomGap.Value.Left, bottomEnd, bottomStart);
-                if (gapRight < bottomStart) path.LineTo(gapRight, r.Bottom);
+                if (gapRight < bottomStart)
+                {
+                    path.LineTo(gapRight, r.Bottom);
+                }
+
                 path.MoveTo(gapLeft, r.Bottom);
-                if (gapLeft > bottomEnd) path.LineTo(bottomEnd, r.Bottom);
+                if (gapLeft > bottomEnd)
+                {
+                    path.LineTo(bottomEnd, r.Bottom);
+                }
             }
             else
             {

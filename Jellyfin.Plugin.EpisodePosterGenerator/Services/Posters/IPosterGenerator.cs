@@ -17,7 +17,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // returning the encoded JPEG bytes, or null when rendering failed.
         byte[]? Generate(
             SKBitmap canvas,
-            EpisodeMetadata episodeMetadata,
+            ArtworkSubject subject,
             PosterSettings settings);
 
         // Style
@@ -27,6 +27,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         string Description { get; }
+
+        // SupportedShapes
+        // The poster shapes this style can lay out.
+        ArtworkShapes SupportedShapes { get; }
+
+        // Supports
+        // Returns true when this style can lay out the given shape.
+        bool Supports(ArtworkShape shape);
     }
 
     public abstract class BasePosterGenerator : IPosterGenerator
@@ -38,6 +46,24 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public abstract string Description { get; }
+
+        // SupportedShapes
+        // Every style lays out both shapes unless it says otherwise.
+        public virtual ArtworkShapes SupportedShapes => ArtworkShapes.All;
+
+        // Supports
+        // Returns true when this style can lay out the given shape.
+        public bool Supports(ArtworkShape shape)
+        {
+            var flag = shape == ArtworkShape.Portrait ? ArtworkShapes.Portrait : ArtworkShapes.Landscape;
+            return (SupportedShapes & flag) != 0;
+        }
+
+        // SizeUnit
+        // The length every size setting is a percentage of: the poster's short edge. For a landscape
+        // poster that is the height, exactly as before; for a portrait poster it is the width, so a
+        // design's text keeps the same weight relative to the frame instead of overflowing it.
+        protected static int SizeUnit(int width, int height) => Math.Max(1, Math.Min(width, height));
 
         // GetSafeAreaMargin
         // Returns the safe area margin as a percentage of the poster dimensions.
@@ -107,35 +133,47 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawBottomTextStack
-        // The layout Standard and Split share: season and episode numbers, a rule, and a two
-        // line title zone packed against the bottom of the area.
-        protected static void DrawBottomTextStack(SKCanvas canvas, SKRect area, int seasonNumber, int episodeNumber, string title, PosterSettings settings, int height)
+        // The layout Standard and Split share: an identity line, a rule, and a two line title zone
+        // packed against the bottom of the area. An episode's identity line is its season and
+        // episode numbers; a season or series draws its label, such as SEASON 2, instead.
+        protected static void DrawBottomTextStack(SKCanvas canvas, SKRect area, ArtworkSubject subject, PosterSettings settings, int unit)
         {
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            using var titleStyle = CreateTitleStyle(settings, height);
-            using var episodeStyle = CreateEpisodeStyle(settings, height);
+            using var titleStyle = CreateTitleStyle(settings, unit);
+            using var episodeStyle = CreateEpisodeStyle(settings, unit);
 
-            var showSeparator = settings.ShowTitle && settings.ShowEpisode;
+            var parts = subject.NumberParts;
+            var label = subject.Label;
+            var showEpisode = settings.ShowEpisode && (parts.Count > 1 || label.Length > 0);
+            var showSeparator = settings.ShowTitle && showEpisode;
 
-            var column = new LayoutColumn(area, GetElementSpacing(settings, height), LayoutAnchor.Bottom)
-                .Add(EpisodeBlock, settings.ShowEpisode ? episodeStyle.LineBox : 0f)
-                .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(height) : 0f)
+            var column = new LayoutColumn(area, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+                .Add(EpisodeBlock, showEpisode ? episodeStyle.LineBox : 0f)
+                .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(unit) : 0f)
                 .Add(TitleBlock, settings.ShowTitle ? titleStyle.BlockHeight(2) : 0f);
 
             if (column.TryGetSlot(EpisodeBlock, out var episodeSlot))
             {
-                DrawSeasonEpisodeInfo(canvas, seasonNumber, episodeNumber, episodeStyle, settings, height, episodeSlot);
+                if (parts.Count > 1)
+                {
+                    DrawSeasonEpisodeInfo(canvas, parts[0], parts[1], episodeStyle, settings, unit, episodeSlot);
+                }
+                else
+                {
+                    episodeStyle.Draw(canvas, label, episodeSlot.MidX, episodeStyle.BaselineAtBottom(episodeSlot));
+                }
             }
 
             if (column.TryGetSlot(SeparatorBlock, out var separatorSlot))
             {
-                DrawSeparatorLine(canvas, settings, height, separatorSlot);
+                DrawSeparatorLine(canvas, settings, unit, separatorSlot);
             }
 
             if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                DrawTitleInSlot(canvas, title, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(canvas, subject.Title ?? "-", titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -181,14 +219,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // ApplySafeAreaConstraints
         // Calculates the safe area dimensions and offsets for a given poster size.
-        // The margin is the safe area percent of the poster HEIGHT, applied as the same
+        // The margin is the safe area percent of the poster's short edge, applied as the same
         // pixel amount on all four sides, so the border is visually even (10% of a
         // 1600x1000 poster is a 100 pixel margin both vertically and horizontally).
         protected static void ApplySafeAreaConstraints(
             int width, int height, PosterSettings settings,
             out float safeWidth, out float safeHeight, out float safeLeft, out float safeTop)
         {
-            var marginPixels = height * GetSafeAreaMargin(settings);
+            var marginPixels = SizeUnit(width, height) * GetSafeAreaMargin(settings);
             safeLeft = marginPixels;
             safeTop = marginPixels;
             safeWidth = width - (2 * marginPixels);
@@ -197,7 +235,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Generate
         // Generates a poster using the 4-layer rendering pipeline and returns the encoded JPEG.
-        public byte[]? Generate(SKBitmap canvas, EpisodeMetadata episodeMetadata, PosterSettings settings)
+        public byte[]? Generate(SKBitmap canvas, ArtworkSubject subject, PosterSettings settings)
         {
             try
             {
@@ -221,16 +259,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 skCanvas.Clear(SKColors.Transparent);
 
                 // Layer 1: Canvas (base layer)
-                RenderCanvas(skCanvas, canvas, episodeMetadata, settings, width, height);
+                RenderCanvas(skCanvas, canvas, subject, settings, width, height);
 
                 // Layer 2: Overlay (color tinting)
-                RenderOverlay(skCanvas, episodeMetadata, settings, width, height);
+                RenderOverlay(skCanvas, subject, settings, width, height);
 
                 // Layer 3: Graphics (static images/watermarks)
-                RenderGraphics(skCanvas, episodeMetadata, settings, width, height);
+                RenderGraphics(skCanvas, subject, settings, width, height);
 
                 // Layer 4: Typography (text and logos)
-                RenderTypography(skCanvas, episodeMetadata, settings, width, height);
+                RenderTypography(skCanvas, subject, settings, width, height);
 
                 using var finalImage = surface.Snapshot();
                 using var data = finalImage.Encode(SKEncodedImageFormat.Jpeg, RenderConstants.JpegQuality);
@@ -239,7 +277,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                LogError(ex, episodeMetadata.EpisodeName);
+                LogError(ex, subject.EpisodeName);
                 return null;
             }
         }
@@ -282,7 +320,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderCanvas
         // Draws the base canvas bitmap onto the surface.
-        protected virtual void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected virtual void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
             skCanvas.DrawBitmap(canvas, 0, 0);
@@ -290,7 +328,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderOverlay
         // Applies a color overlay with optional gradient to the poster.
-        protected virtual void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected virtual void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             if (string.IsNullOrEmpty(settings.OverlayColor))
                 return;
@@ -367,7 +405,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderGraphics
         // Loads and draws a static graphic image within the safe area.
-        protected virtual void RenderGraphics(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected virtual void RenderGraphics(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             if (string.IsNullOrEmpty(settings.GraphicPath))
                 return;
@@ -386,7 +424,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                     return;
 
                 ApplySafeAreaConstraints(width, height, settings, out float safeWidth, out float safeHeight, out float safeLeft, out float safeTop);
-                var graphicRect = CalculateGraphicRect(graphicBitmap, safeLeft, safeTop, safeWidth, safeHeight, settings);
+                var graphicRect = CalculateGraphicRect(graphicBitmap, width, height, safeLeft, safeTop, safeWidth, safeHeight, settings);
 
                 using var graphicPaint = new SKPaint { IsAntialias = true };
                 PaintFactory.DrawBitmap(skCanvas, graphicBitmap, graphicRect, graphicPaint);
@@ -399,7 +437,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderTypography
         // Draws text elements on the poster.
-        protected abstract void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height);
+        protected abstract void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height);
 
         // GetSafeAreaBounds
         // Returns the safe area as an SKRect for the given poster dimensions.
@@ -415,12 +453,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // CalculateGraphicRect
         // Calculates the destination rectangle for a graphic while preserving aspect ratio.
-        protected virtual SKRect CalculateGraphicRect(SKBitmap graphicBitmap, float safeLeft, float safeTop, float safeWidth, float safeHeight, PosterSettings settings)
+        protected virtual SKRect CalculateGraphicRect(SKBitmap graphicBitmap, int posterWidth, int posterHeight, float safeLeft, float safeTop, float safeWidth, float safeHeight, PosterSettings settings)
         {
-            // The pixel margin comes from the poster height on both axes, so the height
-            // reverses proportionally and the width just adds the margins back.
-            var posterHeight = safeHeight / (1 - 2 * GetSafeAreaMargin(settings));
-            var posterWidth = safeWidth + (2 * GetSafeAreaMargin(settings) * posterHeight);
+            ArgumentNullException.ThrowIfNull(graphicBitmap);
+            ArgumentNullException.ThrowIfNull(settings);
 
             var maxWidth = posterWidth * (settings.GraphicWidth / 100f);
             var maxHeight = posterHeight * (settings.GraphicHeight / 100f);

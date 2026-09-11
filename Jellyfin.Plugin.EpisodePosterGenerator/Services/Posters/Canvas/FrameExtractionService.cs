@@ -46,20 +46,25 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
         /// <summary>
         /// Extracts up to <paramref name="count"/> distinct frames from an episode, best first.
-        /// Successive attempts walk a low-discrepancy sequence across the configured extraction
-        /// window, so candidates are spread through the episode rather than clustered. The caller
-        /// owns the returned files and is responsible for deleting them.
+        /// Successive attempts walk a low-discrepancy sequence across the extraction window, so
+        /// candidates are spread through the episode rather than clustered. The walk starts at
+        /// <paramref name="seekPhase"/> and skips its first <paramref name="attemptOffset"/> steps,
+        /// so the same phase and offset always visit the same timestamps. The caller owns the
+        /// returned files and is responsible for deleting them.
         /// </summary>
-        public async Task<IReadOnlyList<string>> ExtractFrameCandidatesAsync(
+        public async Task<IReadOnlyList<ExtractedFrame>> ExtractFrameCandidatesAsync(
             Episode episode,
-            PosterSettings config,
+            float windowStartPercent,
+            float windowEndPercent,
             int count,
+            double seekPhase,
+            int attemptOffset,
             CancellationToken cancellationToken = default)
         {
             if (episode == null || string.IsNullOrEmpty(episode.Path))
             {
                 _logger.LogError("Invalid episode provided to FrameExtractionService");
-                return Array.Empty<string>();
+                return Array.Empty<ExtractedFrame>();
             }
 
             count = Math.Max(1, count);
@@ -69,7 +74,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             if (mediaSource == null)
             {
                 _logger.LogError("No media source found for episode: {Path}", episode.Path);
-                return Array.Empty<string>();
+                return Array.Empty<ExtractedFrame>();
             }
 
             var videoStream = mediaSource.MediaStreams?
@@ -77,7 +82,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             if (videoStream == null)
             {
                 _logger.LogError("No video stream found for episode: {Path}", episode.Path);
-                return Array.Empty<string>();
+                return Array.Empty<ExtractedFrame>();
             }
 
             var container = Path.GetExtension(episode.Path)?.TrimStart('.') ?? string.Empty;
@@ -90,7 +95,6 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             // Candidates kept so far, worst-scoring first so eviction is cheap.
             var candidates = new List<FrameCandidate>(count);
             var goodCount = 0;
-            var seekPhase = Random.Shared.NextDouble();
 
             var maxAttempts = Math.Clamp(
                 MaxRetries + ((count - 1) * ExtraAttemptsPerCandidate),
@@ -108,7 +112,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
                     try
                     {
-                        var seekSeconds = GenerateSeekTime(videoDurationSeconds, attempt, seekPhase, config);
+                        var seekSeconds = GenerateSeekTime(videoDurationSeconds, attemptOffset + attempt, seekPhase, windowStartPercent, windowEndPercent);
                         var offset = TimeSpan.FromSeconds(seekSeconds);
 
                         extractedPath = await _mediaEncoder.ExtractVideoImage(
@@ -205,12 +209,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             if (candidates.Count == 0)
             {
                 _logger.LogError("Failed to extract any usable frames after {Attempts} attempts", maxAttempts);
-                return Array.Empty<string>();
+                return Array.Empty<ExtractedFrame>();
             }
 
             var ordered = candidates
                 .OrderByDescending(c => c.Score)
-                .Select(c => c.Path)
+                .Select(c => new ExtractedFrame(c.Path, c.Score))
                 .ToArray();
 
             _logger.LogInformation("Using {Count} frame(s) (best score: {Score:F3})",
@@ -260,15 +264,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             return true;
         }
 
-        private int GenerateSeekTime(double videoDurationSeconds, int attempt, double seekPhase, PosterSettings config)
+        private int GenerateSeekTime(double videoDurationSeconds, int attempt, double seekPhase, float windowStart, float windowEnd)
         {
-            var startPercent = config.ExtractWindowStart / 100.0;
-            var endPercent = config.ExtractWindowEnd / 100.0;
+            var startPercent = windowStart / 100.0;
+            var endPercent = windowEnd / 100.0;
 
             if (startPercent >= endPercent)
             {
                 _logger.LogWarning("Invalid extraction window: start {Start}% >= end {End}%, using default 20%-80%",
-                    config.ExtractWindowStart, config.ExtractWindowEnd);
+                    windowStart, windowEnd);
                 startPercent = DefaultSeekStartPercent;
                 endPercent = DefaultSeekEndPercent;
             }
@@ -278,7 +282,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
             // Low-discrepancy (golden ratio) sequence: successive attempts land far apart and
             // never resample the same region, unlike random seeks which can cluster or repeat.
-            // The phase is randomized per run so refreshing an episode probes new frames.
+            // The phase comes from the frame pool's seed, so a new pool probes new frames while the
+            // same seed revisits the same ones.
             var fraction = (seekPhase + attempt * 0.6180339887498949) % 1.0;
             return (int)(startTime + fraction * (endTime - startTime));
         }
@@ -368,4 +373,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
         private readonly record struct FrameCandidate(string Path, double Score, bool IsGood);
     }
+
+    /// <summary>
+    /// An extracted frame file and its quality score.
+    /// </summary>
+    public readonly record struct ExtractedFrame(string Path, double Score);
 }

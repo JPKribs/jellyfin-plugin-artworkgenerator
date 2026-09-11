@@ -4,78 +4,82 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
-using MediaBrowser.Controller.Entities.TV;
+using Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork;
+using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 {
     /// <summary>
-    /// Orchestrates poster canvas creation by delegating to frame extraction,
-    /// cropping, and brightness services, or producing a blank canvas.
+    /// Produces the bitmaps artwork is drawn on: extracted frames from the item's shared frame pool,
+    /// the series backdrop, or a blank canvas, each cropped and brightened for the render.
     /// </summary>
     public class CanvasService
     {
+        private const int DefaultHeight = 1080;
+        private const int DefaultWidth = 1920;
+
         private readonly ILogger<CanvasService> _logger;
-        private readonly FrameExtractionService _frameExtractionService;
+        private readonly FramePoolService _framePool;
         private readonly CroppingService _croppingService;
         private readonly BrightnessService _brightnessService;
 
         public CanvasService(
             ILogger<CanvasService> logger,
-            FrameExtractionService frameExtractionService,
+            FramePoolService framePool,
             CroppingService croppingService,
             BrightnessService brightnessService)
         {
             _logger = logger;
-            _frameExtractionService = frameExtractionService;
+            _framePool = framePool;
             _croppingService = croppingService;
             _brightnessService = brightnessService;
         }
 
         /// <summary>
-        /// Generates up to <paramref name="count"/> poster canvases. Only the extracted-frame
-        /// source can produce more than one; the others yield a single canvas. The caller owns
-        /// every returned bitmap.
+        /// Produces up to <paramref name="count"/> poster canvases, starting at rank
+        /// <paramref name="rankOffset"/> of the item's frame pool. The settings must already be
+        /// adjusted for <paramref name="shape"/>. Only extracted frames can produce more than one.
+        /// When nothing can be extracted, the series backdrop and then a blank canvas stand in, so
+        /// a series or season without local episodes still gets artwork. The caller owns the bitmaps.
         /// </summary>
         public async Task<IReadOnlyList<SKBitmap>> GenerateCanvasesAsync(
-            Episode episode,
-            EpisodeMetadata metadata,
-            PosterSettings config,
+            BaseItem item,
+            ArtworkSubject subject,
+            PosterSettings settings,
+            ArtworkShape shape,
+            int rankOffset,
             int count,
             CancellationToken cancellationToken = default)
         {
-            if (metadata?.VideoMetadata == null)
-            {
-                _logger.LogError("Invalid metadata provided to CanvasService");
-                return Array.Empty<SKBitmap>();
-            }
-
-            var videoMeta = metadata.VideoMetadata;
+            ArgumentNullException.ThrowIfNull(item);
+            ArgumentNullException.ThrowIfNull(subject);
+            ArgumentNullException.ThrowIfNull(settings);
 
             try
             {
-                switch (config.CanvasSource)
+                if (settings.CanvasSource == CanvasSource.Extract)
                 {
-                    case CanvasSource.Extract:
-                        return await BuildExtractedCanvasesAsync(episode, metadata, config, count, cancellationToken)
-                            .ConfigureAwait(false);
+                    var extracted = await ExtractCanvasesAsync(item, subject, settings, rankOffset, count, cancellationToken).ConfigureAwait(false);
+                    if (extracted.Count > 0)
+                    {
+                        return extracted;
+                    }
 
-                    case CanvasSource.SeriesBackdrop:
-                        var backdropCanvas = LoadSeriesBackdropCanvas(metadata.VideoMetadata, config);
-                        if (backdropCanvas == null)
-                        {
-                            _logger.LogInformation("Series backdrop unavailable for {SeriesName}, using transparent canvas",
-                                metadata.SeriesName);
-                            backdropCanvas = CreateFallbackCanvas(videoMeta.VideoWidth, videoMeta.VideoHeight);
-                        }
-
-                        return new[] { backdropCanvas };
-
-                    case CanvasSource.None:
-                    default:
-                        return new[] { CreateFallbackCanvas(videoMeta.VideoWidth, videoMeta.VideoHeight) };
+                    _logger.LogInformation("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
                 }
+
+                if (settings.CanvasSource != CanvasSource.None)
+                {
+                    var backdrop = LoadSeriesBackdropCanvas(subject.VideoMetadata, settings);
+                    if (backdrop != null)
+                    {
+                        return new[] { backdrop };
+                    }
+                }
+
+                return new[] { CreateFallbackCanvas(subject.VideoMetadata, shape) };
             }
             catch (OperationCanceledException)
             {
@@ -83,68 +87,109 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating poster canvas for {SeriesName} - {EpisodeName}",
-                    metadata.SeriesName, metadata.EpisodeName);
+                _logger.LogError(ex, "Error generating canvas for {Name}", item.Name);
                 return Array.Empty<SKBitmap>();
             }
         }
 
-        // BuildExtractedCanvasesAsync
-        // Extracts frames and turns each into a cropped, brightened canvas. Extracted frame
-        // files are always removed, including when a later step throws.
-        private async Task<IReadOnlyList<SKBitmap>> BuildExtractedCanvasesAsync(
-            Episode episode,
-            EpisodeMetadata metadata,
-            PosterSettings config,
+        /// <summary>
+        /// Produces up to <paramref name="count"/> backdrop bitmaps from the item's frame pool: the
+        /// frame cropped to the backdrop ratio with no design applied. Returns nothing when the item
+        /// has no extractable video.
+        /// </summary>
+        public async Task<IReadOnlyList<SKBitmap>> GenerateBackdropCanvasesAsync(
+            BaseItem item,
+            ArtworkSubject subject,
+            BackdropSettings backdrop,
+            int rankOffset,
             int count,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
-            var framePaths = await _frameExtractionService
-                .ExtractFrameCandidatesAsync(episode, config, count, cancellationToken)
-                .ConfigureAwait(false);
+            ArgumentNullException.ThrowIfNull(item);
+            ArgumentNullException.ThrowIfNull(subject);
+            ArgumentNullException.ThrowIfNull(backdrop);
 
-            if (framePaths.Count == 0)
+            var settings = new PosterSettings
             {
-                _logger.LogWarning("Frame extraction did not produce a valid output file");
-                return Array.Empty<SKBitmap>();
-            }
-
-            var canvases = new List<SKBitmap>(framePaths.Count);
+                CanvasSource = CanvasSource.Extract,
+                EnableLetterboxDetection = backdrop.EnableLetterboxDetection,
+                LetterboxBlackThreshold = backdrop.LetterboxBlackThreshold,
+                LetterboxConfidence = backdrop.LetterboxConfidence,
+                BrightenHDR = backdrop.BrightenHDR,
+                ExtractWindowStart = backdrop.ExtractWindowStart,
+                ExtractWindowEnd = backdrop.ExtractWindowEnd,
+                PosterFill = PosterFill.Fit,
+                PosterDimensionRatio = string.IsNullOrWhiteSpace(backdrop.AspectRatio) ? "16:9" : backdrop.AspectRatio
+            };
 
             try
             {
-                foreach (var framePath in framePaths)
+                return await ExtractCanvasesAsync(item, subject, settings, rankOffset, count, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating backdrop for {Name}", item.Name);
+                return Array.Empty<SKBitmap>();
+            }
+        }
+
+        // ExtractCanvasesAsync
+        // Leases the item's frame pool and turns the requested ranks into prepared canvases.
+        private async Task<IReadOnlyList<SKBitmap>> ExtractCanvasesAsync(
+            BaseItem item,
+            ArtworkSubject subject,
+            PosterSettings settings,
+            int rankOffset,
+            int count,
+            CancellationToken cancellationToken)
+        {
+            var sources = ArtworkSources.GetPlayableEpisodes(item);
+            if (sources.Count == 0)
+            {
+                return Array.Empty<SKBitmap>();
+            }
+
+            var key = FramePoolService.KeyFor(item.Id, settings.ExtractWindowStart, settings.ExtractWindowEnd);
+
+            using var lease = await _framePool.AcquireAsync(
+                key,
+                sources,
+                settings.ExtractWindowStart,
+                settings.ExtractWindowEnd,
+                rankOffset + count,
+                cancellationToken).ConfigureAwait(false);
+
+            if (lease.Paths.Count == 0)
+            {
+                return Array.Empty<SKBitmap>();
+            }
+
+            var canvases = new List<SKBitmap>(count);
+            var used = new HashSet<int>();
+
+            try
+            {
+                for (int i = 0; i < count; i++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    if (!File.Exists(framePath))
+                    // A pool smaller than the request wraps around rather than failing, but a
+                    // single request never returns the same frame twice.
+                    var index = (rankOffset + i) % lease.Paths.Count;
+                    if (!used.Add(index))
                     {
-                        continue;
+                        break;
                     }
 
-                    using var bitmap = SKBitmap.Decode(framePath);
-                    if (bitmap == null)
+                    var canvas = PrepareFrame(lease.Paths[index], settings);
+                    if (canvas != null)
                     {
-                        _logger.LogWarning("Failed to decode extracted frame");
-                        continue;
+                        canvases.Add(canvas);
                     }
-
-                    var canvas = _croppingService.CropPoster(bitmap, config);
-
-                    // CropPoster hands back the source untouched when nothing needed cropping;
-                    // the source is disposed with the using above, so take a copy in that case.
-                    if (ReferenceEquals(canvas, bitmap))
-                    {
-                        canvas = bitmap.Copy();
-                    }
-
-                    if (config.BrightenHDR > 0)
-                    {
-                        _logger.LogDebug("Applying HDR brightening: +{Brightness}%", config.BrightenHDR);
-                        _brightnessService.BrightenBitmap(canvas, config.BrightenHDR);
-                    }
-
-                    canvases.Add(canvas);
                 }
             }
             catch
@@ -156,47 +201,54 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
                 throw;
             }
-            finally
-            {
-                foreach (var framePath in framePaths)
-                {
-                    TryDeleteFrame(framePath);
-                }
-            }
 
-            // Every canvas comes from the same video, so recording the dimensions once is enough.
             if (canvases.Count > 0)
             {
-                metadata.VideoMetadata.VideoWidth = canvases[0].Width;
-                metadata.VideoMetadata.VideoHeight = canvases[0].Height;
+                subject.VideoMetadata.VideoWidth = canvases[0].Width;
+                subject.VideoMetadata.VideoHeight = canvases[0].Height;
             }
 
             return canvases;
         }
 
-        // TryDeleteFrame
-        // Removes a temporary extracted frame, logging but not propagating cleanup failures.
-        private void TryDeleteFrame(string path)
+        // PrepareFrame
+        // Decodes a pooled frame, crops it, and brightens it. Pooled frames are kept raw so each
+        // consumer can apply its own crop; the pool file itself is never modified.
+        private SKBitmap? PrepareFrame(string path, PosterSettings settings)
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            if (!File.Exists(path))
             {
-                return;
+                return null;
             }
 
-            try
+            using var bitmap = SKBitmap.Decode(path);
+            if (bitmap == null)
             {
-                File.Delete(path);
+                _logger.LogWarning("Failed to decode pooled frame {Path}", path);
+                return null;
             }
-            catch (Exception ex)
+
+            var canvas = _croppingService.CropPoster(bitmap, settings);
+
+            // CropPoster hands back the source untouched when nothing needed cropping; the source
+            // is disposed with the using above, so take a copy in that case.
+            if (ReferenceEquals(canvas, bitmap))
             {
-                _logger.LogWarning(ex, "Failed to cleanup temporary file: {FilePath}", path);
+                canvas = bitmap.Copy();
             }
+
+            if (settings.BrightenHDR > 0)
+            {
+                _brightnessService.BrightenBitmap(canvas, settings.BrightenHDR);
+            }
+
+            return canvas;
         }
 
         // LoadSeriesBackdropCanvas
-        // Loads the series backdrop image and crops it to the configured poster dimensions.
-        // Returns null when no backdrop is available or it cannot be decoded.
-        private SKBitmap? LoadSeriesBackdropCanvas(VideoMetadata videoMeta, PosterSettings config)
+        // Loads the series backdrop image and crops it to the render's settings. Returns null when no
+        // backdrop is available or it cannot be decoded.
+        private SKBitmap? LoadSeriesBackdropCanvas(VideoMetadata videoMeta, PosterSettings settings)
         {
             var backdropPath = videoMeta.SeriesBackdropFilePath;
             if (string.IsNullOrEmpty(backdropPath) || !File.Exists(backdropPath))
@@ -211,7 +263,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 return null;
             }
 
-            var cropped = _croppingService.CropPoster(bitmap, config);
+            var cropped = _croppingService.CropPoster(bitmap, settings);
             var canvas = ReferenceEquals(cropped, bitmap) ? bitmap.Copy() : cropped;
 
             videoMeta.VideoWidth = canvas.Width;
@@ -221,9 +273,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         }
 
         // CreateFallbackCanvas
-        // Creates an empty bitmap canvas with the specified dimensions.
-        private SKBitmap CreateFallbackCanvas(int width, int height)
+        // A transparent canvas in the render's shape: the video's size for landscape, and a 2:3
+        // portrait of the same height for portrait.
+        private SKBitmap CreateFallbackCanvas(VideoMetadata videoMeta, ArtworkShape shape)
         {
+            var height = videoMeta.VideoHeight > 0 ? videoMeta.VideoHeight : DefaultHeight;
+            var width = shape == ArtworkShape.Portrait
+                ? height * 2 / 3
+                : (videoMeta.VideoWidth > 0 ? videoMeta.VideoWidth : DefaultWidth);
+
             _logger.LogDebug("Creating fallback canvas {Width}x{Height}", width, height);
             var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
             using var canvas = new SKCanvas(bitmap);

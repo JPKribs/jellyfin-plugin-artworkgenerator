@@ -309,6 +309,36 @@ public static class TextUtils
         return reduced.Length > 0 && font.MeasureText(reduced) <= maxWidth ? reduced : null;
     }
 
+    // SplitBalanced
+    // Splits text at the word boundary that makes the wider of the two lines as narrow as
+    // possible. Returns the text and an empty second line when it is a single word.
+    public static (string First, string Second) SplitBalanced(string text, SKFont font)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(font);
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length < 2)
+            return (text.Trim(), string.Empty);
+
+        int best = 1;
+        float bestWidest = float.MaxValue;
+        for (int i = 1; i < words.Length; i++)
+        {
+            float widest = Math.Max(
+                font.MeasureText(string.Join(" ", words[..i])),
+                font.MeasureText(string.Join(" ", words[i..])));
+
+            if (widest < bestWidest)
+            {
+                bestWidest = widest;
+                best = i;
+            }
+        }
+
+        return (string.Join(" ", words[..best]), string.Join(" ", words[best..]));
+    }
+
     // FitTextToWidth
     // Wraps text to at most two lines, trimming with an ellipsis when it still does not fit.
     //

@@ -7,11 +7,9 @@ export default function (view) {
     var shared = createShared(view, pluginId, 'Plugins/EpisodePosterGenerator');
     var fullConfig = null;
     var currentConfigId = null;
-    var allSeries = [];
     var _initialized = false;
     var _dirty = false;
     var _savedConfigSnapshot = null;
-    var _seriesModalTrigger = null;
     var _previewObjectUrl = null;
     var _componentObjectUrls = [];
     var _saving = false;
@@ -19,7 +17,9 @@ export default function (view) {
 
     function getTabs() {
         return [
-            { href: 'configurationpage?name=epg_posters', name: 'Posters' },
+            { href: 'configurationpage?name=epg_posters', name: 'Designs' },
+            { href: 'configurationpage?name=epg_logos', name: 'Logos' },
+            { href: 'configurationpage?name=epg_profiles', name: 'Profiles' },
             { href: 'configurationpage?name=epg_settings', name: 'Settings' }
         ];
     }
@@ -270,12 +270,10 @@ export default function (view) {
             }
 
             populateConfigDropdown();
-            loadAllSeries().then(function () {
-                syncColorControls();
-                takeConfigSnapshot();
-                markClean();
-                Dashboard.hideLoadingMsg();
-            });
+            syncColorControls();
+            takeConfigSnapshot();
+            markClean();
+            Dashboard.hideLoadingMsg();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
             Dashboard.hideLoadingMsg();
@@ -337,8 +335,9 @@ export default function (view) {
             }
         });
 
-        updateSeriesAssignment();
+        updateConfigActions();
         updateVisibility();
+        updateStyleAvailability();
         updateStyleDescription();
         syncColorControls();
         schedulePreview();
@@ -382,238 +381,21 @@ export default function (view) {
         el.selectedIndex = 0;
     }
 
-    // ── Series Management ───────────────────────────────────
+    // ── Config Actions ──────────────────────────────────────
 
-    function updateSeriesAssignment() {
+    // The default design cannot be renamed or deleted: profiles fall back to it.
+    function updateConfigActions() {
         var config = getCurrentConfig();
-        var isDefault = config.IsDefault;
-
-        view.querySelector('#seriesAssignmentSection').style.display = isDefault ? 'none' : 'block';
+        var isDefault = !!(config && config.IsDefault);
         view.querySelector('#btnDeleteConfig').classList.toggle('hidden', isDefault);
         view.querySelector('#btnRenameConfig').classList.toggle('hidden', isDefault);
-
-        if (!isDefault) renderAssignedSeries();
     }
 
-    function renderAssignedSeries() {
-        var config = getCurrentConfig();
-        var container = view.querySelector('#assignedSeriesList');
-        container.innerHTML = '';
-
-        if (!config.SeriesIds || config.SeriesIds.length === 0) {
-            var msg = document.createElement('div');
-            msg.className = 'series-empty-state';
-            msg.innerHTML = '<span class="series-empty-state-icon">&#9888;</span> No series assigned. Assign at least one series before saving.';
-            container.appendChild(msg);
-            return;
-        }
-
-        config.SeriesIds.forEach(function (seriesId) {
-            var series = allSeries.find(function (s) { return s.Id === seriesId; });
-            if (!series) return;
-
-            var tag = document.createElement('div');
-            tag.className = 'series-tag';
-
-            var img = document.createElement('img');
-            img.className = 'series-tag-poster';
-            img.src = ApiClient.getImageUrl(series.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
-            img.onerror = function () { this.style.display = 'none'; };
-
-            var name = document.createElement('span');
-            name.className = 'series-tag-name';
-            name.textContent = series.Name;
-
-            var remove = document.createElement('span');
-            remove.className = 'series-tag-remove';
-            remove.textContent = '\u00d7';
-            remove.setAttribute('data-series-id', seriesId);
-
-            tag.appendChild(img);
-            tag.appendChild(name);
-            tag.appendChild(remove);
-            container.appendChild(tag);
+    // Profiles that point a poster slot at the given design.
+    function profilesUsingDesign(designId) {
+        return (fullConfig.Profiles || []).filter(function (p) {
+            return (p.Slots || []).some(function (s) { return s.Slot !== 'Logo' && s.DesignId === designId; });
         });
-
-        container.querySelectorAll('.series-tag-remove').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                removeSeries(this.getAttribute('data-series-id'));
-            });
-        });
-    }
-
-    function loadAllSeries() {
-        return ApiClient.getItems(ApiClient.getCurrentUserId(), {
-            IncludeItemTypes: 'Series',
-            Recursive: true,
-            SortBy: 'SortName',
-            SortOrder: 'Ascending',
-            Fields: 'Overview,ProductionYear'
-        }).then(function (result) {
-            allSeries = result.Items || [];
-            return allSeries;
-        }).catch(function (error) {
-            console.error('Failed to load series:', error);
-            allSeries = [];
-            return [];
-        });
-    }
-
-    function showSeriesSelectionModal() {
-        _seriesModalTrigger = document.activeElement;
-        var modal = view.querySelector('#seriesSelectionModal');
-        var listContainer = view.querySelector('#seriesCheckboxList');
-
-        if (!allSeries || allSeries.length === 0) {
-            listContainer.innerHTML = '<div class="series-modal-loading"><div class="series-modal-spinner"></div><span>Loading series...</span></div>';
-            view.querySelector('#seriesSelectionSummary').textContent = '';
-            modal.style.display = 'flex';
-            document.addEventListener('keydown', _onSeriesModalKeydown);
-
-            loadAllSeries().then(function () {
-                if (!allSeries || allSeries.length === 0) {
-                    closeSeriesSelectionModal();
-                    Dashboard.alert('No series found. Make sure you have TV series in your Jellyfin library.');
-                    return;
-                }
-                populateSeriesModal();
-            });
-            return;
-        }
-
-        modal.style.display = 'flex';
-        document.addEventListener('keydown', _onSeriesModalKeydown);
-        populateSeriesModal();
-    }
-
-    function populateSeriesModal() {
-        var listContainer = view.querySelector('#seriesCheckboxList');
-        var summaryEl = view.querySelector('#seriesSelectionSummary');
-        var config = getCurrentConfig();
-        var currentSeriesIds = config.SeriesIds || [];
-        var assignedSeriesIds = getAllAssignedSeriesIds();
-        var availableCount = 0;
-
-        listContainer.innerHTML = '';
-
-        allSeries.forEach(function (series) {
-            var isAssignedHere = currentSeriesIds.includes(series.Id);
-            var isAssignedElsewhere = !isAssignedHere && assignedSeriesIds.includes(series.Id);
-            if (!isAssignedElsewhere) availableCount++;
-
-            var item = document.createElement('label');
-            item.className = 'series-checkbox-item' + (isAssignedElsewhere ? ' disabled' : '');
-
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'series-checkbox';
-            checkbox.value = series.Id;
-            if (isAssignedHere) checkbox.checked = true;
-            if (isAssignedElsewhere) checkbox.disabled = true;
-
-            var poster = document.createElement('img');
-            poster.className = 'series-item-poster';
-            poster.src = ApiClient.getImageUrl(series.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
-            poster.onerror = function () { this.style.visibility = 'hidden'; };
-
-            var info = document.createElement('div');
-            info.className = 'series-item-info';
-
-            var nameSpan = document.createElement('span');
-            nameSpan.className = 'series-item-name';
-            nameSpan.textContent = series.Name;
-            info.appendChild(nameSpan);
-
-            if (series.ProductionYear) {
-                var yearSpan = document.createElement('span');
-                yearSpan.className = 'series-item-year';
-                yearSpan.textContent = series.ProductionYear;
-                info.appendChild(yearSpan);
-            }
-
-            if (series.Overview) {
-                var descSpan = document.createElement('span');
-                descSpan.className = 'series-item-overview';
-                descSpan.textContent = series.Overview.length > 120 ? series.Overview.substring(0, 120) + '...' : series.Overview;
-                info.appendChild(descSpan);
-            }
-
-            if (isAssignedElsewhere) {
-                var badge = document.createElement('span');
-                badge.className = 'series-item-badge';
-                badge.textContent = 'Assigned elsewhere';
-                info.appendChild(badge);
-            }
-
-            item.appendChild(checkbox);
-            item.appendChild(poster);
-            item.appendChild(info);
-            listContainer.appendChild(item);
-
-            checkbox.addEventListener('change', updateSelectionSummary);
-        });
-
-        function updateSelectionSummary() {
-            var checked = listContainer.querySelectorAll('.series-checkbox:checked').length;
-            summaryEl.textContent = checked + ' of ' + availableCount + ' available series selected';
-        }
-
-        updateSelectionSummary();
-
-        var searchInput = view.querySelector('#seriesSearchInput');
-        searchInput.value = '';
-        searchInput.focus();
-    }
-
-    var debouncedFilterSeriesList = debounce(function () {
-        var term = view.querySelector('#seriesSearchInput').value.toLowerCase();
-        view.querySelectorAll('.series-checkbox-item').forEach(function (item) {
-            var name = item.querySelector('.series-item-name');
-            item.style.display = (name ? name.textContent : item.textContent).toLowerCase().includes(term) ? '' : 'none';
-        });
-    }, 200);
-
-    function getAllAssignedSeriesIds() {
-        var ids = [];
-        fullConfig.PosterConfigurations.forEach(function (c) {
-            if (c.SeriesIds) ids.push.apply(ids, c.SeriesIds);
-        });
-        return ids;
-    }
-
-    function confirmSeriesSelection() {
-        var config = getCurrentConfig();
-        var selectedIds = [];
-        view.querySelectorAll('.series-checkbox:checked').forEach(function (cb) {
-            selectedIds.push(cb.value);
-        });
-        config.SeriesIds = selectedIds;
-        renderAssignedSeries();
-        closeSeriesSelectionModal();
-        checkDirty();
-    }
-
-    function _onSeriesModalKeydown(e) {
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            closeSeriesSelectionModal();
-        } else {
-            trapFocus(view.querySelector('.series-modal-content'), e);
-        }
-    }
-
-    function closeSeriesSelectionModal() {
-        view.querySelector('#seriesSelectionModal').style.display = 'none';
-        document.removeEventListener('keydown', _onSeriesModalKeydown);
-        if (_seriesModalTrigger && _seriesModalTrigger.focus) _seriesModalTrigger.focus();
-        _seriesModalTrigger = null;
-    }
-
-    function removeSeries(seriesId) {
-        var config = getCurrentConfig();
-        config.SeriesIds = config.SeriesIds.filter(function (id) { return id !== seriesId; });
-        renderAssignedSeries();
-        checkDirty();
     }
 
     // ── Config CRUD ─────────────────────────────────────────
@@ -652,6 +434,7 @@ export default function (view) {
                     ExtractWindowStart: 20.0,
                     ExtractWindowEnd: 80.0,
                     PosterStyle: 'Standard',
+                    Shape: currentShape(),
                     CutoutType: 'Code',
                     CutoutBorder: true,
                     LogoPosition: 'Center',
@@ -735,7 +518,11 @@ export default function (view) {
             return;
         }
 
-        Dashboard.confirm('Are you sure you want to delete this poster configuration?', 'Delete Configuration', function (confirmed) {
+        var users = profilesUsingDesign(config.Id).map(function (p) { return p.Name || 'Unnamed'; });
+        var message = users.length
+            ? 'This design is used by: ' + users.join(', ') + '. Those images will use the default design for their shape instead. Delete it anyway?'
+            : 'Are you sure you want to delete this design?';
+        Dashboard.confirm(message, 'Delete Design', function (confirmed) {
             if (confirmed) {
                 fullConfig.PosterConfigurations = fullConfig.PosterConfigurations.filter(function (c) {
                     return c.Id !== currentConfigId;
@@ -909,16 +696,6 @@ export default function (view) {
             return;
         }
 
-        var invalidConfigs = fullConfig.PosterConfigurations.filter(function (c) {
-            return c.IsDefault !== true && (!c.SeriesIds || c.SeriesIds.length === 0);
-        });
-
-        if (invalidConfigs.length > 0) {
-            var names = invalidConfigs.map(function (c) { return c.Name || 'Unnamed'; }).join(', ');
-            Dashboard.alert('Cannot save. These configurations have no series assigned: ' + names + '. Please assign series or delete these configurations.');
-            return;
-        }
-
         if (_saving) return;
         _saving = true;
 
@@ -946,6 +723,7 @@ export default function (view) {
     // ── Style Descriptions ──────────────────────────────────
 
     var posterStyleDescriptions = {};
+    var posterStyleShapes = {};
 
     // Pull each style's description from the generators (Plugins/EpisodePosterGenerator/PosterStyles)
     function loadPosterStyles() {
@@ -954,7 +732,11 @@ export default function (view) {
             url: ApiClient.getUrl('Plugins/EpisodePosterGenerator/PosterStyles'),
             dataType: 'json'
         }).then(function (styles) {
-            (styles || []).forEach(function (s) { posterStyleDescriptions[s.value] = s.description; });
+            (styles || []).forEach(function (s) {
+                posterStyleDescriptions[s.value] = s.description;
+                posterStyleShapes[s.value] = { Portrait: s.portrait !== false, Landscape: s.landscape !== false };
+            });
+            updateStyleAvailability();
             updateStyleDescription();
         });
     }
@@ -1004,7 +786,39 @@ export default function (view) {
     function updateStyleDescription() {
         var style = view.querySelector('#selectPosterStyle').value;
         var el = view.querySelector('#posterStyleDescription');
-        if (el) el.textContent = posterStyleDescriptions[style] || '';
+        if (!el) return;
+
+        var text = posterStyleDescriptions[style] || '';
+        if (!styleSupportsShape(style, currentShape())) {
+            text += (text ? ' ' : '') + 'This style cannot lay out ' + currentShape().toLowerCase() + ' posters, so Standard is drawn instead.';
+        }
+        el.textContent = text;
+    }
+
+    function currentShape() {
+        var el = view.querySelector('#selectShape');
+        return (el && el.value) || 'Landscape';
+    }
+
+    function styleSupportsShape(style, shape) {
+        var shapes = posterStyleShapes[style];
+        return !shapes || shapes[shape] !== false;
+    }
+
+    // Styles that cannot lay out the chosen shape are labelled rather than removed, so a stored
+    // choice is never silently rewritten; the description explains the fallback.
+    function updateStyleAvailability() {
+        var shape = currentShape();
+        view.querySelectorAll('#selectPosterStyle option').forEach(function (option) {
+            var base = option.getAttribute('data-label') || option.textContent;
+            option.setAttribute('data-label', base);
+            option.textContent = styleSupportsShape(option.value, shape)
+                ? base
+                : base + ' (' + (shape === 'Portrait' ? 'landscape' : 'portrait') + ' only)';
+        });
+
+        var frame = view.querySelector('#posterPreviewFrame');
+        if (frame) frame.classList.toggle('portrait', shape === 'Portrait');
     }
 
     // ── Live Preview ────────────────────────────────────────
@@ -1031,7 +845,9 @@ export default function (view) {
         // Use ApiClient.ajax so Jellyfin's auth headers are attached the same way the
         // working Configuration calls authenticate. Without a dataType it resolves to
         // the raw Response, so we can read the JPEG body as a blob.
-        var url = ApiClient.getUrl('Plugins/EpisodePosterGenerator/Preview');
+        var kindEl = view.querySelector('#selectPreviewKind');
+        var kind = kindEl ? kindEl.value : '';
+        var url = ApiClient.getUrl('Plugins/EpisodePosterGenerator/Preview', kind ? { kind: kind } : undefined);
 
         ApiClient.ajax({
             type: 'POST',
@@ -1286,15 +1102,12 @@ export default function (view) {
             });
         }
 
-        // Series modal
-        view.querySelector('#btnAddSeries').addEventListener('click', showSeriesSelectionModal);
-        view.querySelector('#btnCancelSeriesSelection').addEventListener('click', closeSeriesSelectionModal);
-        view.querySelector('#btnCloseSeriesModal').addEventListener('click', closeSeriesSelectionModal);
-        view.querySelector('#btnConfirmSeriesSelection').addEventListener('click', confirmSeriesSelection);
-        view.querySelector('#seriesSelectionModal').addEventListener('click', function (e) {
-            if (e.target === this) closeSeriesSelectionModal();
+        // Preview subject and shape
+        view.querySelector('#selectPreviewKind').addEventListener('change', renderPreview);
+        view.querySelector('#selectShape').addEventListener('change', function () {
+            updateStyleAvailability();
+            updateStyleDescription();
         });
-        view.querySelector('#seriesSearchInput').addEventListener('input', debouncedFilterSeriesList);
 
         // Controls that affect visibility
         var visibilityControls = [

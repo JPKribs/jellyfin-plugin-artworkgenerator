@@ -1,15 +1,25 @@
 # ![Episode Poster Generator](Jellyfin.Plugin.EpisodePosterGenerator/Assets/Logo.png)
 
-A Jellyfin plugin that automatically generates custom episode posters using smart frame analysis, black frame detection, letterbox detection, and configurable styling. Perfect for filling in missing or generic episode artwork with clean, consistent visuals.
+A Jellyfin plugin that generates artwork for TV shows using smart frame analysis, black frame detection, letterbox detection, and configurable styling. It makes episode posters, portrait series and season posters, thumbs, backdrops, and text logos, filling in missing or generic artwork with clean, consistent visuals.
 
 ## How It Works
 
-Episode Poster Generator scans each episode file, evaluates multiple frames, and selects a strong candidate while avoiding fades, black screens, and letterboxed shots. The selected frame is turned into a poster and optionally styled with configurable text such as episode title or numbering.
+Episode Poster Generator scans episode files, evaluates multiple frames, and selects strong candidates while avoiding fades, black screens, and letterboxed shots. The selected frame is turned into an image and optionally styled with configurable text such as a title or numbering. Seasons and series use frames from their own episodes.
+
+Configuration is split into three parts:
+
+* **Designs** set how a poster looks. Each design is laid out for portrait or landscape, and every style except Split can draw both.
+* **Logos** set how a text logo looks: which name it uses, how that name is cleaned up, and its font and color.
+* **Profiles** choose which images are made for series, seasons, and episodes, and which design draws each. Series use the default profile unless assigned to another.
+
+Every image of one item draws from a shared set of frames, so a season's poster, thumb, and backdrop show different shots from the same pool. A fixed seed in Settings makes frame choice repeatable.
 
 The plugin runs entirely as a Jellyfin metadata provider. There are two ways to get a poster:
 
-* **Automatically** — a metadata refresh generates a poster for any episode that has no image. This is the default; it can be turned off in Settings.
-* **By hand** — open an episode, choose **Edit Images**, and press the search button on the Primary image. Generated posters appear alongside the usual providers, each rendered from a different frame, so you can pick the one you like instead of refreshing until a good frame comes up.
+* **Automatically** — a metadata refresh generates any image the item's profile turns on that the item is missing. This is the default; it can be turned off in Settings.
+* **By hand** — open an item, choose **Edit Images**, and press the search button on an image type. Generated images appear alongside the usual providers, each rendered from a different frame, so you can pick the one you like instead of refreshing until a good frame comes up.
+
+For series and season images, tick **Episode Poster Generator** under Image Fetchers for Series and Season in each library's settings. Jellyfin only asks enabled fetchers for images.
 
 There is no scheduled task. Use Jellyfin's own metadata refresh, on a library or a single item, to generate in bulk.
 
@@ -162,7 +172,7 @@ For an explanation of the settings, visit [SETTINGS.md](docs/SETTINGS.md).
 For additional template examples and downloadable configurations, visit [EXAMPLES.md](docs/EXAMPLES.md).
 
 ### Preview your poster
-A live preview at the top of the Posters page renders your current settings against sample artwork and updates as you change them. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
+A live preview at the top of the Designs page renders your current settings against sample artwork and updates as you change them. Choose whether it shows an episode, a season, or a series. The Logos page previews logos the same way. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
 ![Preview Modal](Jellyfin.Plugin.EpisodePosterGenerator/Assets/Preview-Modal.png)
 
 ---

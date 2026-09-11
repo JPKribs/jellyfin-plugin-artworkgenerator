@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using Microsoft.Extensions.Logging;
@@ -15,7 +14,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Season progress bar with episode info and optional title. Clean and data driven.";
+        public override string Description => "Progress bar with the code, position, and optional title. Clean and data driven.";
 
         private const string LabelsBlock = "labels";
         private const string BarBlock = "bar";
@@ -30,66 +29,66 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders, bottom-up: the season progress bar, the episode code and position labels
-        // above it, and the optional episode title above those.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders, bottom-up: the progress bar, the code and position labels above it, and the
+        // optional title above those. An episode's bar runs through its season, a season's through
+        // the series; a series has no position and draws a full bar.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
+            var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Left);
-            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Left);
+            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
+            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
 
-            var episodeNumber = episodeMetadata.EpisodeNumberStart ?? 0;
-            // When the season size is unknown the bar renders full rather than guessing.
-            var totalEpisodes = episodeMetadata.SeasonEpisodeCount ?? episodeNumber;
+            var position = subject.ProgressPosition ?? 0;
+            // When the length is unknown the bar renders full rather than guessing.
+            var total = subject.ProgressTotal ?? position;
 
-            // Measured top-to-bottom: title, then the position labels, then the progress bar
-            // pinned to the bottom of the safe area.
-            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, height), LayoutAnchor.Bottom)
-                .Add(TitleBlock, settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName)
+            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+                .Add(TitleBlock, settings.ShowTitle && !string.IsNullOrEmpty(subject.Title)
                     ? titleStyle.BlockHeight(2)
                     : 0f)
                 .Add(LabelsBlock, settings.ShowEpisode ? episodeStyle.LineBox : 0f)
-                .Add(BarBlock, MeasureProgressBar(height));
+                .Add(BarBlock, MeasureProgressBar(unit));
 
-            DrawProgressBar(skCanvas, settings, column.Slot(BarBlock), height, episodeNumber, totalEpisodes);
+            DrawProgressBar(skCanvas, settings, column.Slot(BarBlock), unit, position, total);
 
             if (column.TryGetSlot(LabelsBlock, out var labelsSlot))
             {
-                DrawEpisodeLabels(skCanvas, episodeMetadata, episodeStyle, settings, height, labelsSlot, episodeNumber, totalEpisodes);
+                DrawLabels(skCanvas, subject, episodeStyle, settings, unit, labelsSlot);
             }
 
             if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, episodeMetadata.EpisodeName!, titleStyle, titleSlot, titleSlot.Left, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Title!, titleStyle, titleSlot, titleSlot.Left, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
         // BarHeight
         // Track thickness, scaled with the poster.
-        private static float BarHeight(int height) => Math.Max(4f, height * 0.008f);
+        private static float BarHeight(int unit) => Math.Max(4f, unit * 0.008f);
 
         // MeasureProgressBar
         // Vertical extent of the bar including the marker dot, which overhangs the track.
-        private static float MeasureProgressBar(int height)
+        private static float MeasureProgressBar(int unit)
         {
-            return BarHeight(height) * 3f;
+            return BarHeight(unit) * 3f;
         }
 
         // DrawProgressBar
-        // Draws the season timeline: a rounded track across the safe width, filled to the
-        // episode's position, with a marker dot at the fill point kept inside the safe area.
-        private static void DrawProgressBar(SKCanvas canvas, PosterSettings config, SKRect slot, int height, int episodeNumber, int totalEpisodes)
+        // Draws the timeline: a rounded track across the safe width, filled to the position, with
+        // a marker dot at the fill point kept inside the safe area.
+        private static void DrawProgressBar(SKCanvas canvas, PosterSettings config, SKRect slot, int unit, int position, int total)
         {
-            float barHeight = BarHeight(height);
+            float barHeight = BarHeight(unit);
             float dotRadius = barHeight * 1.5f;
             float barY = slot.MidY;
 
-            float progress = totalEpisodes > 0
-                ? Math.Clamp((float)episodeNumber / totalEpisodes, 0f, 1f)
+            float progress = total > 0
+                ? Math.Clamp((float)position / total, 0f, 1f)
                 : 1f;
 
             var barColor = ColorUtils.ParseHexColor(config.EpisodeFontColor);
@@ -99,11 +98,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             using var trackPaint = PaintFactory.CreateLinePaint(barColor.WithAlpha((byte)(barColor.Alpha * 0.3f)), barHeight, SKStrokeCap.Round);
             using var fillPaint = PaintFactory.CreateLinePaint(barColor, barHeight, SKStrokeCap.Round);
 
-            using var shadowBlur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, RenderConstants.ShadowBlurSigma(height));
+            using var shadowBlur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, RenderConstants.ShadowBlurSigma(unit));
             using var shadowPaint = PaintFactory.CreateShadowLinePaint(barHeight, SKStrokeCap.Round);
             shadowPaint.MaskFilter = shadowBlur;
 
-            float shadowOffset = RenderConstants.ShadowOffset(height);
+            float shadowOffset = RenderConstants.ShadowOffset(unit);
             canvas.DrawLine(slot.Left + shadowOffset, barY + shadowOffset, slot.Right + shadowOffset, barY + shadowOffset, shadowPaint);
             canvas.DrawLine(slot.Left, barY, slot.Right, barY, trackPaint);
             canvas.DrawLine(slot.Left, barY, fillEndX, barY, fillPaint);
@@ -117,22 +116,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             canvas.DrawCircle(dotX, barY, dotRadius, dotPaint);
         }
 
-        // DrawEpisodeLabels
-        // Draws the episode code left-aligned and the season position right-aligned
-        // directly above the progress bar.
-        private static void DrawEpisodeLabels(SKCanvas canvas, EpisodeMetadata episodeMetadata, TextStyle leftStyle, PosterSettings config, int height, SKRect slot, int episodeNumber, int totalEpisodes)
+        // DrawLabels
+        // Draws the code left-aligned and the position right-aligned directly above the bar.
+        private static void DrawLabels(SKCanvas canvas, ArtworkSubject subject, TextStyle leftStyle, PosterSettings config, int unit, SKRect slot)
         {
-            using var rightStyle = CreateEpisodeStyle(config, height, SKTextAlign.Right);
-
-            var codeText = EpisodeCodeUtils.FormatEpisodeCode(episodeMetadata.SeasonNumber ?? 0, episodeNumber);
-            var positionText = episodeMetadata.SeasonEpisodeCount.HasValue
-                ? string.Format(CultureInfo.InvariantCulture, "{0} OF {1}", episodeNumber, totalEpisodes)
-                : string.Format(CultureInfo.InvariantCulture, "EPISODE {0}", episodeNumber);
+            using var rightStyle = CreateEpisodeStyle(config, unit, SKTextAlign.Right);
 
             float baselineY = leftStyle.BaselineAtBottom(slot);
 
-            leftStyle.Draw(canvas, codeText, slot.Left, baselineY);
-            rightStyle.Draw(canvas, positionText, slot.Right, baselineY);
+            leftStyle.Draw(canvas, subject.Code, slot.Left, baselineY);
+            rightStyle.Draw(canvas, subject.ProgressText, slot.Right, baselineY);
         }
 
         // LogError

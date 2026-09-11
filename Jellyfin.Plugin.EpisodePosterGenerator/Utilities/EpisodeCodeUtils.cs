@@ -15,6 +15,13 @@ public static class EpisodeCodeUtils
         return $"S{seasonNumber.ToString(seasonFormat, CultureInfo.InvariantCulture)}E{episodeNumber.ToString(episodeFormat, CultureInfo.InvariantCulture)}";
     }
 
+    // FormatSeasonCode
+    // Formats a season number as S01, padded the same way as the episode code.
+    public static string FormatSeasonCode(int seasonNumber)
+    {
+        return $"S{seasonNumber.ToString(GetNumberFormat(seasonNumber), CultureInfo.InvariantCulture)}";
+    }
+
     // FormatEpisodeText
     // Formats episode number as text or code based on the cutout type.
     public static string FormatEpisodeText(CutoutType cutoutType, int seasonNumber, int episodeNumber)

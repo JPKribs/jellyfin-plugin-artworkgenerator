@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
-using Jellyfin.Plugin.EpisodePosterGenerator.Services;
+using Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork;
 using MediaBrowser.Common.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,40 +12,36 @@ using SkiaSharp;
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 {
     /// <summary>
-    /// Renders a single poster against bundled demo artwork so the configuration UI can show
-    /// a live preview of the current settings. Runs the exact crop + generator pipeline the
-    /// image providers use, but sourced from embedded sample images rather than a real episode,
-    /// so it requires no media, no IMediaEncoder, and no library access.
+    /// Renders artwork against bundled demo art so the configuration UI can show a live preview of
+    /// the current settings. Runs the same crop and generator pipeline the image providers use, but
+    /// sourced from embedded sample images, so it needs no media, no IMediaEncoder, and no library.
     /// </summary>
     public class PreviewService
     {
-        // Fixed sample metadata so previews read like a real episode card regardless of library state.
+        // Fixed sample metadata so previews read like a real item regardless of library state.
         private const string ShowName = "TV Show";
         private const string EpisodeName = "Episode Name";
         private const int SeasonNumber = 12;
         private const int EpisodeNumber = 7;
         private const int SeasonEpisodeCount = 10;
+        private const int SeasonCount = 12;
+        private const int ProductionYear = 2024;
 
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<PreviewService> _logger;
         private readonly CroppingService _croppingService;
+        private readonly LogoRenderer _logoRenderer;
         private readonly string _assetRoot;
         private readonly object _assetLock = new object();
         private volatile string? _assetDir;
 
         public PreviewService(ILoggerFactory loggerFactory, IApplicationPaths applicationPaths)
+            : this(loggerFactory, Path.Combine(applicationPaths?.DataPath ?? throw new ArgumentNullException(nameof(applicationPaths)), "episodeposter", "preview-assets"))
         {
-            ArgumentNullException.ThrowIfNull(applicationPaths);
-
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<PreviewService>();
-            _croppingService = new CroppingService(_loggerFactory.CreateLogger<CroppingService>());
-
             // Kept under the plugin's own data directory rather than the shared system temp
             // directory: on a multi-user host /tmp is world-writable, so a fixed path there
             // could be pre-created by another local user and have its files replaced with
             // symlinks that this process would then follow.
-            _assetRoot = Path.Combine(applicationPaths.DataPath, "episodeposter", "preview-assets");
         }
 
         /// <summary>
@@ -53,15 +49,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         /// </summary>
         public PreviewService(ILoggerFactory loggerFactory, string assetRoot)
         {
+            ArgumentNullException.ThrowIfNull(loggerFactory);
+
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<PreviewService>();
             _croppingService = new CroppingService(_loggerFactory.CreateLogger<CroppingService>());
+            _logoRenderer = new LogoRenderer(_loggerFactory.CreateLogger<LogoRenderer>());
             _assetRoot = assetRoot;
         }
 
         // GeneratePreview
-        // Renders the supplied settings against the demo artwork and returns JPEG bytes, or null on failure.
-        public byte[]? GeneratePreview(PosterSettings settings)
+        // Renders a design against the demo artwork and returns JPEG bytes, or null on failure. The
+        // design's shape decides the crop; the item kind decides the text.
+        public byte[]? GeneratePreview(PosterSettings settings, ArtworkItemKind? kind = null)
         {
             ArgumentNullException.ThrowIfNull(settings);
 
@@ -75,41 +75,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 return null;
             }
 
-            var videoMetadata = new VideoMetadata
-            {
-                VideoWidth = baseImage.Width,
-                VideoHeight = baseImage.Height
-            };
-
-            // The Logo and Split styles pull artwork from the video metadata paths; point them at
-            // the bundled demo art so those styles preview faithfully instead of falling back to text.
-            if (settings.PosterStyle == PosterStyle.Logo)
-            {
-                videoMetadata.SeriesLogoFilePath = Path.Combine(assetDir, "demo-logo.png");
-            }
-
-            if (settings.PosterStyle == PosterStyle.Split)
-            {
-                videoMetadata.SeriesPosterFilePath = Path.Combine(assetDir, "demo-poster.jpg");
-            }
-
-            // GraphicPath is left as the user configured it — RenderGraphics null/exists-checks
-            // the path and simply skips the layer if it isn't reachable, so the preview reflects
-            // the real static graphic the user provided.
-
-            var metadata = new EpisodeMetadata
-            {
-                EpisodeName = EpisodeName,
-                SeriesName = ShowName,
-                SeasonNumber = SeasonNumber,
-                EpisodeNumberStart = EpisodeNumber,
-                SeasonEpisodeCount = SeasonEpisodeCount,
-                VideoMetadata = videoMetadata
-            };
+            var subject = CreateDemoSubject(kind ?? DefaultKindFor(settings.Shape), assetDir, baseImage.Width, baseImage.Height);
 
             var bytes = settings.CanvasSource == CanvasSource.None
-                ? RenderTransparentPoster(baseImage.Width, baseImage.Height, metadata, settings)
-                : RenderPoster(baseImage, metadata, settings);
+                ? RenderTransparentPoster(baseImage.Width, baseImage.Height, subject, settings)
+                : RenderPoster(baseImage, subject, settings);
 
             if (bytes == null)
             {
@@ -119,24 +89,35 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             return bytes;
         }
 
-        // RenderPoster
-        // Shared render path: crops the base image, selects the style's generator, and returns the
-        // encoded poster. This is the single copy of the crop + generate pipeline — both the live
-        // preview and the offline demo image generator call it.
-        public byte[]? RenderPoster(SKBitmap baseImage, EpisodeMetadata metadata, PosterSettings settings)
+        // GenerateLogoPreview
+        // Renders a logo design for the demo series as PNG bytes.
+        public byte[]? GenerateLogoPreview(LogoSettings settings)
         {
-            ArgumentNullException.ThrowIfNull(baseImage);
-            ArgumentNullException.ThrowIfNull(metadata);
             ArgumentNullException.ThrowIfNull(settings);
 
-            var canvas = _croppingService.CropPoster(baseImage, settings);
+            var assetDir = EnsureAssetsExtracted();
+            var subject = CreateDemoSubject(ArtworkItemKind.Series, assetDir, 1920, 1080);
+            return _logoRenderer.Render(subject, settings);
+        }
+
+        // RenderPoster
+        // Shared render path: adjusts the design for its shape, crops the base image, selects the
+        // style's generator, and returns the encoded poster. Both the live preview and the offline
+        // demo image generator call it.
+        public byte[]? RenderPoster(SKBitmap baseImage, ArtworkSubject subject, PosterSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(baseImage);
+            ArgumentNullException.ThrowIfNull(subject);
+            ArgumentNullException.ThrowIfNull(settings);
+
+            var adjusted = ArtworkService.ShapeAdjust(settings, settings.Shape);
+            var canvas = _croppingService.CropPoster(baseImage, adjusted);
             try
             {
-                metadata.VideoMetadata.VideoWidth = canvas.Width;
-                metadata.VideoMetadata.VideoHeight = canvas.Height;
+                subject.VideoMetadata.VideoWidth = canvas.Width;
+                subject.VideoMetadata.VideoHeight = canvas.Height;
 
-                var generator = CreateGenerator(settings.PosterStyle, _loggerFactory);
-                return generator.Generate(canvas, metadata, settings);
+                return CreateGeneratorFor(adjusted).Generate(canvas, subject, adjusted);
             }
             finally
             {
@@ -148,26 +129,43 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTransparentPoster
-        // Mirrors the runtime CanvasSource.None path: renders the style generator over a blank
-        // transparent canvas (no crop, since cropping a transparent bitmap would trip letterbox
-        // detection) so the preview honestly reflects a poster with no background image.
-        private byte[]? RenderTransparentPoster(int width, int height, EpisodeMetadata metadata, PosterSettings settings)
+        // Mirrors the runtime CanvasSource.None path: renders the style over a blank transparent
+        // canvas in the design's shape (no crop, since cropping a transparent bitmap would trip
+        // letterbox detection).
+        private byte[]? RenderTransparentPoster(int width, int height, ArtworkSubject subject, PosterSettings settings)
         {
+            var adjusted = ArtworkService.ShapeAdjust(settings, settings.Shape);
+            if (adjusted.Shape == ArtworkShape.Portrait)
+            {
+                width = height * 2 / 3;
+            }
+
             using var canvas = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
             using (var skCanvas = new SKCanvas(canvas))
             {
                 skCanvas.Clear(SKColors.Transparent);
             }
 
+            return CreateGeneratorFor(adjusted).Generate(canvas, subject, adjusted);
+        }
+
+        // CreateGeneratorFor
+        // The design's style, or Standard when the style cannot lay out the design's shape.
+        private IPosterGenerator CreateGeneratorFor(PosterSettings settings)
+        {
             var generator = CreateGenerator(settings.PosterStyle, _loggerFactory);
-            return generator.Generate(canvas, metadata, settings);
+            return generator.Supports(settings.Shape)
+                ? generator
+                : CreateGenerator(PosterStyle.Standard, _loggerFactory);
         }
 
         // CreateGenerator
         // Maps a poster style to its generator implementation. Single source of truth for style
-        // selection, shared by RenderPoster (preview + demos) and the runtime PosterService.
+        // selection, shared by the preview, the demos, and the runtime artwork service.
         public static IPosterGenerator CreateGenerator(PosterStyle style, ILoggerFactory loggerFactory)
         {
+            ArgumentNullException.ThrowIfNull(loggerFactory);
+
             return style switch
             {
                 PosterStyle.Logo => new LogoPosterGenerator(loggerFactory.CreateLogger<LogoPosterGenerator>()),
@@ -187,7 +185,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // GetStyleCatalog
         // Returns one generator per poster style so the configuration UI can read each style's own
-        // description instead of keeping a duplicate copy. Built from the same CreateGenerator mapping.
+        // description and shapes instead of keeping a duplicate copy.
         public static IReadOnlyList<IPosterGenerator> GetStyleCatalog()
         {
             return Enum.GetValues<PosterStyle>()
@@ -229,13 +227,49 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // GetDemoAssetDirectory
-        // Extracts (once) and returns the directory holding the bundled demo artwork:
-        // demo-base.png, demo-logo.png, demo-graphic.png, demo-poster.jpg. This is the single
-        // source of the demo art — the offline example generator reads from here so it stays in
-        // lockstep with the live preview instead of keeping its own copy on disk.
+        // Extracts (once) and returns the directory holding the bundled demo artwork. This is the
+        // single source of the demo art; the offline example generator reads from here too.
         public string GetDemoAssetDirectory()
         {
             return EnsureAssetsExtracted();
+        }
+
+        // DefaultKindFor
+        // Portrait designs are mostly for series and season posters; landscape for episodes.
+        private static ArtworkItemKind DefaultKindFor(ArtworkShape shape)
+        {
+            return shape == ArtworkShape.Portrait ? ArtworkItemKind.Season : ArtworkItemKind.Episode;
+        }
+
+        // CreateDemoSubject
+        // A sample item of the given kind, pointing at the bundled art.
+        private static ArtworkSubject CreateDemoSubject(ArtworkItemKind kind, string assetDir, int width, int height)
+        {
+            var videoMetadata = new VideoMetadata
+            {
+                VideoWidth = width,
+                VideoHeight = height,
+                SeriesLogoFilePath = Path.Combine(assetDir, "demo-logo.png"),
+                SeriesPosterFilePath = Path.Combine(assetDir, "demo-poster.jpg"),
+                SeriesBackdropFilePath = Path.Combine(assetDir, "demo-base.png")
+            };
+
+            return new ArtworkSubject(videoMetadata)
+            {
+                Kind = kind,
+                SeriesName = ShowName,
+                OriginalTitle = "Série Télé",
+                SortTitle = ShowName,
+                FolderName = "TV Show (2024) [tvdbid-000000]",
+                ProductionYear = ProductionYear,
+                SeasonNumber = SeasonNumber,
+                SeasonName = "Season 12",
+                SeasonCount = SeasonCount,
+                EpisodeName = EpisodeName,
+                EpisodeNumberStart = EpisodeNumber,
+                EpisodeNumberEnd = EpisodeNumber,
+                SeasonEpisodeCount = SeasonEpisodeCount
+            };
         }
 
         // EnsureAssetsExtracted

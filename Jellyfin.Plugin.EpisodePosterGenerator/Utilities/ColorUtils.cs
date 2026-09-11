@@ -74,6 +74,18 @@ public static class ColorUtils
             color.Alpha);
     }
 
+    // EnsureMinimumBrightness
+    // Raises a colour's HSV value to at least the given floor (0-100), keeping its hue and
+    // saturation, so a colour sampled from dark artwork is still legible.
+    public static SKColor EnsureMinimumBrightness(SKColor color, float minimumValue)
+    {
+        color.ToHsv(out float hue, out float saturation, out float value);
+        if (value >= minimumValue)
+            return color;
+
+        return SKColor.FromHsv(hue, saturation, Math.Clamp(minimumValue, 0f, 100f), color.Alpha);
+    }
+
     // GetDominantColor
     // Samples the bitmap for its dominant color: pixels are bucketed by hue and the densest
     // bucket of sufficiently saturated pixels is averaged. Falls back to the overall average

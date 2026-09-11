@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Services;
+using Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork;
 using Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters;
 using JPKribs.Jellyfin.Base;
 using MediaBrowser.Common.Configuration;
@@ -12,15 +15,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator
 {
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The plugin lives for the whole server process; the frame pool clears its own directory on the next start.")]
     public class Plugin : PluginBase<Plugin, PluginConfiguration>
     {
         public override string Name => "Episode Poster Generator";
         public override Guid Id => Guid.Parse("b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e");
-        public override string Description => "Automatically generates episode poster cards with titles overlaid on representative frames from video files.";
+        public override string Description => "Generates posters, thumbs, logos, and backdrops for series, seasons, and episodes from their video.";
 
         private readonly ILogger<Plugin> _logger;
-        private readonly PosterService _posterService;
         private readonly PosterConfigurationService _posterConfigService;
+        private readonly FramePoolService _framePool;
+        private readonly ArtworkService _artworkService;
         private readonly PreviewService _previewService;
         private readonly GeneratedImageCache _generatedImageCache;
 
@@ -47,16 +52,25 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator
                 mediaEncoder);
             var croppingService = new CroppingService(
                 loggerFactory.CreateLogger<CroppingService>());
+
+            _framePool = new FramePoolService(
+                loggerFactory.CreateLogger<FramePoolService>(),
+                frameExtractionService,
+                Path.Combine(applicationPaths.DataPath, "episodeposter", "frame-pool"),
+                () => Configuration?.FixedExtractionSeed);
+
             var canvasService = new CanvasService(
                 loggerFactory.CreateLogger<CanvasService>(),
-                frameExtractionService,
+                _framePool,
                 croppingService,
                 brightnessService);
 
-            _posterService = new PosterService(
-                loggerFactory.CreateLogger<PosterService>(),
+            _artworkService = new ArtworkService(
+                loggerFactory.CreateLogger<ArtworkService>(),
+                loggerFactory,
                 canvasService,
-                loggerFactory);
+                new LogoRenderer(loggerFactory.CreateLogger<LogoRenderer>()),
+                _posterConfigService);
 
             _previewService = new PreviewService(loggerFactory, applicationPaths);
             _generatedImageCache = new GeneratedImageCache(
@@ -72,20 +86,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator
             _logger.LogInformation("Episode Poster Generator plugin initialized");
         }
 
-        public PosterService PosterService => _posterService;
+        public ArtworkService ArtworkService => _artworkService;
 
         public PosterConfigurationService PosterConfigService => _posterConfigService;
 
         public PreviewService PreviewService => _previewService;
 
         /// <summary>
-        /// Gets the short-lived store backing the generated poster URLs handed to Jellyfin's
-        /// remote image picker.
+        /// Gets the short-lived store backing the generated image URLs handed to Jellyfin's remote
+        /// image picker.
         /// </summary>
         public GeneratedImageCache GeneratedImageCache => _generatedImageCache;
 
         // GetPages
-        // Returns the plugin configuration page information.
+        // Returns the plugin configuration pages. Only the first tab is listed in the dashboard menu.
         public override IEnumerable<PluginPageInfo> GetPages()
         {
             var ns = typeof(Plugin).Namespace;
@@ -99,29 +113,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator
                 MenuIcon = "image"
             };
 
-            yield return new PluginPageInfo
+            foreach (var name in new[] { "epg_posters.js", "epg_logos", "epg_logos.js", "epg_profiles", "epg_profiles.js", "epg_settings", "epg_settings.js", "epg_shared.css" })
             {
-                Name = "epg_posters.js",
-                EmbeddedResourcePath = $"{ns}.Configuration.epg_posters.js"
-            };
-
-            yield return new PluginPageInfo
-            {
-                Name = "epg_settings",
-                EmbeddedResourcePath = $"{ns}.Configuration.epg_settings.html"
-            };
-
-            yield return new PluginPageInfo
-            {
-                Name = "epg_settings.js",
-                EmbeddedResourcePath = $"{ns}.Configuration.epg_settings.js"
-            };
-
-            yield return new PluginPageInfo
-            {
-                Name = "epg_shared.css",
-                EmbeddedResourcePath = $"{ns}.Configuration.epg_shared.css"
-            };
+                var file = name.Contains('.', StringComparison.Ordinal) ? name : name + ".html";
+                yield return new PluginPageInfo
+                {
+                    Name = name,
+                    EmbeddedResourcePath = $"{ns}.Configuration.{file}"
+                };
+            }
 
             foreach (var page in GetSharedPages("epg"))
             {
@@ -130,7 +130,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator
         }
 
         // UpdateConfiguration
-        // Updates the configuration and reinitializes the poster configuration service.
+        // Updates the configuration and reinitializes the configuration lookups.
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
             base.UpdateConfiguration(configuration);

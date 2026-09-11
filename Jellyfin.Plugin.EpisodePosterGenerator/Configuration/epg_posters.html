@@ -7,7 +7,7 @@
                 <div class="verticalSection verticalSection-extrabottompadding">
 
                     <div class="sectionTitleContainer flex align-items-center">
-                        <h1 class="sectionTitle">Poster Configuration</h1>
+                        <h1 class="sectionTitle">Poster Designs</h1>
                     </div>
 
                     <!-- Config Selector -->
@@ -37,16 +37,6 @@
                         </div>
                     </div>
 
-                    <!-- Series Assignment -->
-                    <div id="seriesAssignmentSection" class="inputContainer" style="display: none; margin-bottom: 1.5em;">
-                        <label>Assigned Series:</label>
-                        <div id="assignedSeriesList" class="assigned-series-container"></div>
-                        <button is="emby-button" type="button" id="btnAddSeries" class="raised" style="margin-top: 8px;">
-                            <span>Edit Series</span>
-                        </button>
-                        <div class="fieldDescription">Select which series should use this poster configuration.</div>
-                    </div>
-
                     <!-- Live Preview -->
                     <div class="jpk-section poster-preview-section">
                         <div class="jpk-section-title">Live Preview</div>
@@ -58,6 +48,16 @@
                                         <div id="posterPreviewStatus" class="poster-preview-status">Loading preview…</div>
                                     </div>
                                     <div class="poster-preview-caption">Rendered from sample artwork. Updates live as you change settings.</div>
+                                    <div class="inputContainer poster-preview-kind">
+                                        <label for="selectPreviewKind">Preview As:</label>
+                                        <select is="emby-select" id="selectPreviewKind">
+                                            <option value="">Automatic</option>
+                                            <option value="Episode">Episode</option>
+                                            <option value="Season">Season</option>
+                                            <option value="Series">Series</option>
+                                        </select>
+                                        <div class="fieldDescription">Which kind of item the preview shows. Automatic uses a season for portrait designs and an episode for landscape ones.</div>
+                                    </div>
                                 </div>
                                 <div class="poster-preview-components">
                                     <div class="poster-component" data-component="canvas" title="Click to expand">
@@ -81,6 +81,15 @@
                     <div class="jpk-section">
                         <div class="jpk-section-title">Poster</div>
                         <div id="posterContent" class="jpk-section-content">
+
+                            <div class="inputContainer">
+                                <label for="selectShape">Shape:</label>
+                                <select is="emby-select" id="selectShape" data-setting="Shape" data-default="Landscape">
+                                    <option value="Landscape">Landscape</option>
+                                    <option value="Portrait">Portrait</option>
+                                </select>
+                                <div class="fieldDescription">The shape this design is laid out for. Profiles offer portrait designs for series and season posters, and landscape designs for episodes and thumbs.</div>
+                            </div>
 
                             <div class="inputContainer">
                                 <label for="selectPosterStyle">Style:</label>
@@ -143,7 +152,7 @@
                                 <div class="inputContainer">
                                     <label for="txtLogoHeight">Logo Height:</label>
                                     <input is="emby-input" type="number" id="txtLogoHeight" min="1.0" max="100.0" data-setting="LogoHeight" data-type="number" />
-                                    <div class="fieldDescription">Logo height as a percent of the poster height, 1 to 100.</div>
+                                    <div class="fieldDescription">Logo height as a percent of the poster's short edge, 1 to 100.</div>
                                 </div>
                             </div>
 
@@ -162,7 +171,7 @@
                                 <label for="selectCanvasSource">Canvas Background:</label>
                                 <select is="emby-select" id="selectCanvasSource" data-setting="CanvasSource" data-default="Extract">
                                     <option value="None">No Background</option>
-                                    <option value="Extract">Extract Frame from Episode</option>
+                                    <option value="Extract">Extract Frame from Video</option>
                                     <option value="SeriesBackdrop">Use Series Backdrop</option>
                                 </select>
                                 <div class="fieldDescription">Determine where the poster background should come from.</div>
@@ -172,24 +181,17 @@
                                 <div class="inputContainer">
                                     <label for="txtExtractWindowStart">Extraction Start (%):</label>
                                     <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-setting="ExtractWindowStart" data-type="number" />
-                                    <div class="fieldDescription">Skip this percent of the episode before extracting, avoiding intros.</div>
+                                    <div class="fieldDescription">Skip this percent of each episode before extracting, avoiding intros.</div>
                                 </div>
                                 <div class="inputContainer">
                                     <label for="txtExtractWindowEnd">Extraction End (%):</label>
                                     <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-setting="ExtractWindowEnd" data-type="number" />
-                                    <div class="fieldDescription">Stop extracting at this percent of the episode, avoiding credits.</div>
+                                    <div class="fieldDescription">Stop extracting at this percent of each episode, avoiding credits.</div>
                                 </div>
                                 <div class="inputContainer">
                                     <label for="txtBrightenHDR">Brighten HDR (%):</label>
                                     <input is="emby-input" type="number" id="txtBrightenHDR" min="0" max="100" data-setting="BrightenHDR" data-type="number" />
                                     <div class="fieldDescription">Brighten frames from HDR sources by this percent.</div>
-                                </div>
-                                <div class="checkboxContainer">
-                                    <label class="emby-checkbox-label">
-                                        <input is="emby-checkbox" type="checkbox" id="chkGenerateBackdrop" data-setting="GenerateBackdrop" data-default-unchecked />
-                                        <span class="checkboxLabel">Save Extracted Frame as Episode Backdrop</span>
-                                    </label>
-                                    <div class="fieldDescription">Also upload the cropped frame as the episode backdrop.</div>
                                 </div>
                             </div>
 
@@ -233,13 +235,13 @@
                             <div class="inputContainer">
                                 <label for="txtPosterSafeArea">Safe Area:</label>
                                 <input is="emby-input" type="number" id="txtPosterSafeArea" min="1.0" max="100.0" data-setting="PosterSafeArea" data-type="number" />
-                                <div class="fieldDescription">Margin kept clear around all edges. The percent applies to the poster height and the same pixel amount is used on every side.</div>
+                                <div class="fieldDescription">Margin kept clear around all edges, as a percent of the poster's short edge. The same pixel amount is used on every side.</div>
                             </div>
 
                             <div class="inputContainer">
                                 <label for="txtElementSpacing">Element Spacing:</label>
                                 <input is="emby-input" type="number" id="txtElementSpacing" min="0" max="20" step="0.5" data-setting="ElementSpacing" data-type="number" />
-                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster height. Raise it if elements sit too close together. Default is 2.</div>
+                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short edge. Raise it if elements sit too close together. Default is 2.</div>
                             </div>
 
                         </div>
@@ -351,7 +353,7 @@
                     <!-- Episode Information -->
                     <div class="jpk-collapsible-section">
                         <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
-                            <span class="jpk-collapsible-title">Episode Information</span>
+                            <span class="jpk-collapsible-title">Number &amp; Code</span>
                             <span class="jpk-collapsible-icon">&#9660;</span>
                         </button>
                         <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
@@ -359,9 +361,9 @@
                             <div class="checkboxContainer" id="showEpisodeRow">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkShowEpisode" data-setting="ShowEpisode" />
-                                    <span class="checkboxLabel">Show Episode</span>
+                                    <span class="checkboxLabel">Show Number &amp; Code</span>
                                 </label>
-                                <div class="fieldDescription">Display season and episode information on the poster.</div>
+                                <div class="fieldDescription">Display the code or number: the season and episode for an episode, the season for a season, and the year or season count for a series.</div>
                             </div>
 
                             <div class="checkboxContainer" data-depends-on="chkShowEpisode">
@@ -412,7 +414,7 @@
                                         <option value="Trebuchet MS">Trebuchet MS</option>
                                         <option value="Verdana">Verdana</option>
                                     </select>
-                                    <div class="fieldDescription">Font family for the episode text.</div>
+                                    <div class="fieldDescription">Font family for the number and code.</div>
                                 </div>
                                 <div class="inputContainer">
                                     <label for="selectEpisodeFontStyle">Font Style:</label>
@@ -422,14 +424,14 @@
                                         <option value="Italic">Italic</option>
                                         <option value="Bold Italic">Bold Italic</option>
                                     </select>
-                                    <div class="fieldDescription">Font style for the episode text.</div>
+                                    <div class="fieldDescription">Font style for the number and code.</div>
                                 </div>
                             </div>
 
                             <div class="inputContainer" data-hide-for-styles="Cutout,Numeral" data-depends-on="chkShowEpisode">
                                 <label for="txtEpisodeFontSize">Font Size:</label>
                                 <input is="emby-input" type="number" id="txtEpisodeFontSize" min="1.0" max="100.0" data-setting="EpisodeFontSize" data-type="number" />
-                                <div class="fieldDescription">Episode text size as a percent of the poster height, 1 to 100.</div>
+                                <div class="fieldDescription">Text size as a percent of the poster's short edge, 1 to 100.</div>
                             </div>
 
                             <div class="inputContainer" data-hide-for-styles="Cutout" data-depends-on="chkShowEpisode">
@@ -440,7 +442,7 @@
                                     <span class="alpha-label">255</span>
                                     <input is="emby-input" type="text" id="txtEpisodeFontColor" placeholder="#FFFFFFFF" data-setting="EpisodeFontColor" class="hex-input" aria-describedby="descEpisodeFontColor" />
                                 </div>
-                                <div id="descEpisodeFontColor" class="fieldDescription">ARGB hex color for the episode text.</div>
+                                <div id="descEpisodeFontColor" class="fieldDescription">ARGB hex color for the number and code.</div>
                             </div>
 
                         </div>
@@ -449,7 +451,7 @@
                     <!-- Episode Title -->
                     <div class="jpk-collapsible-section">
                         <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeTitleContent" data-target="episodeTitleContent">
-                            <span class="jpk-collapsible-title">Episode Title</span>
+                            <span class="jpk-collapsible-title">Title</span>
                             <span class="jpk-collapsible-icon">&#9660;</span>
                         </button>
                         <div id="episodeTitleContent" class="jpk-collapsible-content collapsed">
@@ -459,7 +461,7 @@
                                     <input is="emby-checkbox" type="checkbox" id="chkShowTitle" data-setting="ShowTitle" />
                                     <span class="checkboxLabel">Show Title</span>
                                 </label>
-                                <div class="fieldDescription">Display the episode title text on the poster.</div>
+                                <div class="fieldDescription">Display the title: the episode name for an episode, and the series name for a season or series.</div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowTitle">
@@ -537,7 +539,7 @@
                             <div class="inputContainer" data-depends-on="chkShowTitle">
                                 <label for="txtTitleFontSize">Font Size:</label>
                                 <input is="emby-input" type="number" id="txtTitleFontSize" min="1.0" max="100.0" data-setting="TitleFontSize" data-type="number" />
-                                <div class="fieldDescription">Title size as a percent of the poster height, 1 to 100.</div>
+                                <div class="fieldDescription">Title size as a percent of the poster's short edge, 1 to 100.</div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowTitle">
@@ -589,27 +591,6 @@
             <h2 id="componentModalTitle" class="jpk-modal-title">Component</h2>
             <div class="jpk-modal-body">
                 <img id="componentModalImage" class="poster-preview-modal-image" src="" alt="Preview component" />
-            </div>
-        </div>
-    </div>
-
-    <!-- Series Selection Modal -->
-    <div id="seriesSelectionModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="seriesModalTitle">
-        <div class="jpk-dialog-content series-modal-content">
-            <button type="button" id="btnCloseSeriesModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
-            <h2 id="seriesModalTitle" class="jpk-modal-title">Select Series</h2>
-            <div class="series-modal-search">
-                <input is="emby-input" type="text" id="seriesSearchInput" placeholder="Search series..." />
-            </div>
-            <div class="series-modal-summary" id="seriesSelectionSummary"></div>
-            <div id="seriesCheckboxList" class="series-modal-list"></div>
-            <div class="jpk-modal-button-row">
-                <button is="emby-button" type="button" id="btnCancelSeriesSelection" class="raised jpk-modal-button">
-                    <span>Cancel</span>
-                </button>
-                <button is="emby-button" type="button" id="btnConfirmSeriesSelection" class="raised button-submit jpk-modal-button">
-                    <span>Save Selection</span>
-                </button>
             </div>
         </div>
     </div>

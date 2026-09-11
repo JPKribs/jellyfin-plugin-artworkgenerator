@@ -1,23 +1,39 @@
 # Episode Poster Generator Settings
 
-Settings apply to the active configuration. Any series without its own configuration uses the default. Labels below match the configuration page.
+The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Labels below match the configuration pages.
 
-## Plugin
+## Settings
 
-* **Enable Poster Generation**: generate posters for episodes, both automatically during a metadata refresh when an episode has no image and on demand from an episode's Edit Images dialog. Turning this off disables both. Default on.
-* **Choices In Edit Images**: how many alternate posters to offer when replacing an episode's poster from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An episode with no poster yet is only offered one, because that request comes from an automatic refresh that keeps a single image. Default 3.
+* **Enable Artwork Generation**: generate the images your profiles turn on, both automatically during a metadata refresh when an item is missing one and on demand from an item's Edit Images dialog. Turning this off disables both. Default on.
+* **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An item with no image of that type is only offered one, because that request comes from an automatic refresh that keeps a single image. Default 3.
+* **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
 
-## Configurations
+## Profiles
 
-* **Active Configuration**: the configuration being viewed and edited. The default one applies to every series not assigned elsewhere.
-* **New, Rename, Delete**: manage named configurations. The default configuration cannot be renamed or deleted.
-* **Export, Import**: save a configuration to JSON, or load one as a new configuration.
-* **Assigned Series**: the series that use the active configuration. A series belongs to one configuration at a time.
+* **Profile**: the profile being viewed and edited. The default profile applies to every series not assigned to another one. It cannot be renamed or deleted.
+* **Assigned Series**: the series that use the active profile. A series belongs to one profile at a time.
+* **Images**: one row each for series, seasons, and episodes. Tick an image to generate it whenever an item is missing one.
+  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series and seasons default to portrait and episodes to landscape.
+  * **Thumb**: a landscape poster for series and seasons, drawn with a landscape design.
+  * **Logo**: a transparent text logo for series, drawn with a logo design.
+  * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
+* **Backdrops**: aspect ratio, letterbox detection, HDR brightening, and extraction window for backdrop frames.
+
+Jellyfin only asks the plugin for series and season images in libraries where **Episode Poster Generator** is ticked under Image Fetchers for those item types in the library's settings. Episodes work as before.
+
+## Designs
+
+* **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design for their shape. The default design cannot be renamed or deleted.
+* **New, Rename, Delete**: manage named designs.
+* **Export, Import**: save a design to JSON, or load one as a new design.
+* **Shape**: whether the design is laid out for portrait or landscape images. A portrait render always crops the frame to a portrait ratio. Split lays out landscape only, so a portrait Split image is drawn with Standard instead. Default Landscape.
+* **Preview As**: whether the live preview shows an episode, a season, or a series. Automatic uses a season for portrait designs and an episode for landscape ones.
+
+What each design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows its name and its season count or premiere year.
 
 ## Canvas
 
-* **Canvas Background**: the poster's base image. Extract Frame from Episode, Use Series Backdrop, or No Background. Default Extract Frame.
-* **Save Extracted Frame as Episode Backdrop**: also upload the cropped frame as the episode backdrop. Default off.
+* **Canvas Background**: the poster's base image. Extract Frame from Video, Use Series Backdrop, or No Background. Seasons and series extract from their own episodes. Default Extract Frame.
 * **Extraction Start (%)**: earliest point to pull a frame from, as a percent of runtime. Default 20.
 * **Extraction End (%)**: latest point to pull a frame from, as a percent of runtime. Default 80.
 * **Brighten HDR (%)**: percent to brighten frames pulled from HDR sources. Default 25.
@@ -35,8 +51,8 @@ Settings apply to the active configuration. Any series without its own configura
   * Striped draws its sash from the overlay colors. The main band uses Overlay Color and the pinstripes use Secondary Overlay Color.
 * **Fill Strategy**: how the canvas fits the poster. Original, Fill, or Fit. Default Original.
 * **Aspect Ratio**: output aspect ratio. Default 16:9.
-* **Safe Area**: margin kept clear around all edges. The percent applies to the poster height and the same pixel amount is used on all four sides. Default 5.
-* **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster height. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
+* **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short edge and the same pixel amount is used on all four sides. Default 5.
+* **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short edge. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
 
 ## Outline (Style is Cutout or Brush)
 
@@ -50,27 +66,27 @@ Settings apply to the active configuration. Any series without its own configura
 
 * **Logo Position**: vertical placement. Top, Center, or Bottom. Default Center.
 * **Logo Alignment**: horizontal placement. Left, Center, or Right. Default Center.
-* **Logo Height**: logo height as a percent of the poster. Default 30.
+* **Logo Height**: logo height as a percent of the poster's short edge. Default 30.
 
-## Episode Text
+## Number & Code
 
-* **Show Episode**: draw the episode code or number. Default on.
-* **Font**: font family for the episode text. Default Arial.
+* **Show Number & Code**: draw the code or number line. Default on.
+* **Font**: font family for the number and code. Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
-* **Font Size**: text size as a percent of the poster. Default 7.
+* **Font Size**: text size as a percent of the poster's short edge. Default 7.
 * **Font Color**: text color as ARGB hex. Default #FFFFFFFF.
 
 ## Title Text
 
-* **Show Title**: draw the episode title. Default on.
+* **Show Title**: draw the title, which is the episode name for an episode and the series name otherwise. Default on.
 * **Long Titles**: what to do when a title does not fit. Ellipsis trims it. Abbreviate shortens it in stages: first the text before a divider, then the first sentence, then the first letter of every word with periods such as L.O.T.R., keeping dividers and skipping middle initials if still too wide. Drop Name hides it. Default Ellipsis.
 * **Font**: font family for the title. Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
-* **Font Size**: text size as a percent of the poster. Default 10.
+* **Font Size**: text size as a percent of the poster's short edge. Default 10.
 * **Font Color**: text color as ARGB hex. Default #FFFFFFFF.
 
 ## Overlay
@@ -87,3 +103,19 @@ Settings apply to the active configuration. Any series without its own configura
 * **Graphic Height (%)**: graphic height as a percent of the poster. Default 25.
 * **Graphic Position**: vertical placement. Top, Center, or Bottom. Default Center.
 * **Graphic Alignment**: horizontal placement. Left, Center, or Right. Default Center.
+
+## Logos
+
+* **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
+* **Name From**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
+* **Remove Year**: remove a year in brackets such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345]. Default on.
+* **Stop at Subtitle**: keep only the text before a colon or spaced dash. Default off.
+* **Remove Pattern**: an optional regular expression whose matches are removed. An invalid pattern is ignored.
+* **All Capitals**: draw the name in capitals. Default off.
+* **Lines**: one line, or up to two. A name splits onto two lines only when that lets the text grow noticeably. Default up to two.
+* **Font, Font Style, Use Custom Font, Font Path**: the typeface. Default Arial Bold.
+* **Color From**: Chosen Color, or the main color of the series poster or backdrop lifted to stay legible. Default Chosen Color.
+* **Text Color**: ARGB hex. When sampling, this is the fallback and its opacity still applies. Default #FFFFFFFF.
+* **Outline, Outline Color, Outline Width (%)**: an optional stroke around the letters, its width a percent of the font size. Default off, black, 4.
+* **Drop Shadow**: a soft shadow under the letters. Default off.
+* **Width, Height**: canvas size in pixels. Default 800 by 310, the common HD clear logo size.

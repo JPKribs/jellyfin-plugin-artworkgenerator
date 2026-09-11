@@ -42,6 +42,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         public PosterStyle PosterStyle { get; set; } = PosterStyle.Standard;
 
+        /// <summary>
+        /// The shape this design is laid out for. Profiles use it to offer the right designs for
+        /// each slot and the preview uses it to pick sample art. A design can still render at the
+        /// other shape; its text sizes are relative to the poster's short edge so they carry over.
+        /// </summary>
+        public ArtworkShape Shape { get; set; } = ArtworkShape.Landscape;
+
         public CutoutType CutoutType { get; set; } = CutoutType.Code;
 
         public bool CutoutBorder { get; set; } = true;

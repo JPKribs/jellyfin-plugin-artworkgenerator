@@ -45,13 +45,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
         }
 
         // MARK: PosterStyles
-        // Returns each poster style and its description, read from the generators themselves so the UI
-        // no longer hardcodes them.
+        // Returns each poster style, its description, and the shapes it can lay out, read from the
+        // generators themselves so the UI never hardcodes them.
         [HttpGet("PosterStyles")]
         public IActionResult GetPosterStyles()
         {
             var styles = PreviewService.GetStyleCatalog()
-                .Select(g => new { value = g.Style.ToString(), description = g.Description });
+                .Select(g => new
+                {
+                    value = g.Style.ToString(),
+                    description = g.Description,
+                    portrait = g.Supports(ArtworkShape.Portrait),
+                    landscape = g.Supports(ArtworkShape.Landscape)
+                });
             return Ok(styles);
         }
 
@@ -84,7 +90,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
                 }
 
                 // Debug rather than Information: this fires on every save and expands the whole
-                // configuration, including every poster config, into the server log.
+                // configuration into the server log.
                 _logger.LogDebug("Received config: {@NewConfig}", newConfig);
 
                 var currentConfig = plugin.Configuration;
@@ -103,8 +109,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
         }
 
         // MARK: Preview
+        // Renders a design against the sample artwork. The item kind decides which text the
+        // preview shows; it defaults to a season for portrait designs and an episode otherwise.
         [HttpPost("Preview")]
-        public IActionResult GeneratePreview([FromBody] PosterSettings settings)
+        public IActionResult GeneratePreview([FromBody] PosterSettings settings, [FromQuery] ArtworkItemKind? kind = null)
         {
             if (settings == null)
             {
@@ -120,7 +128,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
 
             try
             {
-                var imageBytes = plugin.PreviewService.GeneratePreview(settings);
+                var imageBytes = plugin.PreviewService.GeneratePreview(settings, kind);
                 if (imageBytes == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, "Failed to render preview.");
@@ -132,6 +140,40 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
             {
                 _logger.LogError(ex, "Failed to generate poster preview.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to render preview.");
+            }
+        }
+
+        // MARK: Preview/Logo
+        // Renders a logo design for the sample series, as a transparent PNG.
+        [HttpPost("Preview/Logo")]
+        public IActionResult GenerateLogoPreview([FromBody] LogoSettings settings)
+        {
+            if (settings == null)
+            {
+                return BadRequest("Logo settings are required.");
+            }
+
+            var plugin = Plugin.Instance;
+            if (plugin == null)
+            {
+                _logger.LogError("Plugin instance was null in logo Preview.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
+            }
+
+            try
+            {
+                var imageBytes = plugin.PreviewService.GenerateLogoPreview(settings);
+                if (imageBytes == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to render logo preview.");
+                }
+
+                return File(imageBytes, "image/png");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate logo preview.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to render logo preview.");
             }
         }
 
@@ -156,7 +198,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
         }
 
         // MARK: Generated
-        // Serves a poster already rendered for the Edit Images picker.
+        // Serves an image already rendered for the Edit Images picker.
         //
         // Anonymous by necessity: Jellyfin fetches picker thumbnails and downloads the chosen
         // image using the server's own HTTP client, which sends no user credentials. Nothing is
@@ -173,12 +215,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
             }
 
-            if (!plugin.GeneratedImageCache.TryGet(token, out var imageBytes))
+            if (!plugin.GeneratedImageCache.TryGet(token, out var imageBytes, out var contentType))
             {
                 return NotFound();
             }
 
-            return File(imageBytes, "image/jpeg");
+            return File(imageBytes, contentType);
         }
 
         // MARK: CopyConfigurationProperties

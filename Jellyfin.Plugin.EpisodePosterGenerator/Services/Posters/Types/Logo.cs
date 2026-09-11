@@ -15,7 +15,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Series logo over the episode image. Puts branding first.";
+        public override string Description => "Series logo over the image. Puts branding first.";
 
         // The logo is never squeezed below this share of the safe height, however much text is configured.
         private const float MinimumLogoAreaRatio = 0.2f;
@@ -31,34 +31,36 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderGraphics
         // Renders configured graphics and the series logo on the poster.
-        protected override void RenderGraphics(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderGraphics(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            base.RenderGraphics(skCanvas, episodeMetadata, settings, width, height);
+            base.RenderGraphics(skCanvas, subject, settings, width, height);
 
-            RenderSeriesLogo(skCanvas, episodeMetadata, settings, width, height);
+            RenderSeriesLogo(skCanvas, subject, settings, width, height);
         }
 
         // RenderTypography
-        // Renders episode title and code text on the poster.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders the code and headline beneath the logo.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            using var titleStyle = CreateTitleStyle(settings, height);
-            using var episodeStyle = CreateEpisodeStyle(settings, height);
+            var unit = SizeUnit(width, height);
+            var (headline, code) = GetText(subject);
 
-            var column = BuildColumn(episodeMetadata, settings, width, height, titleStyle, episodeStyle);
+            using var titleStyle = CreateTitleStyle(settings, unit);
+            using var episodeStyle = CreateEpisodeStyle(settings, unit);
+
+            var column = BuildColumn(subject, settings, width, height, titleStyle, episodeStyle);
 
             if (column.TryGetSlot(EpisodeBlock, out var codeSlot))
             {
-                var code = EpisodeCodeUtils.FormatEpisodeCode(episodeMetadata.SeasonNumber ?? 0, episodeMetadata.EpisodeNumberStart ?? 0);
                 episodeStyle.Draw(skCanvas, code, codeSlot.MidX, episodeStyle.BaselineAtBottom(codeSlot));
             }
 
             if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, episodeMetadata.EpisodeName!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, headline, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -69,49 +71,65 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             _logger.LogError(ex, "Failed to generate logo poster for {EpisodeName}", episodeName);
         }
 
+        // GetText
+        // The logo already names the series, so repeating the series name beneath it would say the
+        // same thing twice. An episode shows its code and title; a season or series shows only its
+        // label, such as SEASON 2, on the smaller code line where a short label belongs.
+        private static (string Headline, string Code) GetText(ArtworkSubject subject)
+        {
+            return subject.Kind == ArtworkItemKind.Episode
+                ? (subject.Title ?? string.Empty, subject.Code)
+                : (string.Empty, subject.Label);
+        }
+
         // RenderSeriesLogo
         // Renders the series logo image or falls back to text if no logo is available.
-        private void RenderSeriesLogo(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, int width, int height)
+        private void RenderSeriesLogo(SKCanvas canvas, ArtworkSubject subject, PosterSettings config, int width, int height)
         {
-            var seriesName = episodeMetadata.SeriesName ?? "Unknown Series";
-            var logoPath = GetSeriesLogoPath(episodeMetadata);
-            var logoArea = GetLogoArea(episodeMetadata, config, width, height);
+            var seriesName = subject.SeriesName ?? "Unknown Series";
+            var logoPath = GetSeriesLogoPath(subject);
+            var logoArea = GetLogoArea(subject, config, width, height);
+            var unit = SizeUnit(width, height);
 
             if (!string.IsNullOrEmpty(logoPath))
-                DrawSeriesLogoImage(canvas, logoPath, config.LogoPosition, config.LogoAlignment, config, logoArea, height);
+            {
+                DrawSeriesLogoImage(canvas, logoPath, config.LogoPosition, config.LogoAlignment, config, logoArea, unit);
+            }
             else
-                DrawSeriesLogoText(canvas, seriesName, config.LogoPosition, config.LogoAlignment, config, logoArea, height);
+            {
+                DrawSeriesLogoText(canvas, seriesName, config.LogoPosition, config.LogoAlignment, config, logoArea, unit);
+            }
         }
 
         // BuildColumn
-        // The single description of this style's vertical layout: episode code above a fixed two
-        // line title zone, packed against the bottom of the safe area.
-        //
-        // Both the typography layer and the logo layer read this same column, so the logo can no
-        // longer be placed from a second, separately maintained copy of the text's height — which
-        // is what let a tall centred logo run straight through the episode code.
-        private static LayoutColumn BuildColumn(EpisodeMetadata episodeMetadata, PosterSettings config, int width, int height, TextStyle titleStyle, TextStyle episodeStyle)
+        // The single description of this style's vertical layout: the code above a fixed two line
+        // headline zone, packed against the bottom of the safe area. Both the typography layer and
+        // the logo layer read this same column, so the logo can never be placed from a separately
+        // maintained copy of the text's height.
+        private static LayoutColumn BuildColumn(ArtworkSubject subject, PosterSettings config, int width, int height, TextStyle titleStyle, TextStyle episodeStyle)
         {
             var safeArea = GetSafeAreaBounds(width, height, config);
+            var (headline, code) = GetText(subject);
 
-            var titleHeight = config.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName)
+            var titleHeight = config.ShowTitle && !string.IsNullOrEmpty(headline)
                 ? titleStyle.BlockHeight(2)
                 : 0f;
 
-            return new LayoutColumn(safeArea, GetElementSpacing(config, height), LayoutAnchor.Bottom)
-                .Add(EpisodeBlock, config.ShowEpisode ? episodeStyle.LineBox : 0f)
+            return new LayoutColumn(safeArea, GetElementSpacing(config, SizeUnit(width, height)), LayoutAnchor.Bottom)
+                .Add(EpisodeBlock, config.ShowEpisode && code.Length > 0 ? episodeStyle.LineBox : 0f)
                 .Add(TitleBlock, titleHeight);
         }
 
         // GetLogoArea
         // Whatever the text column leaves behind, so Center means "centred in the space actually
         // available" and the graphics layer cannot collide with the typography layer.
-        private static SKRect GetLogoArea(EpisodeMetadata episodeMetadata, PosterSettings config, int width, int height)
+        private static SKRect GetLogoArea(ArtworkSubject subject, PosterSettings config, int width, int height)
         {
-            using var titleStyle = CreateTitleStyle(config, height);
-            using var episodeStyle = CreateEpisodeStyle(config, height);
+            var unit = SizeUnit(width, height);
+            using var titleStyle = CreateTitleStyle(config, unit);
+            using var episodeStyle = CreateEpisodeStyle(config, unit);
 
-            var remaining = BuildColumn(episodeMetadata, config, width, height, titleStyle, episodeStyle).Remaining;
+            var remaining = BuildColumn(subject, config, width, height, titleStyle, episodeStyle).Remaining;
             var safeArea = GetSafeAreaBounds(width, height, config);
 
             var minHeight = safeArea.Height * MinimumLogoAreaRatio;
@@ -122,13 +140,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // GetSeriesLogoPath
         // Returns the path to the series logo file if it exists.
-        private string? GetSeriesLogoPath(EpisodeMetadata episodeMetadata)
+        private string? GetSeriesLogoPath(ArtworkSubject subject)
         {
             try
             {
-                var path = episodeMetadata.VideoMetadata?.SeriesLogoFilePath;
+                var path = subject.VideoMetadata?.SeriesLogoFilePath;
                 if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                {
                     return path;
+                }
+
                 return null;
             }
             catch (Exception ex)
@@ -139,16 +160,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawSeriesLogoImage
-        // Draws the series logo image at the specified position and alignment.
-        private void DrawSeriesLogoImage(SKCanvas canvas, string logoPath, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int height)
+        // Draws the series logo image at the specified position and alignment. Its height is a
+        // percent of the poster's short edge, like every other size setting.
+        private void DrawSeriesLogoImage(SKCanvas canvas, string logoPath, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
             try
             {
                 using var stream = File.OpenRead(logoPath);
                 using var bitmap = SKBitmap.Decode(stream);
-                if (bitmap == null) return;
+                if (bitmap == null)
+                {
+                    return;
+                }
 
-                var logoHeight = height * (config.LogoHeight / 100f);
+                var logoHeight = unit * (config.LogoHeight / 100f);
                 var aspect = (float)bitmap.Width / bitmap.Height;
                 var logoWidth = logoHeight * aspect;
 
@@ -158,8 +183,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                     logoHeight = logoWidth / aspect;
                 }
 
-                // A logo height large enough to reach the text strip is scaled down to fit the
-                // space left for it rather than being allowed to overlap.
+                // A logo tall enough to reach the text strip is scaled down to fit the space left
+                // for it rather than being allowed to overlap.
                 if (logoHeight > logoArea.Height)
                 {
                     logoHeight = logoArea.Height;
@@ -181,13 +206,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // DrawSeriesLogoText
         // Draws the series name as text when no logo image is available.
-        private static void DrawSeriesLogoText(SKCanvas canvas, string seriesName, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int height)
+        private static void DrawSeriesLogoText(SKCanvas canvas, string seriesName, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.EpisodeFontSize * RenderConstants.LineHeightMultiplier, height);
+            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.EpisodeFontSize * RenderConstants.LineHeightMultiplier, unit);
             var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
             var textAlign = GetSKTextAlign(alignment);
 
-            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, height, textAlign);
+            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, unit, textAlign);
 
             var availableWidth = logoArea.Width * RenderConstants.TextWidthMultiplier;
             var lines = TextUtils.FitTextToWidth(seriesName, style.Font, availableWidth);

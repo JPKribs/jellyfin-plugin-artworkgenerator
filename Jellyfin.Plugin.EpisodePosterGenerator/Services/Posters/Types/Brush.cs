@@ -31,33 +31,38 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderOverlay
         // Creates an overlay with brush stroke cutouts revealing the canvas beneath.
-        protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
             if (string.IsNullOrEmpty(settings.OverlayColor))
+            {
                 return;
+            }
 
             var primaryColor = ColorUtils.ParseHexColor(settings.OverlayColor);
             if (primaryColor.Alpha == 0)
+            {
                 return;
+            }
 
+            var unit = SizeUnit(width, height);
             var rect = SKRect.Create(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            var textArea = CalculateTextKeepClearArea(safeArea, settings, height, episodeMetadata);
+            var textArea = CalculateTextKeepClearArea(safeArea, settings, unit, subject);
 
-            // Seed from the episode's file path so the same episode always produces the
-            // same stroke layout, but different episodes vary. Falls back to series id +
-            // season + episode if the file path isn't populated (e.g. demo generator).
-            var seed = GenerateBrushSeed(episodeMetadata);
+            // Seed from the subject's source path so the same item always produces the same stroke
+            // layout, but different items vary. Falls back to series id + season + episode when
+            // there is no path (the preview and demo generator).
+            var seed = GenerateBrushSeed(subject);
             var strokeBuilder = new BrushStrokeBuilder(seed);
-            using var brushMask = strokeBuilder.BuildStrokePath(safeArea, textArea, height);
+            using var brushMask = strokeBuilder.BuildStrokePath(safeArea, textArea, unit);
 
-            // Draw the overlay into its own layer, then erase the stroke mask out of it with
-            // a slightly blurred punch. The feathered edge reads as paint on canvas; a hard
-            // ClipPath edge reads as a digital cut.
+            // Draw the overlay into its own layer, then erase the stroke mask out of it with a
+            // slightly blurred punch. The feathered edge reads as paint on canvas; a hard ClipPath
+            // edge reads as a digital cut.
             skCanvas.SaveLayer();
 
             if (settings.OverlayGradient == OverlayGradient.None)
@@ -68,7 +73,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             else
             {
                 var secondaryColor = ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
-                if (secondaryColor.Alpha == 0) secondaryColor = primaryColor;
+                if (secondaryColor.Alpha == 0)
+                {
+                    secondaryColor = primaryColor;
+                }
 
                 using var gradient = CreateOverlayGradient(settings.OverlayGradient, rect, primaryColor, secondaryColor);
                 if (gradient != null)
@@ -84,7 +92,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
 
             // SKPaint does not own its mask filter, hence the explicit using.
-            using var punchBlur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, Math.Max(2f, height * 0.002f));
+            using var punchBlur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, Math.Max(2f, unit * 0.002f));
             using var punchPaint = new SKPaint
             {
                 Color = SKColors.Black,
@@ -106,7 +114,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 {
                     Color = ColorUtils.GetContrastingOutline(primaryColor),
                     Style = SKPaintStyle.Stroke,
-                    StrokeWidth = Math.Max(1f, height * 0.003f),
+                    StrokeWidth = Math.Max(1f, unit * 0.003f),
                     IsAntialias = true,
                     StrokeCap = SKStrokeCap.Round,
                     StrokeJoin = SKStrokeJoin.Round
@@ -116,13 +124,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // GenerateBrushSeed
-        // Produces a deterministic int seed for an episode using a stable FNV-1a hash of
-        // the episode's file path. The string overload of GetHashCode() is randomized per
-        // process on modern .NET, so we hash the bytes ourselves to keep posters stable
-        // across server restarts.
-        private static int GenerateBrushSeed(EpisodeMetadata metadata)
+        // Produces a deterministic int seed for a subject using a stable FNV-1a hash of its source
+        // path. The string overload of GetHashCode() is randomized per process on modern .NET, so
+        // the bytes are hashed here to keep posters stable across server restarts.
+        private static int GenerateBrushSeed(ArtworkSubject metadata)
         {
-            var path = metadata.VideoMetadata?.EpisodeFilePath;
+            var path = metadata.VideoMetadata?.SourcePath;
             if (!string.IsNullOrEmpty(path))
             {
                 unchecked
@@ -133,6 +140,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                         hash ^= c;
                         hash *= 16777619;
                     }
+
                     return hash;
                 }
             }
@@ -146,34 +154,35 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                     ^ BitConverter.ToInt32(bytes, 8)
                     ^ BitConverter.ToInt32(bytes, 12);
             }
+
             fallback = (fallback * 397) ^ (metadata.SeasonNumber ?? 0);
             fallback = (fallback * 397) ^ (metadata.EpisodeNumberStart ?? 1);
             return fallback;
         }
 
         // BuildTextColumn
-        // The one description of the text layout: episode code above a fixed two line title
-        // zone, packed against the bottom left of the safe area.
-        private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int height, EpisodeMetadata episodeMetadata, TextStyle episodeStyle, TextStyle titleStyle)
+        // The one description of the text layout: the code above a fixed two line title zone,
+        // packed against the bottom left of the safe area.
+        private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject, TextStyle episodeStyle, TextStyle titleStyle)
         {
-            var titleHeight = settings.ShowTitle && !string.IsNullOrWhiteSpace(episodeMetadata.EpisodeName)
+            var titleHeight = settings.ShowTitle && !string.IsNullOrWhiteSpace(subject.Title)
                 ? titleStyle.BlockHeight(2)
                 : 0f;
 
-            return new LayoutColumn(safeArea, GetElementSpacing(settings, height), LayoutAnchor.Bottom)
-                .Add(EpisodeBlock, settings.ShowEpisode ? episodeStyle.LineBox : 0f)
+            return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+                .Add(EpisodeBlock, settings.ShowEpisode && subject.Code.Length > 0 ? episodeStyle.LineBox : 0f)
                 .Add(TitleBlock, titleHeight);
         }
 
         // CalculateTextKeepClearArea
         // The area the strokes must leave alone: exactly the block the text column occupies,
         // measured from the same styles that draw it.
-        private static SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int height, EpisodeMetadata episodeMetadata)
+        private static SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject)
         {
-            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Left);
-            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Left);
+            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
+            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
 
-            var consumed = BuildTextColumn(safeArea, settings, height, episodeMetadata, episodeStyle, titleStyle).Consumed;
+            var consumed = BuildTextColumn(safeArea, settings, unit, subject, episodeStyle, titleStyle).Consumed;
 
             return new SKRect(
                 safeArea.Left,
@@ -183,30 +192,28 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the episode code and title in the bottom left corner of the poster.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders the code and title in the bottom left corner of the poster.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
+            var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Left);
-            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Left);
+            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
+            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
 
-            var column = BuildTextColumn(safeArea, settings, height, episodeMetadata, episodeStyle, titleStyle);
+            var column = BuildTextColumn(safeArea, settings, unit, subject, episodeStyle, titleStyle);
 
             if (column.TryGetSlot(EpisodeBlock, out var codeSlot))
             {
-                var episodeCode = EpisodeCodeUtils.FormatEpisodeCode(
-                    episodeMetadata.SeasonNumber ?? 0,
-                    episodeMetadata.EpisodeNumberStart ?? 0);
-                episodeStyle.Draw(skCanvas, episodeCode, safeArea.Left, episodeStyle.BaselineAtBottom(codeSlot));
+                episodeStyle.Draw(skCanvas, subject.Code, safeArea.Left, episodeStyle.BaselineAtBottom(codeSlot));
             }
 
             if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, episodeMetadata.EpisodeName!, titleStyle, titleSlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Title!, titleStyle, titleSlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTitleHandling);
             }
         }
 

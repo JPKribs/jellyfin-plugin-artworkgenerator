@@ -1,0 +1,29 @@
+namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
+{
+    /// <summary>
+    /// How backdrops are extracted. Backdrops carry no design, so this is only framing and cleanup.
+    /// </summary>
+    public class BackdropSettings
+    {
+        /// <summary>Gets or sets the backdrop aspect ratio, such as 16:9.</summary>
+        public string AspectRatio { get; set; } = "16:9";
+
+        /// <summary>Gets or sets a value indicating whether black bars are cropped away first.</summary>
+        public bool EnableLetterboxDetection { get; set; } = true;
+
+        /// <summary>Gets or sets the brightness at or below which a pixel counts as black.</summary>
+        public int LetterboxBlackThreshold { get; set; } = 25;
+
+        /// <summary>Gets or sets the percent of a row that must be black to count as letterboxing.</summary>
+        public float LetterboxConfidence { get; set; } = 85.0f;
+
+        /// <summary>Gets or sets the percent HDR frames are brightened by.</summary>
+        public float BrightenHDR { get; set; } = 25.0f;
+
+        /// <summary>Gets or sets the percent of each episode skipped before frames are considered.</summary>
+        public float ExtractWindowStart { get; set; } = 20.0f;
+
+        /// <summary>Gets or sets the percent of each episode after which frames are no longer considered.</summary>
+        public float ExtractWindowEnd { get; set; } = 80.0f;
+    }
+}

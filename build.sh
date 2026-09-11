@@ -74,6 +74,10 @@ validate_resources() {
         "$PROJECT_DIR/Configuration/epg_posters.js"
         "$PROJECT_DIR/Configuration/epg_settings.html"
         "$PROJECT_DIR/Configuration/epg_settings.js"
+        "$PROJECT_DIR/Configuration/epg_logos.html"
+        "$PROJECT_DIR/Configuration/epg_logos.js"
+        "$PROJECT_DIR/Configuration/epg_profiles.html"
+        "$PROJECT_DIR/Configuration/epg_profiles.js"
         "$PROJECT_DIR/Configuration/epg_shared.css"
     )
     

@@ -12,7 +12,9 @@ export default function (view) {
 
     function getTabs() {
         return [
-            { href: 'configurationpage?name=epg_posters', name: 'Posters' },
+            { href: 'configurationpage?name=epg_posters', name: 'Designs' },
+            { href: 'configurationpage?name=epg_logos', name: 'Logos' },
+            { href: 'configurationpage?name=epg_profiles', name: 'Profiles' },
             { href: 'configurationpage?name=epg_settings', name: 'Settings' }
         ];
     }
@@ -22,7 +24,8 @@ export default function (view) {
     function currentState() {
         return JSON.stringify({
             EnableProvider: view.querySelector('#chkEnableProvider').checked,
-            ImageChoiceCount: view.querySelector('#txtImageChoiceCount').value
+            ImageChoiceCount: view.querySelector('#txtImageChoiceCount').value,
+            FixedExtractionSeed: view.querySelector('#txtFixedSeed').value
         });
     }
 
@@ -83,6 +86,7 @@ export default function (view) {
         shared.getConfig().then(function (config) {
             view.querySelector('#chkEnableProvider').checked = config.EnableProvider !== false;
             view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 3;
+            view.querySelector('#txtFixedSeed').value = (config.FixedExtractionSeed === null || config.FixedExtractionSeed === undefined) ? '' : config.FixedExtractionSeed;
             takeSnapshot();
             markClean();
             Dashboard.hideLoadingMsg();
@@ -108,6 +112,11 @@ export default function (view) {
             if (isNaN(choices)) choices = 3;
             config.ImageChoiceCount = Math.min(10, Math.max(1, choices));
 
+            // Empty means random; anything else must be a whole number the server can store.
+            var seedText = view.querySelector('#txtFixedSeed').value.trim();
+            var seed = parseInt(seedText, 10);
+            config.FixedExtractionSeed = seedText === '' || isNaN(seed) ? null : seed;
+
             return shared.saveConfig(config);
         }).then(function (result) {
             markClean();
@@ -132,13 +141,14 @@ export default function (view) {
     }
 
     view.addEventListener('viewshow', function () {
-        setTabs('epg', 1, getTabs());
+        setTabs('epg', 3, getTabs());
 
         if (!_initialized) {
             _initialized = true;
             view.querySelector('#btnSavePlugin').addEventListener('click', savePluginSettings);
             view.querySelector('#chkEnableProvider').addEventListener('change', checkDirty);
             view.querySelector('#txtImageChoiceCount').addEventListener('input', checkDirty);
+            view.querySelector('#txtFixedSeed').addEventListener('input', checkDirty);
         }
 
         window.addEventListener('beforeunload', onBeforeUnload);
@@ -152,7 +162,7 @@ export default function (view) {
             var confirmed = confirm('You have unsaved changes. Are you sure you want to leave?');
             if (!confirmed) {
                 e.preventDefault();
-                setTabs('epg', 1, getTabs());
+                setTabs('epg', 3, getTabs());
             }
         }
     });

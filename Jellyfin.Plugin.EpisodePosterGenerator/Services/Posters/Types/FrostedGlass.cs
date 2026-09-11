@@ -9,19 +9,25 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 {
     public class FrostedGlassPosterGenerator : BasePosterGenerator
     {
+        // Panel geometry as shares of the size unit.
+        private const float PaddingXRatio = 0.07f;
+        private const float PaddingYRatio = 0.03f;
+        private const float CornerRadiusRatio = 0.02f;
+        private const float BlurRatio = 0.018f;
+
         // Style
         // The poster style this generator produces.
         public override PosterStyle Style => PosterStyle.FrostedGlass;
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Episode text on a frosted glass panel that blurs the image behind it.";
+        public override string Description => "Text on a frosted glass panel that blurs the image behind it.";
 
         private readonly ILogger<FrostedGlassPosterGenerator> _logger;
 
         // The base canvas bitmap, captured during the canvas layer so the typography layer
-        // can re-draw a blurred copy of it inside the panel. Generators are single-use
-        // (one instance per Generate call), so holding the reference is safe.
+        // can re-draw a blurred copy of it inside the panel. A generator renders one poster at a
+        // time, so holding the reference between layers is safe.
         private SKBitmap? _canvasBitmap;
 
         // FrostedGlassPosterGenerator
@@ -33,51 +39,50 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderCanvas
         // Draws the base canvas and captures it for the blurred panel rendering.
-        protected override void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             _canvasBitmap = canvas;
-            base.RenderCanvas(skCanvas, canvas, episodeMetadata, settings, width, height);
+            base.RenderCanvas(skCanvas, canvas, subject, settings, width, height);
         }
 
         // RenderTypography
-        // Renders the frosted panel with episode info and title centered inside it. The text
-        // carries no drop shadow: the panel supplies the contrast.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders the frosted panel with the code and title centred inside it. The text carries
+        // no drop shadow: the panel supplies the contrast.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
             if (!settings.ShowTitle && !settings.ShowEpisode)
+            {
                 return;
+            }
 
+            var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var titleStyle = CreateTitleStyle(settings, height, SKTextAlign.Center, withShadow: false);
-            using var episodeStyle = CreateEpisodeStyle(settings, height, SKTextAlign.Center, withShadow: false);
+            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Center, withShadow: false);
+            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Center, withShadow: false);
 
-            float padX = width * 0.04f;
-            float padY = height * 0.03f;
+            float padX = unit * PaddingXRatio;
+            float padY = unit * PaddingYRatio;
             float maxTextWidth = safeArea.Width - (2 * padX);
 
             var titleLines = new List<string>();
-            if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
+            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
             {
-                titleLines.AddRange(TextUtils.FitTitleLines(episodeMetadata.EpisodeName, titleStyle.Font, maxTextWidth, settings.LongTitleHandling));
+                titleLines.AddRange(TextUtils.FitTitleLines(subject.Title, titleStyle.Font, maxTextWidth, settings.LongTitleHandling));
             }
 
-            string? episodeText = null;
-            if (settings.ShowEpisode)
-            {
-                episodeText = EpisodeCodeUtils.FormatEpisodeCode(
-                    episodeMetadata.SeasonNumber ?? 0,
-                    episodeMetadata.EpisodeNumberStart ?? 0);
-            }
+            string? episodeText = settings.ShowEpisode && subject.Code.Length > 0 ? subject.Code : null;
 
             if (titleLines.Count == 0 && episodeText == null)
+            {
                 return;
+            }
 
-            float spacing = GetElementSpacing(settings, height);
+            float spacing = GetElementSpacing(settings, unit);
 
             // The panel is sized from the same column that positions its contents, so the box can
             // never be measured from one set of numbers and filled from another.
@@ -89,19 +94,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             float contentWidth = 0;
             if (episodeText != null)
+            {
                 contentWidth = Math.Max(contentWidth, episodeStyle.MeasureWidth(episodeText));
+            }
+
             foreach (var line in titleLines)
+            {
                 contentWidth = Math.Max(contentWidth, titleStyle.MeasureWidth(line));
+            }
 
             float panelWidth = Math.Min(safeArea.Width, contentWidth + (2 * padX));
             float panelHeight = contentHeight + (2 * padY);
             float panelLeft = safeArea.MidX - (panelWidth / 2f);
             float panelTop = safeArea.Bottom - panelHeight;
             var panelRect = new SKRect(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight);
-            float cornerRadius = height * 0.02f;
-            using var roundedPanel = new SKRoundRect(panelRect, cornerRadius);
+            using var roundedPanel = new SKRoundRect(panelRect, unit * CornerRadiusRatio);
 
-            DrawFrostedPanel(skCanvas, roundedPanel, episodeMetadata, settings, width, height);
+            DrawFrostedPanel(skCanvas, roundedPanel, subject, settings, width, height);
 
             var placed = new LayoutColumn(
                 SKRect.Create(panelRect.Left, panelTop + padY, panelRect.Width, contentHeight),
@@ -124,14 +133,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // DrawFrostedPanel
         // Fills the rounded panel with a blurred copy of the canvas (matching the poster's
         // overlay tint) plus a frost wash, then strokes a subtle border.
-        private void DrawFrostedPanel(SKCanvas skCanvas, SKRoundRect panel, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        private void DrawFrostedPanel(SKCanvas skCanvas, SKRoundRect panel, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
+            var unit = SizeUnit(width, height);
+
             skCanvas.Save();
             skCanvas.ClipRoundRect(panel, antialias: true);
 
             if (_canvasBitmap != null)
             {
-                float blurSigma = Math.Max(8f, width * 0.01f);
+                float blurSigma = Math.Max(8f, unit * BlurRatio);
 
                 // SKPaint does not own its image filter, so it is disposed explicitly rather
                 // than left for finalization on every poster rendered.
@@ -145,7 +156,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
                 // Re-apply the overlay inside the clip so the blurred panel keeps the same
                 // tint as the rest of the poster instead of showing the raw frame colors.
-                RenderOverlay(skCanvas, episodeMetadata, settings, width, height);
+                RenderOverlay(skCanvas, subject, settings, width, height);
             }
 
             using var frostPaint = PaintFactory.CreateFillPaint(SKColors.White.WithAlpha(38));
@@ -157,7 +168,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             {
                 Color = SKColors.White.WithAlpha(70),
                 Style = SKPaintStyle.Stroke,
-                StrokeWidth = Math.Max(1.5f, height * 0.0015f),
+                StrokeWidth = Math.Max(1.5f, unit * 0.0015f),
                 IsAntialias = true
             };
             skCanvas.DrawRoundRect(panel, borderPaint);

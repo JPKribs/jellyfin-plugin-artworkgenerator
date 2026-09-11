@@ -147,7 +147,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.DemoGenerator
             }
 
             // Create mock episode metadata with current episode number
-            var metadata = new EpisodeMetadata
+            var metadata = new ArtworkSubject
             {
                 EpisodeName = EpisodeName,
                 SeriesName = ShowName,

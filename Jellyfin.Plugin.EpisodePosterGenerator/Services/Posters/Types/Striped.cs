@@ -8,7 +8,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 {
     public class StripedPosterGenerator : BasePosterGenerator
     {
-        // Band geometry, as ratios of poster height. The sash is drawn wider than the
+        // Band geometry. The centre line is a share of the poster height, so the sash sits low on
+        // both shapes; the thicknesses are shares of the size unit, so the band keeps its weight
+        // on a tall portrait instead of growing with the height. The sash is drawn wider than the
         // canvas so its ends stay covered at the tilt angle.
         private const float BandAngleDegrees = -7f;
         private const float BandCenterYRatio = 0.74f;
@@ -25,7 +27,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Tilted pinstriped sash carrying the episode title. Sporty and graphic.";
+        public override string Description => "Tilted pinstriped sash carrying the title. Sporty and graphic.";
 
         private readonly ILogger<StripedPosterGenerator> _logger;
 
@@ -39,26 +41,33 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // RenderOverlay
         // Draws the tilted sash: a solid main band with a thin pinstripe above and below,
         // using the overlay color for the band and the secondary color for the pinstripes.
-        protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
             if (string.IsNullOrEmpty(settings.OverlayColor))
+            {
                 return;
+            }
 
             var bandColor = ColorUtils.ParseHexColor(settings.OverlayColor);
             if (bandColor.Alpha == 0)
+            {
                 return;
+            }
 
             var pinstripeColor = ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
             if (pinstripeColor.Alpha == 0)
+            {
                 pinstripeColor = bandColor;
+            }
 
+            var unit = SizeUnit(width, height);
             float bandCenterY = height * BandCenterYRatio;
-            float bandHeight = height * BandHeightRatio;
-            float pinHeight = height * PinstripeHeightRatio;
-            float pinGap = height * PinstripeGapRatio;
+            float bandHeight = unit * BandHeightRatio;
+            float pinHeight = unit * PinstripeHeightRatio;
+            float pinGap = unit * PinstripeGapRatio;
 
             // Overdraw horizontally so the tilted band's ends never expose the corners.
             float overdraw = width * 0.25f;
@@ -78,62 +87,60 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Draws the episode title along the sash and the episode code in the top-right
-        // corner. When the title is disabled the episode code rides the sash instead.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Draws the title along the sash and the code in the top-right corner. When there is no
+        // title the code rides the sash instead.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
+            var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            var episodeCode = EpisodeCodeUtils.FormatEpisodeCode(
-                episodeMetadata.SeasonNumber ?? 0,
-                episodeMetadata.EpisodeNumberStart ?? 0);
+            var code = subject.Code;
+            var showCode = settings.ShowEpisode && code.Length > 0;
 
             bool titleOnBand = false;
-            if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
+            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
             {
-                using var titleStyle = CreateBandStyle(settings, height, true);
-                titleOnBand = DrawBandText(skCanvas, episodeMetadata.EpisodeName, titleStyle, settings, width, height, safeArea);
+                using var titleStyle = CreateBandStyle(settings, unit, true);
+                titleOnBand = DrawBandText(skCanvas, subject.Title, titleStyle, settings, width, height, safeArea);
             }
 
             // When there is no title on the band (disabled, or dropped by the long
-            // title handling), the episode code rides the band instead of the corner.
+            // title handling), the code rides the band instead of the corner.
             if (!titleOnBand)
             {
-                if (settings.ShowEpisode)
+                if (showCode)
                 {
-                    using var episodeStyle = CreateBandStyle(settings, height, false);
-                    DrawBandText(skCanvas, episodeCode, episodeStyle, settings, width, height, safeArea);
+                    using var codeStyle = CreateBandStyle(settings, unit, false);
+                    DrawBandText(skCanvas, code, codeStyle, settings, width, height, safeArea);
                 }
 
                 return;
             }
 
-            if (settings.ShowEpisode)
+            if (showCode)
             {
-                DrawCornerEpisodeCode(skCanvas, episodeCode, settings, height, safeArea);
+                DrawCornerEpisodeCode(skCanvas, code, settings, unit, safeArea);
             }
         }
 
         // CreateBandStyle
-        // The title or episode style with its configured size capped by the band height.
-        private static TextStyle CreateBandStyle(PosterSettings settings, int height, bool title)
+        // The title or code style with its configured size capped by the band thickness.
+        private static TextStyle CreateBandStyle(PosterSettings settings, int unit, bool title)
         {
-            float bandCap = height * BandHeightRatio * BandTextHeightRatio;
+            float bandCap = unit * BandHeightRatio * BandTextHeightRatio;
 
             if (title)
             {
-                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, height);
+                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, unit);
                 var typeface = FontUtils.ResolveTypeface(settings.EffectiveTitleFontPath, settings.TitleFontFamily, FontUtils.GetFontStyle(settings.TitleFontStyle));
-                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.TitleFontColor), Math.Min(configured, bandCap), typeface, height);
+                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.TitleFontColor), Math.Min(configured, bandCap), typeface, unit);
             }
-            else
-            {
-                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
-                var typeface = ResolveEpisodeTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
-                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), Math.Min(configured, bandCap), typeface, height);
-            }
+
+            float configuredCode = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, unit);
+            var codeTypeface = ResolveEpisodeTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
+            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), Math.Min(configuredCode, bandCap), codeTypeface, unit);
         }
 
         // DrawBandText
@@ -146,7 +153,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             var line = TextUtils.FitTitleLine(text, style.Font, maxTextWidth, settings.LongTitleHandling);
             if (line == null)
+            {
                 return false;
+            }
 
             // Centre the ascent-to-descent box on the band's centre line.
             float baselineY = bandCenterY + ((style.Ascent - style.Descent) / 2f);
@@ -159,12 +168,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawCornerEpisodeCode
-        // Draws the episode code horizontally in the top-right corner of the safe area,
-        // deliberately unrotated to contrast with the tilted sash.
-        private static void DrawCornerEpisodeCode(SKCanvas canvas, string episodeCode, PosterSettings settings, int height, SKRect safeArea)
+        // Draws the code horizontally in the top-right corner of the safe area, deliberately
+        // unrotated to contrast with the tilted sash.
+        private static void DrawCornerEpisodeCode(SKCanvas canvas, string code, PosterSettings settings, int unit, SKRect safeArea)
         {
-            using var style = CreateEpisodeStyle(settings, height, SKTextAlign.Right);
-            style.Draw(canvas, episodeCode, safeArea.Right, style.BaselineAtTop(safeArea));
+            using var style = CreateEpisodeStyle(settings, unit, SKTextAlign.Right);
+            style.Draw(canvas, code, safeArea.Right, style.BaselineAtTop(safeArea));
         }
 
         // LogError

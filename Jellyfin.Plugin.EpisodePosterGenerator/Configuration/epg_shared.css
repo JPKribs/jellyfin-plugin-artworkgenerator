@@ -480,3 +480,121 @@
     color: var(--epg-text-secondary);
     font-size: 0.85em;
 }
+
+/* ── Shapes, Logos, Profiles ───────────────────────────── */
+
+.poster-preview-frame.portrait {
+    aspect-ratio: 2 / 3;
+    max-width: 300px;
+}
+
+.poster-preview-kind {
+    margin-top: 1em;
+    max-width: 480px;
+}
+
+.logo-preview-frame {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 800 / 310;
+    border: 1px solid var(--epg-border-medium);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1b1b1b;
+    background-image:
+        linear-gradient(45deg, #272727 25%, transparent 25%),
+        linear-gradient(-45deg, #272727 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #272727 75%),
+        linear-gradient(-45deg, transparent 75%, #272727 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.logo-preview-frame.light {
+    background-color: #ececec;
+    background-image:
+        linear-gradient(45deg, #d6d6d6 25%, transparent 25%),
+        linear-gradient(-45deg, #d6d6d6 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #d6d6d6 75%),
+        linear-gradient(-45deg, transparent 75%, #d6d6d6 75%);
+}
+
+.logo-preview-image {
+    display: none;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.epg-note {
+    border-left: 3px solid var(--epg-warning-text);
+    background: var(--epg-bg-surface);
+    border-radius: 4px;
+    padding: 0.7em 1em;
+    margin: 0 0 1.4em;
+    line-height: 1.45;
+}
+
+.slot-matrix {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.slot-matrix table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.slot-matrix th,
+.slot-matrix td {
+    padding: 0.7em 0.6em;
+    border-bottom: 1px solid var(--epg-border-subtle);
+    text-align: left;
+    vertical-align: top;
+}
+
+.slot-matrix thead th {
+    color: var(--epg-text-secondary);
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.slot-matrix tbody th {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.slot-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45em;
+    min-width: 11em;
+}
+
+.slot-cell.slot-cell-off .slot-select {
+    opacity: 0.45;
+}
+
+.slot-cell .slot-select {
+    width: 100%;
+    padding: 0.35em 0.5em;
+    background: var(--epg-bg-input);
+    color: inherit;
+    border: 1px solid var(--epg-border-muted);
+    border-radius: 4px;
+}
+
+.slot-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    cursor: pointer;
+}
+
+.slot-cell-unavailable {
+    color: var(--epg-text-secondary);
+    font-style: italic;
+}

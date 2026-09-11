@@ -7,13 +7,19 @@ targetAbi: "12.0.0.0"
 framework: "net10.0"
 overview: "Generate Custom Episode Posters"
 description: >
-  Episode Poster Generator is a Jellyfin plugin that automatically creates custom episode posters using frame extraction and custom overlay rendering. Utilizes brightness and sharpness scoring to avoid dark scenes and motion blur.
+  Episode Poster Generator is a Jellyfin plugin that creates episode posters, series and season posters, thumbs, backdrops, and text logos using frame extraction and custom overlay rendering. Utilizes brightness and sharpness scoring to avoid dark scenes and motion blur.
 category: "MoviesAndShows"
 owner: "JPKribs"
 artifacts:
 - "Jellyfin.Plugin.EpisodePosterGenerator.dll"
 changelog:
   features:
+  - Generates series and season posters, thumbs, backdrops, and text logos alongside episode posters
+  - Designs choose a portrait or landscape shape, and every style except Split lays out both
+  - Profiles decide which images each series gets and which design draws each one, replacing per-design series assignment
+  - Logo designs build a text logo from the title, original title, sort title, or folder name, with year and subtitle cleanup and a fixed or sampled color
+  - All images of an item draw from one shared set of frames, and an optional fixed seed makes frame choice repeatable
+  - Existing designs and series assignments migrate to a default profile automatically
   - Shadows, rules, and the Frame border now scale with the poster, so they read the same on a 4K frame as on a DVD rip instead of turning into a hairline or a slab
   - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
   fixes:

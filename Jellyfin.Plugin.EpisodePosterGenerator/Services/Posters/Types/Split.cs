@@ -17,6 +17,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Series poster beside the episode image with text. Magazine layout.";
 
+        // SupportedShapes
+        // The layout puts a portrait series poster beside a frame, which needs a wide canvas.
+        public override ArtworkShapes SupportedShapes => ArtworkShapes.Landscape;
+
         private readonly ILogger<SplitPosterGenerator> _logger;
 
         // SplitPosterGenerator
@@ -30,12 +34,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Draws the series poster on the left and the extracted frame on the right. The poster
         // is centre-cropped to the 2:3 panel rather than stretched, so artwork that is not
         // exactly 2:3 keeps its proportions.
-        protected override void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
 
-            var seriesPosterPath = episodeMetadata.VideoMetadata.SeriesPosterFilePath;
+            var seriesPosterPath = subject.VideoMetadata.SeriesPosterFilePath;
             var posterWidth = CalculatePosterWidth(height);
 
             // Draw extracted frame as base layer (full canvas)
@@ -80,7 +84,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderOverlay
         // Applies the overlay only to the right side (text area).
-        protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
@@ -120,21 +124,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // RenderTypography
         // Renders the Standard text stack inside the right side safe area.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
             var safeArea = GetRightSideSafeArea(width, height, settings);
 
-            DrawBottomTextStack(
-                skCanvas,
-                safeArea,
-                episodeMetadata.SeasonNumber ?? 0,
-                episodeMetadata.EpisodeNumberStart ?? 0,
-                episodeMetadata.EpisodeName ?? "-",
-                settings,
-                height);
+            DrawBottomTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
 
         // LogError
@@ -159,7 +156,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var rightSideWidth = width - posterWidth;
 
             // Same pixel margin on all sides, derived from the poster height.
-            var margin = height * GetSafeAreaMargin(settings);
+            var margin = SizeUnit(width, height) * GetSafeAreaMargin(settings);
 
             var safeLeft = posterWidth + margin;
             var safeTop = margin;

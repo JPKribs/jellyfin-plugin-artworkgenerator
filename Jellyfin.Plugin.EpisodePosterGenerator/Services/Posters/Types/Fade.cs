@@ -19,13 +19,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private const float NumberZoneHeightRatio = 0.3f;
         private const float NumberZoneWidthRatio = 0.45f;
 
+        // A portrait poster is narrow, so the number may use more of the width.
+        private const float PortraitNumberZoneWidthRatio = 0.7f;
+
         // Style
         // The poster style this generator produces.
         public override PosterStyle Style => PosterStyle.Fade;
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "One sided fade with a big episode number and a vertical title. Editorial and bold.";
+        public override string Description => "One sided fade with a big number and a vertical title. Editorial and bold.";
 
         private readonly ILogger<FadePosterGenerator> _logger;
 
@@ -39,17 +42,21 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // RenderOverlay
         // Draws a hard one-sided gradient: solid overlay color on the left that holds until
         // partway across, then falls off to transparent so the right side shows the frame.
-        protected override void RenderOverlay(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        protected override void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
             if (string.IsNullOrEmpty(settings.OverlayColor))
+            {
                 return;
+            }
 
             var primaryColor = ColorUtils.ParseHexColor(settings.OverlayColor);
             if (primaryColor.Alpha == 0)
+            {
                 return;
+            }
 
             var rect = SKRect.Create(width, height);
             var colors = new[] { primaryColor, primaryColor, primaryColor.WithAlpha(0) };
@@ -58,7 +65,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             using var shader = SKShader.CreateLinearGradient(
                 new SKPoint(rect.Left, rect.MidY),
                 new SKPoint(rect.Right, rect.MidY),
-                colors, positions, SKShaderTileMode.Clamp);
+                colors,
+                positions,
+                SKShaderTileMode.Clamp);
 
             using var overlayPaint = new SKPaint
             {
@@ -70,39 +79,40 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders a large episode number pinned to the bottom left with the title rotated
-        // vertically along the left edge above it. The title zone is fixed as well, so a
-        // long or short title can never move the number.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders a large number pinned to the bottom left with the title rotated vertically along
+        // the left edge above it. A series has no number, so its title runs the full height.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
+            var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float numberTop = safeArea.Bottom;
 
-            if (settings.ShowEpisode)
+            if (settings.ShowEpisode && subject.Number.HasValue)
             {
-                DrawEpisodeNumber(skCanvas, episodeMetadata, settings, safeArea, height);
+                var widthRatio = height > width ? PortraitNumberZoneWidthRatio : NumberZoneWidthRatio;
+                DrawEpisodeNumber(skCanvas, subject.Number.Value, settings, safeArea, unit, widthRatio);
                 numberTop = safeArea.Bottom - (safeArea.Height * NumberZoneHeightRatio);
             }
 
-            if (settings.ShowTitle && !string.IsNullOrEmpty(episodeMetadata.EpisodeName))
+            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
             {
-                DrawVerticalTitle(skCanvas, episodeMetadata.EpisodeName, settings, height, safeArea, numberTop);
+                DrawVerticalTitle(skCanvas, subject.Title, settings, unit, safeArea, numberTop);
             }
         }
 
         // DrawEpisodeNumber
-        // Draws the zero padded episode number at its fixed spot. The size comes from a
-        // fixed reference string so the digits themselves cannot change it. Numbers with
-        // three or more digits shrink to fit without moving the anchor.
-        private static void DrawEpisodeNumber(SKCanvas canvas, EpisodeMetadata episodeMetadata, PosterSettings config, SKRect safeArea, int height)
+        // Draws the zero padded number at its fixed spot. The size comes from a fixed reference
+        // string so the digits themselves cannot change it. Numbers with three or more digits
+        // shrink to fit without moving the anchor.
+        private static void DrawEpisodeNumber(SKCanvas canvas, int number, PosterSettings config, SKRect safeArea, int unit, float widthRatio)
         {
-            var numberText = (episodeMetadata.EpisodeNumberStart ?? 0).ToString("D2", CultureInfo.InvariantCulture);
+            var numberText = number.ToString("D2", CultureInfo.InvariantCulture);
             var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
 
-            float maxWidth = safeArea.Width * NumberZoneWidthRatio;
+            float maxWidth = safeArea.Width * widthRatio;
             float maxHeight = safeArea.Height * NumberZoneHeightRatio;
             float fontSize = FontUtils.CalculateOptimalFontSize("00", typeface, maxWidth, maxHeight);
 
@@ -112,32 +122,35 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 fontSize *= maxWidth / bounds.Width;
             }
 
-            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, height, SKTextAlign.Left);
+            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, unit, SKTextAlign.Left);
             style.Draw(canvas, numberText, safeArea.Left, safeArea.Bottom);
         }
 
         // DrawVerticalTitle
         // Draws the uppercase title rotated 90 degrees, running upward along the left edge
-        // from just above the episode number. The title wraps to up to two vertical rows
-        // before the long title handling engages, matching the other styles.
-        private static void DrawVerticalTitle(SKCanvas canvas, string title, PosterSettings config, int height, SKRect safeArea, float numberTop)
+        // from just above the number. The title wraps to up to two vertical rows before the
+        // long title handling engages, matching the other styles.
+        private static void DrawVerticalTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, float numberTop)
         {
-            using var style = CreateTitleStyle(config, height, SKTextAlign.Left);
+            using var style = CreateTitleStyle(config, unit, SKTextAlign.Left);
 
-            float spacing = GetElementSpacing(config, height);
+            float spacing = GetElementSpacing(config, unit);
             float startY = numberTop - spacing;
             float availableRun = startY - safeArea.Top;
             if (availableRun <= style.Size)
+            {
                 return;
+            }
 
             var lines = TextUtils.FitTitleLines(title.ToUpperInvariant(), style.Font, availableRun, config.LongTitleHandling);
             if (lines.Count == 0)
+            {
                 return;
+            }
 
-            // Rotate around each anchor so the text runs bottom to top along the left
-            // edge. The baseline sits on the anchor's vertical line, shifted right by the
-            // ascent so glyphs stay inside the safe area. The second row sits one line
-            // height further right, reading outward from the edge.
+            // Rotate around each anchor so the text runs bottom to top along the left edge. The
+            // baseline sits on the anchor's vertical line, shifted right by the ascent so glyphs
+            // stay inside the safe area. The second row sits one line height further right.
             float firstAnchorX = safeArea.Left + style.Ascent;
 
             for (int i = 0; i < lines.Count; i++)

@@ -25,22 +25,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the season and episode numbers, a rule, and the title at the bottom of the poster.
-        protected override void RenderTypography(SKCanvas skCanvas, EpisodeMetadata episodeMetadata, PosterSettings settings, int width, int height)
+        // Renders the identity line, a rule, and the title at the bottom of the poster.
+        protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(episodeMetadata);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
             var safeArea = GetSafeAreaBounds(width, height, settings);
-
-            DrawBottomTextStack(
-                skCanvas,
-                safeArea,
-                episodeMetadata.SeasonNumber ?? 0,
-                episodeMetadata.EpisodeNumberStart ?? 0,
-                episodeMetadata.EpisodeName ?? "-",
-                settings,
-                height);
+            DrawBottomTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
 
         // LogError
