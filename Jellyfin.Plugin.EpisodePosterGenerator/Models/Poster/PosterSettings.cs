@@ -74,8 +74,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         /// <summary>
         /// Gets or sets the title and number sizes for portrait renders, as a percent of the sizes
-        /// set for landscape. Sizes are measured from the short edge, which in portrait is the
-        /// width, so the same percent reads larger there; 80 keeps both shapes in proportion.
+        /// set for landscape. Every size is measured from the poster's short side, and a portrait
+        /// crop has a shorter one, so the same percent reads larger there; 80 keeps both shapes in
+        /// proportion.
         /// </summary>
         public float PortraitTextScale { get; set; } = 80.0f;
 

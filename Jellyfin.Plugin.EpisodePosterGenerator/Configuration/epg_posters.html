@@ -155,7 +155,7 @@
                                 <div class="inputContainer">
                                     <label for="txtLogoHeight">Logo Height:</label>
                                     <input is="emby-input" type="number" id="txtLogoHeight" min="1.0" max="100.0" data-setting="LogoHeight" data-type="number" />
-                                    <div class="fieldDescription">Logo height as a percent of the poster's short edge, 1 to 100.</div>
+                                    <div class="fieldDescription">Logo height as a percent of the poster's short side, 1 to 100.</div>
                                 </div>
                             </div>
 
@@ -244,19 +244,19 @@
                             <div class="inputContainer">
                                 <label for="txtPortraitTextScale">Portrait Text Size (%):</label>
                                 <input is="emby-input" type="number" id="txtPortraitTextScale" min="25" max="200" step="5" data-setting="PortraitTextScale" data-type="number" />
-                                <div class="fieldDescription">Title and number sizes for portrait images, as a percent of the sizes below. Sizes are measured from the short edge, which in portrait is the width, so the same percent reads larger there. Default is 80.</div>
+                                <div class="fieldDescription">Title and number sizes for portrait images, as a percent of the sizes below. Every size is measured from the poster's short side, and a portrait crop has a shorter one, so the same percent reads larger there. Default is 80.</div>
                             </div>
 
                             <div class="inputContainer">
                                 <label for="txtPosterSafeArea">Safe Area:</label>
                                 <input is="emby-input" type="number" id="txtPosterSafeArea" min="1.0" max="100.0" data-setting="PosterSafeArea" data-type="number" />
-                                <div class="fieldDescription">Margin kept clear around all edges, as a percent of the poster's short edge. The same pixel amount is used on every side.</div>
+                                <div class="fieldDescription">Margin kept clear around all edges, as a percent of the poster's short side. The same pixel amount is used on every side.</div>
                             </div>
 
                             <div class="inputContainer">
                                 <label for="txtElementSpacing">Element Spacing:</label>
                                 <input is="emby-input" type="number" id="txtElementSpacing" min="0" max="20" step="0.5" data-setting="ElementSpacing" data-type="number" />
-                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short edge. Raise it if elements sit too close together. Default is 2.</div>
+                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short side. Raise it if elements sit too close together. Default is 2.</div>
                             </div>
 
                         </div>
@@ -446,7 +446,7 @@
                             <div class="inputContainer" data-depends-on="chkShowEpisode">
                                 <label for="txtEpisodeFontSize">Font Size:</label>
                                 <input is="emby-input" type="number" id="txtEpisodeFontSize" min="1.0" max="100.0" data-setting="EpisodeFontSize" data-type="number" />
-                                <div class="fieldDescription">Text size as a percent of the poster's short edge, 1 to 100.</div>
+                                <div class="fieldDescription">Text size as a percent of the poster's short side, 1 to 100.</div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowEpisode">
@@ -554,7 +554,7 @@
                             <div class="inputContainer" data-depends-on="chkShowTitle">
                                 <label for="txtTitleFontSize">Font Size:</label>
                                 <input is="emby-input" type="number" id="txtTitleFontSize" min="1.0" max="100.0" data-setting="TitleFontSize" data-type="number" />
-                                <div class="fieldDescription">Title size as a percent of the poster's short edge, 1 to 100.</div>
+                                <div class="fieldDescription">Title size as a percent of the poster's short side, 1 to 100.</div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowTitle">

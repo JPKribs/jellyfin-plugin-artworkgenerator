@@ -168,7 +168,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // DrawSeriesLogoImage
         // Draws the series logo image at the specified position and alignment. Its height is a
-        // percent of the poster's short edge, like every other size setting.
+        // percent of the poster's short side, like every other size setting.
         private void DrawSeriesLogoImage(SKCanvas canvas, string logoPath, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
             try

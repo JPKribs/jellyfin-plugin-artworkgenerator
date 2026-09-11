@@ -55,9 +55,9 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Fill Strategy**: how the canvas fits the poster. Original, Fill, or Fit. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape. Default Original.
 * **Landscape Aspect Ratio**: output aspect ratio for landscape images. Default 16:9.
 * **Portrait Aspect Ratio**: output aspect ratio for portrait images. Default 2:3.
-* **Portrait Text Size (%)**: title and number sizes for portrait images, as a percent of the sizes set below. Sizes are measured from the short edge, which in portrait is the width, so the same percent reads larger there. Default 80.
-* **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short edge and the same pixel amount is used on all four sides. Default 5.
-* **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short edge. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
+* **Portrait Text Size (%)**: title and number sizes for portrait images, as a percent of the sizes set below. Every size is measured from the poster's short side, and a portrait crop has a shorter one, so the same percent reads larger there. Default 80.
+* **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short side and the same pixel amount is used on all four sides. Default 5.
+* **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short side. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
 
 ## Outline (Style is Cutout or Brush)
 
@@ -71,7 +71,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 * **Logo Position**: vertical placement. Top, Center, or Bottom. Default Center.
 * **Logo Alignment**: horizontal placement. Left, Center, or Right. Default Center.
-* **Logo Height**: logo height as a percent of the poster's short edge. Default 30.
+* **Logo Height**: logo height as a percent of the poster's short side. Default 30.
 
 ## Number & Code
 
@@ -80,7 +80,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
-* **Font Size**: text size as a percent of the poster's short edge. Default 7.
+* **Font Size**: text size as a percent of the poster's short side. Default 7.
 * **Font Color**: text color as ARGB hex. Default #FFFFFFFF.
 
 ## Title Text
@@ -91,7 +91,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
-* **Font Size**: text size as a percent of the poster's short edge. Default 10.
+* **Font Size**: text size as a percent of the poster's short side. Default 10.
 * **Font Color**: text color as ARGB hex. Default #FFFFFFFF.
 
 ## Overlay

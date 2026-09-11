@@ -72,9 +72,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // SizeUnit
-        // The length every size setting is a percentage of: the poster's short edge. For a landscape
-        // poster that is the height, exactly as before; for a portrait poster it is the width, so a
-        // design's text keeps the same weight relative to the frame instead of overflowing it.
+        // The length every size setting is a percentage of: the poster's short side. A landscape
+        // poster's short side is what these sizes always measured against, so existing designs are
+        // unchanged; a portrait poster has a shorter one, so a design's text keeps the same weight
+        // relative to the frame instead of overflowing it.
         protected static int SizeUnit(int width, int height) => Math.Max(1, Math.Min(width, height));
 
         // GetSafeAreaMargin
@@ -231,7 +232,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // ApplySafeAreaConstraints
         // Calculates the safe area dimensions and offsets for a given poster size.
-        // The margin is the safe area percent of the poster's short edge, applied as the same
+        // The margin is the safe area percent of the poster's short side, applied as the same
         // pixel amount on all four sides, so the border is visually even (10% of a
         // 1600x1000 poster is a 100 pixel margin both vertically and horizontally).
         protected static void ApplySafeAreaConstraints(
