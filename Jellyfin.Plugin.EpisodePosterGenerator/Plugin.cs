@@ -42,7 +42,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator
             _logger = logger;
 
             _posterConfigService = new PosterConfigurationService(
-                loggerFactory.CreateLogger<PosterConfigurationService>());
+                loggerFactory.CreateLogger<PosterConfigurationService>(),
+                new LogoDesignStore(Path.Combine(applicationPaths.DataPath, "episodeposter", "logos.json")));
             _posterConfigService.Initialize(Configuration);
 
             var brightnessService = new BrightnessService(

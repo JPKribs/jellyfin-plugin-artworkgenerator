@@ -44,7 +44,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Configuration
         public List<PosterConfiguration> PosterConfigurations { get; set; }
 
         /// <summary>
-        /// Gets or sets the logo designs.
+        /// Gets or sets the logo designs an older configuration stored here. They move into their own
+        /// file on load, after which this stays empty; it exists only so that migration can happen.
         /// </summary>
         [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]

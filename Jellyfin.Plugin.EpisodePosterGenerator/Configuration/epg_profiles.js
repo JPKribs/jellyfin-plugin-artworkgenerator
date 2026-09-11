@@ -8,6 +8,7 @@ export default function (view) {
     var fullConfig = null;
     var currentProfileId = null;
     var allSeries = [];
+    var logoDesigns = [];
     var _initialized = false;
     var _dirty = false;
     var _saving = false;
@@ -196,13 +197,25 @@ export default function (view) {
 
     // ── Loading ─────────────────────────────────────────────
 
+    // Logo designs are stored in their own file on the server, not in the plugin configuration.
+    function fetchLogos() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/EpisodePosterGenerator/Logos'),
+            dataType: 'json'
+        }).catch(function (error) {
+            console.error('Failed to load logo designs:', error);
+            return [];
+        });
+    }
+
     function loadConfig() {
         Dashboard.showLoadingMsg();
-        Promise.all([shared.getConfig(), loadAllSeries()]).then(function (results) {
+        Promise.all([shared.getConfig(), loadAllSeries(), fetchLogos()]).then(function (results) {
             fullConfig = results[0];
             fullConfig.Profiles = fullConfig.Profiles || [];
             fullConfig.PosterConfigurations = fullConfig.PosterConfigurations || [];
-            fullConfig.LogoConfigurations = fullConfig.LogoConfigurations || [];
+            logoDesigns = results[2] || [];
 
             // The server always supplies a default profile; this only guards a malformed payload.
             if (!fullConfig.Profiles.some(function (p) { return p.IsDefault; })) {
@@ -302,8 +315,8 @@ export default function (view) {
     }
 
     function logoOptions(currentId) {
-        var options = fullConfig.LogoConfigurations.map(function (l) { return { value: l.Id, text: l.Name || 'Unnamed Logo' }; });
-        var exists = fullConfig.LogoConfigurations.some(function (l) { return sameId(l.Id, currentId); });
+        var options = logoDesigns.map(function (l) { return { value: l.Id, text: l.Name || 'Unnamed Logo' }; });
+        var exists = logoDesigns.some(function (l) { return sameId(l.Id, currentId); });
         if (!exists && currentId && !sameId(currentId, EMPTY_GUID)) {
             options.unshift({ value: currentId, text: 'Deleted logo (uses the default)' });
         }

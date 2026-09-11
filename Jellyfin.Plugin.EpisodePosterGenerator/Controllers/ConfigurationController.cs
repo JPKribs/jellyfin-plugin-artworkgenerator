@@ -44,6 +44,51 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
             return Ok(plugin.Configuration);
         }
 
+        // MARK: Logos
+        // Logo designs live in their own file beside the configuration, so they are read and written
+        // through their own endpoints rather than as part of the configuration payload.
+        [HttpGet("Logos")]
+        public IActionResult GetLogos()
+        {
+            var plugin = Plugin.Instance;
+            if (plugin == null)
+            {
+                _logger.LogError("Plugin instance was null in GET Logos.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
+            }
+
+            return Ok(plugin.PosterConfigService.GetLogoDesigns());
+        }
+
+        // MARK: POST
+        // MARK: Logos
+        [HttpPost("Logos")]
+        public IActionResult SaveLogos([FromBody] LogoConfiguration[] logos)
+        {
+            if (logos == null || logos.Length == 0)
+            {
+                return BadRequest(new { success = false, error = "At least one logo design is required." });
+            }
+
+            try
+            {
+                var plugin = Plugin.Instance;
+                if (plugin == null)
+                {
+                    _logger.LogError("Plugin instance was null in POST Logos.");
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
+                }
+
+                plugin.PosterConfigService.SaveLogoDesigns(plugin.Configuration, logos);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save logo designs.");
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
+
         // MARK: PosterStyles
         // Returns each poster style, its description, and the shapes it can lay out, read from the
         // generators themselves so the UI never hardcodes them.

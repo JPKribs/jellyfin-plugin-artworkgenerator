@@ -19,6 +19,7 @@ changelog:
   - Series posters show only the show's name: Cutout punches that name out of the overlay, Numeral draws it in place of the numeral, and Timeline drops its bar
   - Logos can draw a name like "Star Wars: Andor" with either part large and the other small
   - Logo letters can be filled with a frame from the show instead of a colour
+  - Logo designs live in their own logos.json beside the plugin configuration, and existing designs move there on load
   - Profiles decide which images each series gets and which design draws each one, replacing per-design series assignment
   - Logo designs build a text logo from the title, original title, sort title, or folder name, with year and subtitle cleanup and a fixed or sampled color
   - All images of an item draw from one shared set of frames, and an optional fixed seed makes frame choice repeatable

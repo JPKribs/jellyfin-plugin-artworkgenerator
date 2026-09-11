@@ -3,6 +3,7 @@ using System.Linq;
 using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Services;
+using Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -78,10 +79,12 @@ public class PosterConfigurationServiceTests
     public void Initialize_AddsALogoDesignAndPointsEveryPosterSlotAtTheDefaultDesign()
     {
         var config = LegacyConfig(Guid.NewGuid(), out _);
-        Service().Initialize(config);
+        var service = Service();
+        service.Initialize(config);
 
         var design = config.PosterConfigurations.Single(c => c.IsDefault);
-        var logo = Assert.Single(config.LogoConfigurations);
+        var logo = Assert.Single(service.GetLogoDesigns());
+        Assert.Equal("Default", logo.Name);
         var profile = config.Profiles.Single(p => p.IsDefault);
 
         Assert.Equal(design.Id, profile.GetSlot(ArtworkItemKind.Series, ArtworkSlot.Primary)!.DesignId);
@@ -132,7 +135,7 @@ public class PosterConfigurationServiceTests
         service.Initialize(config);
 
         Assert.Equal(2, config.PosterConfigurations.Count);
-        Assert.Single(config.LogoConfigurations);
+        Assert.Single(service.GetLogoDesigns());
         Assert.Equal(2, config.Profiles.Count);
         Assert.All(config.Profiles, p => Assert.Equal(ArtworkProfile.SupportedSlots.Count, p.Slots.Count));
     }
@@ -164,5 +167,69 @@ public class PosterConfigurationServiceTests
         var dangling = new SlotAssignment { DesignId = Guid.NewGuid() };
 
         Assert.Same(config.PosterConfigurations.Single(c => c.IsDefault).Settings, service.GetDesignForSlot(dangling));
+    }
+
+    /// <summary>
+    /// Logo designs live in their own file. Any left in an older configuration move across on load,
+    /// and the configuration's copy is dropped so the next save cleans it out of the XML.
+    /// </summary>
+    [Fact]
+    public void Initialize_MovesLogoDesignsOutOfTheConfiguration()
+    {
+        var config = LegacyConfig(Guid.NewGuid(), out _);
+        config.LogoConfigurations.Add(new LogoConfiguration { Name = "Mine", Settings = new LogoSettings { Uppercase = true } });
+
+        var store = new LogoDesignStore();
+        var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance, store);
+        service.Initialize(config);
+
+        Assert.Empty(config.LogoConfigurations);
+        var moved = Assert.Single(store.Load());
+        Assert.Equal("Mine", moved.Name);
+        Assert.True(moved.Settings.Uppercase);
+        Assert.Same(moved.Settings, service.GetLogoForSlot(new SlotAssignment { DesignId = moved.Id }));
+    }
+
+    /// <summary>
+    /// An earlier build named the synthesized design "Default Logo"; every synthesized default is
+    /// simply "Default".
+    /// </summary>
+    [Fact]
+    public void Initialize_RenamesTheOldDefaultLogoName()
+    {
+        var store = new LogoDesignStore();
+        store.Save(new[] { new LogoConfiguration { Id = PosterConfigurationService.DefaultLogoDesignId, Name = "Default Logo" } });
+
+        var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance, store);
+        service.Initialize(new PluginConfiguration());
+
+        Assert.Equal("Default", Assert.Single(store.Load()).Name);
+    }
+
+    [Fact]
+    public void SaveLogoDesigns_PersistsAndRefreshesTheLookups()
+    {
+        var store = new LogoDesignStore();
+        var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance, store);
+        var config = new PluginConfiguration();
+        service.Initialize(config);
+
+        var added = new LogoConfiguration { Name = "Outlined", Settings = new LogoSettings { OutlineEnabled = true } };
+        service.SaveLogoDesigns(config, new[] { service.GetLogoDesigns()[0], added });
+
+        Assert.Equal(2, store.Load().Count);
+        Assert.Equal(2, service.GetLogoDesigns().Count);
+        Assert.True(service.GetLogoForSlot(new SlotAssignment { DesignId = added.Id }).OutlineEnabled);
+        Assert.NotEqual(Guid.Empty, added.Id);
+    }
+
+    [Fact]
+    public void SaveLogoDesigns_RejectsAnEmptyList()
+    {
+        var service = Service();
+        var config = new PluginConfiguration();
+        service.Initialize(config);
+
+        Assert.Throws<ArgumentException>(() => service.SaveLogoDesigns(config, Array.Empty<LogoConfiguration>()));
     }
 }

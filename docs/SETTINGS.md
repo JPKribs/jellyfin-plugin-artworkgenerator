@@ -111,6 +111,8 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Logos
 
+Logo designs are stored in their own file, `logos.json`, in the plugin's data directory, rather than inside the plugin configuration. Editing a logo therefore never rewrites the rest of your settings. Designs saved by an earlier version move into that file automatically the first time the plugin loads.
+
 * **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
 * **Sample Name**: a name to preview with. It is not saved, so try the names your own shows have.
 * **Name From**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.

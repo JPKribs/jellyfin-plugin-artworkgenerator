@@ -6,6 +6,7 @@ export default function (view) {
     var pluginId = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
     var shared = createShared(view, pluginId, 'Plugins/EpisodePosterGenerator');
     var fullConfig = null;
+    var logoDesigns = [];
     var currentLogoId = null;
     var _initialized = false;
     var _dirty = false;
@@ -90,7 +91,7 @@ export default function (view) {
     // ── Unsaved Changes ─────────────────────────────────────
 
     function snapshot() {
-        return JSON.stringify(fullConfig ? fullConfig.LogoConfigurations : null);
+        return JSON.stringify(logoDesigns);
     }
 
     function setDirty(dirty) {
@@ -253,18 +254,27 @@ export default function (view) {
         return _fontsPromise;
     }
 
+    // Logo designs live in their own file on the server rather than in the plugin configuration,
+    // so they come from their own endpoint. The configuration is still read, to name the profiles
+    // that use a design being deleted.
+    function fetchLogos() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/EpisodePosterGenerator/Logos'),
+            dataType: 'json'
+        });
+    }
+
     function loadConfig() {
         Dashboard.showLoadingMsg();
-        loadFonts().then(function () {
-            return shared.getConfig();
-        }).then(function (config) {
-            fullConfig = config;
-            fullConfig.LogoConfigurations = fullConfig.LogoConfigurations || [];
+        Promise.all([loadFonts(), fetchLogos(), shared.getConfig()]).then(function (results) {
+            logoDesigns = results[1] || [];
+            fullConfig = results[2] || {};
             fullConfig.Profiles = fullConfig.Profiles || [];
 
             // The server always supplies one; this only guards a malformed payload.
-            if (fullConfig.LogoConfigurations.length === 0) {
-                fullConfig.LogoConfigurations.push({ Id: generateGuid(), Name: 'Default Logo', Settings: Object.assign({}, LOGO_DEFAULTS) });
+            if (logoDesigns.length === 0) {
+                logoDesigns.push({ Id: generateGuid(), Name: 'Default', Settings: Object.assign({}, LOGO_DEFAULTS) });
             }
 
             populateDropdown();
@@ -280,7 +290,7 @@ export default function (view) {
 
     function populateDropdown() {
         var select = view.querySelector('#selectLogo');
-        var logos = fullConfig.LogoConfigurations.slice().sort(function (a, b) {
+        var logos = logoDesigns.slice().sort(function (a, b) {
             return (a.Name || '').localeCompare(b.Name || '');
         });
 
@@ -301,7 +311,7 @@ export default function (view) {
     }
 
     function getCurrentLogo() {
-        return fullConfig.LogoConfigurations.find(function (l) { return l.Id === currentLogoId; });
+        return logoDesigns.find(function (l) { return l.Id === currentLogoId; });
     }
 
     function applySelectValue(el, value) {
@@ -442,7 +452,7 @@ export default function (view) {
     // ── Logo CRUD ───────────────────────────────────────────
 
     function nameIsTaken(name, exceptId) {
-        return fullConfig.LogoConfigurations.some(function (l) {
+        return logoDesigns.some(function (l) {
             return l.Id !== exceptId && l.Name && l.Name.toLowerCase() === name.toLowerCase();
         });
     }
@@ -468,7 +478,7 @@ export default function (view) {
                 Settings: Object.assign({}, LOGO_DEFAULTS, source ? source.Settings : {})
             };
 
-            fullConfig.LogoConfigurations.push(created);
+            logoDesigns.push(created);
             currentLogoId = created.Id;
             populateDropdown();
             checkDirty();
@@ -490,7 +500,7 @@ export default function (view) {
     }
 
     function deleteCurrentLogo() {
-        if (fullConfig.LogoConfigurations.length <= 1) {
+        if (logoDesigns.length <= 1) {
             Dashboard.alert('Keep at least one logo design. Turn logos off in a profile instead.');
             return;
         }
@@ -503,7 +513,7 @@ export default function (view) {
 
         Dashboard.confirm(message, 'Delete Logo Design', function (confirmed) {
             if (!confirmed) return;
-            fullConfig.LogoConfigurations = fullConfig.LogoConfigurations.filter(function (l) { return l.Id !== logo.Id; });
+            logoDesigns = logoDesigns.filter(function (l) { return l.Id !== logo.Id; });
             currentLogoId = null;
             populateDropdown();
             checkDirty();
@@ -518,15 +528,17 @@ export default function (view) {
         _saving = true;
         Dashboard.showLoadingMsg();
 
-        // Read-modify-write: only the logo designs are edited here.
-        shared.getConfig().then(function (serverConfig) {
-            serverConfig.LogoConfigurations = fullConfig.LogoConfigurations;
-            return shared.saveConfig(serverConfig);
-        }).then(function (result) {
+        ApiClient.ajax({
+            type: 'POST',
+            url: ApiClient.getUrl('Plugins/EpisodePosterGenerator/Logos'),
+            data: JSON.stringify(logoDesigns),
+            contentType: 'application/json'
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Save failed: ' + response.status);
             _snapshot = snapshot();
             setDirty(false);
             flashSaveSuccess();
-            Dashboard.processPluginConfigurationUpdateResult(result);
+            Dashboard.hideLoadingMsg();
         }).catch(function (error) {
             console.error('Failed to save logo designs:', error);
             Dashboard.hideLoadingMsg();

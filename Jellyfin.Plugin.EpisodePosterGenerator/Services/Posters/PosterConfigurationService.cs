@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.EpisodePosterGenerator.Configuration;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
+using Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
@@ -22,12 +23,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         /// <summary>Id of the default profile synthesized for configurations that have none.</summary>
         public static readonly Guid DefaultProfileId = new("6f1c2a4e-3b7d-4e21-9a55-0c8d7e1f2a03");
 
+        /// <summary>The name every synthesized default carries: design, profile, and logo design.</summary>
+        private const string DefaultName = "Default";
+
         private readonly ILogger<PosterConfigurationService> _logger;
+        private readonly LogoDesignStore _logoStore;
         private volatile Snapshot _snapshot = Snapshot.Empty;
 
-        public PosterConfigurationService(ILogger<PosterConfigurationService> logger)
+        public PosterConfigurationService(ILogger<PosterConfigurationService> logger, LogoDesignStore? logoStore = null)
         {
             _logger = logger;
+            _logoStore = logoStore ?? new LogoDesignStore();
         }
 
         /// <summary>Gets the default landscape design.</summary>
@@ -50,7 +56,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
             var design = EnsureDefaultDesign(config);
             RetireSynthesizedPortraitDesign(config, design);
-            var logo = EnsureLogoDesign(config);
+            var logoDesigns = LoadLogoDesigns(config);
+            var logo = logoDesigns[0];
 
             EnsureProfiles(config, design, logo);
             foreach (var profile in config.Profiles)
@@ -65,7 +72,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             }
 
             var logos = new Dictionary<Guid, LogoSettings>();
-            foreach (var logoDesign in config.LogoConfigurations)
+            foreach (var logoDesign in logoDesigns)
             {
                 logos.TryAdd(logoDesign.Id, logoDesign.Settings);
             }
@@ -89,6 +96,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 designs,
                 logos,
                 design.Settings,
+                logoDesigns,
                 logo.Settings,
                 config.Profiles.First(p => p.IsDefault),
                 bySeries);
@@ -168,7 +176,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             if (defaults.Count == 0)
             {
                 _logger.LogInformation("No default design found, creating one in memory");
-                var created = new PosterConfiguration { Name = "Default", IsDefault = true };
+                var created = new PosterConfiguration { Name = DefaultName, IsDefault = true };
                 config.PosterConfigurations.Insert(0, created);
                 return created;
             }
@@ -201,18 +209,87 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             _logger.LogInformation("Retired the separate portrait design; every design now renders both shapes");
         }
 
-        // EnsureLogoDesign
-        // A logo design, created in memory when the configuration has none.
-        private LogoConfiguration EnsureLogoDesign(PluginConfiguration config)
+        // LoadLogoDesigns
+        // Logo designs live in their own file beside the configuration, so a logo edit never
+        // rewrites the whole configuration. Designs left in an older configuration move across on
+        // first load and the configuration's copy is dropped, which the next save persists.
+        private List<LogoConfiguration> LoadLogoDesigns(PluginConfiguration config)
         {
+            var logos = _logoStore.Load().ToList();
+            var changed = false;
+
             if (config.LogoConfigurations.Count > 0)
             {
-                return config.LogoConfigurations[0];
+                if (logos.Count == 0)
+                {
+                    logos = config.LogoConfigurations.ToList();
+                    _logger.LogInformation(
+                        "Moved {Count} logo design(s) out of the plugin configuration into their own file",
+                        logos.Count);
+                }
+
+                config.LogoConfigurations.Clear();
+                changed = true;
             }
 
-            var created = new LogoConfiguration { Id = DefaultLogoDesignId, Name = "Default Logo" };
-            config.LogoConfigurations.Add(created);
-            return created;
+            if (logos.Count == 0)
+            {
+                logos.Add(new LogoConfiguration { Id = DefaultLogoDesignId, Name = DefaultName });
+                changed = true;
+            }
+
+            // An earlier build called the synthesized design "Default Logo"; every synthesized
+            // default is simply "Default".
+            foreach (var logo in logos.Where(l => l.Id == DefaultLogoDesignId && l.Name == "Default Logo"))
+            {
+                logo.Name = DefaultName;
+                changed = true;
+            }
+
+            foreach (var logo in logos)
+            {
+                logo.Settings ??= new LogoSettings();
+            }
+
+            if (changed)
+            {
+                _logoStore.Save(logos);
+            }
+
+            return logos;
+        }
+
+        /// <summary>Returns the logo designs.</summary>
+        public IReadOnlyList<LogoConfiguration> GetLogoDesigns() => _snapshot.LogoDesigns;
+
+        /// <summary>
+        /// Replaces the logo designs, persisting them to their own file and refreshing the lookups.
+        /// </summary>
+        /// <param name="config">The plugin configuration, reread to rebuild the lookups.</param>
+        /// <param name="logos">The designs to store. At least one is required.</param>
+        public void SaveLogoDesigns(PluginConfiguration config, IReadOnlyList<LogoConfiguration> logos)
+        {
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(logos);
+
+            if (logos.Count == 0)
+            {
+                throw new ArgumentException("At least one logo design is required.", nameof(logos));
+            }
+
+            var stored = new List<LogoConfiguration>(logos.Count);
+            foreach (var logo in logos)
+            {
+                logo.Id = logo.Id == Guid.Empty ? Guid.NewGuid() : logo.Id;
+                logo.Settings ??= new LogoSettings();
+                logo.Name = string.IsNullOrWhiteSpace(logo.Name) ? DefaultName : logo.Name;
+                stored.Add(logo);
+            }
+
+            _logoStore.Save(stored);
+            _logger.LogInformation("Saved {Count} logo design(s)", stored.Count);
+
+            Initialize(config);
         }
 
         // EnsureProfiles
@@ -224,7 +301,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         {
             if (config.Profiles.Count == 0)
             {
-                config.Profiles.Add(CreateProfile(DefaultProfileId, "Default", true, design, design, logo));
+                config.Profiles.Add(CreateProfile(DefaultProfileId, DefaultName, true, design, design, logo));
 
                 foreach (var legacy in config.PosterConfigurations.Where(c => !c.IsDefault && c.SeriesIds.Count > 0))
                 {
@@ -323,6 +400,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             IReadOnlyDictionary<Guid, PosterSettings> Designs,
             IReadOnlyDictionary<Guid, LogoSettings> Logos,
             PosterSettings DefaultDesign,
+            IReadOnlyList<LogoConfiguration> LogoDesigns,
             LogoSettings DefaultLogo,
             ArtworkProfile DefaultProfile,
             IReadOnlyDictionary<Guid, ArtworkProfile> BySeries)
@@ -331,6 +409,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 new Dictionary<Guid, PosterSettings>(),
                 new Dictionary<Guid, LogoSettings>(),
                 new PosterSettings(),
+                Array.Empty<LogoConfiguration>(),
                 new LogoSettings(),
                 new ArtworkProfile { IsDefault = true },
                 new Dictionary<Guid, ArtworkProfile>());
