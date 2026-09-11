@@ -84,7 +84,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         /// <summary>
         /// Vertical gap between stacked poster elements — logo, episode code, title, and the
-        /// blocks each style reserves for them — as a percentage of the poster height. This is
+        /// blocks each style reserves for them — as a percentage of the poster's short side. This is
         /// the single knob every style uses to keep elements apart, so raising it pushes them
         /// further from each other everywhere rather than in one style.
         /// </summary>

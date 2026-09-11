@@ -83,10 +83,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         protected static float GetSafeAreaMargin(PosterSettings settings) => settings.PosterSafeArea / 100f;
 
         // GetElementSpacing
-        // The configured gap between stacked elements, in pixels for this poster height.
+        // The configured gap between stacked elements, in pixels for this poster's short side.
         // Every style resolves spacing through here so one setting moves them all consistently.
-        protected static float GetElementSpacing(PosterSettings settings, float posterHeight)
-            => posterHeight * (Math.Max(0f, settings.ElementSpacing) / 100f);
+        protected static float GetElementSpacing(PosterSettings settings, float unit)
+            => unit * (Math.Max(0f, settings.ElementSpacing) / 100f);
 
         // Layout block keys shared by the styles that stack text against the bottom edge.
         protected const string EpisodeBlock = "episode";
