@@ -1,3 +1,10 @@
+/* The browser's own [hidden] rule is only a default, so any class that sets display beats it —
+   .jpk-field is flex, which left a field switched off in script still on screen. This makes the
+   attribute mean what it says wherever it is used. */
+[hidden] {
+    display: none !important;
+}
+
 /* ── Custom Properties ────────────────────────────────── */
 :root {
     --ag-text-secondary: rgba(255, 255, 255, 0.5);
