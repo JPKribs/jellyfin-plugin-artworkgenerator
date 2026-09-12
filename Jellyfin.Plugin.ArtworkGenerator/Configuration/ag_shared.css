@@ -345,7 +345,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-top: 0.75em;
+    margin-top: 0.6em;
 }
 
 /* Inside that row it is one item beside the button, not the page's right hand column. */
