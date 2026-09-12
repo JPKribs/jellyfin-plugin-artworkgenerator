@@ -421,3 +421,27 @@ Standard layout with a small mark set into the bottom corner.
 | ![](examples/Watermark/Series.png) | ![](examples/Watermark/Season.png) | ![](examples/Watermark/Example1.png) | ![](examples/Watermark/Example2.png) | ![](examples/Watermark/Example3.png) | ![](examples/Watermark/Example4.png) |
 | | | ![](examples/Watermark/Example5.png) | ![](examples/Watermark/Example6.png) | ![](examples/Watermark/Example7.png) | ![](examples/Watermark/Example8.png) |
 | | | ![](examples/Watermark/Example9.png) | ![](examples/Watermark/Example10.png) | | |
+
+## Bloom
+
+A soft pool of colour in the middle of the frame with the title set over it, fading out to leave the corners clear.
+
+[Download config](examples/Bloom/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/Bloom/Series.png) | ![](examples/Bloom/Season.png) | ![](examples/Bloom/Example1.png) | ![](examples/Bloom/Example2.png) | ![](examples/Bloom/Example3.png) | ![](examples/Bloom/Example4.png) |
+| | | ![](examples/Bloom/Example5.png) | ![](examples/Bloom/Example6.png) | ![](examples/Bloom/Example7.png) | ![](examples/Bloom/Example8.png) |
+| | | ![](examples/Bloom/Example9.png) | ![](examples/Bloom/Example10.png) | | |
+
+## Bloom Palette
+
+The same centre bloom lit from the frame's own colour, darkening towards the rim to hold the eye in the middle.
+
+[Download config](examples/BloomPalette/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/BloomPalette/Series.png) | ![](examples/BloomPalette/Season.png) | ![](examples/BloomPalette/Example1.png) | ![](examples/BloomPalette/Example2.png) | ![](examples/BloomPalette/Example3.png) | ![](examples/BloomPalette/Example4.png) |
+| | | ![](examples/BloomPalette/Example5.png) | ![](examples/BloomPalette/Example6.png) | ![](examples/BloomPalette/Example7.png) | ![](examples/BloomPalette/Example8.png) |
+| | | ![](examples/BloomPalette/Example9.png) | ![](examples/BloomPalette/Example10.png) | | |

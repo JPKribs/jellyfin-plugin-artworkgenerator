@@ -14,6 +14,7 @@ artifacts:
 - "Jellyfin.Plugin.EpisodePosterGenerator.dll"
 changelog:
   features:
+  - A new Bloom poster style that pools a colour in the centre of the frame and sets the text over it, taking that colour from the frame itself when palette colours are on
   - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colours, and text edge over automatically
   - Eleven more example designs, covering every framed text edge and the palette and gradient variants of the striped, split, numeral, timeline, fade, glass, and cutout styles
   - Generates series and season posters, thumbs, backdrops, and text logos alongside episode posters

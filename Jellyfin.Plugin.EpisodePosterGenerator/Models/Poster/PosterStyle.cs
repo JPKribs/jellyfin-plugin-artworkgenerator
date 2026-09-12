@@ -12,6 +12,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         FrostedGlass,
         Fade,
         Timeline,
-        Striped
+        Striped,
+        Bloom
     }
 }

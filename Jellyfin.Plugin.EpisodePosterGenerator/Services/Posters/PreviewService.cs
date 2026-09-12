@@ -204,6 +204,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 PosterStyle.Fade => new FadePosterGenerator(loggerFactory.CreateLogger<FadePosterGenerator>()),
                 PosterStyle.Timeline => new TimelinePosterGenerator(loggerFactory.CreateLogger<TimelinePosterGenerator>()),
                 PosterStyle.Striped => new StripedPosterGenerator(loggerFactory.CreateLogger<StripedPosterGenerator>()),
+                PosterStyle.Bloom => new BloomPosterGenerator(loggerFactory.CreateLogger<BloomPosterGenerator>()),
                 _ => new StandardPosterGenerator(loggerFactory.CreateLogger<StandardPosterGenerator>())
             };
         }
