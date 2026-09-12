@@ -530,7 +530,12 @@
 
 .poster-preview-kind {
     margin-top: 1em;
-    max-width: 560px;
+
+    /* The parent centres its children, so any max-width here both narrows the control and shoves
+       it inward. It spans the column instead, lining up with the caption above it. */
+    width: 100%;
+    max-width: none;
+    align-self: stretch;
 }
 
 /* The control sits under a pair of previews far wider than it, so it fills its own box rather than
