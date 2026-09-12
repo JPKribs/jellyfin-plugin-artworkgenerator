@@ -7,13 +7,13 @@ export default function (view) {
     var shared = createShared(view, pluginId, 'Plugins/ArtworkGenerator');
     var fullConfig = null;
     var currentProfileId = null;
-    var allSeries = [];
     var logoDesigns = [];
     var _initialized = false;
     var _dirty = false;
     var _saving = false;
     var _snapshot = null;
-    var _seriesModalTrigger = null;
+    var _modalTrigger = null;
+    var _modalTarget = null;
 
     var EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -214,7 +214,7 @@ export default function (view) {
 
     function loadConfig() {
         Dashboard.showLoadingMsg();
-        Promise.all([shared.getConfig(), loadAllSeries(), fetchLogos()]).then(function (results) {
+        Promise.all([shared.getConfig(), loadAssignableItems(), fetchLogos()]).then(function (results) {
             fullConfig = results[0];
             fullConfig.Profiles = fullConfig.Profiles || [];
             fullConfig.PosterConfigurations = fullConfig.PosterConfigurations || [];
@@ -286,7 +286,7 @@ export default function (view) {
         view.querySelector('#btnRenameProfile').classList.toggle('hidden', isDefault);
         view.querySelector('#seriesAssignmentSection').style.display = isDefault ? 'none' : 'block';
 
-        if (!isDefault) renderAssignedSeries();
+        if (!isDefault) renderAssignments();
         renderMatrix();
         loadBackdropSettings();
     }
@@ -535,100 +535,178 @@ export default function (view) {
         view.querySelector('#backdropLetterboxOptions').style.display = letterbox && letterbox.checked ? 'block' : 'none';
     }
 
-    // ── Series Assignment ───────────────────────────────────
+    // ── Assignment ──────────────────────────────────────────
 
-    function loadAllSeries() {
-        return ApiClient.getItems(ApiClient.getCurrentUserId(), {
-            IncludeItemTypes: 'Series',
-            Recursive: true,
-            SortBy: 'SortName',
-            SortOrder: 'Ascending',
-            Fields: 'Overview,ProductionYear'
-        }).then(function (result) {
-            allSeries = result.Items || [];
-            return allSeries;
-        }).catch(function (error) {
-            console.error('Failed to load series:', error);
-            allSeries = [];
-            return [];
+    // A profile draws every kind of item, so what it applies to is decided purely by assignment.
+    // Series and films differ only in which list they are stored in and what they are called, so
+    // one set of functions serves both rather than two near-identical copies.
+    var TARGETS = [
+        {
+            key: 'SeriesIds',
+            itemType: 'Series',
+            noun: 'series',
+            label: 'Assigned Series:',
+            button: 'Edit Series',
+            modalTitle: 'Select Series',
+            search: 'Search series...',
+            empty: 'No series assigned.',
+            missing: 'No series found. Make sure you have TV series in your Jellyfin library.',
+            items: []
+        },
+        {
+            key: 'MovieIds',
+            itemType: 'Movie',
+            noun: 'movies',
+            label: 'Assigned Movies:',
+            button: 'Edit Movies',
+            modalTitle: 'Select Movies',
+            search: 'Search movies...',
+            empty: 'No movies assigned.',
+            missing: 'No movies found. Make sure you have movies in your Jellyfin library.',
+            items: []
+        }
+    ];
+
+    function loadAssignableItems() {
+        return Promise.all(TARGETS.map(function (target) {
+            return ApiClient.getItems(ApiClient.getCurrentUserId(), {
+                IncludeItemTypes: target.itemType,
+                Recursive: true,
+                SortBy: 'SortName',
+                SortOrder: 'Ascending',
+                Fields: 'Overview,ProductionYear'
+            }).then(function (result) {
+                target.items = result.Items || [];
+            }).catch(function (error) {
+                console.error('Failed to load ' + target.noun + ':', error);
+                target.items = [];
+            });
+        }));
+    }
+
+    function assignedIds(profile, target) {
+        profile[target.key] = profile[target.key] || [];
+        return profile[target.key];
+    }
+
+    function renderAssignments() {
+        var profile = getCurrentProfile();
+        var host = view.querySelector('#assignmentBlocks');
+        host.innerHTML = '';
+        if (!profile) return;
+
+        TARGETS.forEach(function (target) {
+            host.appendChild(buildAssignmentBlock(profile, target));
         });
     }
 
-    function renderAssignedSeries() {
-        var profile = getCurrentProfile();
-        var container = view.querySelector('#assignedSeriesList');
-        container.innerHTML = '';
+    function buildAssignmentBlock(profile, target) {
+        var block = document.createElement('div');
+        block.className = 'inputContainer';
 
-        if (!profile.SeriesIds || profile.SeriesIds.length === 0) {
+        var label = document.createElement('label');
+        label.textContent = target.label;
+        block.appendChild(label);
+
+        var list = document.createElement('div');
+        list.className = 'assigned-series-container';
+        block.appendChild(list);
+
+        var ids = assignedIds(profile, target);
+        if (ids.length === 0) {
             var msg = document.createElement('div');
             msg.className = 'series-empty-state';
-            msg.innerHTML = '<span class="series-empty-state-icon">&#9888;</span> No series assigned. Assign at least one series before saving.';
-            container.appendChild(msg);
-            return;
+            var icon = document.createElement('span');
+            icon.className = 'series-empty-state-icon';
+            icon.innerHTML = '&#9888;';
+            msg.appendChild(icon);
+            msg.appendChild(document.createTextNode(' ' + target.empty));
+            list.appendChild(msg);
+        } else {
+            ids.forEach(function (id) {
+                var item = target.items.find(function (candidate) { return sameId(candidate.Id, id); });
+                if (!item) return;
+                list.appendChild(buildAssignedTag(item, target, id));
+            });
         }
 
-        profile.SeriesIds.forEach(function (seriesId) {
-            var series = allSeries.find(function (s) { return sameId(s.Id, seriesId); });
-            if (!series) return;
+        var button = document.createElement('button');
+        button.setAttribute('is', 'emby-button');
+        button.type = 'button';
+        button.className = 'raised';
+        button.style.marginTop = '8px';
+        button.appendChild(document.createElement('span')).textContent = target.button;
+        button.addEventListener('click', function () { showSelectionModal(target); });
+        block.appendChild(button);
 
-            var tag = document.createElement('div');
-            tag.className = 'series-tag';
-
-            var img = document.createElement('img');
-            img.className = 'series-tag-poster';
-            img.src = ApiClient.getImageUrl(series.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
-            img.onerror = function () { this.style.display = 'none'; };
-
-            var name = document.createElement('span');
-            name.className = 'series-tag-name';
-            name.textContent = series.Name;
-
-            var remove = document.createElement('span');
-            remove.className = 'series-tag-remove';
-            remove.textContent = '×';
-            remove.addEventListener('click', function () { removeSeries(seriesId); });
-
-            tag.appendChild(img);
-            tag.appendChild(name);
-            tag.appendChild(remove);
-            container.appendChild(tag);
-        });
+        return block;
     }
 
-    function getSeriesAssignedElsewhere() {
+    function buildAssignedTag(item, target, id) {
+        var tag = document.createElement('div');
+        tag.className = 'series-tag';
+
+        var img = document.createElement('img');
+        img.className = 'series-tag-poster';
+        img.src = ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
+        img.onerror = function () { this.style.display = 'none'; };
+
+        var name = document.createElement('span');
+        name.className = 'series-tag-name';
+        name.textContent = item.Name;
+
+        var remove = document.createElement('span');
+        remove.className = 'series-tag-remove';
+        remove.textContent = '\u00d7';
+        remove.addEventListener('click', function () { removeAssignment(target, id); });
+
+        tag.appendChild(img);
+        tag.appendChild(name);
+        tag.appendChild(remove);
+        return tag;
+    }
+
+    // Ids claimed by another profile, so the same item cannot be assigned to two of them.
+    function getAssignedElsewhere(target) {
         var ids = [];
         fullConfig.Profiles.forEach(function (p) {
-            if (p.Id !== currentProfileId && !p.IsDefault && p.SeriesIds) ids.push.apply(ids, p.SeriesIds);
+            if (p.Id !== currentProfileId && !p.IsDefault && p[target.key]) {
+                ids.push.apply(ids, p[target.key]);
+            }
         });
         return ids;
     }
 
-    function showSeriesSelectionModal() {
-        _seriesModalTrigger = document.activeElement;
-        var modal = view.querySelector('#seriesSelectionModal');
-
-        if (!allSeries || allSeries.length === 0) {
-            Dashboard.alert('No series found. Make sure you have TV series in your Jellyfin library.');
+    function showSelectionModal(target) {
+        if (!target.items || target.items.length === 0) {
+            Dashboard.alert(target.missing);
             return;
         }
 
-        modal.style.display = 'flex';
-        document.addEventListener('keydown', onSeriesModalKeydown);
-        populateSeriesModal();
+        _modalTrigger = document.activeElement;
+        _modalTarget = target;
+
+        view.querySelector('#seriesModalTitle').textContent = target.modalTitle;
+        view.querySelector('#seriesSearchInput').placeholder = target.search;
+        view.querySelector('#seriesSelectionModal').style.display = 'flex';
+
+        document.addEventListener('keydown', onSelectionModalKeydown);
+        populateSelectionModal();
     }
 
-    function populateSeriesModal() {
+    function populateSelectionModal() {
+        var target = _modalTarget;
         var listContainer = view.querySelector('#seriesCheckboxList');
         var summaryEl = view.querySelector('#seriesSelectionSummary');
-        var current = getCurrentProfile().SeriesIds || [];
-        var elsewhere = getSeriesAssignedElsewhere();
+        var current = assignedIds(getCurrentProfile(), target);
+        var elsewhere = getAssignedElsewhere(target);
         var availableCount = 0;
 
         listContainer.innerHTML = '';
 
-        allSeries.forEach(function (series) {
-            var isHere = current.some(function (id) { return sameId(id, series.Id); });
-            var isElsewhere = !isHere && elsewhere.some(function (id) { return sameId(id, series.Id); });
+        target.items.forEach(function (entry) {
+            var isHere = current.some(function (id) { return sameId(id, entry.Id); });
+            var isElsewhere = !isHere && elsewhere.some(function (id) { return sameId(id, entry.Id); });
             if (!isElsewhere) availableCount++;
 
             var item = document.createElement('label');
@@ -637,13 +715,13 @@ export default function (view) {
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'series-checkbox';
-            checkbox.value = series.Id;
+            checkbox.value = entry.Id;
             checkbox.checked = isHere;
             checkbox.disabled = isElsewhere;
 
             var poster = document.createElement('img');
             poster.className = 'series-item-poster';
-            poster.src = ApiClient.getImageUrl(series.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
+            poster.src = ApiClient.getImageUrl(entry.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
             poster.onerror = function () { this.style.visibility = 'hidden'; };
 
             var info = document.createElement('div');
@@ -651,13 +729,13 @@ export default function (view) {
 
             var nameSpan = document.createElement('span');
             nameSpan.className = 'series-item-name';
-            nameSpan.textContent = series.Name;
+            nameSpan.textContent = entry.Name;
             info.appendChild(nameSpan);
 
-            if (series.ProductionYear) {
+            if (entry.ProductionYear) {
                 var yearSpan = document.createElement('span');
                 yearSpan.className = 'series-item-year';
-                yearSpan.textContent = series.ProductionYear;
+                yearSpan.textContent = entry.ProductionYear;
                 info.appendChild(yearSpan);
             }
 
@@ -678,7 +756,7 @@ export default function (view) {
 
         function updateSummary() {
             var checked = listContainer.querySelectorAll('.series-checkbox:checked').length;
-            summaryEl.textContent = checked + ' of ' + availableCount + ' available series selected';
+            summaryEl.textContent = checked + ' of ' + availableCount + ' available ' + target.noun + ' selected';
         }
 
         updateSummary();
@@ -688,7 +766,7 @@ export default function (view) {
         searchInput.focus();
     }
 
-    var filterSeriesList = debounce(function () {
+    var filterSelectionList = debounce(function () {
         var term = view.querySelector('#seriesSearchInput').value.toLowerCase();
         view.querySelectorAll('.series-checkbox-item').forEach(function (item) {
             var name = item.querySelector('.series-item-name');
@@ -696,35 +774,36 @@ export default function (view) {
         });
     }, 200);
 
-    function confirmSeriesSelection() {
+    function confirmSelection() {
         var selected = [];
         view.querySelectorAll('.series-checkbox:checked').forEach(function (cb) { selected.push(cb.value); });
-        getCurrentProfile().SeriesIds = selected;
-        renderAssignedSeries();
-        closeSeriesSelectionModal();
+        getCurrentProfile()[_modalTarget.key] = selected;
+        renderAssignments();
+        closeSelectionModal();
         checkDirty();
     }
 
-    function onSeriesModalKeydown(e) {
+    function onSelectionModalKeydown(e) {
         if (e.key === 'Escape') {
             e.preventDefault();
-            closeSeriesSelectionModal();
+            closeSelectionModal();
         } else {
             trapFocus(view.querySelector('.series-modal-content'), e);
         }
     }
 
-    function closeSeriesSelectionModal() {
+    function closeSelectionModal() {
         view.querySelector('#seriesSelectionModal').style.display = 'none';
-        document.removeEventListener('keydown', onSeriesModalKeydown);
-        if (_seriesModalTrigger && _seriesModalTrigger.focus) _seriesModalTrigger.focus();
-        _seriesModalTrigger = null;
+        document.removeEventListener('keydown', onSelectionModalKeydown);
+        if (_modalTrigger && _modalTrigger.focus) _modalTrigger.focus();
+        _modalTrigger = null;
+        _modalTarget = null;
     }
 
-    function removeSeries(seriesId) {
+    function removeAssignment(target, id) {
         var profile = getCurrentProfile();
-        profile.SeriesIds = profile.SeriesIds.filter(function (id) { return !sameId(id, seriesId); });
-        renderAssignedSeries();
+        profile[target.key] = assignedIds(profile, target).filter(function (existing) { return !sameId(existing, id); });
+        renderAssignments();
         checkDirty();
     }
 
@@ -847,14 +926,13 @@ export default function (view) {
         view.querySelector('#btnRenameProfile').addEventListener('click', renameCurrentProfile);
         view.querySelector('#btnDeleteProfile').addEventListener('click', deleteCurrentProfile);
 
-        view.querySelector('#btnAddSeries').addEventListener('click', showSeriesSelectionModal);
-        view.querySelector('#btnCancelSeriesSelection').addEventListener('click', closeSeriesSelectionModal);
-        view.querySelector('#btnCloseSeriesModal').addEventListener('click', closeSeriesSelectionModal);
-        view.querySelector('#btnConfirmSeriesSelection').addEventListener('click', confirmSeriesSelection);
+        view.querySelector('#btnCancelSeriesSelection').addEventListener('click', closeSelectionModal);
+        view.querySelector('#btnCloseSeriesModal').addEventListener('click', closeSelectionModal);
+        view.querySelector('#btnConfirmSeriesSelection').addEventListener('click', confirmSelection);
         view.querySelector('#seriesSelectionModal').addEventListener('click', function (e) {
-            if (e.target === this) closeSeriesSelectionModal();
+            if (e.target === this) closeSelectionModal();
         });
-        view.querySelector('#seriesSearchInput').addEventListener('input', filterSeriesList);
+        view.querySelector('#seriesSearchInput').addEventListener('input', filterSelectionList);
 
         view.querySelectorAll('[data-backdrop-setting]').forEach(function (el) {
             var evt = el.type === 'checkbox' ? 'change' : 'input';
