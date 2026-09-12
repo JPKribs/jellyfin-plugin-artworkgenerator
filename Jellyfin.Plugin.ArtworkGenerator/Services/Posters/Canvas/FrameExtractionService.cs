@@ -381,63 +381,73 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 return default;
             }
 
-            var pixels = analysis.Pixels;
-            if (pixels == null || pixels.Length == 0)
+            var pixels = analysis.GetPixelSpan();
+            if (pixels.IsEmpty)
             {
                 return default;
             }
 
             int width = analysis.Width;
             int height = analysis.Height;
+            int rowBytes = analysis.RowBytes;
+            int pixelCount = width * height;
 
-            var luma = new double[pixels.Length];
-            var rg = new double[pixels.Length];
-            var yb = new double[pixels.Length];
+            // Only the luma plane is kept: the Laplacian below reads a pixel's neighbors, so it
+            // needs the whole frame to hand. The color axes are reduced to running sums as they go,
+            // because all that is wanted from them is a mean and a spread. Holding them as arrays
+            // put three megabytes per frame on the large object heap for no gain.
+            var luma = new double[pixelCount];
             double totalLuma = 0;
             double totalRg = 0;
             double totalYb = 0;
+            double totalRgSquared = 0;
+            double totalYbSquared = 0;
 
-            for (int i = 0; i < pixels.Length; i++)
+            for (int y = 0; y < height; y++)
             {
-                var c = pixels[i];
-                var value = Luma(c);
-                luma[i] = value;
-                totalLuma += value;
+                int row = y * rowBytes;
+                for (int x = 0; x < width; x++)
+                {
+                    int at = row + (x * 4);
+                    double red = pixels[at];
+                    double green = pixels[at + 1];
+                    double blue = pixels[at + 2];
 
-                // Hasler and Susstrunk's opponent axes: a frame with no color scores near zero on
-                // both, which is how a flat gray shot is told from a striking one.
-                rg[i] = Math.Abs(c.Red - c.Green);
-                yb[i] = Math.Abs((0.5 * (c.Red + c.Green)) - c.Blue);
-                totalRg += rg[i];
-                totalYb += yb[i];
+                    var value = (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+                    luma[(y * width) + x] = value;
+                    totalLuma += value;
+
+                    // Hasler and Susstrunk opponent axes: a frame with no color scores near zero
+                    // on both, which is how a flat gray shot is told from a striking one.
+                    var rg = Math.Abs(red - green);
+                    var yb = Math.Abs((0.5 * (red + green)) - blue);
+
+                    totalRg += rg;
+                    totalYb += yb;
+                    totalRgSquared += rg * rg;
+                    totalYbSquared += yb * yb;
+                }
             }
 
-            double meanLuma = totalLuma / pixels.Length;
+            double meanLuma = totalLuma / pixelCount;
             double brightness = meanLuma / 255.0;
 
             double lumaVariance = 0;
-            for (int i = 0; i < luma.Length; i++)
+            for (int i = 0; i < pixelCount; i++)
             {
                 var d = luma[i] - meanLuma;
                 lumaVariance += d * d;
             }
 
-            double contrast = Math.Sqrt(lumaVariance / luma.Length) / 255.0;
+            double contrast = Math.Sqrt(lumaVariance / pixelCount) / 255.0;
 
-            double meanRg = totalRg / rg.Length;
-            double meanYb = totalYb / yb.Length;
-            double varRg = 0;
-            double varYb = 0;
-            for (int i = 0; i < rg.Length; i++)
-            {
-                var dr = rg[i] - meanRg;
-                var dy = yb[i] - meanYb;
-                varRg += dr * dr;
-                varYb += dy * dy;
-            }
+            double meanRg = totalRg / pixelCount;
+            double meanYb = totalYb / pixelCount;
+            double varRg = Math.Max(0, (totalRgSquared / pixelCount) - (meanRg * meanRg));
+            double varYb = Math.Max(0, (totalYbSquared / pixelCount) - (meanYb * meanYb));
 
             double colorfulness =
-                (Math.Sqrt((varRg / rg.Length) + (varYb / yb.Length))
+                (Math.Sqrt(varRg + varYb)
                  + (0.3 * Math.Sqrt((meanRg * meanRg) + (meanYb * meanYb)))) / 255.0;
 
             // Laplacian energy overall, and separately in the bands a design is most likely to set
