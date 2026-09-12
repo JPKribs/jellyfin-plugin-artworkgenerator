@@ -434,4 +434,5 @@
 .slot-cell-unavailable {
     color: var(--ag-text-secondary);
     font-style: italic;
+    text-align: center;
 }

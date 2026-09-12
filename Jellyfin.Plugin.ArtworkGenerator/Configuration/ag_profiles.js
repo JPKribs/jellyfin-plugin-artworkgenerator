@@ -387,7 +387,7 @@ export default function (view) {
                 var td = document.createElement('td');
                 if (SUPPORTED[k.kind].indexOf(slot) === -1) {
                     td.className = 'slot-cell-unavailable';
-                    td.textContent = 'Not used';
+                    td.textContent = '\u2014';
                     td.title = 'Jellyfin clients do not show this image for ' + k.label.toLowerCase() + '.';
                 } else {
                     td.appendChild(buildCell(profile, k, slot));
