@@ -71,23 +71,45 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         public VideoMetadata VideoMetadata { get; set; }
 
         /// <summary>
-        /// Gets the headline: an episode's name, a series' name, and a season's own name when it
-        /// has one. A season called nothing but "Season 2" has no headline, since the subtitle
-        /// already says so; it borrows that line only when no subtitle is drawn.
+        /// Gets the primary line: an episode's name, a series' name, and a season's own name when
+        /// it has one. An item with no name of its own is headlined by its subtitle instead, so the
+        /// one thing it has to say is said once, in the larger type.
         /// </summary>
-        public string? Title => Kind switch
+        public string? Title => OwnName ?? (Promoted ? Subtitle : null);
+
+        /// <summary>
+        /// Gets the secondary line: an episode's season and episode, or a season's number. Empty
+        /// once it has been promoted to the primary line, so it is never drawn twice.
+        /// </summary>
+        public string Label => Promoted ? string.Empty : Subtitle;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the design draws a primary line at all. Set at
+        /// render time, since it depends on the design rather than the item: a design showing only
+        /// the subtitle keeps it as the subtitle, with nothing to promote it to.
+        /// </summary>
+        [JsonIgnore]
+        public bool TitleShown { get; set; } = true;
+
+        // The item's own name, before anything is promoted into its place.
+        private string? OwnName => Kind switch
         {
             ArtworkItemKind.Episode => EpisodeName,
-            ArtworkItemKind.Season => HasCustomSeasonName ? SeasonName : (SubtitleShown ? null : SeasonLabel),
+            ArtworkItemKind.Season => HasCustomSeasonName ? SeasonName : null,
             _ => SeriesName
         };
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the design draws a subtitle for this item. Set at
-        /// render time, since it depends on the design rather than the item.
-        /// </summary>
-        [JsonIgnore]
-        public bool SubtitleShown { get; set; } = true;
+        // The secondary text this item would carry.
+        private string Subtitle => Kind switch
+        {
+            ArtworkItemKind.Episode => EpisodeCodeUtils.FormatFullText(SeasonNumber ?? 0, EpisodeNumberStart ?? 0, true, true),
+            ArtworkItemKind.Season => SeasonLabel,
+            _ => string.Empty
+        };
+
+        // An item with nothing of its own promotes its subtitle, provided the design has a primary
+        // line to promote it into.
+        private bool Promoted => TitleShown && string.IsNullOrWhiteSpace(OwnName) && Subtitle.Length > 0;
 
         /// <summary>
         /// Gets a value indicating whether the season carries a name of its own rather than a
@@ -122,21 +144,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets the compact code: S01E05 for an episode, S01 for a season. A series has none: its
         /// name is its whole identity, so a series poster carries no season count or year.
         /// </summary>
-        public string Code => Kind switch
+        public string Code => Promoted ? string.Empty : Kind switch
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatEpisodeCode(SeasonNumber ?? 0, EpisodeNumberStart ?? 0),
             ArtworkItemKind.Season => SeasonNumber.HasValue ? EpisodeCodeUtils.FormatSeasonCode(SeasonNumber.Value) : string.Empty,
-            _ => string.Empty
-        };
-
-        /// <summary>
-        /// Gets the spelled-out identity line: SEASON 1 • EPISODE 5, or SEASON 1 (or the season's own
-        /// name). Empty for a series.
-        /// </summary>
-        public string Label => Kind switch
-        {
-            ArtworkItemKind.Episode => EpisodeCodeUtils.FormatFullText(SeasonNumber ?? 0, EpisodeNumberStart ?? 0, true, true),
-            ArtworkItemKind.Season => SeasonLabel,
             _ => string.Empty
         };
 
@@ -200,22 +211,24 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets a value indicating whether a cutout style punches out the title itself. A series has
         /// no code or number, so its name becomes the cutout and is not drawn a second time.
         /// </summary>
-        public bool CutoutIsTitle => Kind == ArtworkItemKind.Series;
+        public bool CutoutIsTitle => Kind == ArtworkItemKind.Series || Promoted;
 
         /// <summary>
-        /// Returns the text a cutout style punches out: the <see cref="Code"/>, the featured number
-        /// spelled out as a word, or a series' name.
+        /// Returns the text a cutout style punches out: the featured number spelled out when the
+        /// design asks for that and the item has one, otherwise the item's own line, and otherwise
+        /// the <see cref="Code"/>. The spelled-out number comes first, since an item named after
+        /// nothing but its number is exactly where a numeral belongs.
         /// </summary>
         public string CutoutText(CutoutType type)
         {
-            if (CutoutIsTitle)
-            {
-                return (Title ?? string.Empty).ToUpperInvariant();
-            }
-
             if (type == CutoutType.Text && Number.HasValue)
             {
                 return EpisodeCodeUtils.FormatEpisodeText(CutoutType.Text, 0, Number.Value);
+            }
+
+            if (CutoutIsTitle)
+            {
+                return (Title ?? string.Empty).ToUpperInvariant();
             }
 
             return Code;

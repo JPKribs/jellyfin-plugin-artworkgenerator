@@ -38,6 +38,7 @@ changelog:
   - Three clean designs added to the examples: Minimal, Editorial and Bordered
   - The Frame style chooses how its two edges fill: top or bottom edge first, where a lone line takes that edge whether it is the title or the subtitle, or the title pinned always top or always bottom
   fixes:
+  - An item with no name of its own, such as a season named after nothing but its number, now says that one line in the larger primary type rather than in the small subtitle, and it reads the same way in every style
   - A design drawing a single line of text now always puts it in the same place, so a series and its seasons match; Frame's lone line takes the edge the design chose
   - A poster for an item with no title of its own drew a placeholder dash and held space for it, and Cutout shrank its letters to make room for a title that was not there
   - A season named after nothing but its number no longer draws that name beside the same number; a season with a name of its own is headlined by it, with the number beneath, and a design that draws no subtitle gives the season the title line instead

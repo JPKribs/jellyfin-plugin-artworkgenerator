@@ -131,9 +131,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         }
 
         /// <summary>
-        /// Tells the subject what the design will draw, so it can decide what its own title should
-        /// be. A season with no name of its own borrows the title line only when no subtitle is
-        /// drawn, which is a question about the design, not the item.
+        /// Tells the subject whether the design draws a primary line, which decides whether an item
+        /// with no name of its own can promote its subtitle into it. That is a question about the
+        /// design, not the item.
         /// </summary>
         /// <param name="subject">The item being drawn.</param>
         /// <param name="settings">The design drawing it.</param>
@@ -142,7 +142,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            subject.SubtitleShown = settings.ShowEpisode;
+            subject.TitleShown = settings.ShowTitle;
         }
 
         /// <summary>

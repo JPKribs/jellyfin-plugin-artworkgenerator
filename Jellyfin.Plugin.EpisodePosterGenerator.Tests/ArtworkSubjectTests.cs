@@ -46,42 +46,57 @@ public class ArtworkSubjectTests
     }
 
     /// <summary>
-    /// A season named after nothing but its number has no headline: the subtitle already says it,
-    /// and drawing both would say the same thing twice.
-    /// </summary>
-    [Fact]
-    public void Season_WithANumberedName_HasNoHeadline()
-    {
-        var subject = Subject(ArtworkItemKind.Season);
-
-        Assert.Null(subject.Title);
-        Assert.False(subject.HasCustomSeasonName);
-        Assert.Equal(2, subject.Number);
-        Assert.Equal("S02", subject.Code);
-        Assert.Equal("SEASON 2", subject.Label);
-        Assert.Empty(subject.NumberParts);
-        Assert.Equal("2 OF 3", subject.ProgressText);
-    }
-
-    /// <summary>
-    /// With no subtitle drawn there is nothing to repeat, so the season takes the title line rather
-    /// than leaving the poster without a word on it.
+    /// A season named after nothing but its number has nothing of its own to headline, so its
+    /// subtitle is promoted into the primary line and the secondary line is left empty. The one
+    /// thing it has to say is then said once, in the larger type.
     /// </summary>
     [Theory]
     [InlineData("Season 2")]
     [InlineData("season 02")]
     [InlineData("2")]
-    public void Season_WithoutASubtitle_TakesTheTitleLine(string seasonName)
+    public void Season_WithANumberedName_PromotesItsSubtitle(string seasonName)
     {
         var subject = Subject(ArtworkItemKind.Season);
         subject.SeasonName = seasonName;
-        subject.SubtitleShown = false;
 
+        Assert.False(subject.HasCustomSeasonName);
         Assert.Equal("SEASON 2", subject.Title);
+        Assert.Empty(subject.Label);
+        Assert.Empty(subject.Code);
+        Assert.Equal(2, subject.Number);
+        Assert.Empty(subject.NumberParts);
+    }
+
+    /// <summary>
+    /// A design that draws no primary line has nothing to promote into, so the subtitle stays the
+    /// subtitle rather than vanishing.
+    /// </summary>
+    [Fact]
+    public void Season_WithNoTitleDrawn_KeepsItsSubtitle()
+    {
+        var subject = Subject(ArtworkItemKind.Season);
+        subject.TitleShown = false;
+
+        Assert.Null(subject.Title);
+        Assert.Equal("SEASON 2", subject.Label);
+        Assert.Equal("S02", subject.Code);
+    }
+
+    /// <summary>
+    /// An episode always has a name of its own, so nothing is promoted and both lines are drawn.
+    /// </summary>
+    [Fact]
+    public void Episode_KeepsBothLines()
+    {
+        var subject = Subject(ArtworkItemKind.Episode);
+
+        Assert.Equal("Pilot", subject.Title);
+        Assert.Equal("SEASON 2 • EPISODE 5", subject.Label);
+        Assert.Equal("S02E05", subject.Code);
     }
 
     [Fact]
-    public void Season_WithItsOwnName_IsHeadlinedByIt()
+    public void Season_WithItsOwnName_IsHeadlinedByItWithTheNumberBeneath()
     {
         var subject = Subject(ArtworkItemKind.Season);
         subject.SeasonName = "The Crown Jewels";
@@ -89,6 +104,7 @@ public class ArtworkSubjectTests
         Assert.True(subject.HasCustomSeasonName);
         Assert.Equal("The Crown Jewels", subject.Title);
         Assert.Equal("SEASON 2", subject.Label);
+        Assert.Equal("S02", subject.Code);
     }
 
     /// <summary>
