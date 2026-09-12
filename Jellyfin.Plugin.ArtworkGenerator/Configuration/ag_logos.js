@@ -445,7 +445,7 @@ export default function (view) {
             return;
         }
 
-        row.style.display = 'block';
+        row.style.display = '';
         view.querySelector('#logoColorSourceLabel').textContent = source.label;
 
         // The two demo images never change, so each is fetched once.

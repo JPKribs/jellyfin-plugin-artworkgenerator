@@ -29,31 +29,34 @@
                         </div>
                     </div>
 
-                    <!-- Live Preview -->
-                    <div class="jpk-section">
+                    <!-- Live Preview: same shape as the Designs page, so both read the same way -->
+                    <div class="jpk-section poster-preview-section">
                         <div class="jpk-section-title">Live Preview</div>
                         <div class="jpk-section-content">
-                            <div id="logoPreviewFrame" class="logo-preview-frame">
-                                <img id="logoPreviewImage" class="logo-preview-image" alt="Live logo preview" />
-                                <div id="logoPreviewStatus" class="poster-preview-status">Loading preview…</div>
-                            </div>
-                            <div id="logoColorSourceRow" class="logo-color-source" style="display: none;">
-                                <div class="poster-component" id="logoColorSourceComponent">
-                                    <img class="poster-component-img" id="logoColorSourceImage" src="" alt="Artwork the colour is sampled from" />
-                                    <span class="poster-component-label" id="logoColorSourceLabel"></span>
+                            <div class="poster-preview-layout">
+                                <div class="poster-preview-main">
+                                    <div id="logoPreviewFrame" class="logo-preview-frame">
+                                        <img id="logoPreviewImage" class="logo-preview-image" alt="Live logo preview" />
+                                        <div id="logoPreviewStatus" class="poster-preview-status">Loading preview…</div>
+                                    </div>
+                                    <div class="poster-preview-caption">
+                                        The logo is a transparent image; the checkerboard shows where it is see-through.
+                                        <button is="emby-button" type="button" id="btnToggleLogoBackground" class="raised" style="margin-left: 0.5em;">
+                                            <span>Light Background</span>
+                                        </button>
+                                    </div>
+                                    <div class="inputContainer poster-preview-kind">
+                                        <label for="txtSampleName">Sample Name:</label>
+                                        <input is="emby-input" type="text" id="txtSampleName" placeholder="Star Wars: Andor" />
+                                        <div class="fieldDescription">A name to preview with. It is not saved, so try the names your own shows have.</div>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="inputContainer logo-preview-sample">
-                                <label for="txtSampleName">Sample Name:</label>
-                                <input is="emby-input" type="text" id="txtSampleName" placeholder="Star Wars: Andor" />
-                                <div class="fieldDescription">A name to preview with. It is not saved, so try the names your own shows have.</div>
-                            </div>
-                            <div class="poster-preview-caption">
-                                The logo is a transparent image; the checkerboard shows where it is see-through.
-                                <button is="emby-button" type="button" id="btnToggleLogoBackground" class="raised" style="margin-left: 0.5em;">
-                                    <span>Light Background</span>
-                                </button>
+                                <div class="poster-preview-components" id="logoColorSourceRow" style="display: none;">
+                                    <div class="poster-component" id="logoColorSourceComponent">
+                                        <img class="poster-component-img" id="logoColorSourceImage" src="" alt="Artwork the colour is sampled from" />
+                                        <span class="poster-component-label" id="logoColorSourceLabel"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
