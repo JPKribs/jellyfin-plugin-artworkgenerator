@@ -18,7 +18,7 @@ A series poster shows only the show's name. Styles built around an episode numbe
 
 The plugin runs entirely as a Jellyfin metadata provider. There are two ways to get a poster:
 
-* **Automatically** — a metadata refresh generates any image the item's profile turns on that the item is missing. This is the default; it can be turned off in Settings.
+* **Automatically** — a metadata refresh generates any image the item's profile turns on that the item is missing.
 * **By hand** — open an item, choose **Edit Images**, and press the search button on an image type. Generated images appear alongside the usual providers, each rendered from a different frame, so you can pick the one you like instead of refreshing until a good frame comes up.
 
 For series, season, and movie images, tick **Artwork Generator** under Image Fetchers for those item types in each library's settings. Jellyfin only asks enabled fetchers for images.
@@ -168,11 +168,12 @@ Optional static graphic overlays positioned above the canvas but below text elem
 The top layer containing all text elements, episode information, and series logos.
 
 **Elements:**
-- Episode numbers and season information
-- Episode titles with automatic text wrapping, and configurable handling for titles too long to fit
+- The subtitle: an episode's season and episode numbers, a season's label, or a film's year
+- The title, with automatic wrapping and configurable handling for names too long to fit
 - Series logos with configurable positioning
 - Style specific typography (Roman numerals, cutout text, etc.)
 - Drop shadows and contrasting outlines for enhanced readability
+- A Text Position setting that moves the title and subtitle to the top, center, or bottom on every style whose text is a block laid over the image
 
 ### Rendering Pipeline
 Each poster style follows this exact four layer sequence. The modular approach allows for easy customization and additional poster styles.
@@ -188,7 +189,7 @@ For an explanation of the settings, visit [SETTINGS.md](docs/SETTINGS.md).
 For additional template examples and downloadable configurations, visit [EXAMPLES.md](docs/EXAMPLES.md).
 
 ### Preview your poster
-A live preview at the top of the Designs page renders your current settings against sample artwork in both shapes at once, and updates as you change them. Choose whether it shows a series, a season, or an episode. The Logos page previews logos the same way, against a sample name you type. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
+A live preview at the top of the Designs page renders your current settings against sample artwork in both shapes at once, and updates as you change them. Choose whether it shows a series, a season, an episode, or a film. The Logos page previews logos the same way, against a sample name you type. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
 ![Preview Modal](Jellyfin.Plugin.ArtworkGenerator/Assets/Preview-Modal.png)
 
 ---

@@ -4,7 +4,6 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 
 ## Settings
 
-* **Enable Artwork Generation**: generate the images your profiles turn on, both automatically during a metadata refresh when an item is missing one and on demand from an item's Edit Images dialog. Turning this off disables both. Default on.
 * **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An item with no image of that type is only offered one, because that request comes from an automatic refresh that keeps a single image. Default 3.
 * **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
 
@@ -30,7 +29,7 @@ Sizes are a percent of the poster's short side. A portrait image measures them a
 * **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design. The default design cannot be renamed or deleted.
 * **New, Rename, Delete**: manage named designs.
 * **Export, Import**: save a design to JSON, or load one as a new design.
-* **Preview As**: whether the previews show a series, a season, or an episode.
+* **Preview As**: whether the previews show a series, a season, an episode, or a film.
 
 What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
 
@@ -49,7 +48,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Poster
 
-* **Style**: the layout. Standard, Brush, Cutout, Fade, Frame, Frosted Glass, Logo, Numeral, Split, Striped, or Timeline. Default Standard.
+* **Style**: the layout. Standard, Bloom, Brush, Cutout, Fade, Frame, Frosted Glass, Logo, Numeral, Split, Striped, or Timeline. Default Standard.
   * Timeline draws a season progress bar. It needs the season's episode count, so the bar renders full when the count is unknown, and it does not refresh on its own as more episodes are added to an airing season.
   * Striped draws its sash from the overlay colors. The main band uses Overlay Color and the pinstripes use Secondary Overlay Color.
 * **Fill Strategy**: how the canvas fits the poster. Original, Fill, or Fit. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape. Default Original.
@@ -57,6 +56,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Portrait Aspect Ratio**: output aspect ratio for portrait images. Default 2:3.
 * **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short side and the same pixel amount is used on all four sides. Default 5.
 * **Element Spacing**: gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
+* **Text Position**: where the title and subtitle sit, Top, Center, or Bottom. Left on Design default each style keeps the placement it was built around, which is why turning this setting on moved nothing. Cutout, Fade, Striped, and Frame do not offer it: their text is part of the artwork rather than a block laid over it, and Frame has its own Text Edges instead. Default Design default.
 
 ## Outline (Style is Cutout or Brush)
 
@@ -118,7 +118,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 Logo designs are stored in their own file, `logos.json`, in the plugin's data directory, rather than inside the plugin configuration. Editing a logo therefore never rewrites the rest of your settings. Designs saved by an earlier version move into that file automatically the first time the plugin loads.
 
 * **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
-* **Sample Name**: a name to preview with. It is not saved, so try the names your own shows have.
+* **Sample name**: the box under the preview, which starts out reading Demo Logo Text. What you type is previewed but never saved.
 * **Name From**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
 * **Remove Year**: remove a year in brackets such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345]. Default on.
 * **Names With a Subtitle**: how to treat a name split by a colon or spaced dash. Draw the whole name, keep only the title, keep only the subtitle, or draw both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
@@ -128,8 +128,8 @@ Logo designs are stored in their own file, `logos.json`, in the plugin's data di
 * **Lines**: one line, or up to two. A name splits onto two lines only when that lets the text grow noticeably. Default up to two.
 * **Font, Font Style, Use Custom Font, Font Path**: the typeface. Default Arial Bold.
 * **Letters Filled With**: a color, or a frame from the show. A frame fill cuts the letters out of a picture, taken from the same shared set of frames the show's other images come from, and brightened so it still reads on a dark background. A heavy font shows more of the picture and an outline helps it stand out. With a frame fill, the Edit Images dialog offers several logos, each cut from a different frame. Default a color.
-* **Color From**: Chosen Color, or the main color of the series poster or backdrop lifted to stay legible. Default Chosen Color.
+* **Color From**: Chosen Color, or the main color of the item's own Top Level Poster or Top Level Backdrop, lifted to stay legible. Default Chosen Color.
 * **Text Color**: ARGB hex. When sampling, this is the fallback and its opacity still applies. Default #FFFFFFFF.
 * **Outline, Outline Color, Outline Width (%)**: an optional stroke around the letters, its width a percent of the font size. Default off, black, 4.
 * **Drop Shadow**: a soft shadow under the letters. Default off.
-* **Width, Height**: canvas size in pixels. Default 800 by 310, the common HD clear logo size.
+* **Width, Height**: the room the lettering is laid out in, not the size of the file. The finished logo is trimmed to its own artwork, the way a downloaded clear logo is, so the PNG is usually smaller than this. Default 800 by 310, the common HD clear logo proportions.
