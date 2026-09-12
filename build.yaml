@@ -2,7 +2,7 @@
 name: "Artwork Generator"
 guid: "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e"
 imageUrl: "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png"
-version: "12.0.2.0"
+version: "12.0.2.1"
 targetAbi: "12.0.0.0"
 framework: "net10.0"
 overview: "Generate artwork from your own video"
@@ -13,42 +13,6 @@ owner: "JPKribs"
 artifacts:
 - "Jellyfin.Plugin.ArtworkGenerator.dll"
 changelog:
-  features:
-  - Artwork Generator is Episode Poster Generator rebuilt, with the same settings and a much wider job
-  - The repository moved with the name; re-add it as jellyfin-plugin-artworkgenerator to keep getting updates
-  - Draws posters, thumbs, backdrops, and text logos, where before there were only episode posters
-  - Covers series, seasons, films, music videos, home videos, and anything else with a video
-  - Configuration is rebuilt in three parts: designs, logos, and profiles
-  - Profiles decide which items get which images and which design draws each one
-  - Every design renders portrait and landscape, so one design covers a tall poster and a wide thumb
-  - A design's two lines are now simply the title and the subtitle, whatever the item is
-  - Text position and alignment work on every design, not just the few that had them
-  - New Bloom design, pooling color from the frame behind the text
-  - New Grid canvas, tiling several extracted frames into one picture
-  - Logo designs build a text logo from any name field, with letter case, a line limit, and frame-filled letters
-  - Frame extraction is one set of server settings instead of a copy on every design
-  - Frames are ranked on tone, detail, contrast, and color rather than just clearing a threshold
-  - Optional setting drops a subtitle that only repeats the title
-  - A subtitle too long to fit can shorten to its code, shrink, or trim
-  - Two example designs per style, each showing a genuinely different look
   fixes:
-  - Seasons extract from their own episodes instead of falling back to the series backdrop
-  - Candidate images come from different episodes instead of clustering in one
-  - Heavily letterboxed frames scale back up to a usable size
-  - Portrait text is measured against both sides, so it no longer reads small
-  - Brush strokes stay thick on tall posters instead of piling into a cross
-  - Long titles trim at a word boundary rather than mid-word
-  - Descenders stay inside the safe area
-  - Borders, rules, and shadows scale with the poster
-  - A static graphic keeps its proportions
-  - An item with no name of its own says its one line in the larger type
-  - Generated images carry the item's metadata language
-  developer:
-  - The generator, the settings model, and the configuration page are rebuilt around item kinds rather than episodes
-  - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 that Jellyfin 12.0 ships
-  - Designs are found by reflection, so adding one needs a class and an enum value
-  - Every label, option, and default is read from the settings models
-  - The shared generator is split into pipeline, text, and overlay
-  - Frame analysis is a single pass, under a megabyte per frame instead of three and a half
-  - Every one-time upgrade of an older configuration sits in its own file, to be deleted whole once installs have moved on
-  - Tests hold the documentation, the templates, and US spelling to the code
+  - The Profiles page loads again instead of failing on a backdrop setting that no longer exists
+  - Posters with a logo draw the logo selected for a film, season, or series instead of falling back to text
