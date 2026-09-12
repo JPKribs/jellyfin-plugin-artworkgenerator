@@ -126,4 +126,28 @@ public class SettingTextTests
             Assert.EndsWith(".", text.Description.TrimEnd(), StringComparison.Ordinal);
         }
     }
+
+    /// <summary>
+    /// The profile page's backdrop fields render their wording from the settings model too, so a
+    /// backdrop setting with no words would render a blank label and an empty help line.
+    /// </summary>
+    [Fact]
+    public void EveryBackdropSettingThePageShowsHasTextOnTheModel()
+    {
+        var page = File.ReadAllText(Path.Combine(ConfigurationDirectory(), "ag_profiles.html"));
+        var rendered = Regex.Matches(page, "data-backdrop-setting=\"(\\w+)\"")
+            .Select(m => m.Groups[1].Value)
+            .Distinct()
+            .ToList();
+
+        Assert.NotEmpty(rendered);
+
+        var text = SettingOptions.BackdropText();
+        foreach (var setting in rendered)
+        {
+            Assert.True(text.ContainsKey(setting), $"ag_profiles.html shows {setting}, which has no Display text.");
+            Assert.False(string.IsNullOrWhiteSpace(text[setting].Label));
+            Assert.False(string.IsNullOrWhiteSpace(text[setting].Description));
+        }
+    }
 }

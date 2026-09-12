@@ -1,4 +1,4 @@
-import { initCollapsibles, setTabs, createShared } from '/web/configurationpage?name=ag_jpkribs_shared.js';
+import { initCollapsibles, setTabs, createShared, generateGuid } from '/web/configurationpage?name=ag_jpkribs_shared.js';
 
 export default function (view) {
     'use strict';
@@ -46,13 +46,6 @@ export default function (view) {
     }
 
     // ── Utilities ────────────────────────────────────────────
-
-    function generateGuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
 
     function trapFocus(container, e) {
         if (e.key !== 'Tab') return;
@@ -200,6 +193,44 @@ export default function (view) {
 
     // ── Loading ─────────────────────────────────────────────
 
+    // The backdrop settings' labels and help text live on the settings model, the way the Designs
+    // and Logos pages take theirs, so the wording is changed next to the setting itself.
+    var backdropText = {};
+
+    function loadBackdropText() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
+            dataType: 'json'
+        }).then(function (payload) {
+            backdropText = (payload && (payload.backdropText || payload.BackdropText)) || {};
+        }).catch(function (error) {
+            console.error('Failed to load backdrop setting text:', error);
+        });
+    }
+
+    function applyBackdropText() {
+        view.querySelectorAll('[data-backdrop-setting]').forEach(function (el) {
+            var text = backdropText[el.getAttribute('data-backdrop-setting')];
+            if (!text) return;
+
+            var container = el.closest('.inputContainer, .checkboxContainer');
+            if (!container) return;
+
+            var name = text.label || text.Label || '';
+            var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
+            if (label && name) {
+                label.textContent = el.type === 'checkbox' ? name : name + ':';
+            }
+
+            var description = container.querySelector('.fieldDescription');
+            var help = text.description || text.Description || '';
+            if (description && help) {
+                description.textContent = help;
+            }
+        });
+    }
+
     // Logo designs are stored in their own file on the server, not in the plugin configuration.
     function fetchLogos() {
         return ApiClient.ajax({
@@ -214,11 +245,12 @@ export default function (view) {
 
     function loadConfig() {
         Dashboard.showLoadingMsg();
-        Promise.all([shared.getConfig(), loadAssignableItems(), fetchLogos()]).then(function (results) {
+        Promise.all([shared.getConfig(), loadAssignableItems(), fetchLogos(), loadBackdropText()]).then(function (results) {
             fullConfig = results[0];
             fullConfig.Profiles = fullConfig.Profiles || [];
             fullConfig.PosterConfigurations = fullConfig.PosterConfigurations || [];
             logoDesigns = results[2] || [];
+            applyBackdropText();
 
             // The server always supplies a default profile; this only guards a malformed payload.
             if (!fullConfig.Profiles.some(function (p) { return p.IsDefault; })) {

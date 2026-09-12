@@ -49,48 +49,48 @@
                         <div id="backdropContent" class="jpk-section-content">
 
                             <div class="inputContainer">
-                                <label for="txtBackdropRatio">Aspect Ratio:</label>
+                                <label for="txtBackdropRatio"></label>
                                 <input is="emby-input" type="text" id="txtBackdropRatio" placeholder="16:9" data-backdrop-setting="AspectRatio" />
-                                <div class="fieldDescription">The frame is cropped to this ratio, such as 16:9.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkBackdropLetterbox" data-backdrop-setting="EnableLetterboxDetection" />
-                                    <span class="checkboxLabel">Enable Letterbox Detection</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Detect and crop black bars from the frame first.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="nested-settings" id="backdropLetterboxOptions">
                                 <div class="inputContainer">
-                                    <label for="txtBackdropBlack">Black Threshold:</label>
+                                    <label for="txtBackdropBlack"></label>
                                     <input is="emby-input" type="number" id="txtBackdropBlack" min="0" max="255" data-backdrop-setting="LetterboxBlackThreshold" data-type="number" />
-                                    <div class="fieldDescription">Brightness below which a pixel counts as black, 0 to 255.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="txtBackdropConfidence">Detection Confidence (%):</label>
+                                    <label for="txtBackdropConfidence"></label>
                                     <input is="emby-input" type="number" id="txtBackdropConfidence" min="50" max="100" step="1" data-backdrop-setting="LetterboxConfidence" data-type="number" />
-                                    <div class="fieldDescription">Percent of pixels that must be black to count as letterboxing, 50 to 100.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="txtBackdropBrighten">Brighten HDR (%):</label>
+                                <label for="txtBackdropBrighten"></label>
                                 <input is="emby-input" type="number" id="txtBackdropBrighten" min="0" max="100" data-backdrop-setting="BrightenHDR" data-type="number" />
-                                <div class="fieldDescription">Brighten frames from HDR sources by this percent.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="txtBackdropStart">Extraction Start (%):</label>
+                                <label for="txtBackdropStart"></label>
                                 <input is="emby-input" type="number" id="txtBackdropStart" min="0" max="100" step="1" data-backdrop-setting="ExtractWindowStart" data-type="number" />
-                                <div class="fieldDescription">Skip this percent of each episode before extracting, avoiding intros.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="txtBackdropEnd">Extraction End (%):</label>
+                                <label for="txtBackdropEnd"></label>
                                 <input is="emby-input" type="number" id="txtBackdropEnd" min="0" max="100" step="1" data-backdrop-setting="ExtractWindowEnd" data-type="number" />
-                                <div class="fieldDescription">Stop extracting at this percent of each episode, avoiding credits.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                         </div>

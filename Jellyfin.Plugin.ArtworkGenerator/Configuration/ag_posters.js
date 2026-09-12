@@ -1,4 +1,4 @@
-import { initCollapsibles, setTabs, createShared } from '/web/configurationpage?name=ag_jpkribs_shared.js';
+import { initCollapsibles, setTabs, createShared, generateGuid } from '/web/configurationpage?name=ag_jpkribs_shared.js';
 
 export default function (view) {
     'use strict';
@@ -25,13 +25,6 @@ export default function (view) {
     }
 
     // ── Utilities ────────────────────────────────────────────
-
-    function generateGuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
 
     function parseARGBHex(input) {
         if (!input) return null;

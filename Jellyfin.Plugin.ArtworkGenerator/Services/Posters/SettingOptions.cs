@@ -117,6 +117,29 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return text;
         }
 
+        /// <summary>
+        /// Gets the label and help text for the backdrop settings. These keep their own map because
+        /// several of their names — the extraction window, the letterbox thresholds — are also
+        /// design setting names, and one dictionary would let the two overwrite each other.
+        /// </summary>
+        public static IReadOnlyDictionary<string, SettingText> BackdropText()
+        {
+            var text = new Dictionary<string, SettingText>(StringComparer.Ordinal);
+
+            foreach (var property in typeof(BackdropSettings).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var display = property.GetCustomAttribute<DisplayAttribute>();
+                if (display?.Name == null)
+                {
+                    continue;
+                }
+
+                text[property.Name] = new SettingText(display.Name, display.Description ?? string.Empty);
+            }
+
+            return text;
+        }
+
         // SettableLogoProperties
         // A logo design's settings, which the Logos page renders the same way.
         private static IEnumerable<PropertyInfo> SettableLogoProperties()
