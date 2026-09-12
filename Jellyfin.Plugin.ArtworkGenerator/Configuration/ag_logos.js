@@ -376,6 +376,52 @@ export default function (view) {
 
     // ── Visibility ──────────────────────────────────────────
 
+    // Where a sampled colour comes from. The preview draws its logo over the bundled demo art, and
+    // these are the same two images the renderer samples: the series poster, or the backdrop.
+    var COLOR_SOURCES = {
+        SeriesPoster: { component: 'poster', label: 'Colour sampled from this poster' },
+        SeriesBackdrop: { component: 'canvas', label: 'Colour sampled from this backdrop' }
+    };
+
+    var _colorSourceUrl = null;
+    var _colorSourceComponent = null;
+
+    // A tinted logo with no visible source looks arbitrary, so the artwork it was sampled from is
+    // shown beside it. A fixed colour has no source, so nothing is shown.
+    function updateColorSourceSample() {
+        var row = view.querySelector('#logoColorSourceRow');
+        if (!row) return;
+
+        var source = COLOR_SOURCES[view.querySelector('#selectColorSource').value];
+        if (!source) {
+            row.style.display = 'none';
+            return;
+        }
+
+        row.style.display = 'block';
+        view.querySelector('#logoColorSourceLabel').textContent = source.label;
+
+        // The two demo images never change, so each is fetched once.
+        if (_colorSourceComponent === source.component) return;
+        _colorSourceComponent = source.component;
+
+        ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/ArtworkGenerator/Preview/Component/' + source.component)
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Component request failed: ' + response.status);
+            return response.blob();
+        }).then(function (blob) {
+            if (_colorSourceUrl) URL.revokeObjectURL(_colorSourceUrl);
+            _colorSourceUrl = URL.createObjectURL(blob);
+            view.querySelector('#logoColorSourceImage').src = _colorSourceUrl;
+        }).catch(function (error) {
+            console.error('Failed to load the colour source image:', error);
+            row.style.display = 'none';
+            _colorSourceComponent = null;
+        });
+    }
+
     function updateVisibility() {
         var mode = view.querySelector('#selectSubtitleMode').value;
         var twoSizes = mode === 'TitleLarge' || mode === 'SubtitleLarge';
@@ -396,6 +442,8 @@ export default function (view) {
         if (colorDesc) {
             colorDesc.textContent = colorDesc.getAttribute(sampling ? 'data-opacity-desc' : 'data-color-desc');
         }
+
+        updateColorSourceSample();
 
         // A frame fill has no colour to pick, so the colour controls step aside for it.
         var fill = view.querySelector('#selectLogoFill').value;

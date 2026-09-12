@@ -490,6 +490,12 @@
     display: none;
 }
 
+/* The artwork a sampled logo colour is taken from, shown under the preview so the colour has a
+   visible reason. */
+.logo-color-source {
+    margin-top: 10px;
+}
+
 .logo-preview-sample {
     max-width: 560px;
     margin-top: 1em;
