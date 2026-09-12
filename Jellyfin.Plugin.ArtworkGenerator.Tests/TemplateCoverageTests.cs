@@ -127,19 +127,29 @@ public class TemplateCoverageTests
     }
 
     /// <summary>
-    /// The framed pair shows the two text edge behaviours that differ in kind: one edge filled by
-    /// whichever line the item has, and the lines pinned to an edge each. Which four names those
-    /// are is the enum's business; that both behaviours are on show is this set's business.
+    /// The framed pair shows the title on both border edges, which is the choice that design turns
+    /// on. Which edge is the ordinary text position now, not a control of its own.
     /// </summary>
     [Fact]
-    public void TheFramedPairShowsBothTextEdgeBehaviours()
+    public void TheFramedPairPutsTheTitleOnBothEdges()
     {
-        var edges = Templates()
+        var positions = Templates()
             .Where(t => string.Equals(t.Settings.GetProperty("PosterStyle").GetString(), nameof(PosterStyle.Frame), StringComparison.OrdinalIgnoreCase))
-            .Select(t => Enum.Parse<TextEdge>(t.Settings.GetProperty("TextEdge").GetString()!, ignoreCase: true))
+            .Select(t => t.Settings.TryGetProperty("TextPosition", out var p) ? p.GetString() : "Auto")
             .ToList();
 
-        Assert.Contains(edges, e => e is TextEdge.TopFirst or TextEdge.BottomFirst);
-        Assert.Equal(2, edges.Distinct().Count());
+        Assert.Equal(2, positions.Count);
+        Assert.Equal(2, positions.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    /// <summary>No template may still name the control the frame used to carry.</summary>
+    [Fact]
+    public void NoTemplateStillUsesTheTextEdgeSetting()
+    {
+        foreach (var template in Templates())
+        {
+            Assert.False(template.Settings.TryGetProperty("TextEdge", out _),
+                $"{template.Name} still sets TextEdge.");
+        }
     }
 }
