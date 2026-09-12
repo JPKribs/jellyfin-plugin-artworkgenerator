@@ -57,14 +57,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
             var showSubtitle = settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label);
 
-            // Automatic keeps the title at the top while a subtitle holds the bottom, and moves it
-            // down when there is none, so a series does not leave the bottom edge bare.
+            // Automatic pairs them as title over subtitle, and drops a lone line to the bottom.
+            var bothDrawn = showTitle && showSubtitle;
             var titleAtBottom = settings.TitleEdge switch
             {
                 TitleEdge.Top => false,
                 TitleEdge.Bottom => true,
-                _ => !showSubtitle
+                _ => !bothDrawn
             };
+
+            // Whichever line is on its own takes the title's edge, so a poster carrying one line
+            // always puts it in the same place, whether that line is a title or a subtitle.
+            var subtitleAtBottom = bothDrawn ? !titleAtBottom : titleAtBottom;
 
             TextInfo? topInfo = null;
             TextInfo? bottomInfo = null;
@@ -84,14 +88,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (showSubtitle)
             {
-                var info = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea, !titleAtBottom);
-                if (titleAtBottom)
+                var info = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea, subtitleAtBottom);
+                if (subtitleAtBottom)
                 {
-                    topInfo = info;
+                    bottomInfo = info;
                 }
                 else
                 {
-                    bottomInfo = info;
+                    topInfo = info;
                 }
             }
 

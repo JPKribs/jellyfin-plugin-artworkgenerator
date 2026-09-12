@@ -96,7 +96,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             using var titleStyle = CreateTitleStyle(settings, unit);
 
-            var column = BuildColumn(safeArea, settings, unit, titleStyle);
+            var column = BuildColumn(safeArea, settings, unit, titleStyle, true);
             if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
                 DrawTitleInSlot(skCanvas, subject.Title, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
@@ -114,10 +114,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // The one description of the vertical layout: a fixed two line title zone against the
         // bottom of the safe area. The cutout takes whatever the column leaves, so the title and
         // the letters are measured from the same numbers and cannot collide.
-        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle titleStyle)
+        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle titleStyle, bool reserveTitle)
         {
             return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(TitleBlock, settings.ShowTitle ? titleStyle.BlockHeight(2) : 0f);
+                .Add(TitleBlock, settings.ShowTitle && reserveTitle ? titleStyle.BlockHeight(2) : 0f);
         }
 
         // CalculateCutoutArea
@@ -130,7 +130,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
 
             using var titleStyle = CreateTitleStyle(config, unit);
-            var remaining = BuildColumn(safeArea, config, unit, titleStyle).Remaining;
+            var remaining = BuildColumn(safeArea, config, unit, titleStyle, reserveTitle).Remaining;
 
             var minHeight = safeArea.Height * MinimumCutoutAreaRatio;
             return remaining.Height >= minHeight
@@ -150,7 +150,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
 
             var safeArea = GetSafeAreaBounds(canvasWidth, canvasHeight, config);
-            var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight), !subject.CutoutIsTitle);
+            // Nothing is held back for a title the item does not have, such as a season named after
+            // nothing but its number.
+            var reserveTitle = !subject.CutoutIsTitle && !string.IsNullOrWhiteSpace(subject.Title);
+            var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight), reserveTitle);
             var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
             float fontSize = CalculateOptimalCutoutFontSize(words, typeface, cutoutArea);
 

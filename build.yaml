@@ -37,6 +37,8 @@ changelog:
   - Every bundled design ships a season poster example beside its series poster and its episodes
   - Three clean designs added to the examples: Minimal, Editorial and Bordered
   fixes:
+  - A design drawing a single line of text now always puts it in the same place, so a series and its seasons match; Frame's lone line takes the edge the design chose
+  - A poster for an item with no title of its own drew a placeholder dash and held space for it, and Cutout shrank its letters to make room for a title that was not there
   - A season named after nothing but its number no longer draws that name beside the same number; a season with a name of its own is headlined by it, with the number beneath, and a design that draws no subtitle gives the season the title line instead
   - The Simple design drew only the subtitle, so a series, which has none, came out with no text at all; it now draws the title too
   - Brush strokes on a tall poster are thicker again, revealing more of the frame, while wide posters keep the stroke layout they had

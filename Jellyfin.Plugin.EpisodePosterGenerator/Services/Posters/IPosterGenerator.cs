@@ -160,12 +160,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var parts = subject.NumberParts;
             var label = subject.Label;
             var showEpisode = settings.ShowEpisode && (parts.Count > 1 || label.Length > 0);
-            var showSeparator = settings.ShowTitle && showEpisode;
+
+            // An item can have no title of its own, such as a season named after nothing but its
+            // number. Its zone is not reserved, so nothing is left holding empty space.
+            var showTitle = settings.ShowTitle && !string.IsNullOrWhiteSpace(subject.Title);
+            var showSeparator = showTitle && showEpisode;
 
             var column = new LayoutColumn(area, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
                 .Add(EpisodeBlock, showEpisode ? episodeStyle.LineBox : 0f)
                 .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(unit) : 0f)
-                .Add(TitleBlock, settings.ShowTitle ? titleStyle.BlockHeight(2) : 0f);
+                .Add(TitleBlock, showTitle ? titleStyle.BlockHeight(2) : 0f);
 
             if (column.TryGetSlot(EpisodeBlock, out var episodeSlot))
             {
@@ -186,7 +190,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (column.TryGetSlot(TitleBlock, out var titleSlot))
             {
-                DrawTitleInSlot(canvas, subject.Title ?? "-", titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(canvas, subject.Title!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
