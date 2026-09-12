@@ -142,7 +142,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            subject.TitleShown = settings.ShowTitle;
+            subject.PrimaryShown = settings.ShowTitle;
         }
 
         /// <summary>

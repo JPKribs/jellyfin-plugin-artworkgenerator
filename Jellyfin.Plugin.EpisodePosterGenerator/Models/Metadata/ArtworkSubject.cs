@@ -75,13 +75,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// it has one. An item with no name of its own is headlined by its subtitle instead, so the
         /// one thing it has to say is said once, in the larger type.
         /// </summary>
-        public string? Title => OwnName ?? (Promoted ? Subtitle : null);
+        public string? Primary => OwnName ?? (Promoted ? SecondaryText : null);
 
         /// <summary>
         /// Gets the secondary line: an episode's season and episode, or a season's number. Empty
         /// once it has been promoted to the primary line, so it is never drawn twice.
         /// </summary>
-        public string Label => Promoted ? string.Empty : Subtitle;
+        public string Secondary => Promoted ? string.Empty : SecondaryText;
 
         /// <summary>
         /// Gets or sets a value indicating whether the design draws a primary line at all. Set at
@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// the subtitle keeps it as the subtitle, with nothing to promote it to.
         /// </summary>
         [JsonIgnore]
-        public bool TitleShown { get; set; } = true;
+        public bool PrimaryShown { get; set; } = true;
 
         // The item's own name, before anything is promoted into its place.
         private string? OwnName => Kind switch
@@ -100,7 +100,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         };
 
         // The secondary text this item would carry.
-        private string Subtitle => Kind switch
+        private string SecondaryText => Kind switch
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatFullText(SeasonNumber ?? 0, EpisodeNumberStart ?? 0, true, true),
             ArtworkItemKind.Season => SeasonLabel,
@@ -109,7 +109,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         // An item with nothing of its own promotes its subtitle, provided the design has a primary
         // line to promote it into.
-        private bool Promoted => TitleShown && string.IsNullOrWhiteSpace(OwnName) && Subtitle.Length > 0;
+        private bool Promoted => PrimaryShown && string.IsNullOrWhiteSpace(OwnName) && SecondaryText.Length > 0;
 
         /// <summary>
         /// Gets a value indicating whether the season carries a name of its own rather than a
@@ -133,7 +133,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets the number a numeric style features: the episode number, or the season number.
         /// A series has none.
         /// </summary>
-        public int? Number => Kind switch
+        public int? FeaturedNumber => Kind switch
         {
             ArtworkItemKind.Episode => EpisodeNumberStart,
             ArtworkItemKind.Season => SeasonNumber,
@@ -144,7 +144,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets the compact code: S01E05 for an episode, S01 for a season. A series has none: its
         /// name is its whole identity, so a series poster carries no season count or year.
         /// </summary>
-        public string Code => Promoted ? string.Empty : Kind switch
+        public string SecondaryShort => Promoted ? string.Empty : Kind switch
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatEpisodeCode(SeasonNumber ?? 0, EpisodeNumberStart ?? 0),
             ArtworkItemKind.Season => SeasonNumber.HasValue ? EpisodeCodeUtils.FormatSeasonCode(SeasonNumber.Value) : string.Empty,
@@ -155,12 +155,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets the numbers joined by a bullet in the compact number line, such as 12 • 7. Only an
         /// episode has more than one; other kinds draw <see cref="Label"/> instead.
         /// </summary>
-        public IReadOnlyList<int> NumberParts => Kind == ArtworkItemKind.Episode
+        public IReadOnlyList<int> SecondaryParts => Kind == ArtworkItemKind.Episode
             ? new[] { SeasonNumber ?? 0, EpisodeNumberStart ?? 0 }
             : Array.Empty<int>();
 
         /// <summary>Gets the position along a progress bar: the episode within its season, or the season within its series.</summary>
-        public int? ProgressPosition => Number;
+        public int? ProgressPosition => FeaturedNumber;
 
         /// <summary>Gets the length of the progress bar, when known.</summary>
         public int? ProgressTotal => Kind switch
@@ -187,7 +187,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
                 {
                     ArtworkItemKind.Episode when position.HasValue => string.Format(CultureInfo.InvariantCulture, "EPISODE {0}", position.Value),
                     ArtworkItemKind.Season when position.HasValue => string.Format(CultureInfo.InvariantCulture, "SEASON {0}", position.Value),
-                    _ => Label
+                    _ => Secondary
                 };
             }
         }
@@ -211,7 +211,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets a value indicating whether a cutout style punches out the title itself. A series has
         /// no code or number, so its name becomes the cutout and is not drawn a second time.
         /// </summary>
-        public bool CutoutIsTitle => Kind == ArtworkItemKind.Series || Promoted;
+        public bool CutoutIsPrimary => Kind == ArtworkItemKind.Series || Promoted;
 
         /// <summary>
         /// Returns the text a cutout style punches out: the featured number spelled out when the
@@ -221,17 +221,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// </summary>
         public string CutoutText(CutoutType type)
         {
-            if (type == CutoutType.Text && Number.HasValue)
+            if (type == CutoutType.Text && FeaturedNumber.HasValue)
             {
-                return EpisodeCodeUtils.FormatEpisodeText(CutoutType.Text, 0, Number.Value);
+                return EpisodeCodeUtils.FormatEpisodeText(CutoutType.Text, 0, FeaturedNumber.Value);
             }
 
-            if (CutoutIsTitle)
+            if (CutoutIsPrimary)
             {
-                return (Title ?? string.Empty).ToUpperInvariant();
+                return (Primary ?? string.Empty).ToUpperInvariant();
             }
 
-            return Code;
+            return SecondaryShort;
         }
 
         // FromItem

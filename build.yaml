@@ -64,6 +64,8 @@ changelog:
   - Timeline keeps the marker dot inside the safe area on the first and last episode
   - Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area
   developer:
+  - Every style now reads one primary and one secondary line from the item, rather than a title, a label and a code, so a style no longer needs to know what kind of item it is drawing
+  - The repeated "is this line drawn and does the item have one" check is asked once, in the base class, instead of in each style
   - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 packages Jellyfin 12.0 ships, since the plugin binds to the server's copies at runtime
   - Text drawing moved from the removed SKPaint text members to SKFont, wrapped in a shared TextStyle so every style measures and draws with the same objects
   - Standard and Split share one text stack; Numeral, Cutout, Brush, and Frame no longer hand-build their own paints

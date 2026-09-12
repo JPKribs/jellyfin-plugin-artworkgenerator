@@ -102,18 +102,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float numberTop = safeArea.Bottom;
 
-            if (settings.ShowEpisode && subject.Number.HasValue)
+            if (settings.ShowEpisode && subject.FeaturedNumber.HasValue)
             {
                 var widthRatio = height > width ? PortraitNumberZoneWidthRatio : NumberZoneWidthRatio;
-                DrawEpisodeNumber(skCanvas, subject.Number.Value, settings, safeArea, unit, widthRatio);
+                DrawEpisodeNumber(skCanvas, subject.FeaturedNumber.Value, settings, safeArea, unit, widthRatio);
                 numberTop = safeArea.Bottom - (safeArea.Height * NumberZoneHeightRatio);
             }
 
-            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
+            if (ShowsPrimary(settings, subject))
             {
                 // The title is always sideways: that is the style. A series has no number to sit
                 // above, so its name runs the whole height and is sized to fill it.
-                DrawVerticalTitle(skCanvas, subject.Title, settings, unit, safeArea, numberTop, !subject.Number.HasValue);
+                DrawVerticalTitle(skCanvas, subject.Primary!, settings, unit, safeArea, numberTop, !subject.FeaturedNumber.HasValue);
             }
         }
 
@@ -124,7 +124,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static void DrawEpisodeNumber(SKCanvas canvas, int number, PosterSettings config, SKRect safeArea, int unit, float widthRatio)
         {
             var numberText = number.ToString("D2", CultureInfo.InvariantCulture);
-            var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
 
             float maxWidth = safeArea.Width * widthRatio;
             float maxHeight = safeArea.Height * NumberZoneHeightRatio;
@@ -159,7 +159,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             using var style = focal
                 ? CreateFocalTitleStyle(config, unit, text, availableRun * FocalTitleRunRatio, safeArea.Width * FocalTitleThicknessRatio)
-                : CreateTitleStyle(config, unit, SKTextAlign.Left);
+                : CreatePrimaryStyle(config, unit, SKTextAlign.Left);
 
             if (availableRun <= style.Size)
             {

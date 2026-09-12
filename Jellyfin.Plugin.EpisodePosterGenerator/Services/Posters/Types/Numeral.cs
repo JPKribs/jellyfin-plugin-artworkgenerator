@@ -44,29 +44,29 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
             // A series has no number, so its name is the focal element and is not drawn twice.
-            if (!subject.Number.HasValue)
+            if (!subject.FeaturedNumber.HasValue)
             {
-                if (!string.IsNullOrEmpty(subject.Title))
+                if (!string.IsNullOrEmpty(subject.Primary))
                 {
-                    DrawFocalText(skCanvas, subject.Title, settings, safeArea, unit);
+                    DrawFocalText(skCanvas, subject.Primary, settings, safeArea, unit);
                 }
 
                 return;
             }
 
-            using var titleStyle = CreateTitleStyle(settings, unit);
-            var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
+            using var titleStyle = CreatePrimaryStyle(settings, unit);
+            var showTitle = ShowsPrimary(settings, subject);
 
             // The title's zone is reserved before the numeral is sized, so the numeral fills what is
             // left rather than being drawn across the title.
             var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(TitleBlock, showTitle ? titleStyle.BlockHeight(2) : 0f);
+                .Add(PrimaryBlock, showTitle ? titleStyle.BlockHeight(2) : 0f);
 
-            DrawFocalText(skCanvas, NumberUtils.NumberToRomanNumeral(subject.Number.Value), settings, column.Remaining, unit);
+            DrawFocalText(skCanvas, NumberUtils.NumberToRomanNumeral(subject.FeaturedNumber.Value), settings, column.Remaining, unit);
 
-            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Title!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Primary!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -82,7 +82,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // ink in, the area.
         private static void DrawFocalText(SKCanvas canvas, string numeralText, PosterSettings config, SKRect area, int unit)
         {
-            var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
 
             float fontSize = FontUtils.CalculateOptimalFontSize(numeralText, typeface, area.Width, area.Height);
 

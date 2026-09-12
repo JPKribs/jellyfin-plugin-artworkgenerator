@@ -45,8 +45,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
-            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
+            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
+            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
 
             // A series has no position to mark, so it gets the title alone rather than a bar that
             // would mean nothing.
@@ -56,7 +56,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var total = subject.ProgressTotal ?? position;
 
             var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(TitleBlock, settings.ShowTitle && !string.IsNullOrEmpty(subject.Title)
+                .Add(PrimaryBlock, ShowsPrimary(settings, subject)
                     ? titleStyle.BlockHeight(2)
                     : 0f)
                 .Add(LabelsBlock, settings.ShowEpisode && hasProgress ? episodeStyle.LineBox : 0f)
@@ -72,9 +72,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 DrawLabels(skCanvas, subject, episodeStyle, settings, unit, labelsSlot);
             }
 
-            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Title!, titleStyle, titleSlot, titleSlot.Left, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Primary!, titleStyle, titleSlot, titleSlot.Left, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -131,11 +131,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Draws the code left-aligned and the position right-aligned directly above the bar.
         private static void DrawLabels(SKCanvas canvas, ArtworkSubject subject, TextStyle leftStyle, PosterSettings config, int unit, SKRect slot)
         {
-            using var rightStyle = CreateEpisodeStyle(config, unit, SKTextAlign.Right);
+            using var rightStyle = CreateSecondaryStyle(config, unit, SKTextAlign.Right);
 
             float baselineY = leftStyle.BaselineAtBottom(slot);
 
-            leftStyle.Draw(canvas, subject.Code, slot.Left, baselineY);
+            leftStyle.Draw(canvas, subject.SecondaryShort, slot.Left, baselineY);
             rightStyle.Draw(canvas, subject.ProgressText, slot.Right, baselineY);
         }
 

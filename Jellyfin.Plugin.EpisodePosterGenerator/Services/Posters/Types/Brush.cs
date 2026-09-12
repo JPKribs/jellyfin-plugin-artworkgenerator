@@ -173,13 +173,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // packed against the bottom left of the safe area.
         private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject, TextStyle episodeStyle, TextStyle titleStyle)
         {
-            var titleHeight = settings.ShowTitle && !string.IsNullOrWhiteSpace(subject.Title)
+            var titleHeight = ShowsPrimary(settings, subject)
                 ? titleStyle.BlockHeight(2)
                 : 0f;
 
             return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(EpisodeBlock, settings.ShowEpisode && subject.Code.Length > 0 ? episodeStyle.LineBox : 0f)
-                .Add(TitleBlock, titleHeight);
+                .Add(SecondaryBlock, ShowsSecondary(settings, subject) ? episodeStyle.LineBox : 0f)
+                .Add(PrimaryBlock, titleHeight);
         }
 
         // CalculateTextKeepClearArea
@@ -187,8 +187,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // measured from the same styles that draw it.
         private static SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject)
         {
-            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
-            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
+            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
+            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
 
             var consumed = BuildTextColumn(safeArea, settings, unit, subject, episodeStyle, titleStyle).Consumed;
 
@@ -209,19 +209,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Left);
-            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Left);
+            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
+            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
 
             var column = BuildTextColumn(safeArea, settings, unit, subject, episodeStyle, titleStyle);
 
-            if (column.TryGetSlot(EpisodeBlock, out var codeSlot))
+            if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
-                episodeStyle.Draw(skCanvas, subject.Code, safeArea.Left, episodeStyle.BaselineAtBottom(codeSlot));
+                episodeStyle.Draw(skCanvas, subject.SecondaryShort, safeArea.Left, episodeStyle.BaselineAtBottom(codeSlot));
             }
 
-            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Title!, titleStyle, titleSlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Primary!, titleStyle, titleSlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTitleHandling);
             }
         }
 

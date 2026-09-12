@@ -71,6 +71,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             return (SupportedShapes & flag) != 0;
         }
 
+        // ShowsPrimary
+        // Whether the design draws the primary line and this item has one to put in it.
+        protected static bool ShowsPrimary(PosterSettings settings, ArtworkSubject subject)
+            => settings != null && settings.ShowTitle && !string.IsNullOrWhiteSpace(subject?.Primary);
+
+        // ShowsSecondary
+        // Whether the design draws the secondary line and this item has one. Its long and short
+        // renderings are present or absent together, so one question answers for either.
+        protected static bool ShowsSecondary(PosterSettings settings, ArtworkSubject subject)
+            => settings != null && settings.ShowEpisode && subject?.Secondary.Length > 0;
+
         // SizeUnit
         // The length every size setting is a percentage of: the poster's short side. A landscape
         // poster's short side is what these sizes always measured against, so existing designs are
@@ -89,13 +100,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             => unit * (Math.Max(0f, settings.ElementSpacing) / 100f);
 
         // Layout block keys shared by the styles that stack text against the bottom edge.
-        protected const string EpisodeBlock = "episode";
+        protected const string SecondaryBlock = "episode";
         protected const string SeparatorBlock = "separator";
-        protected const string TitleBlock = "title";
+        protected const string PrimaryBlock = "title";
 
-        // CreateTitleStyle
+        // CreatePrimaryStyle
         // The font and paints for the episode title, sized and coloured from the settings.
-        protected static TextStyle CreateTitleStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
+        protected static TextStyle CreatePrimaryStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
         {
             ArgumentNullException.ThrowIfNull(settings);
 
@@ -104,20 +115,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.TitleFontColor), fontSize, typeface, height, align, withShadow);
         }
 
-        // CreateEpisodeStyle
+        // CreateSecondaryStyle
         // The font and paints for the episode code or number, sized and coloured from the settings.
-        protected static TextStyle CreateEpisodeStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
+        protected static TextStyle CreateSecondaryStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
         {
             ArgumentNullException.ThrowIfNull(settings);
 
             var fontSize = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, height);
-            var typeface = ResolveEpisodeTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), fontSize, typeface, height, align, withShadow);
         }
 
-        // ResolveEpisodeTypeface
+        // ResolveSecondaryTypeface
         // The episode face in the given weight. Not disposed by callers: FontUtils owns the cache.
-        protected static SKTypeface ResolveEpisodeTypeface(PosterSettings settings, SKFontStyle style)
+        protected static SKTypeface ResolveSecondaryTypeface(PosterSettings settings, SKFontStyle style)
         {
             ArgumentNullException.ThrowIfNull(settings);
             return FontUtils.ResolveTypeface(settings.EffectiveEpisodeFontPath, settings.EpisodeFontFamily, style);
@@ -154,24 +165,24 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            using var titleStyle = CreateTitleStyle(settings, unit);
-            using var episodeStyle = CreateEpisodeStyle(settings, unit);
+            using var titleStyle = CreatePrimaryStyle(settings, unit);
+            using var episodeStyle = CreateSecondaryStyle(settings, unit);
 
-            var parts = subject.NumberParts;
-            var label = subject.Label;
+            var parts = subject.SecondaryParts;
+            var label = subject.Secondary;
             var showEpisode = settings.ShowEpisode && (parts.Count > 1 || label.Length > 0);
 
             // An item can have no title of its own, such as a season named after nothing but its
             // number. Its zone is not reserved, so nothing is left holding empty space.
-            var showTitle = settings.ShowTitle && !string.IsNullOrWhiteSpace(subject.Title);
+            var showTitle = ShowsPrimary(settings, subject);
             var showSeparator = showTitle && showEpisode;
 
             var column = new LayoutColumn(area, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(EpisodeBlock, showEpisode ? episodeStyle.LineBox : 0f)
+                .Add(SecondaryBlock, showEpisode ? episodeStyle.LineBox : 0f)
                 .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(unit) : 0f)
-                .Add(TitleBlock, showTitle ? titleStyle.BlockHeight(2) : 0f);
+                .Add(PrimaryBlock, showTitle ? titleStyle.BlockHeight(2) : 0f);
 
-            if (column.TryGetSlot(EpisodeBlock, out var episodeSlot))
+            if (column.TryGetSlot(SecondaryBlock, out var episodeSlot))
             {
                 if (parts.Count > 1)
                 {
@@ -188,9 +199,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 DrawSeparatorLine(canvas, settings, unit, separatorSlot);
             }
 
-            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
-                DrawTitleInSlot(canvas, subject.Title!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(canvas, subject.Primary!, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -203,7 +214,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(settings);
 
             using var bulletStyle = PaintFactory.CreateTextStyle(
-                episodeStyle.Fill.Color, episodeStyle.Size, ResolveEpisodeTypeface(settings, SKFontStyle.Normal), height);
+                episodeStyle.Fill.Color, episodeStyle.Size, ResolveSecondaryTypeface(settings, SKFontStyle.Normal), height);
 
             var seasonText = seasonNumber.ToString(CultureInfo.InvariantCulture);
             var episodeText = episodeNumber.ToString(CultureInfo.InvariantCulture);

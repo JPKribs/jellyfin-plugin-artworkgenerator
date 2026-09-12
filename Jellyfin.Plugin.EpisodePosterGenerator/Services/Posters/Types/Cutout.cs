@@ -87,19 +87,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(settings);
 
             // A series' name is the cutout itself, so it is not drawn again beneath it.
-            if (!settings.ShowTitle || subject.CutoutIsTitle || string.IsNullOrEmpty(subject.Title))
+            if (!settings.ShowTitle || subject.CutoutIsPrimary || string.IsNullOrEmpty(subject.Primary))
             {
                 return;
             }
 
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            using var titleStyle = CreateTitleStyle(settings, unit);
+            using var titleStyle = CreatePrimaryStyle(settings, unit);
 
             var column = BuildColumn(safeArea, settings, unit, titleStyle, true);
-            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Title, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawTitleInSlot(skCanvas, subject.Primary, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
         }
 
@@ -117,7 +117,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle titleStyle, bool reserveTitle)
         {
             return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(TitleBlock, settings.ShowTitle && reserveTitle ? titleStyle.BlockHeight(2) : 0f);
+                .Add(PrimaryBlock, settings.ShowTitle && reserveTitle ? titleStyle.BlockHeight(2) : 0f);
         }
 
         // CalculateCutoutArea
@@ -129,7 +129,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 return safeArea;
             }
 
-            using var titleStyle = CreateTitleStyle(config, unit);
+            using var titleStyle = CreatePrimaryStyle(config, unit);
             var remaining = BuildColumn(safeArea, config, unit, titleStyle, reserveTitle).Remaining;
 
             var minHeight = safeArea.Height * MinimumCutoutAreaRatio;
@@ -152,9 +152,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(canvasWidth, canvasHeight, config);
             // Nothing is held back for a title the item does not have, such as a season named after
             // nothing but its number.
-            var reserveTitle = !subject.CutoutIsTitle && !string.IsNullOrWhiteSpace(subject.Title);
+            var reserveTitle = !subject.CutoutIsPrimary && !string.IsNullOrWhiteSpace(subject.Primary);
             var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight), reserveTitle);
-            var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
             float fontSize = CalculateOptimalCutoutFontSize(words, typeface, cutoutArea);
 
             using var font = PaintFactory.CreateFont(typeface, fontSize);

@@ -62,20 +62,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var titleStyle = CreateTitleStyle(settings, unit, SKTextAlign.Center, withShadow: false);
-            using var episodeStyle = CreateEpisodeStyle(settings, unit, SKTextAlign.Center, withShadow: false);
+            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Center, withShadow: false);
+            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Center, withShadow: false);
 
             float padX = unit * PaddingXRatio;
             float padY = unit * PaddingYRatio;
             float maxTextWidth = safeArea.Width - (2 * padX);
 
             var titleLines = new List<string>();
-            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
+            if (ShowsPrimary(settings, subject))
             {
-                titleLines.AddRange(TextUtils.FitTitleLines(subject.Title, titleStyle.Font, maxTextWidth, settings.LongTitleHandling));
+                titleLines.AddRange(TextUtils.FitTitleLines(subject.Primary!, titleStyle.Font, maxTextWidth, settings.LongTitleHandling));
             }
 
-            string? episodeText = settings.ShowEpisode && subject.Code.Length > 0 ? subject.Code : null;
+            string? episodeText = ShowsSecondary(settings, subject) ? subject.SecondaryShort : null;
 
             if (titleLines.Count == 0 && episodeText == null)
             {
@@ -87,8 +87,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             // The panel is sized from the same column that positions its contents, so the box can
             // never be measured from one set of numbers and filled from another.
             var content = new LayoutColumn(SKRect.Create(safeArea.Left, 0, safeArea.Width, 0), spacing, LayoutAnchor.Top)
-                .Add(EpisodeBlock, episodeText != null ? episodeStyle.LineBox : 0f)
-                .Add(TitleBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
+                .Add(SecondaryBlock, episodeText != null ? episodeStyle.LineBox : 0f)
+                .Add(PrimaryBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
 
             float contentHeight = content.Consumed;
 
@@ -116,15 +116,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 SKRect.Create(panelRect.Left, panelTop + padY, panelRect.Width, contentHeight),
                 spacing,
                 LayoutAnchor.Top)
-                .Add(EpisodeBlock, episodeText != null ? episodeStyle.LineBox : 0f)
-                .Add(TitleBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
+                .Add(SecondaryBlock, episodeText != null ? episodeStyle.LineBox : 0f)
+                .Add(PrimaryBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
 
-            if (episodeText != null && placed.TryGetSlot(EpisodeBlock, out var episodeSlot))
+            if (episodeText != null && placed.TryGetSlot(SecondaryBlock, out var episodeSlot))
             {
                 episodeStyle.Draw(skCanvas, episodeText, panelRect.MidX, episodeStyle.BaselineAtTop(episodeSlot));
             }
 
-            if (placed.TryGetSlot(TitleBlock, out var titleSlot))
+            if (placed.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
                 titleStyle.DrawLines(skCanvas, titleLines, panelRect.MidX, titleStyle.BaselineAtTop(titleSlot));
             }

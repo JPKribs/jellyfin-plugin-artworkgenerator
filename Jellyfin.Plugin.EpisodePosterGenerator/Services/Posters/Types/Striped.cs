@@ -96,14 +96,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            var code = subject.Code;
+            var code = subject.SecondaryShort;
             var showCode = settings.ShowEpisode && code.Length > 0;
 
             bool titleOnBand = false;
-            if (settings.ShowTitle && !string.IsNullOrEmpty(subject.Title))
+            if (ShowsPrimary(settings, subject))
             {
                 using var titleStyle = CreateBandStyle(settings, unit, true);
-                titleOnBand = DrawBandText(skCanvas, subject.Title, titleStyle, settings, width, height, safeArea);
+                titleOnBand = DrawBandText(skCanvas, subject.Primary!, titleStyle, settings, width, height, safeArea);
             }
 
             // When there is no title on the band (disabled, or dropped by the long
@@ -139,7 +139,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             }
 
             float configuredCode = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, unit);
-            var codeTypeface = ResolveEpisodeTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
+            var codeTypeface = ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), Math.Min(configuredCode, bandCap), codeTypeface, unit);
         }
 
@@ -172,7 +172,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // unrotated to contrast with the tilted sash.
         private static void DrawCornerEpisodeCode(SKCanvas canvas, string code, PosterSettings settings, int unit, SKRect safeArea)
         {
-            using var style = CreateEpisodeStyle(settings, unit, SKTextAlign.Right);
+            using var style = CreateSecondaryStyle(settings, unit, SKTextAlign.Right);
             style.Draw(canvas, code, safeArea.Right, style.BaselineAtTop(safeArea));
         }
 

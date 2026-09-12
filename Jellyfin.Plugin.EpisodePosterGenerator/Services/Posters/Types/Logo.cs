@@ -55,17 +55,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var (headline, code) = GetText(subject);
 
-            using var titleStyle = CreateTitleStyle(settings, unit);
-            using var episodeStyle = CreateEpisodeStyle(settings, unit);
+            using var titleStyle = CreatePrimaryStyle(settings, unit);
+            using var episodeStyle = CreateSecondaryStyle(settings, unit);
 
             var column = BuildColumn(subject, settings, width, height, titleStyle, episodeStyle);
 
-            if (column.TryGetSlot(EpisodeBlock, out var codeSlot))
+            if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
                 episodeStyle.Draw(skCanvas, code, codeSlot.MidX, episodeStyle.BaselineAtBottom(codeSlot));
             }
 
-            if (column.TryGetSlot(TitleBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
             {
                 DrawTitleInSlot(skCanvas, headline, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
             }
@@ -83,7 +83,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // series has no code, so its name sits alone beneath the logo.
         private static (string Headline, string Code) GetText(ArtworkSubject subject)
         {
-            return (subject.Title ?? string.Empty, subject.Code);
+            return (subject.Primary ?? string.Empty, subject.SecondaryShort);
         }
 
         // RenderSeriesLogo
@@ -120,8 +120,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 : 0f;
 
             return new LayoutColumn(safeArea, GetElementSpacing(config, SizeUnit(width, height)), LayoutAnchor.Bottom)
-                .Add(EpisodeBlock, config.ShowEpisode && code.Length > 0 ? episodeStyle.LineBox : 0f)
-                .Add(TitleBlock, titleHeight);
+                .Add(SecondaryBlock, config.ShowEpisode && code.Length > 0 ? episodeStyle.LineBox : 0f)
+                .Add(PrimaryBlock, titleHeight);
         }
 
         // GetLogoArea
@@ -130,8 +130,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static SKRect GetLogoArea(ArtworkSubject subject, PosterSettings config, int width, int height)
         {
             var unit = SizeUnit(width, height);
-            using var titleStyle = CreateTitleStyle(config, unit);
-            using var episodeStyle = CreateEpisodeStyle(config, unit);
+            using var titleStyle = CreatePrimaryStyle(config, unit);
+            using var episodeStyle = CreateSecondaryStyle(config, unit);
 
             var remaining = BuildColumn(subject, config, width, height, titleStyle, episodeStyle).Remaining;
             var safeArea = GetSafeAreaBounds(width, height, config);
@@ -213,7 +213,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static void DrawSeriesLogoText(SKCanvas canvas, string seriesName, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
             var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.EpisodeFontSize * RenderConstants.LineHeightMultiplier, unit);
-            var typeface = ResolveEpisodeTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
             var textAlign = GetSKTextAlign(alignment);
 
             using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, unit, textAlign);

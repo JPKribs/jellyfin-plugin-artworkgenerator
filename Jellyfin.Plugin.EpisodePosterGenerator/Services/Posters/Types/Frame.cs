@@ -54,8 +54,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float spacing = GetElementSpacing(settings, unit);
 
-            var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
-            var showSubtitle = settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label);
+            var showTitle = ShowsPrimary(settings, subject);
+            var showSubtitle = ShowsSecondary(settings, subject);
 
             var (titleAtBottom, subtitleAtBottom) = ResolveEdges(settings.TitleEdge, showTitle);
 
@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (showTitle)
             {
-                var info = DrawEpisodeTitle(skCanvas, subject.Title!, settings, unit, safeArea, titleAtBottom);
+                var info = DrawEpisodeTitle(skCanvas, subject.Primary!, settings, unit, safeArea, titleAtBottom);
                 if (titleAtBottom)
                 {
                     bottomInfo = info;
@@ -77,7 +77,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (showSubtitle)
             {
-                var info = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea, subtitleAtBottom);
+                var info = DrawEpisodeInfo(skCanvas, subject.Secondary, settings, unit, safeArea, subtitleAtBottom);
                 if (subtitleAtBottom)
                 {
                     bottomInfo = info;
@@ -117,7 +117,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // drops a title that does not fit.
         private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
-            using var style = CreateTitleStyle(config, unit);
+            using var style = CreatePrimaryStyle(config, unit);
 
             var lines = TextUtils.FitTitleLines(title.ToUpperInvariant(), style.Font, safeArea.Width * RenderConstants.TextWidthMultiplier, config.LongTitleHandling);
             if (lines.Count == 0)
@@ -146,7 +146,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Draws the subtitle into whichever edge the title did not take, and returns its extent.
         private static TextInfo DrawEpisodeInfo(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
-            using var style = CreateEpisodeStyle(config, unit);
+            using var style = CreateSecondaryStyle(config, unit);
             var padding = unit * TextPaddingRatio;
 
             if (!atBottom)

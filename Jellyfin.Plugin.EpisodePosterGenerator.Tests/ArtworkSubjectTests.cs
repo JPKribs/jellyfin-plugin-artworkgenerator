@@ -27,11 +27,11 @@ public class ArtworkSubjectTests
     {
         var subject = Subject(ArtworkItemKind.Episode);
 
-        Assert.Equal("Pilot", subject.Title);
-        Assert.Equal(5, subject.Number);
-        Assert.Equal("S02E05", subject.Code);
-        Assert.Equal("SEASON 2 • EPISODE 5", subject.Label);
-        Assert.Equal(new[] { 2, 5 }, subject.NumberParts);
+        Assert.Equal("Pilot", subject.Primary);
+        Assert.Equal(5, subject.FeaturedNumber);
+        Assert.Equal("S02E05", subject.SecondaryShort);
+        Assert.Equal("SEASON 2 • EPISODE 5", subject.Secondary);
+        Assert.Equal(new[] { 2, 5 }, subject.SecondaryParts);
         Assert.Equal("5 OF 10", subject.ProgressText);
     }
 
@@ -60,11 +60,11 @@ public class ArtworkSubjectTests
         subject.SeasonName = seasonName;
 
         Assert.False(subject.HasCustomSeasonName);
-        Assert.Equal("SEASON 2", subject.Title);
-        Assert.Empty(subject.Label);
-        Assert.Empty(subject.Code);
-        Assert.Equal(2, subject.Number);
-        Assert.Empty(subject.NumberParts);
+        Assert.Equal("SEASON 2", subject.Primary);
+        Assert.Empty(subject.Secondary);
+        Assert.Empty(subject.SecondaryShort);
+        Assert.Equal(2, subject.FeaturedNumber);
+        Assert.Empty(subject.SecondaryParts);
     }
 
     /// <summary>
@@ -75,11 +75,11 @@ public class ArtworkSubjectTests
     public void Season_WithNoTitleDrawn_KeepsItsSubtitle()
     {
         var subject = Subject(ArtworkItemKind.Season);
-        subject.TitleShown = false;
+        subject.PrimaryShown = false;
 
-        Assert.Null(subject.Title);
-        Assert.Equal("SEASON 2", subject.Label);
-        Assert.Equal("S02", subject.Code);
+        Assert.Null(subject.Primary);
+        Assert.Equal("SEASON 2", subject.Secondary);
+        Assert.Equal("S02", subject.SecondaryShort);
     }
 
     /// <summary>
@@ -90,9 +90,9 @@ public class ArtworkSubjectTests
     {
         var subject = Subject(ArtworkItemKind.Episode);
 
-        Assert.Equal("Pilot", subject.Title);
-        Assert.Equal("SEASON 2 • EPISODE 5", subject.Label);
-        Assert.Equal("S02E05", subject.Code);
+        Assert.Equal("Pilot", subject.Primary);
+        Assert.Equal("SEASON 2 • EPISODE 5", subject.Secondary);
+        Assert.Equal("S02E05", subject.SecondaryShort);
     }
 
     [Fact]
@@ -102,9 +102,9 @@ public class ArtworkSubjectTests
         subject.SeasonName = "The Crown Jewels";
 
         Assert.True(subject.HasCustomSeasonName);
-        Assert.Equal("The Crown Jewels", subject.Title);
-        Assert.Equal("SEASON 2", subject.Label);
-        Assert.Equal("S02", subject.Code);
+        Assert.Equal("The Crown Jewels", subject.Primary);
+        Assert.Equal("SEASON 2", subject.Secondary);
+        Assert.Equal("S02", subject.SecondaryShort);
     }
 
     /// <summary>
@@ -116,12 +116,12 @@ public class ArtworkSubjectTests
         var subject = Subject(ArtworkItemKind.Series);
         subject.SeasonCount = 3;
 
-        Assert.Equal("The Show", subject.Title);
-        Assert.Null(subject.Number);
-        Assert.Equal(string.Empty, subject.Label);
-        Assert.Equal(string.Empty, subject.Code);
+        Assert.Equal("The Show", subject.Primary);
+        Assert.Null(subject.FeaturedNumber);
+        Assert.Equal(string.Empty, subject.Secondary);
+        Assert.Equal(string.Empty, subject.SecondaryShort);
         Assert.Null(subject.ProgressPosition);
-        Assert.Empty(subject.NumberParts);
+        Assert.Empty(subject.SecondaryParts);
     }
 
     [Fact]
@@ -129,9 +129,9 @@ public class ArtworkSubjectTests
     {
         var subject = Subject(ArtworkItemKind.Series);
 
-        Assert.True(subject.CutoutIsTitle);
+        Assert.True(subject.CutoutIsPrimary);
         Assert.Equal("THE SHOW", subject.CutoutText(CutoutType.Code));
-        Assert.False(Subject(ArtworkItemKind.Episode).CutoutIsTitle);
+        Assert.False(Subject(ArtworkItemKind.Episode).CutoutIsPrimary);
     }
 
     [Fact]
