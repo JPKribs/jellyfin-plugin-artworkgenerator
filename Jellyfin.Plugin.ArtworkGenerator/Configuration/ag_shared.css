@@ -586,15 +586,6 @@
     max-height: 100%;
 }
 
-.ag-note {
-    border-left: 3px solid var(--ag-warning-text);
-    background: var(--ag-bg-surface);
-    border-radius: 4px;
-    padding: 0.7em 1em;
-    margin: 0 0 1.4em;
-    line-height: 1.45;
-}
-
 .slot-matrix {
     width: 100%;
     overflow-x: auto;
@@ -611,6 +602,13 @@
     border-bottom: 1px solid var(--ag-border-subtle);
     text-align: left;
     vertical-align: top;
+}
+
+/* Every row draws a rule beneath it, which leaves the last one hanging under the table as a stray
+   divider directly above the next section's own header rule. */
+.slot-matrix tbody tr:last-child th,
+.slot-matrix tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .slot-matrix thead th {
