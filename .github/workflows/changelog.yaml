@@ -79,7 +79,7 @@ jobs:
           echo "Updating build.yaml version to ${NEW_VERSION}"
 
           # Update build.yaml (single source of truth for version)
-          sed -i "s/^version: .*/version: \"${NEW_VERSION}\"/" build.yaml
+          sed -i "s/^version: .*/version: ${NEW_VERSION}/" build.yaml
 
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"

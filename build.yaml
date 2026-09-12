@@ -1,18 +1,30 @@
 ---
-name: "Artwork Generator"
-guid: "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e"
-imageUrl: "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png"
-version: "12.0.2.1"
-targetAbi: "12.0.0.0"
-framework: "net10.0"
-overview: "Generate artwork from your own video"
+# Keep single and double quote characters out of this file, changelog entries included. The
+# release workflows pass these values through the shell and into the manifest, and quotes mangle
+# the result. A colon followed by a space inside a changelog entry does the same, because YAML
+# reads that entry as a key and a value.
+name: Artwork Generator
+guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
+imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
+version: 12.0.3.0
+targetAbi: 12.0.0.0
+framework: net10.0
+overview: Generate artwork from your own video
 description: >
   Artwork Generator draws posters, thumbs, backdrops, and text logos for series, seasons, episodes, films, and any other video, extracting frames from the item itself and rendering them through designs you control.
-category: "MoviesAndShows"
-owner: "JPKribs"
+category: MoviesAndShows
+owner: JPKribs
 artifacts:
-- "Jellyfin.Plugin.ArtworkGenerator.dll"
+- Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
+  features:
+  - Primary and thumb images can name a second and third design, adding their versions of the same frames to the Edit Images picker
+  - New Edit Images Cache setting for how long rendered choices stay available, default 30 minutes
+  - Edit Images reuses the choices it already rendered when switching image type or page, instead of rendering every image again
   fixes:
-  - The Profiles page loads again instead of failing on a backdrop setting that no longer exists
-  - Posters with a logo draw the logo selected for a film, season, or series instead of falling back to text
+  - The Edit Images cache is bounded by size at 256 MB and releases expired images on its own, instead of holding them until the next render
+  - Every design in one Edit Images render draws from the same frames, even while other items are extracting
+  - Posters pass over a logo Jellyfin only knows by web address and use the next logo that can be read
+  developer:
+  - Settings saved before 12.0.2.0 are no longer brought forward, so update through 12.0.2.1 first when coming from an older version
+  - Code, pages, and docs say logo rather than series logo, since films draw their own
