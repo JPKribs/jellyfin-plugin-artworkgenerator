@@ -23,6 +23,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
     ///   * the two calls in Initialize marked with the same TODO
     ///   * the tests in ConfigurationMigrationTests.cs and FrameEdgeMigrationTests.cs
     ///
+    /// Plugin.MoveLegacyDataDirectory is the one migration that cannot live here, because it has
+    /// to run before the services that read the directory are built. It carries the same TODO.
+    ///
     /// Nothing outside those points at this file, and the build fails on anything missed.
     /// </summary>
     public partial class PosterConfigurationService

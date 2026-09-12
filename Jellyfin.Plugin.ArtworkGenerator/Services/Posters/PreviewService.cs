@@ -5,7 +5,6 @@ using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
-using MediaBrowser.Common.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SkiaSharp;
@@ -36,17 +35,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         private readonly object _assetLock = new object();
         private volatile string? _assetDir;
 
-        public PreviewService(ILoggerFactory loggerFactory, IApplicationPaths applicationPaths)
-            : this(loggerFactory, Path.Combine(applicationPaths?.DataPath ?? throw new ArgumentNullException(nameof(applicationPaths)), "episodeposter", "preview-assets"))
-        {
-            // Kept under the plugin's own data directory rather than the shared system temp
-            // directory: on a multi-user host /tmp is world-writable, so a fixed path there
-            // could be pre-created by another local user and have its files replaced with
-            // symlinks that this process would then follow.
-        }
-
         /// <summary>
-        /// Test/offline constructor that materializes demo assets under the given directory.
+        /// Materializes the demo assets under the given directory. The plugin passes a directory
+        /// of its own rather than the shared system temp directory: on a multi-user host /tmp is
+        /// world-writable, so a fixed path there could be pre-created by another local user and
+        /// have its files replaced with symlinks that this process would then follow.
         /// </summary>
         public PreviewService(ILoggerFactory loggerFactory, string assetRoot)
         {

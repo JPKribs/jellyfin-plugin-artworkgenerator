@@ -48,9 +48,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         {
             _logger = logger;
 
+            var dataRoot = Path.Combine(applicationPaths.DataPath, "artworkgenerator");
+
+            // TODO (12.0.2.1): delete this call and MoveLegacyDataDirectory. The plugin's data
+            // directory was named for its former name until 12.0.2.0.
+            MoveLegacyDataDirectory(applicationPaths.DataPath, dataRoot, logger);
+
             _posterConfigService = new PosterConfigurationService(
                 loggerFactory.CreateLogger<PosterConfigurationService>(),
-                new LogoDesignStore(Path.Combine(applicationPaths.DataPath, "episodeposter", "logos.json")));
+                new LogoDesignStore(Path.Combine(dataRoot, "logos.json")));
             _posterConfigService.Initialize(Configuration);
 
             var brightnessService = new BrightnessService(
@@ -64,7 +70,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             _framePool = new FramePoolService(
                 loggerFactory.CreateLogger<FramePoolService>(),
                 frameExtractionService,
-                Path.Combine(applicationPaths.DataPath, "episodeposter", "frame-pool"),
+                Path.Combine(dataRoot, "frame-pool"),
                 () => Configuration?.FixedExtractionSeed);
 
             var canvasService = new CanvasService(
@@ -80,7 +86,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 new LogoRenderer(loggerFactory.CreateLogger<LogoRenderer>()),
                 _posterConfigService);
 
-            _previewService = new PreviewService(loggerFactory, applicationPaths);
+            _previewService = new PreviewService(loggerFactory, Path.Combine(dataRoot, "preview-assets"));
             _generatedImageCache = new GeneratedImageCache(
                 loggerFactory.CreateLogger<GeneratedImageCache>());
 
@@ -92,6 +98,38 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                     family));
 
             _logger.LogInformation("Artwork Generator plugin initialized");
+        }
+
+        // MoveLegacyDataDirectory
+        // The plugin kept its data under a directory named for its former name. Renaming it
+        // outright would strand the user's logo designs, so the old directory is moved across
+        // once. Only ever moves onto an absent destination, so a half-finished move cannot
+        // overwrite live data; the frame pool and preview assets inside are rebuilt on demand
+        // either way.
+        //
+        // TODO (12.0.2.1): delete, along with its call in the constructor.
+        private static void MoveLegacyDataDirectory(string dataPath, string destination, ILogger<Plugin> logger)
+        {
+            var legacy = Path.Combine(dataPath, "episodeposter");
+
+            if (!Directory.Exists(legacy) || Directory.Exists(destination))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.Move(legacy, destination);
+                logger.LogInformation("Moved the plugin data directory from {Legacy} to {Destination}", legacy, destination);
+            }
+            catch (IOException ex)
+            {
+                logger.LogWarning(ex, "Could not move the plugin data directory from {Legacy}; starting fresh", legacy);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                logger.LogWarning(ex, "Could not move the plugin data directory from {Legacy}; starting fresh", legacy);
+            }
         }
 
         public ArtworkService ArtworkService => _artworkService;

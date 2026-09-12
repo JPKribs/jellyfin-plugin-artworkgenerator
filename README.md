@@ -214,7 +214,7 @@ Releases use a four part version, `JJ.JJ.F.B`, that matches the supported Jellyf
 
 * Open Jellyfin and navigate to Dashboard → Plugins → Repositories
 * Click Add Repository
-* Enter the following repository URL: `https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-episodepostergenerator/master/manifest.json`
+* Enter the following repository URL: `https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/master/manifest.json`
 * Click Save
 
 ### Step 2: Install Plugin

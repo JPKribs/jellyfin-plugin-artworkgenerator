@@ -169,7 +169,7 @@ main() {
     log "SUCCESS" "Build completed: $dll_path"
     
     # Create ZIP package
-    local zip_name="jellyfin-plugin-episodepostergenerator-$VERSION.zip"
+    local zip_name="jellyfin-plugin-artworkgenerator-$VERSION.zip"
     local zip_path="$OUTPUT_DIR/$zip_name"
     
     log "INFO" "Creating package: $zip_name"

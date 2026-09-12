@@ -22,5 +22,5 @@ jobs:
   call:
     uses: jellyfin/jellyfin-meta-plugins/.github/workflows/scan-codeql.yaml@master
     with:
-      repository-name: JPKribs/jellyfin-plugin-episodepostergenerator
+      repository-name: JPKribs/jellyfin-plugin-artworkgenerator
       dotnet-version: 10.0.x

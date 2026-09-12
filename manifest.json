@@ -4,7 +4,7 @@
     "name": "Artwork Generator",
     "description": "Artwork Generator is a Jellyfin plugin that automatically creates custom episode posters using smart frame analysis, black frame detection, and configurable text styling. Perfect for filling in missing or generic episode artwork with clean, consistent visuals.",
     "overview": "Generate Custom Episode Posters",
-    "imageUrl": "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-episodepostergenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png",
+    "imageUrl": "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png",
     "owner": "JPKribs",
     "category": "MoviesAndShows",
     "versions": [
@@ -12,7 +12,7 @@
         "version": "12.0.1.0",
         "changelog": "## Features\r\n- Shadows, rules, and the Frame border now scale with the poster, so they read the same on a 4K frame as on a DVD rip instead of turning into a hairline or a slab\r\n- Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word\r\n\r\n## Fixes\r\n- Frame drew no border at all for an episode without a name, and ignored the Show Title setting\r\n- Cutout no longer lets a two line title run into the bottom of the cutout letters\r\n- Split center-crops the series poster into its panel instead of stretching artwork that is not 2:3\r\n- Brush honours the Show Episode setting and keeps a wrapped title inside the area the strokes leave clear\r\n- Timeline keeps the marker dot inside the safe area on the first and last episode\r\n- Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area\r\n\r\n## Developer\r\n- Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 packages Jellyfin 12.0 ships, since the plugin binds to the server's copies at runtime\r\n- Text drawing moved from the removed SKPaint text members to SKFont, wrapped in a shared TextStyle so every style measures and draws with the same objects\r\n- Standard and Split share one text stack; Numeral, Cutout, Brush, and Frame no longer hand-build their own paints\r\n- Cutout renders through a canvas layer instead of a full-size scratch bitmap per poster; Split and Brush dispose their gradient shaders\r\n- Letterbox detection scans the pixel buffer directly instead of a native call per pixel\r\n- Bitmap scaling uses explicit cubic resampling now that FilterQuality is gone",
         "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v12.0.1.0/jellyfin-plugin-episodepostergenerator-12.0.1.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.0.1.0/jellyfin-plugin-episodepostergenerator-12.0.1.0.zip",
         "checksum": "7a3cddbb4817e1ff4a78b66b978d127e",
         "timestamp": "2026-09-11T20:21:18Z"
       },
@@ -20,7 +20,7 @@
         "version": "12.0.0.0",
         "changelog": "## Developer\r\n- Rebuilt for Jellyfin 12.0 on .NET 10, with the target ABI raised to 12.0.0.0\r\n- The dashboard menu entry now shows a icon instead of the generic folder\r\n- CI builds, tests, and CodeQL now run on .NET 10, and label sync has the token scope it needs",
         "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v12.0.0.0/jellyfin-plugin-episodepostergenerator-12.0.0.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.0.0.0/jellyfin-plugin-episodepostergenerator-12.0.0.0.zip",
         "checksum": "b38c6c2fc364691e03f990a033fd5d7a",
         "timestamp": "2026-09-08T02:45:47Z"
       },
@@ -28,7 +28,7 @@
         "version": "10.11.25.0",
         "changelog": "## Features\r\n- Generated posters now appear in the episodes Edit Images dialog, so you can pick the frame you want instead of refreshing until you get a good one\r\n- Choose how many alternate posters to offer in Edit Images, from 1 to 10 (default 3)\r\n- Brush style can outline its stroke, sharing the Cutout styles outline toggle\r\n- Element Spacing setting controls the gap between stacked poster elements, so every style spaces them the same way\r\n- The font dropdown now lists the fonts actually installed on your server, and a font that is not installed is called out in the log instead of silently rendering in a substitute face\r\n- Overlay colors collapse to an opacity control when Palette-Derived Colors is on, since the color itself comes from the image\r\n\r\n## Breaking\r\n- The scheduled task has been removed. Poster generation now runs entirely as a metadata provider - use a library metadata refresh, or pick a poster from Edit Images\r\n- Processing history and its database have been removed, along with the Reset Processing History button. Jellyfins own refresh options now decide what gets regenerated\r\n\r\n## Fixes\r\n- Deleting an episode poster no longer left it permanently blank; there is no tracking state left to say the episode was already done\r\n- Changing a custom font now takes effect; it used to be left out of the change detection entirely\r\n- A tall logo no longer overlaps the episode code beneath it\r\n- Long episode titles wrap to two lines again instead of being shortened to one\r\n- Short titles no longer leave a gap between the episode code and the title\r\n- Cancelling a refresh now stops frame extraction instead of letting it run to completion\r\n- Generated posters are no longer written to the transcode directory and left behind\r\n- Aspect ratios like 2.35:1 now parse correctly on servers with a comma decimal separator\r\n- Saving the Posters tab no longer hangs on a spinner when the save fails, and no longer overwrites the settings on the other tab\r\n- Settings added in a newer version no longer break saving for configurations written by an older one\r\n\r\n## Developer\r\n- The frosted panel shape and the brush stroke paths are disposed even when an exception unwinds\r\n- Poster elements are positioned by a shared measure-then-place layout column instead of each style walking its own offsets, and titles are fitted to the height they are given as well as the width\r\n- Poster configuration is never written back during plugin startup, so a failed config load can no longer overwrite good settings with defaults\r\n- Poster rendering returns encoded bytes rather than temp files\r\n- Removed the scheduled task, tracking database, configuration hashing, and around 900 lines of superseded code\r\n- Shaders, mask filters, and image filters are disposed rather than left to finalization; HDR brightening no longer round-trips the whole bitmap through managed memory\r\n- Example templates carry every current setting, and the bundled examples were regenerated\r\n- Test suite grown from 21 to 39 cases, covering layout, title fitting, aspect ratio parsing, font resolution, and the generated image cache\r\n- Bump Base to 2026.7.31",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.25.0/jellyfin-plugin-episodepostergenerator-10.11.25.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.25.0/jellyfin-plugin-episodepostergenerator-10.11.25.0.zip",
         "checksum": "f59367920856a69d43f5db89ea188e13",
         "timestamp": "2026-08-01T01:20:29Z"
       },
@@ -36,7 +36,7 @@
         "version": "10.11.24.6",
         "changelog": "## Developer\r\n- Bump Base to 2026.7.12",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.6/jellyfin-plugin-episodepostergenerator-10.11.24.6.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.6/jellyfin-plugin-episodepostergenerator-10.11.24.6.zip",
         "checksum": "656e986b83fd6f49c61f99296faa0eb9",
         "timestamp": "2026-07-11T23:30:44Z"
       },
@@ -44,7 +44,7 @@
         "version": "10.11.24.5",
         "changelog": "## Fixes\r\n- Remove backdrops before using the current extracted frame as the new backdrop to prevent image bloat",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.5/jellyfin-plugin-episodepostergenerator-10.11.24.5.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.5/jellyfin-plugin-episodepostergenerator-10.11.24.5.zip",
         "checksum": "f7a2d48df7c24192b8c9c4055d56d563",
         "timestamp": "2026-07-06T16:39:37Z"
       },
@@ -52,7 +52,7 @@
         "version": "10.11.24.4",
         "changelog": "## Fixes\r\n- Frame seeking starts from a random phase each run, so refreshing an episode image picks a new frame instead of the same one",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.4/jellyfin-plugin-episodepostergenerator-10.11.24.4.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.4/jellyfin-plugin-episodepostergenerator-10.11.24.4.zip",
         "checksum": "ef3ec2be04398dafde10a6e23aa641be",
         "timestamp": "2026-07-05T18:14:40Z"
       },
@@ -60,7 +60,7 @@
         "version": "10.11.24.3",
         "changelog": "## Features\r\n- Abbreviate tries the text before a divider, then the first sentence, then initials with periods",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.3/jellyfin-plugin-episodepostergenerator-10.11.24.3.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.3/jellyfin-plugin-episodepostergenerator-10.11.24.3.zip",
         "checksum": "26346097b16b139707ce313bf20eae58",
         "timestamp": "2026-07-05T17:35:56Z"
       },
@@ -68,7 +68,7 @@
         "version": "10.11.24.2",
         "changelog": "## Fixes\r\n- Episode numbers and codes are pinned so title length cannot move them in any style\r\n- Fade titles wrap to two vertical rows before long title handling engages",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.2/jellyfin-plugin-episodepostergenerator-10.11.24.2.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.2/jellyfin-plugin-episodepostergenerator-10.11.24.2.zip",
         "checksum": "7047e3683ca5745642afa762c5cb1f5b",
         "timestamp": "2026-07-05T16:30:14Z"
       },
@@ -76,7 +76,7 @@
         "version": "10.11.24.1",
         "changelog": "## Features\r\n- New Long Titles dropdown with Ellipsis, Abbreviate, and Drop Name modes for titles that do not fit\r\n\r\n## Fixes\r\n- Cutout no longer overflows the poster edges on long episode titles. Every style now bounds long titles\r\n- Safe area now applies the same pixel margin on all four sides based on poster height\r\n\r\n## Polish\r\n- Documentation and interface text cleanup",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.1/jellyfin-plugin-episodepostergenerator-10.11.24.1.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.1/jellyfin-plugin-episodepostergenerator-10.11.24.1.zip",
         "checksum": "6a21066ebc38091e709028a2a5013ffc",
         "timestamp": "2026-07-05T01:12:24Z"
       },
@@ -84,7 +84,7 @@
         "version": "10.11.24.0",
         "changelog": "## Features\r\n- New poster style - Striped - tilted pinstriped sash carrying the episode title\r\n- New poster style - Frosted Glass - blurred glass panel behind the episode text\r\n- New poster style - Fade - one-sided gradient with a large episode number and vertical title\r\n- New poster style - Timeline - progress bar showing the episodes position within the season\r\n- Palette-derived colors - overlay colors can be sampled from the episode frame\r\n- Concurrent poster generation with a configurable worker count\r\n\r\n## Performance\r\n- Frame extraction now seeks with a stratified sequence instead of random retries\r\n- Tracking database uses WAL mode, pooled connections, and a batched filter pass\r\n- Poster settings hashes are cached instead of recomputed per episode\r\n- JPEG encoding quality tuned from 100 to 92 for much smaller files\r\n\r\n## Polish\r\n- Brush strokes are feathered instead of hard-clipped for a painted look\r\n- Cutout title shadow now uses the same soft blur as other styles\r\n- Standard and Split separator lines follow the episode font color\r\n- Fixed poster files not being truncated when re-rendered smaller\r\n- All templates updated to the 10.11.24 settings format",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.24.0/jellyfin-plugin-episodepostergenerator-10.11.24.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.24.0/jellyfin-plugin-episodepostergenerator-10.11.24.0.zip",
         "checksum": "7c4e45d5a98e1e2c0cf73f4ff0587f58",
         "timestamp": "2026-07-05T00:19:58Z"
       },
@@ -92,7 +92,7 @@
         "version": "10.11.23.2",
         "changelog": "## Developer\r\n- Bump to base 2026.6.23\r\n- File cleanup\r\n- Update template files for import\r\n- README cleanup\r\n- Move demo creation to its own project folder\r\n- Add tests just to keep me from going crazy\r\n- Move poster descriptions to their CS file instead of maintaining in JS\r\n- Move preview to button instead od rendering everytime",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.23.2/jellyfin-plugin-episodepostergenerator-10.11.23.2.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.23.2/jellyfin-plugin-episodepostergenerator-10.11.23.2.zip",
         "checksum": "aba9c5c00d3ad8e8b01503c17a61f314",
         "timestamp": "2026-06-09T01:12:45Z"
       },
@@ -100,7 +100,7 @@
         "version": "10.11.23.1",
         "changelog": "## Developer\r\n- Migrate to shared web components\r\n- Bump to base 2026.6.20",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.23.1/jellyfin-plugin-episodepostergenerator-10.11.23.1.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.23.1/jellyfin-plugin-episodepostergenerator-10.11.23.1.zip",
         "checksum": "69a6a9ca5adb8b165a953a39ab0e58c8",
         "timestamp": "2026-06-08T02:40:28Z"
       },
@@ -108,7 +108,7 @@
         "version": "10.11.23.0",
         "changelog": "## Features\r\n- Allow using the extracted image as a backdrop\r\n- Allow using the series backdrop instead of needing to be extracted or nothing",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.23.0/jellyfin-plugin-episodepostergenerator-10.11.23.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.23.0/jellyfin-plugin-episodepostergenerator-10.11.23.0.zip",
         "checksum": "7aa7ec41e867b8c00f031ff2129a2574",
         "timestamp": "2026-05-30T20:37:43Z"
       },
@@ -116,7 +116,7 @@
         "version": "10.11.22.1",
         "changelog": "## Fixes\r\n- JS changes to ensure that buttons actually hide when unusable\r\n- CSS changes to make this easier to maintain & less janky",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.22.1/jellyfin-plugin-episodepostergenerator-10.11.22.1.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.22.1/jellyfin-plugin-episodepostergenerator-10.11.22.1.zip",
         "checksum": "c68f4e7493283571d40c424a1b45ecc8",
         "timestamp": "2026-05-30T19:11:49Z"
       },
@@ -124,7 +124,7 @@
         "version": "10.11.22.0",
         "changelog": "## Features\r\n- Live poster preview in the config page\r\n\r\n## Developer\r\n- New version numbering: \r\n- README updates\r\n- Build updates for example images",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.22.0/jellyfin-plugin-episodepostergenerator-10.11.22.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.22.0/jellyfin-plugin-episodepostergenerator-10.11.22.0.zip",
         "checksum": "99ab4fa6e8552f818fbdf11c130a9cc2",
         "timestamp": "2026-05-30T18:43:22Z"
       },
@@ -132,7 +132,7 @@
         "version": "10.11.21.0",
         "changelog": "## Fixes\r\n- Attempt 4) to fix the plugin image",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.21.0/jellyfin-plugin-episodepostergenerator-10.11.21.0.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.21.0/jellyfin-plugin-episodepostergenerator-10.11.21.0.zip",
         "checksum": "677f4259fb4d2a99635fa2d08254d407",
         "timestamp": "2026-05-30T06:43:35Z"
       },
@@ -140,7 +140,7 @@
         "version": "10.11.20",
         "changelog": "## Fixes\r\n- Attempt 3) to fix the plugin image",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.20/jellyfin-plugin-episodepostergenerator-10.11.20.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.20/jellyfin-plugin-episodepostergenerator-10.11.20.zip",
         "checksum": "53e8362c40325d3792730a1f9024f716",
         "timestamp": "2026-05-30T05:44:41Z"
       },
@@ -148,7 +148,7 @@
         "version": "10.11.19",
         "changelog": "## Fixes\r\n- Attempt 2) to fix the plugin image",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.19/jellyfin-plugin-episodepostergenerator-10.11.19.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.19/jellyfin-plugin-episodepostergenerator-10.11.19.zip",
         "checksum": "3d8040e2da26dceb6b87babe5caca228",
         "timestamp": "2026-05-30T05:25:44Z"
       },
@@ -156,7 +156,7 @@
         "version": "10.11.18",
         "changelog": "## Fixes\r\n- Build fixes for 10.11.18\r\n\r\n## Features\r\n- Fix the Brush Poster Type from looking just truly terrible",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.18/jellyfin-plugin-episodepostergenerator-10.11.18.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.18/jellyfin-plugin-episodepostergenerator-10.11.18.zip",
         "checksum": "63ed1809971108a41d073fd34387c94b",
         "timestamp": "2026-05-25T03:10:33Z"
       },
@@ -164,7 +164,7 @@
         "version": "10.11.17",
         "changelog": "## Chores\r\n- Cleanup documentation and add build logic",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.17/jellyfin-plugin-episodepostergenerator-10.11.17.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.17/jellyfin-plugin-episodepostergenerator-10.11.17.zip",
         "checksum": "d2fc9ed59f4e976ce0f245f65fc94827",
         "timestamp": "2026-04-02T03:45:02Z"
       },
@@ -172,7 +172,7 @@
         "version": "10.11.16",
         "changelog": "## Fix\r\n- Missing poster image\r\n- Remove invalid image embedding",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.16/jellyfin-plugin-episodepostergenerator-10.11.16.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.16/jellyfin-plugin-episodepostergenerator-10.11.16.zip",
         "checksum": "9612685c09bc0453f75bd971cb880220",
         "timestamp": "2026-04-02T03:29:58Z"
       },
@@ -180,7 +180,7 @@
         "version": "10.11.15",
         "changelog": "## Improvements\r\n- Rename FFmpegService to FrameExtractionService and relocate to Canvas services directory\r\n- Remove dead BrightnessService dependency from frame extraction service\r\n- Strip BrightnessService to single responsibility (brightness adjustment only), remove unused analysis methods\r\n- Remove unused public service properties from Plugin (CanvasService, CroppingService, FrameExtractionService, TrackingDatabase, TemplateExportService, LoggerFactory)\r\n- Clean up JS, CSS, and HTML configuration pages (remove unused code, consolidate CSS variables, use Jellyfin built-in styles)\r\n- Update example templates to 10.11.15",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.15/jellyfin-plugin-episodepostergenerator-10.11.15.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.15/jellyfin-plugin-episodepostergenerator-10.11.15.zip",
         "checksum": "615e157fa6e9295e2c0a667523fcd35d",
         "timestamp": "2026-02-10T00:14:51Z"
       },
@@ -188,7 +188,7 @@
         "version": "10.11.14",
         "changelog": "## Improvements\r\n- Use Jellyfins built-in IMediaEncoder for frame extraction and tone mapping\r\n- Remove custom FFmpeg tone mapping pipeline (ToneMapFilterService, HardwareFFmpegService, SoftwareFFmpegService, HardwareValidationService)\r\n- Remove HWA (Hardware Acceleration) configuration option\r\n- Remove file type selection, standardize output to JPEG\r\n- Replace config action button labels with Material Icons for a more compact mobile layout\r\n- Update example templates to include custom font properties and bump to 10.11.13\r\n\r\n## Fixes\r\n- HDR content appears washed out (DV with HDR10+ fallback)\r\n- Dolby Vision content appears purple (pure DV without fallback)\r\n- Config action buttons overflow on mobile screens",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.14/jellyfin-plugin-episodepostergenerator-10.11.14.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.14/jellyfin-plugin-episodepostergenerator-10.11.14.zip",
         "checksum": "09977742dc67fe700f8e2fc01feb5cfc",
         "timestamp": "2026-02-09T22:41:49Z"
       },
@@ -196,7 +196,7 @@
         "version": "10.11.13",
         "changelog": "## Improvements\r\n- Added 60-second timeout per FFmpeg frame extraction to prevent hung processes\r\n- Added FFmpeg process kill on task cancellation and timeout to prevent zombie processes\r\n- Added database initialization guard that blocks callers until DB is ready\r\n- Added database wait gate to scheduled task and reset history endpoint\r\n\r\n## Fixes\r\n- Fixed temp file accumulation from unhandled exceptions during frame quality analysis\r\n- Fixed database NullReferenceException when methods called before initialization completes\r\n- Fixed custom font cache permanently caching missing files instead of retrying",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.13/jellyfin-plugin-episodepostergenerator-10.11.13.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.13/jellyfin-plugin-episodepostergenerator-10.11.13.zip",
         "checksum": "9dc466853be73f8679c9d67b4055ecb4",
         "timestamp": "2026-02-09T05:01:06Z"
       },
@@ -204,7 +204,7 @@
         "version": "10.11.12",
         "changelog": "## new:\r\n  - Added per-section custom font support with checkbox toggle and file path input (TTF, OTF, TTC)\r\n  - Refactored configuration UI into 2-tab layout (Posters | Settings) with collapsible sections\r\n  - Added styled input modal replacing native browser prompt dialogs\r\n  - Added series selection modal with poster thumbnails, year, and overview\r\n  - Added unsaved changes tracking with visual indicator to both tabs\r\n  - Added mobile responsive layout with media queries for tablet and phone screens\r\n  - Added CSS custom properties (design tokens) for consistent theming\r\n  - Added dynamic poster style descriptions below style dropdown\r\n## improvements:\r\n  - Split monolithic config page into separate HTML/JS/CSS files following Jellyfin plugin best practices\r\n  - Reordered collapsible sections to match rendering pipeline (Poster → Canvas → Overlay → Static Graphic → Episode Information → Episode Title)\r\n  - Added collapsible sections for Poster, Episode Information, Episode Title, Overlay, and Static Graphic settings\r\n  - Moved plugin enable/disable and reset history to dedicated Settings tab\r\n  - Moved Save button outside collapsible sections for consistent visibility\r\n  - All collapsible sections default to closed on load\r\n  - Added close button, backdrop click, and escape key to dismiss all modals\r\n  - Added unsaved changes warning on tab switch and page navigation\r\n  - Added green save confirmation flash with animated indicator\r\n  - Added loading spinner in series selection modal during data fetch\r\n  - Added scroll to top when switching poster configurations\r\n  - Added responsive flex-wrap to configuration selector buttons\r\n  - Added focus trapping and focus return for all modals\r\n  - Added aria-controls, aria-describedby, aria-expanded, and aria-labelledby attributes\r\n  - Added 200ms debounce to series search filtering\r\n  - Added number input bounds validation on save\r\n  - Added empty state with warning icon when no series assigned\r\n  - Improved disabled series styling in selection modal\r\n  - Renamed confusing Enable Poster Episode label to Extract Frame from Episode\r\n## fixes:\r\n  - Fixed Dolby Vision tone mapping using libplacebo for proper DV RPU dynamic metadata handling\r\n  - Fixed DV codec mapped to HEVC for hardware decoding eligibility (DV content was forced to software-only)\r\n  - Fixed memory leak from duplicate color control event listeners on config switch\r\n  - Added save guard to prevent concurrent save operations on Settings tab\r\n  - Fixed series search to use addEventListener instead of inline handler\r\n  - Removed unused CSS rules",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.12/jellyfin-plugin-episodepostergenerator-10.11.12.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.12/jellyfin-plugin-episodepostergenerator-10.11.12.zip",
         "checksum": "acb9d5d8809ff1906418bc7753e85fda",
         "timestamp": "2026-02-09T02:35:40Z"
       },
@@ -212,7 +212,7 @@
         "version": "10.11.10",
         "changelog": "## Fixes\r\n- Fixed floating point equality comparisons in TextInfo\r\n- Improved IDisposable handling to prevent resource leaks\r\n- Fixed potential log forging vulnerability in ConfigurationController\r\n\r\n## Improvements\r\n- Replaced string concatenation with LINQ in TextUtils\r\n- Improved LINQ usage for text measurement calculations\r\n- Added readonly modifier to configuration lookup dictionary\r\n- Replaced loop with LINQ Where in ConfigurationController",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.10/jellyfin-plugin-episodepostergenerator-10.11.10.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.10/jellyfin-plugin-episodepostergenerator-10.11.10.zip",
         "checksum": "221a8efb1e9094e6b503a06c0a2dd9b9",
         "timestamp": "2026-01-26T00:41:57Z"
       },
@@ -220,7 +220,7 @@
         "version": "10.11.9",
         "changelog": "## Features\r\n- New Split poster style combining series poster with extracted frame\r\n- Added BrightenHDR setting to boost brightness on HDR content\r\n\r\n## Improvements\r\n- Optimized frame quality analysis with downscaled processing\r\n- Added font caching for faster poster rendering\r\n- Reduced memory overhead by eliminating encode/decode cycles\r\n- Centralized paint and rendering constants for consistent styling\r\n- Added CancellationToken support for graceful task shutdown\r\n\r\n## Fixes\r\n- SkiaSharp API compatibility with Jellyfins bundled version\r\n- Fixed random seed reuse causing identical frame selections\r\n- Added proper error logging for logo loading failures",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.9/jellyfin-plugin-episodepostergenerator-10.11.9.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.9/jellyfin-plugin-episodepostergenerator-10.11.9.zip",
         "checksum": "b0377d1ee64e9cc048fa395babde6850",
         "timestamp": "2026-01-25T20:03:05Z"
       },
@@ -228,7 +228,7 @@
         "version": "10.11.8",
         "changelog": "## Improvements\r\n- Optimized frame quality analysis with downscaled processing\r\n- Added font caching for faster poster rendering\r\n- Reduced memory overhead by eliminating encode/decode cycles\r\n\r\n## Fixes\r\n- SkiaSharp API compatibility with Jellyfins bundled version",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.8/jellyfin-plugin-episodepostergenerator-10.11.8.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.8/jellyfin-plugin-episodepostergenerator-10.11.8.zip",
         "checksum": "f4a83956403e2fab94a198b6dcce2c01",
         "timestamp": "2026-01-25T10:39:12Z"
       },
@@ -236,7 +236,7 @@
         "version": "10.11.7",
         "changelog": "## Fixes\r\n- Poster generation on 10.11s version of FFmpeg\r\n- Alter sharpness check",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.7/jellyfin-plugin-episodepostergenerator-10.11.7.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.7/jellyfin-plugin-episodepostergenerator-10.11.7.zip",
         "checksum": "607d20a670021b4240405237626a82bd",
         "timestamp": "2026-01-25T08:53:35Z"
       },
@@ -244,7 +244,7 @@
         "version": "10.11.6",
         "changelog": "## Fixes\r\n- Poster generation on 10.11",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.6/jellyfin-plugin-episodepostergenerator-10.11.6.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.6/jellyfin-plugin-episodepostergenerator-10.11.6.zip",
         "checksum": "277d0cd451bb2dfb4ebd77e58a424df7",
         "timestamp": "2026-01-25T08:29:31Z"
       },
@@ -252,7 +252,7 @@
         "version": "10.11.5",
         "changelog": "## Fixes\r\n- Remove temporary file creation\r\n\r\n## Enhancements\r\n- Cache fonts to reduce idle time on slower disks\r\n\r\n## Technical\r\n- Batch frame extractions to reduce calls to FFmpeg\r\n\r\n## Documentation\r\n- Standardized commenting accross all classes",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.5/jellyfin-plugin-episodepostergenerator-10.11.5.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.5/jellyfin-plugin-episodepostergenerator-10.11.5.zip",
         "checksum": "c7060604989ae14a89b782911a378bfe",
         "timestamp": "2026-01-25T06:16:12Z"
       },
@@ -260,7 +260,7 @@
         "version": "10.11.4",
         "changelog": "## Fixes\r\n- Fixed UTF-8 encoding for bullet characters and special text\r\n- Fixed Frame poster text alignment with borders\r\n- Fixed all VideoRangeType variants in HDR/DV tone mapping\r\n\r\n## Enhancements\r\n- Redesigned StandardBrush\r\n- Added smooth bezier curves and Perlin noise for organic edges\r\n- Added paint splatters and edge texture for realism\r\n\r\n## Technical\r\n- Added UTF-8 text encoding to all poster types\r\n- Implemented Perlin noise brush stroke generation\r\n- Added natural brush tapering with bezier curves",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.4/jellyfin-plugin-episodepostergenerator-10.11.4.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.4/jellyfin-plugin-episodepostergenerator-10.11.4.zip",
         "checksum": "aa44cb6981eef66ce3fdceaaa9a726db",
         "timestamp": "2026-01-10T05:32:20Z"
       },
@@ -268,15 +268,15 @@
         "version": "10.11.3",
         "changelog": "**Improvements**\r\n\r\n  - Dramatically improved overall image quality with professional-grade rendering pipeline\r\n  - Enhanced text rendering with subpixel positioning and LCD rendering for crisp, clear typography\r\n  - Added professional soft shadow blur to all text elements for improved depth and readability\r\n  - Implemented explicit sRGB color space handling for consistent color accuracy across all output formats\r\n  - Increased image encoding quality to 100% for all output formats (JPEG, PNG, WEBP)\r\n  - Enhanced FFmpeg frame extraction quality from q:v 2 to q:v 1 (absolute highest quality)\r\n  - Added RGB24 pixel format specification for better color accuracy during frame extraction\r\n  - Implemented gradient dithering to eliminate color banding in overlay gradients\r\n  - Fixed Frame poster border corners to connect seamlessly without gaps\r\n  - Improved line rendering quality with proper stroke caps across all poster styles\r\n\r\n**Fixes**\r\n  \r\n  - Implemented multi-quality frame analysis system combining brightness AND sharpness detection\r\n  - Added Laplacian variance blur detection to reject motion-blurred action shots\r\n  - Created intelligent quality scoring algorithm that weighs both brightness and sharpness\r\n  - Enhanced frame selection logic to find optimal frames instead of just brightest frames\r\n  - HDR-aware quality scoring (60% brightness, 40% sharpness for HDR; 40% brightness, 60% sharpness for SDR)\r\n  - Improved early exit logic for HDR content when quality score exceeds 0.6 threshold\r\n  - Added comprehensive quality metrics logging (brightness, sharpness, and combined score)\r\n\r\n**Technical**\r\n\r\n  - Added FilterQuality.High to all bitmap drawing operations in CroppingService and poster generators\r\n  - Implemented SubpixelText and LcdRenderText properties for all text paint objects across 6 files\r\n  - Added MaskFilter.CreateBlur(SKBlurStyle.Normal, 1.5f) to all shadow paint objects for soft shadows\r\n  - Configured explicit SKImageInfo with RGBA8888, Premul alpha, and sRGB color space in surface creation\r\n  - Added SKMatrix.Identity to all gradient shader creation for proper dithering support\r\n  - Added IsDither = true to gradient overlay paint for smooth color transitions\r\n  - Implemented StrokeCap.Square and StrokeJoin.Miter to Frame border rendering for precise corner connections\r\n  - Updated Standard separator lines with StrokeCap.Square for cleaner rendering\r\n  - Enhanced Cutout border rendering with StrokeCap.Round and StrokeJoin.Round\r\n  - Added GetFrameSharpness() method using Laplacian operator for edge detection\r\n  - Added CalculateFrameQualityScore() method for combined brightness/sharpness scoring\r\n  - Updated TryExtractionStrategy() to track and compare quality scores instead of brightness alone\r\n  - Modified both SoftwareFFmpegService and HardwareFFmpegService with -q:v 1 -pix_fmt rgb24 parameters",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.3/jellyfin-plugin-episodepostergenerator-10.11.3.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.3/jellyfin-plugin-episodepostergenerator-10.11.3.zip",
         "checksum": "0069f6230ea97c765843e345df99c4a4",
         "timestamp": "2025-12-01T00:43:34Z"
       },
       {
         "version": "10.11.2",
-        "changelog": "Please find our new examples [here](https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/tree/master/Examples)!\r\n\r\n**Features**\r\n- Added template export/import system for sharing poster configurations\r\n- Export poster configurations as JSON templates with metadata (author, description, & plugin version)\r\n- Import templates from other users to quickly apply custom poster styles\r\n\r\n**Documentation**\r\n- Added a page for examples\r\n- Removed old screenshots in favor of examples\r\n\r\n**Technical**\r\n- Added TemplateExportService for JSON serialization of poster configurations\r\n- Created PosterTemplate model for shareable configuration format",
+        "changelog": "Please find our new examples [here](https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/tree/master/Examples)!\r\n\r\n**Features**\r\n- Added template export/import system for sharing poster configurations\r\n- Export poster configurations as JSON templates with metadata (author, description, & plugin version)\r\n- Import templates from other users to quickly apply custom poster styles\r\n\r\n**Documentation**\r\n- Added a page for examples\r\n- Removed old screenshots in favor of examples\r\n\r\n**Technical**\r\n- Added TemplateExportService for JSON serialization of poster configurations\r\n- Created PosterTemplate model for shareable configuration format",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.2/jellyfin-plugin-episodepostergenerator-10.11.2.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.2/jellyfin-plugin-episodepostergenerator-10.11.2.zip",
         "checksum": "1c02d0988bbdaded7273e0d8c5f9186f",
         "timestamp": "2025-10-21T14:04:59Z"
       },
@@ -284,7 +284,7 @@
         "version": "10.11.1",
         "changelog": "**Technical:**\r\n* Jellyfin 10.11 Release",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.11.1/jellyfin-plugin-episodepostergenerator-10.11.1.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.11.1/jellyfin-plugin-episodepostergenerator-10.11.1.zip",
         "checksum": "aba01584c59c38cc19c8aa436bd1b3e5",
         "timestamp": "2025-10-20T23:00:15Z"
       },
@@ -292,7 +292,7 @@
         "version": "10.10.33",
         "changelog": "**Fixes:**\r\n\r\n  - Fixed QSV hardware acceleration failing when tone mapping is disabled\r\n  - Fixed VAAPI, NVENC, and AMF hardware acceleration failing without tone mapping\r\n\r\n**Technical:**\r\n\r\n  - Changed hwdownload filter to apply unconditionally for all hardware acceleration types\r\n  - Hardware frames now properly convert to CPU format for PNG encoding regardless of tone mapping state",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.33/jellyfin-plugin-episodepostergenerator-10.10.33.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.33/jellyfin-plugin-episodepostergenerator-10.10.33.zip",
         "checksum": "c0047dfe59183093142d3f5e7c99a301",
         "timestamp": "2025-10-11T00:24:09Z"
       },
@@ -300,7 +300,7 @@
         "version": "10.10.32",
         "changelog": "**Fixes:**\r\n\r\n  - Fixed QSV hardware acceleration failing with format conversion errors on Linux\r\n  - Fixed QSV tone mapping producing invalid filter chain errors\r\n\r\n**Technical:**\r\n\r\n  - Changed QSV initialization to use VAAPI as base device matching Jellyfin behavior\r\n  - Changed QSV to use VAAPI hwaccel method instead of direct QSV hwaccel for proper hardware frame handling\r\n  - Changed QSV tone mapping from vpp_qsv to tonemap_vaapi filter for compatibility with VAAPI frame format",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.32/jellyfin-plugin-episodepostergenerator-10.10.32.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.32/jellyfin-plugin-episodepostergenerator-10.10.32.zip",
         "checksum": "f2dea0dc9bd052dc6484339d5db6b03f",
         "timestamp": "2025-10-10T23:49:13Z"
       },
@@ -308,7 +308,7 @@
         "version": "10.10.31",
         "changelog": "### Notice\r\n\r\nThis version is confirmed on MacOS to resolve SW Tone Mapping and HW Tone Mapping. This being said, I do not have other hardware to test this for QSV, NVENC, and VAAPI but these should mirror how Jellyfin Transcodes work so this _should_ resolve these issues as well.\r\n\r\n**Fixes:**\r\n\r\n  - Fixed BT.2390 and all tone mapping algorithms failing with Undefined constant error\r\n  - Fixed VideoToolbox hardware acceleration failing to extract frames\r\n  - Fixed QSV hardware tone mapping not working properly\r\n  - Fixed hardware frames not converting to software for PNG encoding\r\n\r\n**Technical:**\r\n\r\n  - Changed software tone mapping to use tonemapx filter matching Jellyfin transcoding behavior\r\n  - Added VideoToolbox specific tone mapping using scale_vt filter\r\n  - Added QSV specific tone mapping using vpp_qsv filter\r\n  - Added hwdownload filter to convert hardware frames to software for all acceleration types\r\n  - VideoToolbox now always uses hwdownload due to videotoolbox_vld output format\r\n  - Removed unnecessary hardware encoding arguments for PNG output",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.31/jellyfin-plugin-episodepostergenerator-10.10.31.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.31/jellyfin-plugin-episodepostergenerator-10.10.31.zip",
         "checksum": "22a3880d1950fcbbf8e9527b328f6cf9",
         "timestamp": "2025-10-09T19:23:00Z"
       },
@@ -316,7 +316,7 @@
         "version": "10.10.30",
         "changelog": "**Fixes:**\r\n\r\n  - Rebuild 10.10.29",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.30/jellyfin-plugin-episodepostergenerator-10.10.30.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.30/jellyfin-plugin-episodepostergenerator-10.10.30.zip",
         "checksum": "ec7c4f95c356add12164ec4f53c29d41",
         "timestamp": "2025-10-09T18:21:11Z"
       },
@@ -324,7 +324,7 @@
         "version": "10.10.29",
         "changelog": "**Fixes:**\r\n- Fixed BT.2390 tone mapping failing with Undefined constant error\r\n- Fixed plugin logo not displaying in repository/installed plugins view\r\n\r\n**Technical:**\r\n- Corrected tone mapping filter syntax from double tonemap parameter to single in ToneMapFilterService\r\n- Removed GetImage method from Plugin.cs to use Jellyfin default embedded resource mechanism",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.29/jellyfin-plugin-episodepostergenerator-10.10.29.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.29/jellyfin-plugin-episodepostergenerator-10.10.29.zip",
         "checksum": "9eab9e92dab0f88d696ca1d141e1b331",
         "timestamp": "2025-10-09T06:08:55Z"
       },
@@ -332,7 +332,7 @@
         "version": "10.10.28",
         "changelog": "**Fixes:**\r\n- Fixed duplicate default configurations being created on every plugin initialization/restart\r\n- Fixed saved poster configurations not persisting between restarts\r\n- Fixed UI showing only default configuration until new configuration was created\r\n- Fixed font color and font size controls not hiding for Cutout and Numeral poster styles\r\n- Added validation to prevent saving non-default configurations with no assigned series\r\n\r\n**Technical:**\r\n- Changed PluginConfiguration constructor to initialize empty PosterConfigurations list instead of creating default\r\n- Made IsDefault an explicit boolean property instead of computed property based on SeriesIds\r\n- Added automatic default configuration creation in PosterConfigurationService.Initialize() with persistence\r\n- Added null safety checks with error logging in GetSettingsForSeries() and GetSettingsForEpisode()\r\n- Updated configuration loading to properly deserialize from XML without constructor interference\r\n\r\n**Other:**\r\n- Improved configuration dropdown sorting to show default configuration first, then alphabetically by name\r\n- Added validation to prevent users from naming configurations Default (reserved name)\r\n- Updated UI logic to use IsDefault property instead of index-based detection\r\n- Combined data-depends-on and data-hide-for-styles visibility checks to prevent conflicts",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.28/jellyfin-plugin-episodepostergenerator-10.10.28.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.28/jellyfin-plugin-episodepostergenerator-10.10.28.zip",
         "checksum": "66859feb4bd1b94a21c744b0eb88389b",
         "timestamp": "2025-10-06T21:02:21Z"
       },
@@ -340,7 +340,7 @@
         "version": "10.10.27",
         "changelog": "## Notice\r\n\r\n### Major Version\r\n\r\nThe current versioning scheme is Jellyfin-Major.Jellyfin-Minor.Plugin-Version. So, 10.10.1 is Jellyfin 10.10 and version 1 for the plugin. This does a good job of tracking plugin versions and the supported Jellyfin version but it doesnt do a good job of tracking major version changes.\r\n\r\nThis is a note that this version (10.10.27) is a huge architectural change. You may need to uninstall and reinstall this plugin as the underlying settings for this plugin have changed dramatically to support **series specific posters**!\r\n\r\n**This means, you can set a poster per series (or multiple series) or use a single default for all series.**\r\n\r\n## Changes\r\n\r\n**Features:**\r\n\r\n  - Added multi-configuration support - create multiple named poster configurations with different styles\r\n  - Added series assignment system - assign specific series to use custom poster configurations\r\n  - Added default configuration that applies to all unassigned series\r\n  - Added visual series tags with poster thumbnails in configuration UI\r\n  - Added rename functionality for poster configurations\r\n  \r\n  **Fixes:**\r\n\r\n  - Fixed XML serialization error preventing plugin from loading (ICollection to List conversion)\r\n  - Fixed series names displaying as series.Name instead of actual names in UI\r\n  - Fixed Episode Font Size and Font Color visibility in Cutout style (now properly hidden)\r\n  \r\n  **Technical:**\r\n\r\n  - Refactored PosterConfiguration to use List<Guid> with proper XML serialization support\r\n  - Added Name property to PosterConfiguration for user-friendly identification\r\n  - Updated UI to use DOM manipulation instead of innerHTML to prevent translation system conflicts\r\n  - Added SuppressMessage attributes for CA1002 and CA2227 code analysis warnings\r\n  - Improved updateVisibility function to handle multiple conditional display rules\r\n  \r\n  **Other:**\r\n\r\n  - Improved UI styling with Jellyfin-themed series cards including poster images and hover effects\r\n  - Added delete protection for default configuration\r\n  - Improved configuration dropdown to display Default for first configuration\r\n  \r\n  **Documentation:**\r\n\r\n  - Updated configuration page with better field descriptions for multi-configuration workflow\r\n  - Reorganized settings documentation into Plugin Settings and Poster Settings sections",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.27/jellyfin-plugin-episodepostergenerator-10.10.27.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.27/jellyfin-plugin-episodepostergenerator-10.10.27.zip",
         "checksum": "4ea965378a43fd3013101ca47c9a9ebf",
         "timestamp": "2025-10-05T02:51:15Z"
       },
@@ -348,7 +348,7 @@
         "version": "10.10.26",
         "changelog": "**Features:**\r\n\r\n  - Introduction of the new Frame poster style!",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.26/jellyfin-plugin-episodepostergenerator-10.10.26.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.26/jellyfin-plugin-episodepostergenerator-10.10.26.zip",
         "checksum": "f39c11c5faf8a11e314a09fbe83f6ef7",
         "timestamp": "2025-10-03T03:58:00Z"
       },
@@ -356,7 +356,7 @@
         "version": "10.10.25",
         "changelog": "**Fixes:**\r\n\r\n  - Attempt to rework HWA tone mapping\r\n  - Better HWA -> SW fallback\r\n\r\n**Technical:**\r\n\r\n  - Encode using CPU since MJPEG is fairly limited and results in common failures\r\n\r\n**Other:**\r\n\r\n  - Removal or SVG and GIF types as they cause layering issues\r\n\r\n**Documentation:**\r\n\r\n  - Better logging to track graphic issues ",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.25/jellyfin-plugin-episodepostergenerator-10.10.25.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.25/jellyfin-plugin-episodepostergenerator-10.10.25.zip",
         "checksum": "013f51d46a40ebc31dd860830e2069c0",
         "timestamp": "2025-10-02T02:18:51Z"
       },
@@ -364,7 +364,7 @@
         "version": "10.10.24",
         "changelog": "**Features:**\r\n\r\n  - Add overlay gradient\r\n\r\n**Fixes:** \r\n\r\n  - Rework tone mapping\r\n  - Better HWA -> SW fallback",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.24/jellyfin-plugin-episodepostergenerator-10.10.24.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.24/jellyfin-plugin-episodepostergenerator-10.10.24.zip",
         "checksum": "4d36b49acced5a98585cc76f1fce3b24",
         "timestamp": "2025-09-26T23:16:55Z"
       },
@@ -372,7 +372,7 @@
         "version": "10.10.23",
         "changelog": "**Features:**\r\n\r\n  - Allow disabling HWA\r\n\r\n**Fixes:** \r\n\r\n  - Disable HWA by default to prevent issues with VPP / VideoToolBox filters\r\n\r\n**Other:**\r\n\r\n  - Will need to get HWA more stable in a later release",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.23/jellyfin-plugin-episodepostergenerator-10.10.23.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.23/jellyfin-plugin-episodepostergenerator-10.10.23.zip",
         "checksum": "d61565b89430c15c192d06f28aa73016",
         "timestamp": "2025-09-26T22:17:58Z"
       },
@@ -380,7 +380,7 @@
         "version": "10.10.22",
         "changelog": "**Features:**\r\n\r\n  - Allow for Extract Window configuration\r\n  - Allow for custom Graphics on top of the overlay\r\n  - Allow clearing the database of previously processed work\r\n\r\n**Fixes:** \r\n\r\n  - Fix missing Plugin Page\r\n  - Only track changes to poster configurations not task/provider changes\r\n\r\n**Technical:**\r\n\r\n  - Rework to a generic 4 layer structure for extensibility\r\n  - Use HWA filters instead of always defaulting to SW\r\n  - VideoToolBox always defaults to SW tone mapping\r\n\r\n**Other:**\r\n\r\n  - Standardize all comments in code \r\n\r\n**Documentation:**\r\n\r\n  - Update Read Me to better explain the processing\r\n  - Renew screenshots on latest version\r\n  - Add screenshot configuration steps",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.22/jellyfin-plugin-episodepostergenerator-10.10.22.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.22/jellyfin-plugin-episodepostergenerator-10.10.22.zip",
         "checksum": "b9eeccbdd96a5fec4385dd783aee9a1f",
         "timestamp": "2025-09-26T21:30:39Z"
       },
@@ -388,7 +388,7 @@
         "version": "10.10.21",
         "changelog": "**Fixes**\r\n\r\n* Fix Missing Logo\r\n* Maybe Fix Broken Plugin Page",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.21/jellyfin-plugin-episodepostergenerator-10.10.21.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.21/jellyfin-plugin-episodepostergenerator-10.10.21.zip",
         "checksum": "20fef18f722705723fa4c97e6afcfdb1",
         "timestamp": "2025-09-26T06:54:04Z"
       },
@@ -396,7 +396,7 @@
         "version": "10.10.20",
         "changelog": "**Features**\r\n* HWA Tone Mapping\r\n* Fallback to SW if HWA fails\r\n**Fixes**\r\n* Maybe Fix Missing Logo\r\n* Maybe Fix Broken Plugin Page\r\n**Technical**\r\n* Rebuilt from the ground up\r\n* Split FFmpeg with a shared parent\r\n* Migrate to single function services\r\n**Other**\r\n* Additional cleanup\r\n**Documentation**\r\n* Reduce comments and documentation",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.20/jellyfin-plugin-episodepostergenerator-10.10.20.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.20/jellyfin-plugin-episodepostergenerator-10.10.20.zip",
         "checksum": "389b2ae2673982a9b7ff0645ede330fa",
         "timestamp": "2025-09-26T06:48:41Z"
       },
@@ -404,7 +404,7 @@
         "version": "10.10.19",
         "changelog": "**Bug Fixes & Crashes**\r\n* Maybe Fix Missing Logo\r\n* Better? Concurrency\r\n* Additional cleanup\r\n* Reduce comments and documentation",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.19/jellyfin-plugin-episodepostergenerator-10.10.19.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.19/jellyfin-plugin-episodepostergenerator-10.10.19.zip",
         "checksum": "beeeefb1bee25b84396d567c59e1a682",
         "timestamp": "2025-09-24T03:20:10Z"
       },
@@ -412,7 +412,7 @@
         "version": "10.10.18",
         "changelog": "**Bug Fixes & Crashes**\r\n* Fix Missing Logo\r\n\r\n**Documentation**\r\n* Reduce comments to be more concise",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.18/jellyfin-plugin-episodepostergenerator-10.10.18.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.18/jellyfin-plugin-episodepostergenerator-10.10.18.zip",
         "checksum": "30e6310652fe4c885a1e94eedeb42c02",
         "timestamp": "2025-09-23T21:19:51Z"
       },
@@ -420,7 +420,7 @@
         "version": "10.10.17",
         "changelog": "**Bug Fixes & Crashes**\r\n*  Crash AVC 10 bit ColorSpace",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.17/jellyfin-plugin-episodepostergenerator-10.10.17.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.17/jellyfin-plugin-episodepostergenerator-10.10.17.zip",
         "checksum": "399b0056900101d03040191eda1836d7",
         "timestamp": "2025-08-01T05:04:58Z"
       },
@@ -428,7 +428,7 @@
         "version": "10.10.16",
         "changelog": "**Bug Fixes & Crashes**\r\n* Crash on bad ColorSpace parsing",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.16/jellyfin-plugin-episodepostergenerator-10.10.16.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.16/jellyfin-plugin-episodepostergenerator-10.10.16.zip",
         "checksum": "bb72d491f679f21c1b4e874fb1f6410a",
         "timestamp": "2025-07-29T17:27:06Z"
       },
@@ -436,7 +436,7 @@
         "version": "10.10.15",
         "changelog": "**Cleanup & Tech Debt**\r\n* SDR Color Mapping\r\n* HDR Color Mapping\r\n* Get color space from Jellyfin",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.15/jellyfin-plugin-episodepostergenerator-10.10.15.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.15/jellyfin-plugin-episodepostergenerator-10.10.15.zip",
         "checksum": "a5c5c8b9ab5a1d78a46deb393ccb8495",
         "timestamp": "2025-07-29T17:14:27Z"
       },
@@ -444,7 +444,7 @@
         "version": "10.10.14",
         "changelog": "**FFmpeg Cleanup**\r\n* FFmpeg cleanup from items found during tone mapping",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.14/jellyfin-plugin-episodepostergenerator-10.10.14.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.14/jellyfin-plugin-episodepostergenerator-10.10.14.zip",
         "checksum": "1ecb88962bee5561cf88789a6f4efa18",
         "timestamp": "2025-07-29T16:32:08Z"
       },
@@ -452,7 +452,7 @@
         "version": "10.10.13",
         "changelog": "**Tone Mapping & Cleanup**\r\n* Remove all SDR tone mapping\r\n* Cleanup inline comments in FFmpegService",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.13/jellyfin-plugin-episodepostergenerator-10.10.13.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.13/jellyfin-plugin-episodepostergenerator-10.10.13.zip",
         "checksum": "e69360971a26be69c02aaffa67194513",
         "timestamp": "2025-07-29T16:13:39Z"
       },
@@ -460,7 +460,7 @@
         "version": "10.10.12",
         "changelog": "**Fix SDR Poster Brightness**\r\n* SDR Retain Brightness",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.12/jellyfin-plugin-episodepostergenerator-10.10.12.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.12/jellyfin-plugin-episodepostergenerator-10.10.12.zip",
         "checksum": "f0266d2428513dcccbcf79e2a5c688c9",
         "timestamp": "2025-07-29T15:54:36Z"
       },
@@ -468,7 +468,7 @@
         "version": "10.10.11",
         "changelog": "* HDR Tone Mapping",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.11/jellyfin-plugin-episodepostergenerator-10.10.11.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.11/jellyfin-plugin-episodepostergenerator-10.10.11.zip",
         "checksum": "abca00fb4d29bf05cc2977f1c2e2d035",
         "timestamp": "2025-07-29T15:36:39Z"
       },
@@ -476,7 +476,7 @@
         "version": "10.10.10",
         "changelog": "**Logging & FFmpeg Cleanup**\r\n\r\n* Fallback to SW Decoding if HWA fails\r\n* Reduce excessive logging\r\n* Print HWA configuration to logs",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.10/jellyfin-plugin-episodepostergenerator-10.10.10.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.10/jellyfin-plugin-episodepostergenerator-10.10.10.zip",
         "checksum": "5bda48b4f1205947a7de76f1be3a5bd0",
         "timestamp": "2025-06-17T01:26:03Z"
       },
@@ -484,7 +484,7 @@
         "version": "10.10.9",
         "changelog": "**Letterbox Detection**\r\n\r\n- Optional Letterbox Detection (Pillbox as well)\r\n- Letterbox Detection Customization\r\n- Fix missing build from 10.10.8",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.9/jellyfin-plugin-episodepostergenerator-10.10.9.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.9/jellyfin-plugin-episodepostergenerator-10.10.9.zip",
         "checksum": "9667389a8f3fc017d5c75a2d3c859470",
         "timestamp": "2025-06-16T16:07:20Z"
       },
@@ -492,7 +492,7 @@
         "version": "10.10.8",
         "changelog": "**Letterbox Detection**\r\n\r\n- Optional Letterbox Detection (Pillbox as well)\r\n- Letterbox Detection Customization",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.8/jellyfin-plugin-episodepostergenerator-10.10.8.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.8/jellyfin-plugin-episodepostergenerator-10.10.8.zip",
         "checksum": "Not Found",
         "timestamp": "2025-06-16T16:02:53Z"
       },
@@ -500,7 +500,7 @@
         "version": "10.10.7",
         "changelog": "**Configuration Page Revamp**\r\n- Fix hiding policies to show items \r\n- New custom CSS\r\n- Spacing & generic cleanup\r\n- New nested section for poster-specific setting\r\n- Color Picker\r\n- Transparency Picker for Colors",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.7/jellyfin-plugin-episodepostergenerator-10.10.7.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.7/jellyfin-plugin-episodepostergenerator-10.10.7.zip",
         "checksum": "9c8f1f5a1c535633928f5933ee5d6ef5",
         "timestamp": "2025-06-16T05:31:11Z"
       },
@@ -508,7 +508,7 @@
         "version": "10.10.6",
         "changelog": "**All Configurations will need to be redone.**\r\n\r\n* Track processed Episodes for Scheduled Tasks\r\n* Choose to not extract an image if you want to just use colors\r\n* Allow Logo positioning\r\n* Allow episode images on all poster types if wanted\r\n* Allow skipping frame extraction for all poster types\r\n* Prevent re-processing previously processed posters\r\n* Updating the poster design will make re-enable processing for posters that used the previous design\r\n* Proper dependency injection\r\n* SQL DB for tracking episode changes - Should track manual poster updates as well.\r\n* Better, inline documentation and summaries",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.6/jellyfin-plugin-episodepostergenerator-10.10.6.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.6/jellyfin-plugin-episodepostergenerator-10.10.6.zip",
         "checksum": "eaf8583061634fbccc6547f64faa461c",
         "timestamp": "2025-06-15T19:53:05Z"
       },
@@ -516,7 +516,7 @@
         "version": "10.10.5",
         "changelog": "* Utilize HWA if available.\r\n* Add a border on Cutout poster to make them more visible & pop\r\n* More efficient frame extraction (~70% quicker!).\r\n* HWA frame extraction (~95% quicker!!!).\r\n* Cleanup and move some more items out of \r\n* Updated screenshots with new Cutout appearance.",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.5/jellyfin-plugin-episodepostergenerator-10.10.5.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.5/jellyfin-plugin-episodepostergenerator-10.10.5.zip",
         "checksum": "be3aac3262fdcefed35f1eb222ee151b",
         "timestamp": "2025-06-12T23:17:20Z"
       },
@@ -524,7 +524,7 @@
         "version": "10.10.4",
         "changelog": "* Add a safe area configuration for parameter padding\r\n* Improve font handling to prevent overlapping\r\n* Improve Standard poster text placement\r\n* Improve Cutout poster text placement\r\n* Better code documentation on posters\r\n* Better padding / safe area inheritance\r\n* Migrate all Text functionality into its own utility\r\n* Updated screenshots to show multiple variations of each poster type\r\n* New changelog formatting\r\n* Summarize all poster code for better readibility",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.4/jellyfin-plugin-episodepostergenerator-10.10.4.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.4/jellyfin-plugin-episodepostergenerator-10.10.4.zip",
         "checksum": "281d9096e845ecc860fb301efbb22878",
         "timestamp": "2025-06-11T23:58:34Z"
       },
@@ -532,7 +532,7 @@
         "version": "10.10.3",
         "changelog": "Fixes:\r\n• Changes the build using GitHub workflows\r\n• Fixes to get the checksum included in the manifest",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.3/jellyfin-plugin-episodepostergenerator-10.10.3.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.3/jellyfin-plugin-episodepostergenerator-10.10.3.zip",
         "checksum": "d12adc95cc6c62a92096a96ee7c30886",
         "timestamp": "2025-06-11T18:59:09Z"
       },
@@ -540,7 +540,7 @@
         "version": "10.10.2",
         "changelog": "## Changes\r\n\r\n* Automate Manifest updates (hopefully!)\r\n\r\n## Contributors\r\n\r\n@JPKribs\r\n",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.2/jellyfin-plugin-episodepostergenerator-10.10.2.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.2/jellyfin-plugin-episodepostergenerator-10.10.2.zip",
         "checksum": "",
         "timestamp": "2025-06-11T18:24:27Z"
       },
@@ -548,7 +548,7 @@
         "version": "10.10.1",
         "changelog": "First official release. This is a test of the automated building process.",
         "targetAbi": "10.10.7.0",
-        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v10.10.1/jellyfin-plugin-episodepostergenerator-10.10.1.zip",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v10.10.1/jellyfin-plugin-episodepostergenerator-10.10.1.zip",
         "checksum": "",
         "timestamp": "2025-06-11T18:24:27Z"
       }
