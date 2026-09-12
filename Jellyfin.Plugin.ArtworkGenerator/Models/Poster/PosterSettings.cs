@@ -94,7 +94,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Logo Height", Description = "Logo height as a percent of the poster's short side, 1 to 100.")]
         public float LogoHeight { get; set; } = 30.0f;
 
-        [Display(Name = "Brighten HDR (%)", Description = "Brightens every extracted frame by this percent. It is meant for HDR sources that come out dim after tone mapping, but nothing detects HDR, so it lifts all frames alike. Default 0.")]
+        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent. Default 0, which leaves the frame as it was extracted.")]
         public float BrightenHDR { get; set; }
 
         [Display(Name = "Fill Strategy", Description = "How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.")]

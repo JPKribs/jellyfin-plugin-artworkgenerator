@@ -157,7 +157,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             if (!atBottom)
             {
                 var top = safeArea.Top + padding;
-                style.Draw(canvas, label, safeArea.MidX, top + style.Ascent);
+                DrawFittedLine(canvas, style, label, safeArea.MidX, top + style.Ascent, safeArea.Width);
 
                 return new TextInfo
                 {
@@ -169,7 +169,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
 
             var bottom = safeArea.Bottom - padding;
-            style.Draw(canvas, label, safeArea.MidX, bottom - style.Descent);
+            DrawFittedLine(canvas, style, label, safeArea.MidX, bottom - style.Descent, safeArea.Width);
 
             return new TextInfo
             {

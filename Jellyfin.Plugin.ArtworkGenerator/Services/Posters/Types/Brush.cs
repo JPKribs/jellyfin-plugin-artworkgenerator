@@ -160,7 +160,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
-                secondaryStyle.Draw(skCanvas, subject.SecondaryShort, AlignedX(safeArea, align), secondaryStyle.BaselineAtBottom(codeSlot));
+                DrawFittedLine(skCanvas, secondaryStyle, subject.SecondaryShort, AlignedX(safeArea, align), secondaryStyle.BaselineAtBottom(codeSlot), safeArea.Width * TextWidthRatio);
             }
 
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))

@@ -211,6 +211,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             => unit * (Math.Max(0f, settings.ElementSpacing) / 100f);
 
         // Layout block keys shared by the styles that stack text against the bottom edge.
+        // How far a line may be shrunk to fit before it is trimmed instead. Below this it stops
+        // being readable, and a smaller unreadable line is worse than a shorter readable one.
+        private const float MinimumFittedScale = 0.6f;
+
         protected const string SecondaryBlock = "secondary";
         protected const string SeparatorBlock = "separator";
         protected const string PrimaryBlock = "primary";
@@ -311,7 +315,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 }
                 else
                 {
-                    secondaryStyle.Draw(canvas, label, AlignedX(secondarySlot, align), secondaryStyle.BaselineAtBottom(secondarySlot));
+                    DrawFittedLine(canvas, secondaryStyle, label, AlignedX(secondarySlot, align), secondaryStyle.BaselineAtBottom(secondarySlot), secondarySlot.Width);
                 }
             }
 
@@ -338,6 +342,55 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 SKTextAlign.Right => centerX + (width / 2f),
                 _ => centerX
             };
+        }
+
+        // DrawFittedLine
+        // Draws a single line that cannot be allowed to run past its slot. The subtitle carries
+        // things like "SEASON 12 • EPISODE 1", which fits a landscape poster and overruns a portrait
+        // one, so it is shrunk to the width available and only clipped when shrinking is not enough.
+        protected static void DrawFittedLine(SKCanvas canvas, TextStyle style, string text, float x, float baseline, float maxWidth)
+        {
+            ArgumentNullException.ThrowIfNull(style);
+
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            if (maxWidth <= 0)
+            {
+                style.Draw(canvas, text, x, baseline);
+                return;
+            }
+
+            var width = style.MeasureWidth(text);
+            if (width <= maxWidth)
+            {
+                style.Draw(canvas, text, x, baseline);
+                return;
+            }
+
+            var original = style.Font.Size;
+            try
+            {
+                // Shrink first: a subtitle set a little smaller still reads, where a clipped one
+                // loses the part that says which episode it is.
+                style.Font.Size = Math.Max(original * MinimumFittedScale, original * (maxWidth / width));
+
+                if (style.MeasureWidth(text) <= maxWidth)
+                {
+                    style.Draw(canvas, text, x, baseline);
+                    return;
+                }
+
+                // Past the floor the line would be too small to read, so what is left is trimmed.
+                var trimmed = TextUtils.FitTitleLine(text, style.Font, maxWidth, LongTextHandling.Ellipsis);
+                style.Draw(canvas, trimmed ?? text, x, baseline);
+            }
+            finally
+            {
+                style.Font.Size = original;
+            }
         }
 
         // DrawSeasonEpisodeInfo
