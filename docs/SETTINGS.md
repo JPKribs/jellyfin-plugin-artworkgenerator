@@ -104,10 +104,12 @@ On this design the shared **Text Position** is shown as **Title Edge**, since th
 
 ## Overlay
 
-* **Palette Colors**: replace the overlay color channels with the dominant color sampled from each episode's image. The secondary color becomes a darker shade of it and the alpha values below still apply. Default off.
-* **Overlay Color**: color drawn over the canvas as ARGB hex. Default #66000000.
-* **Overlay Gradient**: gradient direction. None, Left To Right, Bottom To Top, or a diagonal corner. Default None.
-* **Secondary Overlay Color**: the gradient's second color as ARGB hex. Default #66000000.
+Most designs wash the overlay across the whole frame, so the gradient and its second color mean what they say. Three shape the overlay themselves and name these settings for what they actually draw.
+
+* **Overlay Color**: the color drawn over the canvas, as ARGB hex. Bloom calls it **Bloom Color**, Striped calls it **Band Color**, and Fade calls it **Fade Color**. Default #66000000.
+* **Overlay Gradient**: the direction the overlay blends in. Bloom, Striped, and Fade do not offer it, since each builds its own overlay and has nothing for a direction to act on. Default none.
+* **Secondary Overlay Color**: the gradient's far end, shown once a gradient is chosen. Bloom draws it as the **Rim Color** the bloom fades out to and Striped as the **Pinstripe Color** on its sash, so both show it always. Fade draws from one color alone and does not offer it. Default #66000000.
+* **Palette Colors**: replace the overlay colors with the dominant color sampled from each image. The secondary becomes a darker shade of it and the alpha values still apply. Default off.
 
 ## Graphic
 

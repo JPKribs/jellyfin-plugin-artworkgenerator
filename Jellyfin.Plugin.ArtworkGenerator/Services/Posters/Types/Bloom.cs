@@ -36,6 +36,27 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "A soft bloom of color in the center with the text set over it.";
 
+        // SettingText
+        // The bloom is a pool of color with its own falloff, so a wash direction means nothing here and
+        // the second color is the rim rather than a gradient end.
+        public override IReadOnlyDictionary<string, SettingText> SettingText { get; }
+            = new Dictionary<string, SettingText>(StringComparer.Ordinal)
+            {
+                [PosterSettingRules.OverlayColor] = new(
+                    "Bloom Color",
+                    "The color pooled in the middle of the frame."),
+                [PosterSettingRules.OverlaySecondaryColor] = new(
+                    "Rim Color",
+                    "The color the bloom fades out to at the edges.")
+            };
+
+        // SettingRules
+        // The bloom is a pool of color with its own falloff, so a wash direction means nothing here and
+        // the second color is the rim rather than a gradient end.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.OverlayGradient, PosterSettingState.Hidden),
+            (PosterSettingRules.OverlaySecondaryColor, PosterSettingState.Optional));
+
         // NaturalTextPosition
         // The text belongs over the bloom, so centered is this style's own placement rather than
         // the usual foot of the image.

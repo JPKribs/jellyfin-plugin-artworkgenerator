@@ -30,9 +30,25 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Tilted pinstriped sash carrying the title, with the subtitle in the corner. Sporty and graphic.";
 
+        // SettingText
+        // The sash is drawn from the two colors directly, one for the band and one for its stripes, so
+        // neither is optional and a wash direction does not apply.
+        public override IReadOnlyDictionary<string, SettingText> SettingText { get; }
+            = new Dictionary<string, SettingText>(StringComparer.Ordinal)
+            {
+                [PosterSettingRules.OverlayColor] = new(
+                    "Band Color",
+                    "The color of the sash."),
+                [PosterSettingRules.OverlaySecondaryColor] = new(
+                    "Pinstripe Color",
+                    "The color of the stripes running along the sash.")
+            };
+
         // SettingRules
         // Text position is hidden here: the title rides the tilted sash, which is the design.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.OverlayGradient, PosterSettingState.Hidden),
+            (PosterSettingRules.OverlaySecondaryColor, PosterSettingState.Optional),
             (PosterSettingRules.TextPosition, PosterSettingState.Hidden),
             (PosterSettingRules.TextAlignment, PosterSettingState.Hidden));
 

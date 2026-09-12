@@ -1109,9 +1109,15 @@ export default function (view) {
         });
 
         // Gradient dependency
+        // The second overlay color is the gradient's far end on most designs, so it only appears
+        // once a gradient is chosen. A design that shapes its own overlay hides the gradient
+        // entirely and uses both colors directly, so there it is always on show.
         view.querySelectorAll('[data-depends-on-gradient]').forEach(function (el) {
             var select = view.querySelector('#' + el.getAttribute('data-depends-on-gradient'));
-            el.style.display = (select && select.value !== 'None') ? 'block' : 'none';
+            var gradientOffered = settingState(posterStyle, 'OverlayGradient') !== 'Hidden';
+            var wanted = !gradientOffered || (select && select.value !== 'None');
+
+            el.style.display = wanted ? 'block' : 'none';
         });
 
         // Value dependency (show when input has a value)

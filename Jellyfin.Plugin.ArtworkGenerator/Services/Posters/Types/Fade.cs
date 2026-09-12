@@ -42,9 +42,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "One sided fade with a big number and a vertical title. Editorial and bold.";
 
+        // SettingText
+        // The fade is this design's own one sided wash from a single color, so the gradient direction
+        // and the second color have nothing to act on.
+        public override IReadOnlyDictionary<string, SettingText> SettingText { get; }
+            = new Dictionary<string, SettingText>(StringComparer.Ordinal)
+            {
+                [PosterSettingRules.OverlayColor] = new(
+                    "Fade Color",
+                    "The color that fades in from one side of the frame.")
+            };
+
         // SettingRules
         // Text position is hidden here: the title runs sideways up the edge and the number is pinned to the foot.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.OverlayGradient, PosterSettingState.Hidden),
+            (PosterSettingRules.OverlaySecondaryColor, PosterSettingState.Hidden),
             (PosterSettingRules.TextPosition, PosterSettingState.Hidden),
             (PosterSettingRules.TextAlignment, PosterSettingState.Hidden));
 

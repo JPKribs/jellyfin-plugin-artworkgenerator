@@ -51,6 +51,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public const string TextAlignment = "TextAlignment";
 
         /// <summary>The cutout's text choice.</summary>
+        // OverlayColor
+        // The overlay's main color. Always offered; only its wording changes by design.
+        public const string OverlayColor = "OverlayColor";
+
+        // OverlayGradient
+        // The direction an overlay blends in. Hidden on the designs that shape their overlay
+        // themselves rather than washing it across the frame.
+        public const string OverlayGradient = "OverlayGradient";
+
+        // OverlaySecondaryColor
+        // The overlay's second color. Required on a design that always draws two, hidden on one
+        // that never does, and otherwise shown only when a gradient asks for it.
+        public const string OverlaySecondaryColor = "OverlaySecondaryColor";
+
         public const string CutoutType = "CutoutType";
 
         /// <summary>The outline drawn around a cut-out shape.</summary>
