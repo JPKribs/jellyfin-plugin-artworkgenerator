@@ -29,6 +29,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         string Description { get; }
 
+        // PrimaryDescription
+        // One sentence saying what the title is and where this style puts it, shown at the top of
+        // the Title section so the settings below it read in context.
+        string PrimaryDescription { get; }
+
+        // SecondaryDescription
+        // One sentence saying what the subtitle is and where this style puts it, shown at the top
+        // of the Subtitle section.
+        string SecondaryDescription { get; }
+
         // SupportedShapes
         // The poster shapes this style can lay out.
         ArtworkShapes SupportedShapes { get; }
@@ -53,6 +63,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public abstract string Description { get; }
 
+        // PrimaryDescription
+        // Most styles set the title in a text block at the foot of the image, so that is the
+        // default; a style that treats it differently says so.
+        public virtual string PrimaryDescription
+            => "The title is the item's own name, set at the bottom of the image under the subtitle.";
+
+        // SecondaryDescription
+        // What fills the subtitle never changes, only where a style puts it, so the default names
+        // the content and the usual place.
+        public virtual string SecondaryDescription
+            => "The subtitle is an episode's numbers, a season's label, or a film's year, set above the title.";
+
         // SupportedShapes
         // Every style lays out both shapes unless it says otherwise.
         public virtual ArtworkShapes SupportedShapes => ArtworkShapes.All;
@@ -62,6 +84,45 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // otherwise. Overriding this is how a style adds its own settings, or insists on an element
         // it always draws.
         public virtual IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.None;
+
+        // NaturalTextPosition
+        // Where this style puts its text when the setting is left on its default. Almost every
+        // design packs the text against the bottom; one built around centered text says so, and
+        // then "Design default" means the right thing for it too.
+        protected virtual TextPosition NaturalTextPosition => TextPosition.Bottom;
+
+        // ResolveTextAnchor
+        // Turns the setting into the edge a LayoutColumn packs against, falling back to the
+        // style's own placement so an untouched configuration renders exactly as it always has.
+        protected LayoutAnchor ResolveTextAnchor(PosterSettings settings)
+        {
+            var position = settings?.TextPosition ?? TextPosition.Auto;
+
+            if (position == TextPosition.Auto)
+            {
+                position = NaturalTextPosition;
+            }
+
+            return position switch
+            {
+                TextPosition.Top => LayoutAnchor.Top,
+                TextPosition.Center => LayoutAnchor.Center,
+                _ => LayoutAnchor.Bottom
+            };
+        }
+
+        // PlaceBlockTop
+        // The top edge for a block of known height, for the styles that position a measured box
+        // themselves — a frosted panel, a centered pair of lines — rather than through a column.
+        protected float PlaceBlockTop(SKRect safeArea, float blockHeight, PosterSettings settings)
+        {
+            return ResolveTextAnchor(settings) switch
+            {
+                LayoutAnchor.Top => safeArea.Top,
+                LayoutAnchor.Center => safeArea.MidY - (blockHeight / 2f),
+                _ => safeArea.Bottom - blockHeight
+            };
+        }
 
         // Supports
         // Returns true when this style can lay out the given shape.
@@ -105,7 +166,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         protected const string PrimaryBlock = "primary";
 
         // CreatePrimaryStyle
-        // The font and paints for the episode title, sized and coloured from the settings.
+        // The font and paints for the episode title, sized and colored from the settings.
         protected static TextStyle CreatePrimaryStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
         {
             ArgumentNullException.ThrowIfNull(settings);
@@ -116,7 +177,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // CreateSecondaryStyle
-        // The font and paints for the episode code or number, sized and coloured from the settings.
+        // The font and paints for the episode code or number, sized and colored from the settings.
         protected static TextStyle CreateSecondaryStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
         {
             ArgumentNullException.ThrowIfNull(settings);
@@ -135,7 +196,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawPrimaryInSlot
-        // Fits the title to the slot's height and the given width, centres the resulting lines
+        // Fits the title to the slot's height and the given width, centers the resulting lines
         // vertically in the slot, and draws them at x. Returns the number of lines drawn, which
         // is zero when the long title handling drops the title.
         //
@@ -156,11 +217,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return lines.Count;
         }
 
-        // DrawBottomTextStack
+        // DrawTextStack
         // The layout Standard and Split share: an identity line, a rule, and a two line title zone
-        // packed against the bottom of the area. An episode's identity line is its season and
+        // packed against whichever edge the text position asks for. An episode's identity line is its season and
         // episode numbers; a season or series draws its label, such as SEASON 2, instead.
-        protected static void DrawBottomTextStack(SKCanvas canvas, SKRect area, ArtworkSubject subject, PosterSettings settings, int unit)
+        protected void DrawTextStack(SKCanvas canvas, SKRect area, ArtworkSubject subject, PosterSettings settings, int unit)
         {
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
@@ -177,7 +238,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var showPrimary = ShowsPrimary(settings, subject);
             var showSeparator = showPrimary && showSecondary;
 
-            var column = new LayoutColumn(area, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+            var column = new LayoutColumn(area, GetElementSpacing(settings, unit), ResolveTextAnchor(settings))
                 .Add(SecondaryBlock, showSecondary ? secondaryStyle.LineBox : 0f)
                 .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(unit) : 0f)
                 .Add(PrimaryBlock, showPrimary ? primaryStyle.BlockHeight(2) : 0f);
@@ -206,7 +267,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawSeasonEpisodeInfo
-        // Draws "season • episode" centred on the slot's bottom edge. The bullet uses the
+        // Draws "season • episode" centered on the slot's bottom edge. The bullet uses the
         // regular weight so it does not overpower the numbers beside it.
         protected static void DrawSeasonEpisodeInfo(SKCanvas canvas, int seasonNumber, int episodeNumber, TextStyle secondaryStyle, PosterSettings settings, int height, SKRect slot)
         {
@@ -233,7 +294,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawSeparatorLine
-        // Draws a horizontal rule across the slot in the episode colour, with a shadow.
+        // Draws a horizontal rule across the slot in the episode color, with a shadow.
         protected static void DrawSeparatorLine(SKCanvas canvas, PosterSettings settings, int height, SKRect slot)
         {
             ArgumentNullException.ThrowIfNull(settings);

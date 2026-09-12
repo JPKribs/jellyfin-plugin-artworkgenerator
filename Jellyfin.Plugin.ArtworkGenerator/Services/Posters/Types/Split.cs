@@ -17,6 +17,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Series poster beside the frame with text. Magazine layout.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set at the bottom of the panel beside the frame.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is an episode's numbers, a season's label, or a film's year, set above the title in that panel.";
+
         // SupportedShapes
         // The layout puts a portrait series poster beside a frame, which needs a wide canvas.
         public override ArtworkShapes SupportedShapes => ArtworkShapes.Landscape;
@@ -32,7 +42,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // RenderCanvas
         // Draws the series poster on the left and the extracted frame on the right. The poster
-        // is centre-cropped to the 2:3 panel rather than stretched, so artwork that is not
+        // is center-cropped to the 2:3 panel rather than stretched, so artwork that is not
         // exactly 2:3 keeps its proportions.
         protected override void RenderCanvas(SKCanvas skCanvas, SKBitmap canvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
@@ -131,7 +141,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             var safeArea = GetRightSideSafeArea(width, height, settings);
 
-            DrawBottomTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
+            DrawTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
 
         // LogError

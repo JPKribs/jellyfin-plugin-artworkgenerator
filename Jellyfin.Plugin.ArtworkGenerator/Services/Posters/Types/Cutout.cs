@@ -18,14 +18,26 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Large text cut out of the image. Bold and minimal.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set below the cutout, and it becomes the cutout itself when the item has no number to cut.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode number or code, and this style cuts it out of the image rather than drawing it as a line of text.";
+
         // The cutout letters are the poster, so the code or number is always drawn, and its size and
-        // colour come from the cutout itself rather than the text settings.
+        // color come from the cutout itself rather than the text settings.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.CutoutType, PosterSettingState.Optional),
             (PosterSettingRules.CutoutBorder, PosterSettingState.Optional),
             (PosterSettingRules.ShowSecondary, PosterSettingState.Required),
             (PosterSettingRules.SecondaryFontSize, PosterSettingState.Hidden),
-            (PosterSettingRules.SecondaryFontColor, PosterSettingState.Hidden));
+            (PosterSettingRules.SecondaryFontColor, PosterSettingState.Hidden),
+            // Text position is hidden here: the lettering is cut out of the image and has to stay centered in it.
+            (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
 
         // Baseline-to-baseline spacing between stacked cutout words, relative to the font size.
         private const float WordLineSpacing = 1.1f;
@@ -249,7 +261,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawCutoutTextCentered
-        // Draws the words centred horizontally and vertically in the area, stacked when there
+        // Draws the words centered horizontally and vertically in the area, stacked when there
         // is more than one.
         private static void DrawCutoutTextCentered(SKCanvas canvas, string[] words, SKFont font, SKPaint paint, SKRect area)
         {
@@ -258,7 +270,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (words.Length == 1)
             {
-                // Centre the glyphs' actual ink rather than the em box.
+                // Center the glyphs' actual ink rather than the em box.
                 font.MeasureText(words[0], out SKRect bounds);
                 canvas.DrawText(words[0], centerX, centerY - bounds.MidY, SKTextAlign.Center, font, paint);
                 return;

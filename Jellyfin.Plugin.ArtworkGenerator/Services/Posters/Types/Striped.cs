@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
@@ -8,7 +9,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
     public class StripedPosterGenerator : BasePosterGenerator
     {
-        // Band geometry. The centre line is a share of the poster height, so the sash sits low on
+        // Band geometry. The center line is a share of the poster height, so the sash sits low on
         // both shapes; the thicknesses are shares of the size unit, so the band keeps its weight
         // on a tall portrait instead of growing with the height. The sash is drawn wider than the
         // canvas so its ends stay covered at the tilt angle.
@@ -28,6 +29,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Description
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Tilted pinstriped sash carrying the title, with the subtitle in the corner. Sporty and graphic.";
+
+        // SettingRules
+        // Text position is hidden here: the title rides the tilted sash, which is the design.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
+
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set along the tilted sash.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code, set in the corner, or on the sash itself when there is no title.";
 
         private readonly ILogger<StripedPosterGenerator> _logger;
 
@@ -144,7 +160,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawBandText
-        // Draws a single line of text centred along the tilted sash, fitted to the safe width
+        // Draws a single line of text centered along the tilted sash, fitted to the safe width
         // using the long title handling. Returns false when the handling drops the text.
         private static bool DrawBandText(SKCanvas canvas, string text, TextStyle style, PosterSettings settings, int width, int height, SKRect safeArea)
         {
@@ -157,7 +173,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 return false;
             }
 
-            // Centre the ascent-to-descent box on the band's centre line.
+            // Center the ascent-to-descent box on the band's center line.
             float baselineY = bandCenterY + ((style.Ascent - style.Descent) / 2f);
 
             canvas.Save();

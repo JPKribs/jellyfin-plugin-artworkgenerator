@@ -17,6 +17,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Large Roman numeral as the focal element. Minimal and distinctive.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set under the numeral, and it takes the numeral's place when the item has no number.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the item's number, drawn as the large Roman numeral rather than as a line of text.";
+
         // The numeral is the poster and is sized to fill it, so it is always drawn and its size
         // setting would do nothing.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
@@ -33,7 +43,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the Roman numeral filling the safe area, with the optional title centred over it.
+        // Renders the Roman numeral filling the safe area, with the optional title centered over it.
         // A series has no number, so its name becomes the focal element instead.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
@@ -59,7 +69,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             // The title's zone is reserved before the numeral is sized, so the numeral fills what is
             // left rather than being drawn across the title.
-            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), ResolveTextAnchor(settings))
                 .Add(PrimaryBlock, showPrimary ? primaryStyle.BlockHeight(2) : 0f);
 
             DrawFocalText(skCanvas, NumberUtils.NumberToRomanNumeral(subject.FeaturedNumber.Value), settings, column.Remaining, unit);
@@ -78,7 +88,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawFocalText
-        // Draws the focal text, a Roman numeral or a series name, sized to fill, and centred on its
+        // Draws the focal text, a Roman numeral or a series name, sized to fill, and centered on its
         // ink in, the area.
         private static void DrawFocalText(SKCanvas canvas, string numeralText, PosterSettings config, SKRect area, int unit)
         {

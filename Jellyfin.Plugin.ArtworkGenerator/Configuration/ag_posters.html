@@ -26,7 +26,7 @@
                                 <span class="material-icons" aria-hidden="true">file_download</span>
                                 <span class="jpk-icon-btn-label">Import</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnNewConfig" class="raised jpk-icon-btn button-submit" title="New">
+                            <button is="emby-button" type="button" id="btnNewConfig" class="raised jpk-icon-btn" title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
                                 <span class="jpk-icon-btn-label">New</span>
                             </button>
@@ -92,6 +92,12 @@
                                 <label for="selectPosterStyle"></label>
                                 <select is="emby-select" id="selectPosterStyle" data-setting="PosterStyle" data-default="Standard"></select>
                                 <div id="posterStyleDescription" class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="selectTextPosition"></label>
+                                <select is="emby-select" id="selectTextPosition" data-setting="TextPosition" data-default="Auto"></select>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="cutout-logo-group" id="frameOptions">
@@ -307,6 +313,8 @@
                         </button>
                         <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
 
+                            <div id="secondaryStyleNote" class="fieldDescription ag-section-note"></div>
+
                             <div class="checkboxContainer" id="showEpisodeRow">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkShowSecondary" data-setting="ShowSecondary" />
@@ -399,6 +407,8 @@
                             <span class="jpk-collapsible-icon">&#9660;</span>
                         </button>
                         <div id="episodeTitleContent" class="jpk-collapsible-content collapsed">
+
+                            <div id="primaryStyleNote" class="fieldDescription ag-section-note"></div>
 
                             <div class="checkboxContainer" id="showTitleRow">
                                 <label class="emby-checkbox-label">

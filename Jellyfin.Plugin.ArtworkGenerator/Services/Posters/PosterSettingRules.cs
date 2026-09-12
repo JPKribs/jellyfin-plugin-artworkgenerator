@@ -33,11 +33,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         /// <summary>The number and code size.</summary>
         public const string SecondaryFontSize = "SecondaryFontSize";
 
-        /// <summary>The number and code colour.</summary>
+        /// <summary>The number and code color.</summary>
         public const string SecondaryFontColor = "SecondaryFontColor";
 
         /// <summary>Which edge of a framed poster the title sits in.</summary>
         public const string TextEdge = "TextEdge";
+
+        // TextPosition
+        // Where the text block sits. Hidden on the designs that make the text part of the artwork.
+        public const string TextPosition = "TextPosition";
 
         /// <summary>The cutout's text choice.</summary>
         public const string CutoutType = "CutoutType";

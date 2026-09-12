@@ -15,7 +15,10 @@ public enum LayoutAnchor
     Top,
 
     /// <summary>Blocks sit against the bottom edge, filling upward.</summary>
-    Bottom
+    Bottom,
+
+    /// <summary>Blocks sit centered between the two edges.</summary>
+    Center
 }
 
 /// <summary>
@@ -61,8 +64,27 @@ public sealed class LayoutColumn
     }
 
     /// <summary>
+    /// Gets the top edge of the first block, which is where the anchor puts the whole stack.
+    /// </summary>
+    private float StartY => _anchor switch
+    {
+        LayoutAnchor.Bottom => _bounds.Bottom - Consumed,
+        LayoutAnchor.Center => _bounds.MidY - (Consumed / 2f),
+        _ => _bounds.Top
+    };
+
+    /// <summary>
+    /// Gets the rectangle the placed blocks occupy as one run, gaps included. A caller that has to
+    /// keep clear of the stack asks for this rather than re-deriving it from the anchor, which is
+    /// the arithmetic this type exists to stop being copied.
+    /// </summary>
+    public SKRect Span => SKRect.Create(_bounds.Left, StartY, _bounds.Width, Consumed);
+
+    /// <summary>
     /// Gets the part of the bounds no block occupies, already inset by one gap so anything drawn
     /// there keeps its distance from the stack. Empty (zero height) when the blocks fill the bounds.
+    /// A centered stack leaves a band on each side, and the taller one is returned, since a caller
+    /// asking for what is left wants the space it can actually use.
     /// </summary>
     public SKRect Remaining
     {
@@ -74,6 +96,16 @@ public sealed class LayoutColumn
             }
 
             var used = Consumed + _spacing;
+
+            if (_anchor == LayoutAnchor.Center)
+            {
+                var above = Math.Max(0f, StartY - _spacing - _bounds.Top);
+                var below = Math.Max(0f, _bounds.Bottom - (StartY + Consumed + _spacing));
+
+                return above >= below
+                    ? SKRect.Create(_bounds.Left, _bounds.Top, _bounds.Width, above)
+                    : SKRect.Create(_bounds.Left, _bounds.Bottom - below, _bounds.Width, below);
+            }
 
             return _anchor == LayoutAnchor.Bottom
                 ? SKRect.Create(_bounds.Left, _bounds.Top, _bounds.Width, Math.Max(0f, _bounds.Height - used))
@@ -124,9 +156,7 @@ public sealed class LayoutColumn
             return false;
         }
 
-        var y = _anchor == LayoutAnchor.Bottom
-            ? _bounds.Bottom - Consumed
-            : _bounds.Top;
+        var y = StartY;
 
         for (var i = 0; i < index; i++)
         {

@@ -12,11 +12,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // How far the bloom reaches, as a share of the size unit, so the glow keeps the same weight
         // on a portrait poster as on a landscape one rather than stretching with the frame. Kept
         // well under half the short side on purpose: a radius that runs past the frame leaves tint
-        // on every edge, which reads as an overall haze instead of a pool of colour.
+        // on every edge, which reads as an overall haze instead of a pool of color.
         private const float RadiusRatio = 0.85f;
 
-        // The bloom holds its full colour only this far out, leaving nearly all of the radius to the
-        // eased falloff. That is what spreads the colour widely and gently; a long core concentrates
+        // The bloom holds its full color only this far out, leaving nearly all of the radius to the
+        // eased falloff. That is what spreads the color widely and gently; a long core concentrates
         // it into a dark disc with a visible edge instead.
         // The falloff is sampled at this many stops and eased rather than ramped straight down.
         // A straight ramp changes slope abruptly where the core ends, and the eye reads that as the
@@ -34,7 +34,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "A soft bloom of colour in the centre with the text set over it.";
+        public override string Description => "A soft bloom of color in the center with the text set over it.";
+
+        // NaturalTextPosition
+        // The text belongs over the bloom, so centered is this style's own placement rather than
+        // the usual foot of the image.
+        protected override TextPosition NaturalTextPosition => TextPosition.Center;
+
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, centered over the bloom.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code, centered over the bloom just above the title.";
 
         private readonly ILogger<BloomPosterGenerator> _logger;
 
@@ -46,9 +61,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // RenderOverlay
-        // Draws a radial bloom centred on the poster: the overlay colour at full strength in the
-        // middle, falling away to the secondary colour at the rim, or to nothing when no secondary
-        // colour is set so the frame shows through at the corners.
+        // Draws a radial bloom centered on the poster: the overlay color at full strength in the
+        // middle, falling away to the secondary color at the rim, or to nothing when no secondary
+        // color is set so the frame shows through at the corners.
         protected override void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(skCanvas);
@@ -66,7 +81,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
 
             // A zero-alpha secondary keeps the meaning it has everywhere else in the plugin: there
-            // is no second colour, so the bloom simply fades out.
+            // is no second color, so the bloom simply fades out.
             var edgeColor = string.IsNullOrEmpty(settings.OverlaySecondaryColor)
                 ? centreColor.WithAlpha(0)
                 : ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
@@ -78,8 +93,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var rect = SKRect.Create(width, height);
             var radius = SizeUnit(width, height) * RadiusRatio;
 
-            // Clamp means everything past the radius keeps the rim colour, so the corners of a wide
-            // poster are covered by the same colour the bloom ends on.
+            // Clamp means everything past the radius keeps the rim color, so the corners of a wide
+            // poster are covered by the same color the bloom ends on.
             var colors = new SKColor[FalloffSteps + 2];
             var positions = new float[FalloffSteps + 2];
 
@@ -117,8 +132,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // Blend
-        // Mixes two colours, alpha included. A bloom that fades out has an edge colour holding the
-        // centre's own channels at zero alpha, so mixing towards it fades without drifting in hue.
+        // Mixes two colors, alpha included. A bloom that fades out has an edge color holding the
+        // center's own channels at zero alpha, so mixing towards it fades without drifting in hue.
         private static SKColor Blend(SKColor from, SKColor to, float amount)
         {
             static byte Mix(byte a, byte b, float t) => (byte)Math.Clamp(a + ((b - a) * t), 0f, 255f);
@@ -131,7 +146,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Draws the secondary line above the primary one, the pair centred on the middle of the
+        // Draws the secondary line above the primary one, the pair centered on the middle of the
         // poster so they sit in the brightest part of the bloom.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
@@ -175,7 +190,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             float consumed = measured.Consumed;
 
             var placed = new LayoutColumn(
-                SKRect.Create(safeArea.Left, safeArea.MidY - (consumed / 2f), safeArea.Width, consumed),
+                SKRect.Create(safeArea.Left, PlaceBlockTop(safeArea, consumed, settings), safeArea.Width, consumed),
                 spacing,
                 LayoutAnchor.Top)
                 .Add(SecondaryBlock, secondaryHeight)

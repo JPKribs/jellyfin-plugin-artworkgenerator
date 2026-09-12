@@ -68,6 +68,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Text Edges", Description = "How the border's two edges are filled. The first two fill that edge with whichever line the item has: the title normally, or the subtitle when there is no title, such as on a numbered season. The last two pin the title to one edge and the subtitle to the other, leaving an edge empty when its line is missing.")]
         public TextEdge TextEdge { get; set; } = TextEdge.TopFirst;
 
+        /// <summary>
+        /// Gets or sets where the title and subtitle sit inside the safe area. Left on its default,
+        /// each design keeps the placement it was drawn around.
+        /// </summary>
+        [Display(Name = "Text Position", Description = "Where the title and subtitle sit on the image. Left on the design default, each design keeps the placement it was built around. Designs that make the text part of the artwork, such as Cutout and Fade, do not offer this.")]
+        public TextPosition TextPosition { get; set; } = TextPosition.Auto;
+
         [Display(Name = "Enable Outline", Description = "Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.")]
         public bool CutoutBorder { get; set; } = true;
 

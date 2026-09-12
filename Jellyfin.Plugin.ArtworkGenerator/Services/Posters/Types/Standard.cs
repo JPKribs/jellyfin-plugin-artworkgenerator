@@ -32,7 +32,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(settings);
 
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            DrawBottomTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
+            DrawTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
 
         // LogError

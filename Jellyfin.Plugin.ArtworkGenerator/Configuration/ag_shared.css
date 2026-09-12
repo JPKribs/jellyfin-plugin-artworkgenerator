@@ -313,7 +313,7 @@
 .poster-preview-kind {
     margin-top: 1em;
 
-    /* The parent centres its children, so any max-width here both narrows the control and shoves
+    /* The parent centers its children, so any max-width here both narrows the control and shoves
        it inward. It spans the column instead, lining up with the caption above it. */
     width: 100%;
     max-width: none;
@@ -330,6 +330,12 @@
    ran the full span as a dense two-line block. */
 .poster-preview-kind .fieldDescription {
     max-width: 40ch;
+}
+
+/* The logo page puts its color source under the preview rather than in a side column, so it needs
+   the gap the side column got from the layout. */
+#logoColorSourceRow {
+    margin-top: 0.75em;
 }
 
 .logo-preview-frame {
@@ -435,4 +441,9 @@
     color: var(--ag-text-secondary);
     font-style: italic;
     text-align: center;
+}
+
+/* The one line at the top of a section saying what its text is in the chosen design. */
+.ag-section-note {
+    margin: 0 0 1.25em;
 }

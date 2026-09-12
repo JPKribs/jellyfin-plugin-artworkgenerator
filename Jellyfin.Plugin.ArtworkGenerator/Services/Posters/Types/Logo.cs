@@ -18,6 +18,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Series logo over the image. Puts branding first.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set at the bottom under the logo.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code, set on the line above the title.";
+
         // This style places the series logo, so the logo settings are its own.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.LogoPosition, PosterSettingState.Optional),
@@ -110,7 +120,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // headline zone, packed against the bottom of the safe area. Both the typography layer and
         // the logo layer read this same column, so the logo can never be placed from a separately
         // maintained copy of the text's height.
-        private static LayoutColumn BuildColumn(ArtworkSubject subject, PosterSettings config, int width, int height, TextStyle primaryStyle, TextStyle secondaryStyle)
+        private LayoutColumn BuildColumn(ArtworkSubject subject, PosterSettings config, int width, int height, TextStyle primaryStyle, TextStyle secondaryStyle)
         {
             var safeArea = GetSafeAreaBounds(width, height, config);
             var (headline, code) = GetText(subject);
@@ -119,15 +129,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 ? primaryStyle.BlockHeight(2)
                 : 0f;
 
-            return new LayoutColumn(safeArea, GetElementSpacing(config, SizeUnit(width, height)), LayoutAnchor.Bottom)
+            return new LayoutColumn(safeArea, GetElementSpacing(config, SizeUnit(width, height)), ResolveTextAnchor(config))
                 .Add(SecondaryBlock, config.ShowSecondary && code.Length > 0 ? secondaryStyle.LineBox : 0f)
                 .Add(PrimaryBlock, primaryHeight);
         }
 
         // GetLogoArea
-        // Whatever the text column leaves behind, so Center means "centred in the space actually
+        // Whatever the text column leaves behind, so Center means "centered in the space actually
         // available" and the graphics layer cannot collide with the typography layer.
-        private static SKRect GetLogoArea(ArtworkSubject subject, PosterSettings config, int width, int height)
+        private SKRect GetLogoArea(ArtworkSubject subject, PosterSettings config, int width, int height)
         {
             var unit = SizeUnit(width, height);
             using var primaryStyle = CreatePrimaryStyle(config, unit);

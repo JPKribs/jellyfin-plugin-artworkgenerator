@@ -42,6 +42,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "One sided fade with a big number and a vertical title. Editorial and bold.";
 
+        // SettingRules
+        // Text position is hidden here: the title runs sideways up the edge and the number is pinned to the foot.
+        public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
+            (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
+
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set sideways so it runs up the edge of the image.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the item's number, drawn as the big number at the foot of the image.";
+
         private readonly ILogger<FadePosterGenerator> _logger;
 
         // FadePosterGenerator

@@ -685,6 +685,7 @@ export default function (view) {
     var posterSettingDefaults = {};
     var posterSettingText = {};
     var posterStyleDescriptions = {};
+    var posterStyleTextNotes = {};
     var posterStyleShapes = {};
     var posterStyleSettings = {};
 
@@ -697,6 +698,10 @@ export default function (view) {
         }).then(function (styles) {
             (styles || []).forEach(function (s) {
                 posterStyleDescriptions[s.value] = s.description;
+                posterStyleTextNotes[s.value] = {
+                    primary: s.primaryDescription || '',
+                    secondary: s.secondaryDescription || ''
+                };
                 posterStyleShapes[s.value] = { Portrait: s.portrait !== false, Landscape: s.landscape !== false };
                 posterStyleSettings[s.value] = s.settings || {};
             });
@@ -752,7 +757,7 @@ export default function (view) {
 
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
 
-            // The colour fields swap their own wording between colour and opacity, so they keep it.
+            // The color fields swap their own wording between color and opacity, so they keep it.
             if (label && !label.hasAttribute('data-color-label')) {
                 var name = text.label || text.Label || '';
                 label.textContent = el.type === 'checkbox' ? name : name + ':';
@@ -835,6 +840,15 @@ export default function (view) {
         var style = view.querySelector('#selectPosterStyle').value;
         var el = view.querySelector('#posterStyleDescription');
         if (el) el.textContent = posterStyleDescriptions[style] || '';
+
+        // Each style says in its own words what its title and subtitle are, because where the
+        // text lands is the one thing that changes between them.
+        var notes = posterStyleTextNotes[style] || {};
+        var primaryNote = view.querySelector('#primaryStyleNote');
+        if (primaryNote) primaryNote.textContent = notes.primary || '';
+        var secondaryNote = view.querySelector('#secondaryStyleNote');
+        if (secondaryNote) secondaryNote.textContent = notes.secondary || '';
+
         updateStyleAvailability();
     }
 
@@ -1107,8 +1121,8 @@ export default function (view) {
     }
 
     // With Palette-Derived Colors on, the renderer replaces the overlay RGB channels with the
-    // dominant color sampled from each episode's image and keeps only the alpha. Leaving a colour
-    // swatch and an ARGB field on screen implies the chosen colour still applies, so those are
+    // dominant color sampled from each episode's image and keeps only the alpha. Leaving a color
+    // swatch and an ARGB field on screen implies the chosen color still applies, so those are
     // dropped and the field becomes what it actually controls: opacity.
     function updatePaletteMode() {
         var paletteCb = view.querySelector('#chkPaletteDerivedColors');

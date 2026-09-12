@@ -23,6 +23,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Text on a frosted glass panel that blurs the image behind it.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, centered on the frosted panel.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code, centered on the panel above the title.";
+
         private readonly ILogger<FrostedGlassPosterGenerator> _logger;
 
         // The base canvas bitmap, captured during the canvas layer so the typography layer
@@ -46,7 +56,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the frosted panel with the code and title centred inside it. The text carries
+        // Renders the frosted panel with the code and title centered inside it. The text carries
         // no drop shadow: the panel supplies the contrast.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
@@ -106,7 +116,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             float panelWidth = Math.Min(safeArea.Width, contentWidth + (2 * padX));
             float panelHeight = contentHeight + (2 * padY);
             float panelLeft = safeArea.MidX - (panelWidth / 2f);
-            float panelTop = safeArea.Bottom - panelHeight;
+            float panelTop = PlaceBlockTop(safeArea, panelHeight, settings);
             var panelRect = new SKRect(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight);
             using var roundedPanel = new SKRoundRect(panelRect, unit * CornerRadiusRatio);
 

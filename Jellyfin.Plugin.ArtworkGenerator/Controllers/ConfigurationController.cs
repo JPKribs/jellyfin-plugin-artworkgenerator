@@ -100,6 +100,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
                 {
                     value = g.Style.ToString(),
                     description = g.Description,
+                    primaryDescription = g.PrimaryDescription,
+                    secondaryDescription = g.SecondaryDescription,
                     portrait = g.Supports(ArtworkShape.Portrait),
                     landscape = g.Supports(ArtworkShape.Landscape),
                     settings = g.SettingRules.ToDictionary(rule => rule.Key, rule => rule.Value.ToString())

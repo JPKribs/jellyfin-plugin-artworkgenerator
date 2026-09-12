@@ -17,6 +17,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Brush strokes reveal the image through a flat overlay. Painted, editorial look.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set left aligned at the foot of the image over the brush strokes.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code, set on the left just above the title.";
+
         // The stroke carries the title and the code, so both are always drawn, and the stroke can
         // take the same outline the cutout uses.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
@@ -171,32 +181,34 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // BuildTextColumn
         // The one description of the text layout: the code above a fixed two line title zone,
         // packed against the bottom left of the safe area.
-        private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject, TextStyle secondaryStyle, TextStyle primaryStyle)
+        private LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject, TextStyle secondaryStyle, TextStyle primaryStyle)
         {
             var primaryHeight = ShowsPrimary(settings, subject)
                 ? primaryStyle.BlockHeight(2)
                 : 0f;
 
-            return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+            return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), ResolveTextAnchor(settings))
                 .Add(SecondaryBlock, ShowsSecondary(settings, subject) ? secondaryStyle.LineBox : 0f)
                 .Add(PrimaryBlock, primaryHeight);
         }
 
         // CalculateTextKeepClearArea
         // The area the strokes must leave alone: exactly the block the text column occupies,
-        // measured from the same styles that draw it.
-        private static SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject)
+        // measured from the same styles that draw it and placed by the same column.
+        private SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject)
         {
             using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
             using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
 
-            var consumed = BuildTextColumn(safeArea, settings, unit, subject, secondaryStyle, primaryStyle).Consumed;
+            // The column reports where it put itself, so the strokes follow the text wherever the
+            // position setting sends it rather than assuming it is still at the bottom.
+            var span = BuildTextColumn(safeArea, settings, unit, subject, secondaryStyle, primaryStyle).Span;
 
             return new SKRect(
                 safeArea.Left,
-                safeArea.Bottom - consumed,
+                span.Top,
                 safeArea.Left + (safeArea.Width * TextWidthRatio),
-                safeArea.Bottom);
+                span.Bottom);
         }
 
         // RenderTypography

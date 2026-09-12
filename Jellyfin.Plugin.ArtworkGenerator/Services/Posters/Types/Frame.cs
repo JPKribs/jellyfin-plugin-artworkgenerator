@@ -18,11 +18,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Image inside a decorative border. Polished gallery look.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set on whichever border edge the text edges setting gives it.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code, set on the border edge left to it by the title.";
+
         // The frame is drawn around the title, so the title is always there, and this style is the
         // one that decides which edge holds it.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.ShowPrimary, PosterSettingState.Required),
-            (PosterSettingRules.TextEdge, PosterSettingState.Optional));
+            (PosterSettingRules.TextEdge, PosterSettingState.Optional),
+            // Text position is hidden here: the two border edges are this design's own placement control.
+            (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
         private const float BorderStrokeReference = 4f;

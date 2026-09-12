@@ -36,6 +36,52 @@ public class LayoutColumnTests
         Assert.Equal(110f, stack.Slot("second").Top, 3);
     }
 
+    [Fact]
+    public void CenterAnchored_PacksBlocksAroundTheMiddleInOrder()
+    {
+        var stack = new LayoutColumn(Bounds, 10f, LayoutAnchor.Center);
+        stack.Add("code", 100f).Add("title", 200f);
+
+        // 310 tall centered in 1000 starts at 500 - 155 = 345.
+        Assert.Equal(345f, stack.Slot("code").Top, 3);
+        Assert.Equal(455f, stack.Slot("title").Top, 3);
+        Assert.Equal(655f, stack.Slot("title").Bottom, 3);
+    }
+
+    /// <summary>
+    /// Anything that has to keep clear of the text asks the column where it put itself, rather than
+    /// subtracting from an edge it assumes the text is still against.
+    /// </summary>
+    [Theory]
+    [InlineData(LayoutAnchor.Bottom, 690f)]
+    [InlineData(LayoutAnchor.Top, 0f)]
+    [InlineData(LayoutAnchor.Center, 345f)]
+    public void Span_ReportsWhereTheAnchorPutTheRun(LayoutAnchor anchor, float expectedTop)
+    {
+        var stack = new LayoutColumn(Bounds, 10f, anchor);
+        stack.Add("code", 100f).Add("title", 200f);
+
+        Assert.Equal(expectedTop, stack.Span.Top, 3);
+        Assert.Equal(expectedTop + 310f, stack.Span.Bottom, 3);
+    }
+
+    /// <summary>
+    /// A centered run leaves a band above and below, and a caller asking what is left wants the one
+    /// it can actually draw in.
+    /// </summary>
+    [Fact]
+    public void CenterAnchored_RemainingIsTheTallerOfTheTwoBands()
+    {
+        var stack = new LayoutColumn(SKRect.Create(0, 0, 1000, 1000), 10f, LayoutAnchor.Center);
+        stack.Add("only", 100f);
+
+        var remaining = stack.Remaining;
+
+        // Symmetric bands here, so the upper one wins the tie and is 450 - 10 tall.
+        Assert.Equal(0f, remaining.Top, 3);
+        Assert.Equal(440f, remaining.Height, 3);
+    }
+
     /// <summary>
     /// The whole point: whatever is left is a fact, not a subtraction a caller had to remember.
     /// </summary>

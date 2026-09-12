@@ -17,6 +17,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Progress bar with the subtitle, the position, and an optional title. Clean and data driven.";
 
+        // PrimaryDescription
+        // One sentence on what the title is and where this style puts it.
+        public override string PrimaryDescription
+            => "The title is the item's own name, set left aligned above the progress bar.";
+
+        // SecondaryDescription
+        // One sentence on what the subtitle is and where this style puts it.
+        public override string SecondaryDescription
+            => "The subtitle is the episode code beside the bar, marking where the episode falls in its season.";
+
         // The bar and its labels are the style, so the code line is always drawn.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.ShowSecondary, PosterSettingState.Required));
@@ -55,7 +65,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // When the length is unknown the bar renders full rather than guessing.
             var total = subject.ProgressTotal ?? position;
 
-            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
+            var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), ResolveTextAnchor(settings))
                 .Add(PrimaryBlock, ShowsPrimary(settings, subject)
                     ? primaryStyle.BlockHeight(2)
                     : 0f)
