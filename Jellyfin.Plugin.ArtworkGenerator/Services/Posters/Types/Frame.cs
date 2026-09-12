@@ -93,7 +93,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (showSecondary)
             {
-                var info = DrawSecondaryLine(skCanvas, subject.Secondary, settings, unit, safeArea, secondaryAtBottom);
+                var info = DrawSecondaryLine(skCanvas, subject.Secondary, subject.SecondaryShort, settings, unit, safeArea, secondaryAtBottom);
                 if (secondaryAtBottom)
                 {
                     bottomInfo = info;
@@ -164,15 +164,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // DrawSecondaryLine
         // Draws the subtitle into whichever edge the title did not take, and returns its extent.
-        private static TextInfo DrawSecondaryLine(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
+        private static TextInfo DrawSecondaryLine(SKCanvas canvas, string label, string shortLabel, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
             using var style = CreateSecondaryStyle(config, unit);
             var padding = unit * TextPaddingRatio;
 
+            // The border runs close to the text, so the line keeps the same margin the title does
+            // rather than reaching for the corners.
+            var maxWidth = safeArea.Width * RenderConstants.TextWidthMultiplier;
+
             if (!atBottom)
             {
                 var top = safeArea.Top + padding;
-                DrawFittedLine(canvas, style, label, safeArea.MidX, top + style.Ascent, safeArea.Width);
+                DrawFittedLine(canvas, style, label, safeArea.MidX, top + style.Ascent, maxWidth, config.LongSubtitleHandling, shortLabel);
 
                 return new TextInfo
                 {
@@ -184,7 +188,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
 
             var bottom = safeArea.Bottom - padding;
-            DrawFittedLine(canvas, style, label, safeArea.MidX, bottom - style.Descent, safeArea.Width);
+            DrawFittedLine(canvas, style, label, safeArea.MidX, bottom - style.Descent, maxWidth, config.LongSubtitleHandling, shortLabel);
 
             return new TextInfo
             {

@@ -170,6 +170,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Long Titles", Description = "What to do when a title does not fit.")]
         public LongTextHandling LongTextHandling { get; set; } = LongTextHandling.Ellipsis;
 
+        /// <summary>
+        /// Gets or sets what a subtitle does when it does not fit the width it has.
+        /// </summary>
+        [Display(Name = "Long Subtitles", Description = "What to do when the subtitle does not fit.")]
+        public LongSubtitleHandling LongSubtitleHandling { get; set; }
+
         [Display(Name = "Overlay Color")]
         public string OverlayColor { get; set; } = "#66000000";
 

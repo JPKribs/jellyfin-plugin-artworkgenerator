@@ -315,7 +315,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 }
                 else
                 {
-                    DrawFittedLine(canvas, secondaryStyle, label, AlignedX(secondarySlot, align), secondaryStyle.BaselineAtBottom(secondarySlot), secondarySlot.Width);
+                    DrawFittedLine(canvas, secondaryStyle, label, AlignedX(secondarySlot, align), secondaryStyle.BaselineAtBottom(secondarySlot), secondarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongSubtitleHandling, subject.SecondaryShort);
                 }
             }
 
@@ -345,10 +345,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawFittedLine
-        // Draws a single line that cannot be allowed to run past its slot. The subtitle carries
-        // things like "SEASON 12 • EPISODE 1", which fits a landscape poster and overruns a portrait
-        // one, so it is shrunk to the width available and only clipped when shrinking is not enough.
-        protected static void DrawFittedLine(SKCanvas canvas, TextStyle style, string text, float x, float baseline, float maxWidth)
+        // Draws a single line that cannot be allowed to run past its slot. A subtitle carries
+        // something like "SEASON 12 • EPISODE 7", which fits a landscape poster and overruns a
+        // portrait one; the long subtitle setting says what it becomes. Whatever is chosen, the
+        // line is squeezed as a last resort rather than allowed over the edge.
+        protected static void DrawFittedLine(
+            SKCanvas canvas,
+            TextStyle style,
+            string text,
+            float x,
+            float baseline,
+            float maxWidth,
+            LongSubtitleHandling handling = LongSubtitleHandling.Shrink,
+            string? shortForm = null)
         {
             ArgumentNullException.ThrowIfNull(style);
 
@@ -357,35 +366,45 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 return;
             }
 
-            if (maxWidth <= 0)
+            if (maxWidth <= 0 || style.MeasureWidth(text) <= maxWidth)
             {
                 style.Draw(canvas, text, x, baseline);
                 return;
             }
 
-            var width = style.MeasureWidth(text);
-            if (width <= maxWidth)
+            var chosen = text;
+
+            if (handling == LongSubtitleHandling.ShortCode && !string.IsNullOrEmpty(shortForm))
             {
-                style.Draw(canvas, text, x, baseline);
+                chosen = shortForm;
+                if (style.MeasureWidth(chosen) <= maxWidth)
+                {
+                    style.Draw(canvas, chosen, x, baseline);
+                    return;
+                }
+            }
+
+            if (handling == LongSubtitleHandling.Ellipsis)
+            {
+                var trimmed = TextUtils.FitTitleLine(chosen, style.Font, maxWidth, LongTextHandling.Ellipsis);
+                style.Draw(canvas, trimmed ?? chosen, x, baseline);
                 return;
             }
 
             var original = style.Font.Size;
             try
             {
-                // Shrink first: a subtitle set a little smaller still reads, where a clipped one
-                // loses the part that says which episode it is.
-                style.Font.Size = Math.Max(original * MinimumFittedScale, original * (maxWidth / width));
+                style.Font.Size = Math.Max(original * MinimumFittedScale, original * (maxWidth / style.MeasureWidth(chosen)));
 
-                if (style.MeasureWidth(text) <= maxWidth)
+                if (style.MeasureWidth(chosen) <= maxWidth)
                 {
-                    style.Draw(canvas, text, x, baseline);
+                    style.Draw(canvas, chosen, x, baseline);
                     return;
                 }
 
                 // Past the floor the line would be too small to read, so what is left is trimmed.
-                var trimmed = TextUtils.FitTitleLine(text, style.Font, maxWidth, LongTextHandling.Ellipsis);
-                style.Draw(canvas, trimmed ?? text, x, baseline);
+                var trimmed = TextUtils.FitTitleLine(chosen, style.Font, maxWidth, LongTextHandling.Ellipsis);
+                style.Draw(canvas, trimmed ?? chosen, x, baseline);
             }
             finally
             {
