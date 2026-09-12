@@ -62,7 +62,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
             var plugin = Plugin.Instance;
-            if (item == null || plugin?.Configuration?.EnableProvider != true)
+            if (item == null || plugin?.Configuration == null)
             {
                 return Array.Empty<ImageType>();
             }
@@ -75,7 +75,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var plugin = Plugin.Instance;
-            if (item == null || plugin?.Configuration == null || !plugin.Configuration.EnableProvider)
+            if (item == null || plugin?.Configuration == null)
             {
                 return Array.Empty<RemoteImageInfo>();
             }

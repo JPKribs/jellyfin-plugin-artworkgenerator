@@ -17,13 +17,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Configuration
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether artwork is generated at all. When on, items missing
-        /// an image their profile fills get one during a metadata refresh, and generated images are
-        /// offered in Edit Images. Turning it off disables both providers.
-        /// </summary>
-        public bool EnableProvider { get; set; } = true;
-
-        /// <summary>
         /// Gets or sets the number of alternates offered when replacing an image from the Edit Images
         /// dialog (1-10). Items with no image of that type are only ever offered one, since that
         /// request comes from an automatic refresh that keeps a single image.

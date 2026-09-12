@@ -23,7 +23,6 @@ export default function (view) {
 
     function currentState() {
         return JSON.stringify({
-            EnableProvider: view.querySelector('#chkEnableProvider').checked,
             ImageChoiceCount: view.querySelector('#txtImageChoiceCount').value,
             FixedExtractionSeed: view.querySelector('#txtFixedSeed').value
         });
@@ -84,7 +83,6 @@ export default function (view) {
     function loadConfig() {
         Dashboard.showLoadingMsg();
         shared.getConfig().then(function (config) {
-            view.querySelector('#chkEnableProvider').checked = config.EnableProvider !== false;
             view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 3;
             view.querySelector('#txtFixedSeed').value = (config.FixedExtractionSeed === null || config.FixedExtractionSeed === undefined) ? '' : config.FixedExtractionSeed;
             takeSnapshot();
@@ -106,7 +104,6 @@ export default function (view) {
         // Read-modify-write: the poster configurations live in the same configuration object
         // and are edited on the other tab, so a blind overwrite here would discard them.
         shared.getConfig().then(function (config) {
-            config.EnableProvider = view.querySelector('#chkEnableProvider').checked;
 
             var choices = parseInt(view.querySelector('#txtImageChoiceCount').value, 10);
             if (isNaN(choices)) choices = 3;
@@ -146,7 +143,6 @@ export default function (view) {
         if (!_initialized) {
             _initialized = true;
             view.querySelector('#btnSavePlugin').addEventListener('click', savePluginSettings);
-            view.querySelector('#chkEnableProvider').addEventListener('change', checkDirty);
             view.querySelector('#txtImageChoiceCount').addEventListener('input', checkDirty);
             view.querySelector('#txtFixedSeed').addEventListener('input', checkDirty);
         }
