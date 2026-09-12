@@ -131,6 +131,21 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         }
 
         /// <summary>
+        /// Tells the subject what the design will draw, so it can decide what its own title should
+        /// be. A season with no name of its own borrows the title line only when no subtitle is
+        /// drawn, which is a question about the design, not the item.
+        /// </summary>
+        /// <param name="subject">The item being drawn.</param>
+        /// <param name="settings">The design drawing it.</param>
+        public static void ApplySubjectRules(ArtworkSubject subject, PosterSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(subject);
+            ArgumentNullException.ThrowIfNull(settings);
+
+            subject.SubtitleShown = settings.ShowEpisode;
+        }
+
+        /// <summary>
         /// Returns the image types the item's profile has turned on, in slot order.
         /// </summary>
         public IReadOnlyList<ImageType> GetEnabledImageTypes(BaseItem item)
@@ -214,6 +229,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             var shape = profile.GetShape(kind, slot);
             var settings = ShapeAdjust(_configService.GetDesignForSlot(assignment), shape);
             var generator = CreateGenerator(settings.PosterStyle, shape);
+
+            ApplySubjectRules(subject, settings);
 
             var canvases = await _canvasService
                 .GenerateCanvasesAsync(item, subject, settings, shape, RankOffset(slot), count, cancellationToken)

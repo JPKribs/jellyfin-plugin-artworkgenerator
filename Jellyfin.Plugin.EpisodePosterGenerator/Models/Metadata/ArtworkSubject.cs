@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -20,6 +22,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
     /// </remarks>
     public class ArtworkSubject
     {
+        // "Season 2", "season 02", or a bare number: a name that only repeats the season number.
+        private static readonly Regex GenericSeasonName = new(@"^(season\s*)?0*\d+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+
         public ArtworkSubject()
         {
             VideoMetadata = new VideoMetadata();
@@ -65,10 +71,41 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         public VideoMetadata VideoMetadata { get; set; }
 
         /// <summary>
-        /// Gets the headline: the episode name for an episode, and the series name for a season or
-        /// series, whose own identity is carried by <see cref="Label"/>.
+        /// Gets the headline: an episode's name, a series' name, and a season's own name when it
+        /// has one. A season called nothing but "Season 2" has no headline, since the subtitle
+        /// already says so; it borrows that line only when no subtitle is drawn.
         /// </summary>
-        public string? Title => Kind == ArtworkItemKind.Episode ? EpisodeName : SeriesName;
+        public string? Title => Kind switch
+        {
+            ArtworkItemKind.Episode => EpisodeName,
+            ArtworkItemKind.Season => HasCustomSeasonName ? SeasonName : (SubtitleShown ? null : SeasonLabel),
+            _ => SeriesName
+        };
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the design draws a subtitle for this item. Set at
+        /// render time, since it depends on the design rather than the item.
+        /// </summary>
+        [JsonIgnore]
+        public bool SubtitleShown { get; set; } = true;
+
+        /// <summary>
+        /// Gets a value indicating whether the season carries a name of its own rather than a
+        /// numbered one, such as "The Crown Jewels" instead of "Season 2".
+        /// </summary>
+        public bool HasCustomSeasonName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(SeasonName))
+                {
+                    return false;
+                }
+
+                var name = SeasonName.Trim();
+                return !GenericSeasonName.IsMatch(name);
+            }
+        }
 
         /// <summary>
         /// Gets the number a numeric style features: the episode number, or the season number.
@@ -144,18 +181,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             }
         }
 
+        // A season's subtitle is always its number, so a named season shows its name as the
+        // headline and its number beneath, rather than the name twice.
         private string SeasonLabel
         {
             get
             {
-                if (!string.IsNullOrWhiteSpace(SeasonName))
+                if (SeasonNumber.HasValue)
                 {
-                    return SeasonName.ToUpperInvariant();
+                    return string.Format(CultureInfo.InvariantCulture, "SEASON {0}", SeasonNumber.Value);
                 }
 
-                return SeasonNumber.HasValue
-                    ? string.Format(CultureInfo.InvariantCulture, "SEASON {0}", SeasonNumber.Value)
-                    : string.Empty;
+                return string.IsNullOrWhiteSpace(SeasonName) ? string.Empty : SeasonName.ToUpperInvariant();
             }
         }
 

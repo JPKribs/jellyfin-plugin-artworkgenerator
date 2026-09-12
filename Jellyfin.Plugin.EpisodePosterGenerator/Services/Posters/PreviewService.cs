@@ -131,6 +131,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(settings);
 
             var adjusted = ArtworkService.ShapeAdjust(settings, settings.Shape);
+            ArtworkService.ApplySubjectRules(subject, adjusted);
+
             var canvas = _croppingService.CropPoster(baseImage, adjusted);
             try
             {
@@ -155,6 +157,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private byte[]? RenderTransparentPoster(int width, int height, ArtworkSubject subject, PosterSettings settings)
         {
             var adjusted = ArtworkService.ShapeAdjust(settings, settings.Shape);
+            ArtworkService.ApplySubjectRules(subject, adjusted);
+
             if (adjusted.Shape == ArtworkShape.Portrait)
             {
                 var ratio = CroppingService.ParseAspectRatio(adjusted.PosterDimensionRatio);

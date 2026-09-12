@@ -34,7 +34,10 @@ changelog:
   - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
   - The Frame style chooses which edge of its border holds the title, the subtitle taking the other; Automatic keeps the title at the top while there is a subtitle to hold the bottom
   - Every bundled template is brought up to the current settings: it gains the portrait aspect ratio and the Frame title edge, and its two per-axis graphic sizes become the single size
+  - Every bundled design ships a season poster example beside its series poster and its episodes
+  - Three clean designs added to the examples: Minimal, Editorial and Bordered
   fixes:
+  - A season named after nothing but its number no longer draws that name beside the same number; a season with a name of its own is headlined by it, with the number beneath, and a design that draws no subtitle gives the season the title line instead
   - The Simple design drew only the subtitle, so a series, which has none, came out with no text at all; it now draws the title too
   - Brush strokes on a tall poster are thicker again, revealing more of the frame, while wide posters keep the stroke layout they had
   - Fade sized a short series name until it filled the whole poster; its focal name is now bounded in thickness and length
