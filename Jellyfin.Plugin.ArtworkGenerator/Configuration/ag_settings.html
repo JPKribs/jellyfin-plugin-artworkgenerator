@@ -19,6 +19,12 @@
                     </div>
 
                     <div class="inputContainer">
+                        <label for="txtImageCacheMinutes">Edit Images Cache (Minutes):</label>
+                        <input is="emby-input" type="number" id="txtImageCacheMinutes" min="5" max="1440" step="1" />
+                        <div class="fieldDescription">How long the choices rendered for Edit Images stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones.</div>
+                    </div>
+
+                    <div class="inputContainer">
                         <label for="txtFixedSeed">Fixed Frame Seed:</label>
                         <input is="emby-input" type="number" id="txtFixedSeed" step="1" placeholder="Random" />
                         <div class="fieldDescription">Any whole number makes frame choice repeatable, so an item always gets the same frames. Empty picks new ones each refresh.</div>

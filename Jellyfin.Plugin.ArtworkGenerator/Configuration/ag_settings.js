@@ -24,6 +24,7 @@ export default function (view) {
     function currentState() {
         return JSON.stringify({
             ImageChoiceCount: view.querySelector('#txtImageChoiceCount').value,
+            ImageCacheMinutes: view.querySelector('#txtImageCacheMinutes').value,
             FixedExtractionSeed: view.querySelector('#txtFixedSeed').value,
             FrameExtraction: frameFields().map(function (el) {
                 return el.type === 'checkbox' ? el.checked : el.value;
@@ -134,6 +135,7 @@ export default function (view) {
         Dashboard.showLoadingMsg();
         shared.getConfig().then(function (config) {
             view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 3;
+            view.querySelector('#txtImageCacheMinutes').value = config.ImageCacheMinutes || 30;
             view.querySelector('#txtFixedSeed').value = (config.FixedExtractionSeed === null || config.FixedExtractionSeed === undefined) ? '' : config.FixedExtractionSeed;
 
             var frame = config.FrameExtraction || {};
@@ -172,6 +174,10 @@ export default function (view) {
             var choices = parseInt(view.querySelector('#txtImageChoiceCount').value, 10);
             if (isNaN(choices)) choices = 3;
             config.ImageChoiceCount = Math.min(10, Math.max(1, choices));
+
+            var cacheMinutes = parseInt(view.querySelector('#txtImageCacheMinutes').value, 10);
+            if (isNaN(cacheMinutes)) cacheMinutes = 30;
+            config.ImageCacheMinutes = Math.min(1440, Math.max(5, cacheMinutes));
 
             // Empty means random; anything else must be a whole number the server can store.
             var seedText = view.querySelector('#txtFixedSeed').value.trim();
@@ -224,6 +230,7 @@ export default function (view) {
             initCollapsibles(view);
             view.querySelector('#btnSavePlugin').addEventListener('click', savePluginSettings);
             view.querySelector('#txtImageChoiceCount').addEventListener('input', checkDirty);
+            view.querySelector('#txtImageCacheMinutes').addEventListener('input', checkDirty);
             view.querySelector('#txtFixedSeed').addEventListener('input', checkDirty);
 
             frameFields().forEach(function (el) {

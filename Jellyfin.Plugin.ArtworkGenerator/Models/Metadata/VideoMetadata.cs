@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -66,13 +67,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         // FindLogo
         // The logo selected for the item itself, then for its season, then for its series. A film
-        // has no series, so its own logo is the only one it can draw.
+        // has no series, so its own logo is the only one it can draw. A logo Jellyfin only knows by
+        // its web address, or whose file is gone, is passed over for the next one that can be read.
         private static string? FindLogo(BaseItem? item, Series? series)
         {
             var owners = new[] { item, (item as Episode)?.Season, series };
             return owners
-                .Select(owner => owner?.GetImages(ImageType.Logo).FirstOrDefault()?.Path)
-                .FirstOrDefault(path => !string.IsNullOrEmpty(path));
+                .Where(owner => owner != null)
+                .SelectMany(owner => owner!.GetImages(ImageType.Logo))
+                .Where(image => image.IsLocalFile && File.Exists(image.Path))
+                .Select(image => image.Path)
+                .FirstOrDefault();
         }
     }
 }

@@ -340,16 +340,22 @@ export default function (view) {
     }
 
     // Every design draws both shapes, so a slot may use any of them.
-    function designOptions(currentId) {
+    function designOptions(currentId, deletedText) {
         var options = sortedDesigns().map(function (d) {
             return { value: d.Id, text: d.Name || 'Unnamed Design' };
         });
 
         if (!findDesign(currentId) && currentId && !sameId(currentId, EMPTY_GUID)) {
-            options.unshift({ value: currentId, text: 'Deleted design (uses the default)' });
+            options.unshift({ value: currentId, text: deletedText || 'Deleted design (uses the default)' });
         }
 
         return options;
+    }
+
+    // A secondary or tertiary design is optional, and a deleted one is skipped rather than
+    // replaced by the default.
+    function extraDesignOptions(currentId) {
+        return [{ value: EMPTY_GUID, text: '\u2014' }].concat(designOptions(currentId, 'Deleted design (skipped)'));
     }
 
     function logoOptions(currentId) {
@@ -366,7 +372,7 @@ export default function (view) {
     function getSlot(profile, kind, slot) {
         var assignment = profile.Slots.find(function (s) { return s.Kind === kind && s.Slot === slot; });
         if (!assignment) {
-            assignment = { Kind: kind, Slot: slot, Enabled: false, DesignId: EMPTY_GUID };
+            assignment = { Kind: kind, Slot: slot, Enabled: false, DesignId: EMPTY_GUID, SecondaryDesignId: EMPTY_GUID, TertiaryDesignId: EMPTY_GUID };
             profile.Slots.push(assignment);
         }
         return assignment;
@@ -377,6 +383,13 @@ export default function (view) {
         select.className = 'emby-select slot-select';
         if (label) select.setAttribute('aria-label', label);
 
+        setOptions(select, options, value);
+        return select;
+    }
+
+    function setOptions(select, options, value) {
+        select.innerHTML = '';
+
         options.forEach(function (o) {
             var option = document.createElement('option');
             option.value = o.value;
@@ -386,7 +399,6 @@ export default function (view) {
 
         var match = options.find(function (o) { return sameId(o.value, value) || o.value === value; });
         if (match) select.value = match.value;
-        return select;
     }
 
     function renderMatrix() {
@@ -484,6 +496,43 @@ export default function (view) {
 
             cell.appendChild(designSelect);
             controls.push(designSelect);
+
+            // A second and third design only add choices to the Edit Images picker, drawn over the
+            // same frames. The third is offered once there is a second, and clearing the second
+            // moves the third up into its place, so the two never leave a gap.
+            var secondarySelect = makeSelect([], null, k.label + ' ' + slot.toLowerCase() + ' second design');
+            var tertiarySelect = makeSelect([], null, k.label + ' ' + slot.toLowerCase() + ' third design');
+
+            var refreshExtras = function () {
+                var second = assignment.SecondaryDesignId || EMPTY_GUID;
+                var third = assignment.TertiaryDesignId || EMPTY_GUID;
+
+                if (sameId(second, EMPTY_GUID) && !sameId(third, EMPTY_GUID)) {
+                    second = assignment.SecondaryDesignId = third;
+                    third = assignment.TertiaryDesignId = EMPTY_GUID;
+                }
+
+                setOptions(secondarySelect, extraDesignOptions(second), second);
+                setOptions(tertiarySelect, extraDesignOptions(third), third);
+                tertiarySelect.style.display = sameId(second, EMPTY_GUID) ? 'none' : '';
+            };
+
+            secondarySelect.addEventListener('change', function () {
+                assignment.SecondaryDesignId = secondarySelect.value;
+                refreshExtras();
+                checkDirty();
+            });
+
+            tertiarySelect.addEventListener('change', function () {
+                assignment.TertiaryDesignId = tertiarySelect.value;
+                refreshExtras();
+                checkDirty();
+            });
+
+            refreshExtras();
+            cell.appendChild(secondarySelect);
+            cell.appendChild(tertiarySelect);
+            controls.push(secondarySelect, tertiarySelect);
         } else if (slot === 'Logo') {
             var logos = logoOptions(assignment.DesignId);
             var logoSelect = makeSelect(logos, assignment.DesignId, k.label + ' logo design');

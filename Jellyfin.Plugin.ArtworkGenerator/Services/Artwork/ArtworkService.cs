@@ -24,8 +24,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
     public class ArtworkService
     {
         /// <summary>
-        /// Upper bound on how many alternates a single request may ask for. Each distinct frame costs
-        /// an extraction, so this caps the worst case for the Edit Images picker.
+        /// Upper bound on how many frames a single request may ask for. Each distinct frame costs an
+        /// extraction, and a poster slot draws every frame once per design, so the Edit Images
+        /// picker can receive up to three times this many posters for one slot.
         /// </summary>
         public const int MaxCandidates = 10;
 
@@ -181,10 +182,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         /// Generates up to <paramref name="count"/> images of the requested type for an item. Returns
         /// nothing when the item's profile does not fill that slot.
         /// </summary>
+        /// <param name="item">The item to draw.</param>
+        /// <param name="type">The image type to draw.</param>
+        /// <param name="count">How many frames to draw.</param>
+        /// <param name="includeAlternateDesigns">
+        /// Whether a poster slot's secondary and tertiary designs also draw each frame, for the Edit
+        /// Images picker. An automatic refresh keeps one image, so it draws the first design only.
+        /// </param>
+        /// <param name="cancellationToken">Cancels the render.</param>
         public async Task<IReadOnlyList<GeneratedArtwork>> GenerateAsync(
             BaseItem item,
             ImageType type,
             int count,
+            bool includeAlternateDesigns,
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(item);
@@ -218,13 +228,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             {
                 ArtworkSlot.Logo => await RenderLogosAsync(item, subject, profile, assignment, count, cancellationToken).ConfigureAwait(false),
                 ArtworkSlot.Backdrop => await RenderBackdropsAsync(item, subject, profile, count, cancellationToken).ConfigureAwait(false),
-                _ => await RenderPostersAsync(item, subject, profile, kind.Value, slot.Value, assignment, count, cancellationToken).ConfigureAwait(false)
+                _ => await RenderPostersAsync(item, subject, profile, kind.Value, slot.Value, assignment, count, includeAlternateDesigns, cancellationToken).ConfigureAwait(false)
             };
         }
 
         // RenderPostersAsync
         // Primary and Thumb: the assigned design, adjusted to the slot's shape, drawn over canvases
-        // from the item's frame pool.
+        // from the item's frame pool. With alternates, the slot's secondary and tertiary designs
+        // draw the same frame ranks too, and the results are interleaved by frame so the picker
+        // shows every design's take on one frame side by side.
         private async Task<IReadOnlyList<GeneratedArtwork>> RenderPostersAsync(
             BaseItem item,
             ArtworkSubject subject,
@@ -233,10 +245,44 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             ArtworkSlot slot,
             SlotAssignment assignment,
             int count,
+            bool includeAlternateDesigns,
             CancellationToken cancellationToken)
         {
             var shape = profile.GetShape(kind, slot);
-            var settings = ShapeAdjust(_configService.GetDesignForSlot(assignment), shape);
+            var designs = includeAlternateDesigns
+                ? _configService.GetDesignsForSlot(assignment)
+                : new[] { _configService.GetDesignForSlot(assignment) };
+
+            // Each design takes its frames from the pool on its own. Holding the pool for the whole
+            // render keeps it from being discarded between designs while other items' pools crowd
+            // it, which would hand the later designs a new pool with different frames and extract
+            // them all over again.
+            using var hold = designs.Count > 1
+                ? await _canvasService.HoldFramePoolAsync(item, ShapeAdjust(designs[0], shape), cancellationToken).ConfigureAwait(false)
+                : null;
+
+            var perDesign = new List<IReadOnlyList<GeneratedArtwork?>>(designs.Count);
+            foreach (var design in designs)
+            {
+                perDesign.Add(await RenderDesignAsync(item, subject, ShapeAdjust(design, shape), shape, slot, count, cancellationToken).ConfigureAwait(false));
+            }
+
+            return InterleaveByFrame(perDesign);
+        }
+
+        // RenderDesignAsync
+        // One design over the slot's frame ranks. Each entry is one frame, null where that frame
+        // failed to render, so a failure never shifts the frames that follow out of line with the
+        // other designs'. Canvases are released before the next design starts.
+        private async Task<IReadOnlyList<GeneratedArtwork?>> RenderDesignAsync(
+            BaseItem item,
+            ArtworkSubject subject,
+            PosterSettings settings,
+            ArtworkShape shape,
+            ArtworkSlot slot,
+            int count,
+            CancellationToken cancellationToken)
+        {
             var generator = CreateGenerator(settings.PosterStyle, shape);
 
             ApplySubjectRules(subject, settings);
@@ -245,13 +291,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 .GenerateCanvasesAsync(item, subject, settings, shape, RankOffset(slot), count, cancellationToken)
                 .ConfigureAwait(false);
 
-            var results = new List<GeneratedArtwork>(canvases.Count);
+            var results = new GeneratedArtwork?[canvases.Count];
             try
             {
-                foreach (var canvas in canvases)
+                for (int i = 0; i < canvases.Count; i++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
+                    var canvas = canvases[i];
                     var bytes = generator.Generate(canvas, subject, settings);
                     if (bytes == null)
                     {
@@ -259,7 +306,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                         continue;
                     }
 
-                    results.Add(new GeneratedArtwork(bytes, "image/jpeg", ImageFormat.Jpg, canvas.Width, canvas.Height));
+                    results[i] = new GeneratedArtwork(bytes, "image/jpeg", ImageFormat.Jpg, canvas.Width, canvas.Height);
                 }
             }
             finally
@@ -267,6 +314,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 foreach (var canvas in canvases)
                 {
                     canvas.Dispose();
+                }
+            }
+
+            return results;
+        }
+
+        // InterleaveByFrame
+        // Frame by frame, each design's image of that frame in design order. A design with fewer
+        // frames, such as one drawn over the series backdrop, simply runs out early.
+        internal static IReadOnlyList<GeneratedArtwork> InterleaveByFrame(IReadOnlyList<IReadOnlyList<GeneratedArtwork?>> perDesign)
+        {
+            var frames = perDesign.Count == 0 ? 0 : perDesign.Max(images => images.Count);
+            var results = new List<GeneratedArtwork>();
+
+            for (int frame = 0; frame < frames; frame++)
+            {
+                foreach (var images in perDesign)
+                {
+                    if (frame < images.Count && images[frame] is { } artwork)
+                    {
+                        results.Add(artwork);
+                    }
                 }
             }
 

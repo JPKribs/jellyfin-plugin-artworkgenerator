@@ -978,7 +978,7 @@ export default function (view) {
         var componentTitles = {
             canvas: 'Canvas Image',
             poster: 'Series Poster',
-            logo: 'Series Logo',
+            logo: 'Logo',
             graphic: 'Static Graphic'
         };
 
@@ -1226,7 +1226,7 @@ export default function (view) {
         // Controls that affect visibility
         var visibilityControls = [
             '#selectPosterStyle', '#chkShowPrimary', '#chkShowSecondary', '#selectCanvasSource',
-            '#chkEnableLetterboxDetection', '#selectPosterFill', '#selectOverlayGradient',
+            '#selectPosterFill', '#selectOverlayGradient',
             '#chkSecondaryUseCustomFont', '#chkPrimaryUseCustomFont', '#chkPaletteDerivedColors'
         ];
         visibilityControls.forEach(function (selector) {

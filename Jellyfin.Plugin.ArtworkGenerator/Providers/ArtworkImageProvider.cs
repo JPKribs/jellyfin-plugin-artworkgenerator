@@ -75,7 +75,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
 
             try
             {
-                var results = await plugin.ArtworkService.GenerateAsync(item, type, 1, cancellationToken).ConfigureAwait(false);
+                var results = await plugin.ArtworkService.GenerateAsync(item, type, 1, false, cancellationToken).ConfigureAwait(false);
                 if (results.Count == 0)
                 {
                     _logger.LogWarning("No {Type} image could be generated for {Name}", type, item.Name);
@@ -124,7 +124,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
 
             try
             {
-                var results = await plugin.ArtworkService.GenerateAsync(item, ImageType.Backdrop, 1, cancellationToken).ConfigureAwait(false);
+                var results = await plugin.ArtworkService.GenerateAsync(item, ImageType.Backdrop, 1, false, cancellationToken).ConfigureAwait(false);
                 if (results.Count == 0)
                 {
                     return;

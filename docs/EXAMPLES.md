@@ -325,7 +325,7 @@ Fade with a corner-to-corner wash instead of a flat tint.
 
 ## Logo
 
-Series logo over the image. Puts branding first.
+The item's logo over the image. Puts branding first.
 
 ### Logo
 

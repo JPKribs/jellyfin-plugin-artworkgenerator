@@ -96,6 +96,26 @@ public class PosterConfigurationServiceTests
     }
 
     [Fact]
+    public void GetDesignsForSlot_ListsTheExtraDesignsAndSkipsDeletedOrRepeatedOnes()
+    {
+        var config = Config();
+        var service = Service();
+        service.Initialize(config);
+
+        var standard = config.PosterConfigurations.Single(c => c.IsDefault);
+        var anime = config.PosterConfigurations.Single(c => c.Name == "Anime");
+
+        var assignment = new SlotAssignment { DesignId = anime.Id, SecondaryDesignId = standard.Id, TertiaryDesignId = Guid.NewGuid() };
+        Assert.Equal(new[] { anime.Settings, standard.Settings }, service.GetDesignsForSlot(assignment));
+
+        var repeated = new SlotAssignment { DesignId = anime.Id, SecondaryDesignId = anime.Id };
+        Assert.Equal(new[] { anime.Settings }, service.GetDesignsForSlot(repeated));
+
+        var deletedFirst = new SlotAssignment { DesignId = Guid.NewGuid(), TertiaryDesignId = anime.Id };
+        Assert.Equal(new[] { standard.Settings, anime.Settings }, service.GetDesignsForSlot(deletedFirst));
+    }
+
+    [Fact]
     public void SaveLogoDesigns_PersistsAndRefreshesTheLookups()
     {
         var store = new LogoDesignStore();

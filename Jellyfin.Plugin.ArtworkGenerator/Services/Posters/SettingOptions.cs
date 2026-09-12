@@ -50,15 +50,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // Settable
-        // The settings a design actually stores: writable, not computed, and not one of the legacy
-        // names kept only for migration (those are the nullable ones).
+        // The settings a design actually stores: writable and not computed.
         private static IEnumerable<PropertyInfo> Settable()
         {
             return typeof(PosterSettings)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead && p.CanWrite)
-                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
-                .Where(p => Nullable.GetUnderlyingType(p.PropertyType) == null);
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null);
         }
 
         /// <summary>

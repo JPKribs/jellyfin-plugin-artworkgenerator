@@ -29,7 +29,7 @@ public class PosterSettingRulesTests
     }
 
     /// <summary>
-    /// A style that does not place the series logo, cut out its text, or outline a shape should not
+    /// A style that does not place the logo, cut out its text, or outline a shape should not
     /// offer those settings.
     /// </summary>
     [Fact]

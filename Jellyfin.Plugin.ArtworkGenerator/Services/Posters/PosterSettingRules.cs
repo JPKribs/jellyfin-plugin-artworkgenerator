@@ -70,13 +70,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         /// <summary>The outline drawn around a cut-out shape.</summary>
         public const string CutoutBorder = "CutoutBorder";
 
-        /// <summary>The series logo's vertical placement.</summary>
+        /// <summary>The logo's vertical placement.</summary>
         public const string LogoPosition = "LogoPosition";
 
-        /// <summary>The series logo's horizontal placement.</summary>
+        /// <summary>The logo's horizontal placement.</summary>
         public const string LogoAlignment = "LogoAlignment";
 
-        /// <summary>The series logo's height.</summary>
+        /// <summary>The logo's height.</summary>
         public const string LogoHeight = "LogoHeight";
 
         /// <summary>

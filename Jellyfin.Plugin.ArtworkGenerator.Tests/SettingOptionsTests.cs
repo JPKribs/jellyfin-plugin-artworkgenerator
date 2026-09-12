@@ -78,7 +78,7 @@ public class SettingOptionsTests
     }
 
     /// <summary>
-    /// The legacy setting names kept only for migration are not offered, so the page cannot show a
+    /// The setting names retired before 12.0.2.0 are not offered, so the page cannot show a
     /// dropdown for a setting nothing reads any more.
     /// </summary>
     [Theory]

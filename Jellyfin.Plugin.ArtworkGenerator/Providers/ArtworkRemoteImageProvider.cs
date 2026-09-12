@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
+using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -93,7 +94,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
                 return Array.Empty<RemoteImageInfo>();
             }
 
+            // The dialog asks for everything again on every type switch and page, so a set rendered
+            // moments ago is offered again while nothing it was drawn from has changed.
+            var stamp = GeneratedCandidateMemo.StampFor(item, plugin.PosterConfigService.Version);
+            if (plugin.CandidateMemo.TryGet(item.Id, stamp, plugin.GeneratedImageCache, out var remembered))
+            {
+                _logger.LogDebug("Offering {Count} remembered image(s) for {Name}", remembered.Count, item.Name);
+                return remembered;
+            }
+
             var images = new List<RemoteImageInfo>();
+            var tokens = new List<string>();
+            var complete = true;
 
             // The picker groups and filters by language. These are drawn from the item's own frames
             // and its own name, so they belong to whatever language the item's metadata is in: the
@@ -105,20 +117,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
                 // Jellyfin also queries remote providers during a metadata refresh, for items
                 // missing an image type, and nothing distinguishes that from a user opening the
                 // picker. The count is therefore bounded by what the item already has: with no
-                // image of this type the caller is filling a blank and keeps exactly one. A color
-                // logo is text only, so the artwork service returns just one whatever is asked.
-                var count = !item.HasImage(type)
+                // image of this type the caller is filling a blank and keeps exactly one, drawn
+                // with the slot's first design. A color logo is text only, so the artwork service
+                // returns just one whatever is asked.
+                var choosing = item.HasImage(type);
+                var count = !choosing
                     ? 1
                     : Math.Clamp(plugin.Configuration.ImageChoiceCount, 1, ArtworkService.MaxCandidates);
 
                 try
                 {
-                    var generated = await plugin.ArtworkService.GenerateAsync(item, type, count, cancellationToken).ConfigureAwait(false);
+                    var generated = await plugin.ArtworkService.GenerateAsync(item, type, count, choosing, cancellationToken).ConfigureAwait(false);
                     foreach (var artwork in generated)
                     {
                         var token = plugin.GeneratedImageCache.Add(artwork.Bytes, artwork.MimeType);
                         var url = string.Create(CultureInfo.InvariantCulture, $"{baseUrl}/{GeneratedImageRoute}/{token}");
 
+                        tokens.Add(token);
                         images.Add(new RemoteImageInfo
                         {
                             ProviderName = Name,
@@ -137,8 +152,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
                 }
                 catch (Exception ex)
                 {
+                    complete = false;
                     _logger.LogError(ex, "Failed to generate {Type} candidates for {Name}", type, item.Name);
                 }
+            }
+
+            // A set missing a type that failed is not remembered, so the next request tries it again.
+            if (complete)
+            {
+                plugin.CandidateMemo.Set(item.Id, stamp, images, tokens);
             }
 
             _logger.LogInformation("Offering {Count} generated image(s) for {Name}", images.Count, item.Name);

@@ -60,7 +60,7 @@ Decorative frame borders with the title and an optional subtitle.
 | ![Frame Example 1](docs/examples/Frame/Example1.png) | ![Frame Example 2](docs/examples/Frame/Example2.png) | ![Frame Example 3](docs/examples/Frame/Example3.png) |
 
 ### Logo Style
-Series logo focused posters with optional season/episode information.
+Posters built around the item's logo, with an optional title and subtitle.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
@@ -166,12 +166,12 @@ Optional static graphic overlays positioned above the canvas but below text elem
 - Maintains aspect ratio while fitting within poster constraints
 
 ### Layer 4: Typography (Text and Logos)
-The top layer containing all text elements, episode information, and series logos.
+The top layer containing all text elements, the subtitle, and logos.
 
 **Elements:**
 - The subtitle: an episode's season and episode numbers, a season's label, or a film's year
 - The title, with automatic wrapping and configurable handling for names too long to fit
-- Series logos with configurable positioning
+- The logo selected for the item, its season, or its series, with configurable positioning
 - Style specific typography (Roman numerals, cutout text, etc.)
 - Drop shadows and contrasting outlines for enhanced readability
 - A Text Position setting that moves the title and subtitle to the top, center, or bottom on every style whose text is a block laid over the image

@@ -21,5 +21,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// logo design for Logo. Ignored for Backdrop, which is a plain extraction.
         /// </summary>
         public Guid DesignId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a second poster design offered in the Edit Images picker, drawn over the same
+        /// frames as the first. Empty when there is none. Automatic generation only uses
+        /// <see cref="DesignId"/>.
+        /// </summary>
+        public Guid SecondaryDesignId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a third poster design offered in the Edit Images picker, drawn over the same
+        /// frames as the first. Empty when there is none.
+        /// </summary>
+        public Guid TertiaryDesignId { get; set; }
     }
 }

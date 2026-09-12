@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.ArtworkGenerator
 {
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The plugin lives for the whole server process; the frame pool clears its own directory on the next start.")]
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The plugin lives for the whole server process; the frame pool clears its own directory on the next start, and the image cache sweep timer ends with the process.")]
     public class Plugin : PluginBase<Plugin, PluginConfiguration>
     {
         public override string Name => "Artwork Generator";
@@ -27,7 +27,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         /// </summary>
         public override string ConfigurationFileName => "Jellyfin.Plugin.EpisodePosterGenerator.xml";
 
-        public override string Description => "Generates posters, thumbs, logos, and backdrops for series, seasons, and episodes from their video.";
+        public override string Description => "Generates posters, thumbs, logos, and backdrops for series, seasons, episodes, films, and other videos from their video.";
 
         private readonly ILogger<Plugin> _logger;
         private readonly PosterConfigurationService _posterConfigService;
@@ -35,6 +35,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         private readonly ArtworkService _artworkService;
         private readonly PreviewService _previewService;
         private readonly GeneratedImageCache _generatedImageCache;
+        private readonly GeneratedCandidateMemo _candidateMemo = new();
 
         // Plugin
         // Initializes the plugin with all required services and dependencies.
@@ -49,11 +50,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             _logger = logger;
 
             var dataRoot = Path.Combine(applicationPaths.DataPath, "artworkgenerator");
-
-            // TODO (12.0.2.1): delete this call and MoveLegacyDataDirectory. The plugin's data
-            // directory was named for its former name until 12.0.2.0.
-            MoveLegacyDataDirectory(applicationPaths.DataPath, dataRoot, logger);
-
             _posterConfigService = new PosterConfigurationService(
                 loggerFactory.CreateLogger<PosterConfigurationService>(),
                 new LogoDesignStore(Path.Combine(dataRoot, "logos.json")));
@@ -88,7 +84,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator
 
             _previewService = new PreviewService(loggerFactory, Path.Combine(dataRoot, "preview-assets"));
             _generatedImageCache = new GeneratedImageCache(
-                loggerFactory.CreateLogger<GeneratedImageCache>());
+                loggerFactory.CreateLogger<GeneratedImageCache>(),
+                () => Configuration?.ImageCacheMinutes ?? GeneratedImageCache.DefaultLifetimeMinutes);
 
             // Container images ship almost none of the common desktop fonts, so a configured
             // family often silently falls back to Skia's default. Surface it once per family.
@@ -98,38 +95,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                     family));
 
             _logger.LogInformation("Artwork Generator plugin initialized");
-        }
-
-        // MoveLegacyDataDirectory
-        // The plugin kept its data under a directory named for its former name. Renaming it
-        // outright would strand the user's logo designs, so the old directory is moved across
-        // once. Only ever moves onto an absent destination, so a half-finished move cannot
-        // overwrite live data; the frame pool and preview assets inside are rebuilt on demand
-        // either way.
-        //
-        // TODO (12.0.2.1): delete, along with its call in the constructor.
-        private static void MoveLegacyDataDirectory(string dataPath, string destination, ILogger<Plugin> logger)
-        {
-            var legacy = Path.Combine(dataPath, "episodeposter");
-
-            if (!Directory.Exists(legacy) || Directory.Exists(destination))
-            {
-                return;
-            }
-
-            try
-            {
-                Directory.Move(legacy, destination);
-                logger.LogInformation("Moved the plugin data directory from {Legacy} to {Destination}", legacy, destination);
-            }
-            catch (IOException ex)
-            {
-                logger.LogWarning(ex, "Could not move the plugin data directory from {Legacy}; starting fresh", legacy);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                logger.LogWarning(ex, "Could not move the plugin data directory from {Legacy}; starting fresh", legacy);
-            }
         }
 
         public ArtworkService ArtworkService => _artworkService;
@@ -143,6 +108,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         /// image picker.
         /// </summary>
         public GeneratedImageCache GeneratedImageCache => _generatedImageCache;
+
+        /// <summary>
+        /// Gets the choices last offered for each item in Edit Images, reused while they are still
+        /// current so switching image type or page does not render everything again.
+        /// </summary>
+        public GeneratedCandidateMemo CandidateMemo => _candidateMemo;
 
         // GetPages
         // Returns the plugin configuration pages. Only the first tab is listed in the dashboard menu.

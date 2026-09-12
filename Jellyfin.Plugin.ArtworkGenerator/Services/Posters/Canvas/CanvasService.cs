@@ -106,6 +106,26 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         /// <summary>
+        /// Takes a hold on the item's frame pool without growing it, so the pool is not discarded
+        /// while several renders draw from it in turn. Returns null when the item has no video to
+        /// extract from. Dispose the hold once the renders are done.
+        /// </summary>
+        public async Task<IDisposable?> HoldFramePoolAsync(BaseItem item, PosterSettings settings, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(item);
+            ArgumentNullException.ThrowIfNull(settings);
+
+            var sources = ArtworkSources.GetPlayableSources(item);
+            if (sources.Count == 0)
+            {
+                return null;
+            }
+
+            var key = FramePoolService.KeyFor(item.Id, settings.ExtractWindowStart, settings.ExtractWindowEnd);
+            return await _framePool.AcquireAsync(key, sources, settings.ExtractWindowStart, settings.ExtractWindowEnd, 0, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Produces up to <paramref name="count"/> backdrop bitmaps from the item's frame pool: the
         /// frame cropped to the backdrop ratio with no design applied. Returns nothing when the item
         /// has no extractable video.

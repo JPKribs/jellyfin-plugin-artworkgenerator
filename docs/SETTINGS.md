@@ -4,7 +4,8 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 
 ## Settings
 
-* **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An item with no image of that type is only offered one, because that request comes from an automatic refresh that keeps a single image. Default 3.
+* **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An item with no image of that type is only offered one, because that request comes from an automatic refresh that keeps a single image. A primary image or thumb with a second and third design draws each choice once per design. Default 3.
+* **Edit Images Cache (Minutes)**: how long the choices rendered for the Edit Images dialog stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones, unless the settings or the item's images have changed. The dialog loads each choice by address, so one picked after this has passed cannot be downloaded and the dialog has to be reopened. They are held in memory, up to 256 MB at once, oldest dropped first, and released as soon as they expire. Default 30.
 * **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
 
 ### Frame Extraction
@@ -24,6 +25,7 @@ How frames are taken from a video and cleaned up, for every poster and every bac
 * **Images**: one row each for series, seasons, episodes, movies, and videos. Tick an image to generate it whenever an item is missing one.
   * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series, seasons, and movies default to portrait and episodes to landscape. Any design can draw either shape.
   * **Thumb**: a landscape image, offered for every kind. An episode thumb is what many clients show in the next-up and resume rows.
+  * **Second and third designs**: Primary and Thumb can each name up to two more designs, picked from the dropdowns under the design, where a dash means none. The third appears once a second is chosen, and clearing the second moves the third up. They only add choices to the Edit Images picker, where every design draws the same frames and each frame's versions sit side by side. Generating a missing image always uses the first design.
   * **Logo**: a transparent text logo for a series or a film, drawn with a logo design.
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
 * **Backdrops**: the aspect ratio a backdrop is cropped to. How its frame is taken from the video is in Settings, under Frame Extraction.
@@ -36,7 +38,7 @@ Every design draws both shapes. The profile decides which one each image uses, s
 
 Sizes are a percent of the poster's short side. A portrait image measures them against the average of its two sides instead, so text carries the same weight on a tall poster as it does on a wide one.
 
-* **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design. The default design cannot be renamed or deleted.
+* **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design, and drops it wherever it was a second or third design. The default design cannot be renamed or deleted.
 * **New, Rename, Delete**: manage named designs.
 * **Export, Import**: save a design to JSON, or load one as a new design.
 * **Preview As**: whether the previews show a series, a season, an episode, a film, or a standalone video.
@@ -80,6 +82,8 @@ On this design the shared **Text Position** is shown as **Title Edge**, since th
 * **Lone Subtitle Takes the Title Edge**: an item with no title of its own, such as a season named after nothing but its number, puts its subtitle where the title would go, so an item with one line looks the same whichever line it has. Off, the subtitle keeps its own edge and the title's is left empty. Default on.
 
 ## Logo (Style is Logo)
+
+The logo is the one selected for the item, then its season, then its series. With none, the name is drawn as text instead.
 
 * **Logo Position**: vertical placement. Top, Center, or Bottom. Default Center.
 * **Logo Alignment**: horizontal placement. Left, Center, or Right. Default Center.

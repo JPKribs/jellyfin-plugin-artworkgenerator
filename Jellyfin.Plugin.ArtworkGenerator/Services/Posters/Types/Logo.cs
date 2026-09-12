@@ -16,7 +16,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Series logo over the image. Puts branding first.";
+        public override string Description => "The item's logo over the image. Puts branding first.";
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
@@ -28,7 +28,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override string SecondaryDescription
             => "The subtitle is the episode code, set on the line above the title.";
 
-        // This style places the series logo, so the logo settings are its own.
+        // This style places the logo, so the logo settings are its own.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.LogoPosition, PosterSettingState.Optional),
             (PosterSettingRules.LogoAlignment, PosterSettingState.Optional),
@@ -45,12 +45,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // RenderGraphics
-        // Renders configured graphics and the series logo on the poster.
+        // Renders configured graphics and the logo on the poster.
         protected override void RenderGraphics(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             base.RenderGraphics(skCanvas, subject, settings, width, height);
 
-            RenderSeriesLogo(skCanvas, subject, settings, width, height);
+            RenderLogo(skCanvas, subject, settings, width, height);
         }
 
         // RenderTypography
@@ -89,22 +89,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return (subject.Primary ?? string.Empty, subject.SecondaryShort);
         }
 
-        // RenderSeriesLogo
-        // Renders the series logo image or falls back to text if no logo is available.
-        private void RenderSeriesLogo(SKCanvas canvas, ArtworkSubject subject, PosterSettings config, int width, int height)
+        // RenderLogo
+        // Renders the item's logo image, or its name as text when it has no logo.
+        private void RenderLogo(SKCanvas canvas, ArtworkSubject subject, PosterSettings config, int width, int height)
         {
-            var seriesName = subject.SeriesName ?? "Unknown Series";
-            var logoPath = GetSeriesLogoPath(subject);
+            var name = subject.SeriesName ?? "Unknown Series";
+            var logoPath = GetLogoPath(subject);
             var logoArea = GetLogoArea(subject, config, width, height);
             var unit = SizeUnit(width, height);
 
             if (!string.IsNullOrEmpty(logoPath))
             {
-                DrawSeriesLogoImage(canvas, logoPath, config.LogoPosition, config.LogoAlignment, config, logoArea, unit);
+                DrawLogoImage(canvas, logoPath, config.LogoPosition, config.LogoAlignment, config, logoArea, unit);
             }
             else
             {
-                DrawSeriesLogoText(canvas, seriesName, config.LogoPosition, config.LogoAlignment, config, logoArea, unit);
+                DrawLogoText(canvas, name, config.LogoPosition, config.LogoAlignment, config, logoArea, unit);
             }
         }
 
@@ -146,10 +146,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 : SKRect.Create(safeArea.Left, safeArea.Top, safeArea.Width, floor);
         }
 
-        // GetSeriesLogoPath
+        // GetLogoPath
         // Returns the path to the logo selected for the item, its season, or its series, if the
         // file exists.
-        private string? GetSeriesLogoPath(ArtworkSubject subject)
+        private string? GetLogoPath(ArtworkSubject subject)
         {
             try
             {
@@ -163,15 +163,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                Logger.LogWarning(ex, "Error checking series logo path");
+                Logger.LogWarning(ex, "Error checking logo path");
                 return null;
             }
         }
 
-        // DrawSeriesLogoImage
-        // Draws the series logo image at the specified position and alignment. Its height is a
+        // DrawLogoImage
+        // Draws the logo image at the specified position and alignment. Its height is a
         // percent of the poster's short side, like every other size setting.
-        private void DrawSeriesLogoImage(SKCanvas canvas, string logoPath, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
+        private void DrawLogoImage(SKCanvas canvas, string logoPath, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
             try
             {
@@ -209,13 +209,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                Logger.LogWarning(ex, "Failed to draw series logo image: {Path}", logoPath);
+                Logger.LogWarning(ex, "Failed to draw logo image: {Path}", logoPath);
             }
         }
 
-        // DrawSeriesLogoText
-        // Draws the series name as text when no logo image is available.
-        private static void DrawSeriesLogoText(SKCanvas canvas, string seriesName, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
+        // DrawLogoText
+        // Draws the name as text when no logo image is available.
+        private static void DrawLogoText(SKCanvas canvas, string name, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
             var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.SecondaryFontSize * RenderConstants.LineHeightMultiplier, unit);
             var typeface = ResolveSecondaryTypeface(config);
@@ -224,7 +224,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.SecondaryFontColor), fontSize, typeface, unit, textAlign);
 
             var availableWidth = logoArea.Width * RenderConstants.TextWidthMultiplier;
-            var lines = TextUtils.FitTextToWidth(seriesName, style.Font, availableWidth);
+            var lines = TextUtils.FitTextToWidth(name, style.Font, availableWidth);
 
             var x = CalculateLogoX(alignment, logoArea, 0);
             var y = CalculateLogoY(position, logoArea, style.BlockHeight(lines.Count));

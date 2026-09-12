@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
-    public partial class PosterSettings
+    public class PosterSettings
     {
         /// <summary>
         /// Gets the effective episode font path (null when custom font is disabled).
@@ -85,10 +85,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Outline", Description = "Draw a contrasting outline around the cut-out shape.")]
         public bool CutoutBorder { get; set; } = true;
 
-        [Display(Name = "Logo Position", Description = "Vertical position of the series logo on the poster.")]
+        [Display(Name = "Logo Position", Description = "Vertical position of the logo on the poster.")]
         public Position LogoPosition { get; set; } = Position.Center;
 
-        [Display(Name = "Logo Alignment", Description = "Horizontal alignment of the series logo on the poster.")]
+        [Display(Name = "Logo Alignment", Description = "Horizontal alignment of the logo on the poster.")]
         public Alignment LogoAlignment { get; set; } = Alignment.Center;
 
         [Display(Name = "Logo Height", Description = "Logo height as a percent of the poster's short side, 1 to 100.")]

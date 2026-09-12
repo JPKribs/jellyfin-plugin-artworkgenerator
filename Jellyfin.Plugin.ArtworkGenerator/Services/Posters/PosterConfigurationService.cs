@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Jellyfin.Plugin.ArtworkGenerator.Configuration;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
@@ -9,14 +10,11 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.ArtworkGenerator.Services
 {
     /// <summary>
-    /// Resolves which profile, poster design, and logo design apply to an item, and brings older
-    /// configurations up to the profile model.
+    /// Resolves which profile, poster design, and logo design apply to an item, filling in the
+    /// defaults a configuration lacks.
     /// </summary>
-    public partial class PosterConfigurationService
+    public class PosterConfigurationService
     {
-        /// <summary>Id of the separate portrait design an earlier build synthesized. Every design now renders both shapes, so it is retired on load.</summary>
-        public static readonly Guid DefaultPortraitDesignId = new("6f1c2a4e-3b7d-4e21-9a55-0c8d7e1f2a01");
-
         /// <summary>Id of the logo design synthesized for configurations that have none.</summary>
         public static readonly Guid DefaultLogoDesignId = new("6f1c2a4e-3b7d-4e21-9a55-0c8d7e1f2a02");
 
@@ -29,12 +27,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         private readonly ILogger<PosterConfigurationService> _logger;
         private readonly LogoDesignStore _logoStore;
         private volatile Snapshot _snapshot = Snapshot.Empty;
+        private int _version;
 
         public PosterConfigurationService(ILogger<PosterConfigurationService> logger, LogoDesignStore? logoStore = null)
         {
             _logger = logger;
             _logoStore = logoStore ?? new LogoDesignStore();
         }
+
+        /// <summary>
+        /// Gets a number that changes every time the configuration is loaded, so anything derived
+        /// from it can tell when it has gone stale.
+        /// </summary>
+        public int Version => Volatile.Read(ref _version);
 
         /// <summary>Gets the default landscape design.</summary>
         public PosterSettings DefaultDesign => _snapshot.DefaultDesign;
@@ -54,14 +59,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             var design = EnsureDefaultDesign(config);
 
-            // TODO (12.0.2.1): delete this call and PosterConfigurationService.Migration.cs.
-            MigrateConfiguration(config, design);
-
             var logoDesigns = LoadLogoDesigns();
             var logo = logoDesigns[0];
-
-            // TODO (12.0.2.1): delete this call and PosterConfigurationService.Migration.cs.
-            MigrateLegacyDesignsToProfiles(config, design, logo);
 
             EnsureProfiles(config, design, logo);
             foreach (var profile in config.Profiles)
@@ -117,6 +116,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 config.Profiles.First(p => p.IsDefault),
                 bySeries,
                 byMovie);
+            Interlocked.Increment(ref _version);
 
             _logger.LogInformation(
                 "Artwork configuration loaded: {Designs} design(s), {Logos} logo design(s), {Profiles} profile(s), {Assigned} assigned series, {Duplicates} duplicate assignment(s) ignored",
@@ -153,6 +153,37 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             return assignment != null && snapshot.Designs.TryGetValue(assignment.DesignId, out var design)
                 ? design
                 : snapshot.DefaultDesign;
+        }
+
+        /// <summary>
+        /// Returns every poster design a slot offers in the picker, first design first. The first
+        /// falls back to the default like <see cref="GetDesignForSlot"/>; a secondary or tertiary
+        /// design that has been deleted, or that repeats one already listed, is skipped, so it never
+        /// turns into a second copy of the default.
+        /// </summary>
+        public IReadOnlyList<PosterSettings> GetDesignsForSlot(SlotAssignment assignment)
+        {
+            var snapshot = _snapshot;
+            if (assignment == null || !snapshot.Designs.TryGetValue(assignment.DesignId, out var first))
+            {
+                first = snapshot.DefaultDesign;
+            }
+
+            var designs = new List<PosterSettings> { first };
+            if (assignment == null)
+            {
+                return designs;
+            }
+
+            foreach (var id in new[] { assignment.SecondaryDesignId, assignment.TertiaryDesignId })
+            {
+                if (id != Guid.Empty && snapshot.Designs.TryGetValue(id, out var design) && !designs.Contains(design))
+                {
+                    designs.Add(design);
+                }
+            }
+
+            return designs;
         }
 
         /// <summary>
