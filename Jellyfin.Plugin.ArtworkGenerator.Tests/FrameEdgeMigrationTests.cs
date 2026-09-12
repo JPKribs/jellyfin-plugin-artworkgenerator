@@ -66,4 +66,26 @@ public class FrameEdgeMigrationTests
             Assert.Equal(before.Secondary, now.SecondaryAtBottom);
         }
     }
+
+    /// <summary>
+    /// The plugin configuration is XML, not JSON, and the old name is now a nullable enum. If that
+    /// stopped deserializing, every saved framed design would quietly fall back to the default edge
+    /// with nothing to show it had happened.
+    /// </summary>
+    [Fact]
+    public void TheOldNameStillLoadsFromASavedXmlConfiguration()
+    {
+        const string Xml = "<PosterSettings><PosterStyle>Frame</PosterStyle><TextEdge>AlwaysBottom</TextEdge></PosterSettings>";
+
+        var serializer = new System.Xml.Serialization.XmlSerializer(typeof(PosterSettings));
+        using var reader = new System.IO.StringReader(Xml);
+        var settings = (PosterSettings)serializer.Deserialize(reader)!;
+
+        Assert.Equal(TextEdge.AlwaysBottom, settings.TextEdge);
+
+        PosterConfigurationService.MigrateTextVocabulary(settings);
+
+        Assert.Equal(TextPosition.Bottom, settings.TextPosition);
+        Assert.False(settings.LoneLineFollowsTitle);
+    }
 }
