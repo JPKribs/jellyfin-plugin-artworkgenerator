@@ -9,7 +9,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
         // The tallest a stroke may be relative to its own length. A brush stroke reads as a stroke
         // only while it is longer than it is thick; past this it reads as a blob. A wide poster
         // never reaches this cap, so raising it thickens the strokes on a tall poster alone.
-        private const float MaxHeightToLengthRatio = 0.36f;
+        private const float MaxHeightToLengthRatio = 0.46f;
 
         private readonly Random _random;
 

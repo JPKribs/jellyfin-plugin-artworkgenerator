@@ -33,6 +33,7 @@ changelog:
   - Four bundled designs set a caption-sized title, which left a series poster's name looking like an afterthought; they now use the same title size as the rest
   - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
   fixes:
+  - Brush strokes on a tall poster are thicker again, revealing more of the frame, while wide posters keep the stroke layout they had
   - Fade sized a short series name until it filled the whole poster; its focal name is now bounded in thickness and length
   - The Logo style drew nothing but the logo for a series; it shows the name beneath the logo, the same way it shows an episode's name
   - Brush strokes were thin on a tall poster, since the cap that stops them becoming blobs was tuned for wide frames; they are thicker there now, and wide posters are unchanged
