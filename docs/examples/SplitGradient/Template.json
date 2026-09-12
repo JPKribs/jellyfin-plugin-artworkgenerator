@@ -1,6 +1,6 @@
 {
   "name": "Gradient Split",
-  "description": "Split panel with a diagonal gradient drawn from the frame's own colour.",
+  "description": "Split panel with a diagonal gradient drawn from the frame's own color.",
   "author": "Joseph Kribs",
   "version": "12.0.1.0",
   "createdDate": "2026-09-11T00:00:00.000Z",

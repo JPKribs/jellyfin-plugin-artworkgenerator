@@ -18,14 +18,14 @@ changelog:
   - Every profile covers films, series, seasons, and episodes; which items it draws is decided by assigning them to it
   - The live preview can render a film, alongside a series, season, and episode
   - A season or series poster now draws its candidates from as many different episodes as you ask for images, rather than from at most three
-  - A new Bloom poster style that pools a colour in the centre of the frame and sets the text over it, taking that colour from the frame itself when palette colours are on
-  - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colours, and text edge over automatically
+  - A new Bloom poster style that pools a color in the center of the frame and sets the text over it, taking that color from the frame itself when palette colors are on
+  - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colors, and text edge over automatically
   - Eleven more example designs, covering every framed text edge and the palette and gradient variants of the striped, split, numeral, timeline, fade, glass, and cutout styles
   - Generates series and season posters, thumbs, backdrops, and text logos alongside episode posters
   - Every design draws both portrait and landscape, with its own portrait aspect ratio and text size, and the Designs page previews both at once
   - "Series posters show only the show's name: Cutout punches that name out of the overlay, Numeral draws it in place of the numeral, and Timeline drops its bar"
   - Logos can draw a name split by a colon or dash with either part large and the other small
-  - Logo letters can be filled with a frame from the show instead of a colour
+  - Logo letters can be filled with a frame from the show instead of a color
   - Logo designs live in their own logos.json beside the plugin configuration, and existing designs move there on load
   - Profiles decide which images each series gets and which design draws each one, replacing per-design series assignment
   - Logo designs build a text logo from the title, original title, sort title, or folder name, with year and subtitle cleanup and a fixed or sampled color
@@ -35,7 +35,7 @@ changelog:
   - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
   - Each poster style declares which settings it uses, so the Designs page offers only the settings that do something
   - Episodes can have a generated thumb, alongside series and seasons
-  - "The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning"
+  - "The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behavior that needs no tuning"
   - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   - Four bundled designs set a caption-sized title, which left a series poster's name looking like an afterthought; they now use the same title size as the rest
   - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
@@ -65,10 +65,10 @@ changelog:
   - Numeral drew its title across the numeral instead of above it
   - Fade gave a series a hairline of vertical text where the episode number would be
   - A logo's name and its subtitle sat far apart, because the lines were spaced by their em boxes rather than by the letters
-  - The logo colour control offered a swatch even when the colour is sampled from the series artwork; it now shows the opacity it actually controls
+  - The logo color control offered a swatch even when the color is sampled from the series artwork; it now shows the opacity it actually controls
   - Frame drew no border at all for an episode without a name, and ignored the Show Title setting
   - Cutout no longer lets a two line title run into the bottom of the cutout letters
-  - Split centre-crops the series poster into its panel instead of stretching artwork that is not 2:3
+  - Split center-crops the series poster into its panel instead of stretching artwork that is not 2:3
   - Brush honours the Show Episode setting and keeps a wrapped title inside the area the strokes leave clear
   - Timeline keeps the marker dot inside the safe area on the first and last episode
   - Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area

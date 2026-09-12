@@ -10,7 +10,7 @@ using SkiaSharp;
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 {
     /// <summary>
-    /// Draws a transparent text logo from a series name, filled with a colour or with a photo.
+    /// Draws a transparent text logo from a series name, filled with a color or with a photo.
     /// </summary>
     public class LogoRenderer
     {
@@ -31,11 +31,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
         // A logo has to read over dark backdrops, and a frame straight from an episode is usually
         // too dark for that once it is cut down to the inside of the letters.
-        // The lift is a colour matrix offset, which Skia measures from 0 to 1, not 0 to 255.
+        // The lift is a color matrix offset, which Skia measures from 0 to 1, not 0 to 255.
         private const float PhotoBrightness = 1.25f;
         private const float PhotoLift = 0.06f;
 
-        // Brightness floor for sampled colours, as an HSV value from 0 to 100, so a logo sampled
+        // Brightness floor for sampled colors, as an HSV value from 0 to 100, so a logo sampled
         // from a dark poster is still legible over dark backdrops.
         private const float MinimumSampledValue = 60f;
 
@@ -48,7 +48,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
         /// <summary>
         /// Renders the logo for a subject as PNG bytes, or null when there is no text to draw. A
-        /// photo fill uses <paramref name="photo"/>, and falls back to the colour when it is null.
+        /// photo fill uses <paramref name="photo"/>, and falls back to the color when it is null.
         /// </summary>
         public byte[]? Render(ArtworkSubject subject, LogoSettings settings, SKBitmap? photo = null)
         {
@@ -215,7 +215,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         }
 
         // BuildGlyphs
-        // Turns each line into an outline path, then stacks and centres the run by the letters' ink
+        // Turns each line into an outline path, then stacks and centers the run by the letters' ink
         // rather than their em boxes. A line of capitals leaves a lot of empty space above its
         // baseline, which as an em box opens a gap that grows with the font size and sits the whole
         // run low on the canvas.
@@ -362,7 +362,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         }
 
         // ResolveColor
-        // The configured colour, or the dominant colour of the chosen series artwork lifted to a
+        // The configured color, or the dominant color of the chosen series artwork lifted to a
         // legible brightness. The configured alpha applies either way.
         private SKColor ResolveColor(ArtworkSubject subject, LogoSettings settings)
         {
@@ -399,7 +399,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                _logger.LogDebug(ex, "Could not sample logo colour from {Path}", path);
+                _logger.LogDebug(ex, "Could not sample logo color from {Path}", path);
                 return configured;
             }
         }

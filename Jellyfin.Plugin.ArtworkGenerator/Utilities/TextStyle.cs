@@ -79,7 +79,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
         }
 
         // FirstBaselineCentered
-        // The baseline of the first line when a run of lines is centred vertically in a slot.
+        // The baseline of the first line when a run of lines is centered vertically in a slot.
         // A slot taller than the run splits the slack evenly above and below.
         public float FirstBaselineCentered(SKRect slot, int lineCount)
         {

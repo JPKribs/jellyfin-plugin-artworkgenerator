@@ -246,7 +246,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             var outerTotal = isHorizontal ? height : width;
             var innerMax = isHorizontal ? width : height;
 
-            // Both 8888 layouts keep the three colour channels in the first three bytes of each
+            // Both 8888 layouts keep the three color channels in the first three bytes of each
             // pixel (in either order), and the brightness is their mean, so the order is moot.
             var fastPath = bitmap.ColorType is SKColorType.Rgba8888 or SKColorType.Bgra8888;
             var pixels = fastPath ? bitmap.GetPixelSpan() : ReadOnlySpan<byte>.Empty;
@@ -281,14 +281,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         // Brightness8888
-        // Mean of the three colour channels of a 4 byte pixel at the given byte offset.
+        // Mean of the three color channels of a 4 byte pixel at the given byte offset.
         private static int Brightness8888(ReadOnlySpan<byte> pixels, int offset)
         {
             return (pixels[offset] + pixels[offset + 1] + pixels[offset + 2]) / 3;
         }
 
         // Brightness
-        // Mean of the three colour channels of a pixel.
+        // Mean of the three color channels of a pixel.
         private static int Brightness(SKColor pixel)
         {
             return (pixel.Red + pixel.Green + pixel.Blue) / 3;

@@ -10,7 +10,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
     {
         // CreateFont
         // A font set up for rendering to an offscreen surface: antialiased with subpixel
-        // positioning. LCD (subpixel colour) edging is deliberately not requested; a raster
+        // positioning. LCD (subpixel color) edging is deliberately not requested; a raster
         // surface has no pixel geometry, so Skia would silently fall back anyway.
         public static SKFont CreateFont(SKTypeface typeface, float size)
         {

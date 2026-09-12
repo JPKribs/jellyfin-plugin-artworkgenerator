@@ -46,7 +46,7 @@ public static class ColorUtils
 
     // GetContrastingOutline
     // Picks an outline color that reads against the given overlay: black over a light overlay,
-    // white over a dark one, and a mid grey in the band where neither would stand out.
+    // white over a dark one, and a mid gray in the band where neither would stand out.
     // Shared by the Cutout text border and the Brush stroke outline so the two agree.
     public static SKColor GetContrastingOutline(SKColor overlayColor)
     {
@@ -75,8 +75,8 @@ public static class ColorUtils
     }
 
     // EnsureMinimumBrightness
-    // Raises a colour's HSV value to at least the given floor (0-100), keeping its hue and
-    // saturation, so a colour sampled from dark artwork is still legible.
+    // Raises a color's HSV value to at least the given floor (0-100), keeping its hue and
+    // saturation, so a color sampled from dark artwork is still legible.
     public static SKColor EnsureMinimumBrightness(SKColor color, float minimumValue)
     {
         color.ToHsv(out float hue, out float saturation, out float value);

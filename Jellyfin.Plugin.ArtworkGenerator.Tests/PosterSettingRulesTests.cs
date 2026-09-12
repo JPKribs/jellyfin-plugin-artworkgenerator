@@ -68,7 +68,7 @@ public class PosterSettingRulesTests
     }
 
     /// <summary>
-    /// Cutout sizes and colours its letters from the cutout itself, so the text settings would lie.
+    /// Cutout sizes and colors its letters from the cutout itself, so the text settings would lie.
     /// </summary>
     [Fact]
     public void CutoutHidesTheTextSizeAndColour()

@@ -303,9 +303,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         }
 
         // RenderLogosAsync
-        // Logo: a coloured logo is text only, so there is only ever one. A photo-filled logo takes
+        // Logo: a colored logo is text only, so there is only ever one. A photo-filled logo takes
         // its picture from the item's frame pool, one frame per alternate, so each choice differs;
-        // with no frames it uses the series backdrop, and with neither it falls back to the colour.
+        // with no frames it uses the series backdrop, and with neither it falls back to the color.
         private async Task<IReadOnlyList<GeneratedArtwork>> RenderLogosAsync(
             BaseItem item,
             ArtworkSubject subject,

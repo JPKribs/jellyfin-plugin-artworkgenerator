@@ -204,7 +204,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // MigrateTextVocabulary
         // These settings were once named for a title and an episode; they are now named for the
         // primary and secondary lines every style draws. A value saved under an old name is copied
-        // onto its replacement and cleared, so an existing design keeps the fonts and colours the
+        // onto its replacement and cleared, so an existing design keeps the fonts and colors the
         // user chose rather than quietly reverting to the defaults.
         private static bool MigrateTextVocabulary(PosterSettings settings)
         {
@@ -484,7 +484,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
         // EnsureProfiles
         // Builds profiles for a configuration that predates them. The default profile reproduces
-        // the old behaviour for episodes and turns on the new slots with the default designs; every
+        // the old behavior for episodes and turns on the new slots with the default designs; every
         // design that had series assigned becomes a profile carrying those series, so each series
         // keeps the episode poster design it had.
         private void EnsureProfiles(PluginConfiguration config, PosterConfiguration design, LogoConfiguration logo)

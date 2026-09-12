@@ -340,7 +340,7 @@ Frosted panel over a soft left-to-right wash.
 
 ## Striped Palette
 
-Banded type in colours sampled from the frame itself.
+Banded type in colors sampled from the frame itself.
 
 [Download config](examples/StripedPalette/Template.json)
 
@@ -352,7 +352,7 @@ Banded type in colours sampled from the frame itself.
 
 ## Gradient Split
 
-Split panel with a diagonal gradient drawn from the frame's own colour.
+Split panel with a diagonal gradient drawn from the frame's own color.
 
 [Download config](examples/SplitGradient/Template.json)
 
@@ -424,7 +424,7 @@ Standard layout with a small mark set into the bottom corner.
 
 ## Bloom
 
-A soft pool of colour in the middle of the frame with the title set over it, fading out to leave the corners clear.
+A soft pool of color in the middle of the frame with the title set over it, fading out to leave the corners clear.
 
 [Download config](examples/Bloom/Template.json)
 
@@ -436,7 +436,7 @@ A soft pool of colour in the middle of the frame with the title set over it, fad
 
 ## Bloom Palette
 
-The same centre bloom lit from the frame's own colour, darkening towards the rim to hold the eye in the middle.
+The same center bloom lit from the frame's own color, darkening towards the rim to hold the eye in the middle.
 
 [Download config](examples/BloomPalette/Template.json)
 

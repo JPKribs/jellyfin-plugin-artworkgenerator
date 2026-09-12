@@ -255,7 +255,7 @@ public class PosterConfigurationServiceTests
     }
 
     /// <summary>
-    /// A design saved under the old title/episode setting names keeps its fonts and colours: the
+    /// A design saved under the old title/episode setting names keeps its fonts and colors: the
     /// values move onto the primary/secondary names and the old ones are cleared.
     /// </summary>
     [Fact]
