@@ -2,85 +2,48 @@
 name: "Artwork Generator"
 guid: "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e"
 imageUrl: "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-episodepostergenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png"
-version: "12.0.1.0"
+version: "12.0.2.0"
 targetAbi: "12.0.0.0"
 framework: "net10.0"
-overview: "Generate Custom Episode Posters"
+overview: "Generate artwork from your own video"
 description: >
-  Artwork Generator is a Jellyfin plugin that creates episode posters, series and season posters, thumbs, backdrops, and text logos using frame extraction and custom overlay rendering. Utilizes brightness and sharpness scoring to avoid dark scenes and motion blur.
+  Artwork Generator draws posters, thumbs, backdrops, and text logos for series, seasons, episodes, films, and any other video, extracting frames from the item itself and rendering them through designs you control.
 category: "MoviesAndShows"
 owner: "JPKribs"
 artifacts:
 - "Jellyfin.Plugin.ArtworkGenerator.dll"
 changelog:
   features:
-  - Films are supported alongside TV, with their own posters, thumbs, logos, and backdrops drawn from the film's own video
-  - Every profile covers films, series, seasons, and episodes; which items it draws is decided by assigning them to it
-  - The live preview can render a film, alongside a series, season, and episode
-  - A season or series poster now draws its candidates from as many different episodes as you ask for images, rather than from at most three
-  - A new Bloom poster style that pools a color in the center of the frame and sets the text over it, taking that color from the frame itself when palette colors are on
-  - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colors, and text edge over automatically
-  - Eleven more example designs, covering every framed text edge and the palette and gradient variants of the striped, split, numeral, timeline, fade, glass, and cutout styles
-  - Generates series and season posters, thumbs, backdrops, and text logos alongside episode posters
-  - Every design draws both portrait and landscape, with its own portrait aspect ratio and text size, and the Designs page previews both at once
-  - "Series posters show only the show's name: Cutout punches that name out of the overlay, Numeral draws it in place of the numeral, and Timeline drops its bar"
-  - Logos can draw a name split by a colon or dash with either part large and the other small
-  - Logo letters can be filled with a frame from the show instead of a color
-  - Logo designs live in their own logos.json beside the plugin configuration, and existing designs move there on load
-  - Profiles decide which images each series gets and which design draws each one, replacing per-design series assignment
-  - Logo designs build a text logo from the title, original title, sort title, or folder name, with year and subtitle cleanup and a fixed or sampled color
-  - All images of an item draw from one shared set of frames, and an optional fixed seed makes frame choice repeatable
-  - Existing designs and series assignments migrate to a default profile automatically
-  - Shadows, rules, and the Frame border now scale with the poster, so they read the same on a 4K frame as on a DVD rip instead of turning into a hairline or a slab
-  - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
-  - Each poster style declares which settings it uses, so the Designs page offers only the settings that do something
-  - Episodes can have a generated thumb, alongside series and seasons
-  - "The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behavior that needs no tuning"
-  - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
-  - Four bundled designs set a caption-sized title, which left a series poster's name looking like an afterthought; they now use the same title size as the rest
-  - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
-  - The Frame style chooses which edge of its border holds the title, the subtitle taking the other; Automatic keeps the title at the top while there is a subtitle to hold the bottom
-  - "Every bundled template is brought up to the current settings: it gains the portrait aspect ratio and the Frame title edge, and its two per-axis graphic sizes become the single size"
-  - Every bundled design ships a season poster example beside its series poster and its episodes
-  - "Three clean designs added to the examples: Minimal, Editorial and Bordered"
-  - "The Frame style chooses how its two edges fill: top or bottom edge first, where a lone line takes that edge whether it is the title or the subtitle, or the title pinned always top or always bottom"
+  - Draws posters, thumbs, backdrops, and text logos, not just episode posters
+  - Covers series, seasons, films, music videos, home videos, and anything else with a video
+  - Profiles decide which items get which images and which design draws each one
+  - Every design renders portrait and landscape
+  - New Bloom design, pooling color from the frame behind the text
+  - New Grid canvas, tiling several extracted frames into one picture
+  - Text position and alignment work on every design
+  - Logo designs build a text logo from any name field, with letter case, a line limit, and frame-filled letters
+  - Frames are ranked on tone, detail, contrast, and color rather than just clearing a threshold
+  - Frame extraction is one set of server settings instead of a copy on every design
+  - A design's two lines are simply the title and the subtitle, whatever the item is
+  - Optional setting drops a subtitle that only repeats the title
+  - A subtitle too long to fit can shorten to its code, shrink, or trim
+  - Two example designs per style, each showing a genuinely different look
   fixes:
-  - The image picker no longer offers several candidates cut from the same episode — frames are ranked so consecutive choices come from different episodes wherever the season allows
-  - A poster built from a heavily letterboxed frame is scaled back up to a usable size, so candidates no longer sit side by side at wildly different resolutions
-  - An item with no name of its own, such as a season named after nothing but its number, now says that one line in the larger primary type rather than in the small subtitle, and it reads the same way in every style
-  - A design drawing a single line of text now always puts it in the same place, so a series and its seasons match; Frame's lone line takes the edge the design chose
-  - A poster for an item with no title of its own drew a placeholder dash and held space for it, and Cutout shrank its letters to make room for a title that was not there
-  - A season named after nothing but its number no longer draws that name beside the same number; a season with a name of its own is headlined by it, with the number beneath, and a design that draws no subtitle gives the season the title line instead
-  - The Simple design drew only the subtitle, so a series, which has none, came out with no text at all; it now draws the title too
-  - Brush strokes on a tall poster are thicker again, revealing more of the frame, while wide posters keep the stroke layout they had
-  - Fade sized a short series name until it filled the whole poster; its focal name is now bounded in thickness and length
-  - The Logo style drew nothing but the logo for a series; it shows the name beneath the logo, the same way it shows an episode's name
-  - Brush strokes were thin on a tall poster, since the cap that stops them becoming blobs was tuned for wide frames; they are thicker there now, and wide posters are unchanged
-  - Portrait text looked small against a tall frame, because every size was a percent of the short side, which in portrait is the width; portrait now measures sizes against the average of the two sides, roughly a quarter larger, and landscape is unchanged
-  - Brush piled its strokes into a cross on a tall poster, because a stroke's height came from the short side while its length always came from the width; a stroke is now capped against its own length, which leaves wide posters untouched
-  - Fade's sideways series name could wrap into two rows that stacked across the poster and ran off the edge; it is sized from the text the canvas actually draws and stays on one row inside the safe area
-  - A static graphic could be stretched, because its width and height were set independently; it now keeps its proportions inside a single size
-  - Fade drew a series name flat in the number's corner; it now runs sideways like every other Fade title, sized to fill the poster
-  - Frame left the bottom of its border bare on a series; the title moves down into it when there is no season and episode line
-  - Numeral drew its title across the numeral instead of above it
-  - Fade gave a series a hairline of vertical text where the episode number would be
-  - A logo's name and its subtitle sat far apart, because the lines were spaced by their em boxes rather than by the letters
-  - The logo color control offered a swatch even when the color is sampled from the series artwork; it now shows the opacity it actually controls
-  - Frame drew no border at all for an episode without a name, and ignored the Show Title setting
-  - Cutout no longer lets a two line title run into the bottom of the cutout letters
-  - Split center-crops the series poster into its panel instead of stretching artwork that is not 2:3
-  - Brush honours the Show Episode setting and keeps a wrapped title inside the area the strokes leave clear
-  - Timeline keeps the marker dot inside the safe area on the first and last episode
-  - Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area
+  - Seasons extract from their own episodes instead of falling back to the series backdrop
+  - Candidate images come from different episodes instead of clustering in one
+  - Heavily letterboxed frames scale back up to a usable size
+  - Portrait text is measured against both sides, so it no longer reads small
+  - Brush strokes stay thick on tall posters instead of piling into a cross
+  - Long titles trim at a word boundary rather than mid-word
+  - Descenders stay inside the safe area
+  - Borders, rules, and shadows scale with the poster
+  - A static graphic keeps its proportions
+  - An item with no name of its own says its one line in the larger type
+  - Generated images carry the item's metadata language
   developer:
-  - The configuration page builds every dropdown and a new design's starting values from the settings model itself, so adding a value to an enum in C# offers it in the UI without touching the page
-  - Option labels that read as prose rather than as their member name are declared on the enum members beside the values they name
-  - The example templates are checked by the test suite — every style and text edge must have one, and every key a template sets must name a real setting, so a renamed setting cannot silently fall back to its default
-  - Every style now reads one primary and one secondary line from the item, rather than a title, a label and a code, so a style no longer needs to know what kind of item it is drawing
-  - The repeated "is this line drawn and does the item have one" check is asked once, in the base class, instead of in each style
-  - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 packages Jellyfin 12.0 ships, since the plugin binds to the server's copies at runtime
-  - Text drawing moved from the removed SKPaint text members to SKFont, wrapped in a shared TextStyle so every style measures and draws with the same objects
-  - Standard and Split share one text stack; Numeral, Cutout, Brush, and Frame no longer hand-build their own paints
-  - Cutout renders through a canvas layer instead of a full-size scratch bitmap per poster; Split and Brush dispose their gradient shaders
-  - Letterbox detection scans the pixel buffer directly instead of a native call per pixel
-  - Bitmap scaling uses explicit cubic resampling now that FilterQuality is gone
+  - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 that Jellyfin 12.0 ships
+  - Designs are found by reflection, so adding one needs a class and an enum value
+  - Every label, option, and default is read from the settings models
+  - The shared generator is split into pipeline, text, and overlay
+  - Frame analysis is a single pass, under a megabyte per frame instead of three and a half
+  - Tests hold the documentation, the templates, and US spelling to the code
