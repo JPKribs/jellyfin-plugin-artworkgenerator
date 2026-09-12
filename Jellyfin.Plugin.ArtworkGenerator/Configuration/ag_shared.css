@@ -100,7 +100,7 @@
 }
 
 /* ── Series Assignment ───────────────────────────────── */
-.assigned-series-container {
+.assigned-list {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
@@ -111,7 +111,7 @@
     min-height: 48px;
 }
 
-.series-empty-state {
+.assigned-empty {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -120,11 +120,11 @@
     font-size: 14px;
 }
 
-.series-empty-state-icon {
+.assigned-empty-icon {
     font-size: 18px;
 }
 
-.series-tag {
+.assigned-tag {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -136,12 +136,12 @@
     transition: all 0.2s ease;
 }
 
-.series-tag:hover {
+.assigned-tag:hover {
     background: rgba(40, 40, 40, 0.9);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-.series-tag-poster {
+.assigned-tag-poster {
     width: 32px;
     height: 48px;
     border-radius: 3px;
@@ -149,12 +149,12 @@
     background: var(--ag-bg-surface);
 }
 
-.series-tag-name {
+.assigned-tag-name {
     flex: 1;
     font-weight: 500;
 }
 
-.series-tag-remove {
+.assigned-tag-remove {
     cursor: pointer;
     font-weight: bold;
     font-size: 18px;
@@ -163,7 +163,7 @@
     transition: color 0.2s ease;
 }
 
-.series-tag-remove:hover {
+.assigned-tag-remove:hover {
     color: rgba(231, 76, 60, 1);
 }
 
@@ -172,28 +172,28 @@
    from the base shared CSS. Only the EPG-specific bits inside the dialogs live here. */
 
 /* ── Series Selection Modal (list/search inside a base dialog) ────────── */
-.series-modal-content {
+.picker-content {
     width: 90vw;
     max-width: 600px;
     display: flex;
     flex-direction: column;
 }
 
-.series-modal-search {
+.picker-search {
     margin-bottom: 12px;
 }
 
-.series-modal-search input {
+.picker-search input {
     width: 100%;
 }
 
-.series-modal-summary {
+.picker-summary {
     margin-bottom: 8px;
     font-size: 13px;
     color: var(--ag-text-secondary);
 }
 
-.series-modal-list {
+.picker-list {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
@@ -202,7 +202,7 @@
 }
 
 /* ── Series Checkbox Items ───────────────────────────── */
-.series-checkbox-item {
+.picker-row {
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -213,20 +213,20 @@
     transition: background 0.15s ease;
 }
 
-.series-checkbox-item:hover {
+.picker-row:hover {
     background: rgba(255, 255, 255, 0.06);
 }
 
-.series-checkbox-item.disabled {
+.picker-row.disabled {
     opacity: 0.4;
     cursor: default;
 }
 
-.series-checkbox-item.disabled:hover {
+.picker-row.disabled:hover {
     background: none;
 }
 
-.series-checkbox-item input[type="checkbox"] {
+.picker-row input[type="checkbox"] {
     flex-shrink: 0;
     width: 18px;
     height: 18px;
@@ -234,11 +234,11 @@
     cursor: pointer;
 }
 
-.series-checkbox-item.disabled input[type="checkbox"] {
+.picker-row.disabled input[type="checkbox"] {
     cursor: default;
 }
 
-.series-item-poster {
+.picker-item-poster {
     width: 50px;
     height: 75px;
     border-radius: 4px;
@@ -247,7 +247,7 @@
     flex-shrink: 0;
 }
 
-.series-item-info {
+.picker-item-info {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -258,7 +258,7 @@
     overflow: hidden;
 }
 
-.series-item-name {
+.picker-item-name {
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
@@ -266,12 +266,12 @@
     text-overflow: ellipsis;
 }
 
-.series-item-year {
+.picker-item-year {
     font-size: 12px;
     color: var(--ag-text-secondary);
 }
 
-.series-item-badge {
+.picker-item-badge {
     display: inline-block;
     align-self: flex-start;
     font-size: 11px;
@@ -315,28 +315,28 @@
     .hex-input {
         min-width: 0;
     }
-    .series-modal-content {
+    .picker-content {
         width: 95vw;
     }
-    .series-tag {
+    .assigned-tag {
         font-size: 13px;
     }
-    .series-tag-poster {
+    .assigned-tag-poster {
         width: 28px;
         height: 42px;
     }
 }
 
 @media (max-width: 480px) {
-    .series-checkbox-item {
+    .picker-row {
         padding: 8px;
         gap: 8px;
     }
-    .series-item-poster {
+    .picker-item-poster {
         width: 40px;
         height: 60px;
     }
-    .series-checkbox-item input[type="checkbox"] {
+    .picker-row input[type="checkbox"] {
         margin-top: 20px;
     }
     .cutout-logo-group,

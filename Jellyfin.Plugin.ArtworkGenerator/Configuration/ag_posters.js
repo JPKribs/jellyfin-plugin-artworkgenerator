@@ -738,8 +738,10 @@ export default function (view) {
     // Fills each bound <select> from the server's list. Font families are left alone: they have
     // their own loader below, which keeps the markup list as a fallback.
     function populateSettingOptions() {
-        view.querySelectorAll('select[data-setting]').forEach(function (select) {
-            var options = optionsFor(select.getAttribute('data-setting'));
+        // data-options is for a select whose choices come from the server but whose value is not
+        // part of the design, such as the preview picker; data-setting covers the design's own.
+        view.querySelectorAll('select[data-setting], select[data-options]').forEach(function (select) {
+            var options = optionsFor(select.getAttribute('data-options') || select.getAttribute('data-setting'));
             if (!options || !options.length) return;
 
             var previous = select.value;

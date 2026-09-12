@@ -97,4 +97,58 @@ public class FramePoolServiceTests
 
         Assert.Equal(new[] { 0.9, 0.5, 0.2 }, ordered.Select(f => f.Item2));
     }
+
+
+    /// <summary>
+    /// The source order is shuffled, but deterministically: the same pool seed must pick the same
+    /// episodes every time, or a season's artwork would be drawn from different episodes on every
+    /// server restart.
+    /// </summary>
+    [Fact]
+    public void OrderSources_IsDeterministicForASeed()
+    {
+        var sources = new[] { "a", "b", "c", "d", "e", "f", "g", "h" };
+
+        var first = FramePoolService.OrderSources(sources, 1234).ToList();
+        var again = FramePoolService.OrderSources(sources, 1234).ToList();
+
+        Assert.Equal(first, again);
+    }
+
+    /// <summary>Every source survives the shuffle; none is dropped or repeated.</summary>
+    [Fact]
+    public void OrderSources_KeepsEverySourceExactlyOnce()
+    {
+        var sources = new[] { "a", "b", "c", "d", "e", "f", "g", "h" };
+
+        var ordered = FramePoolService.OrderSources(sources, 99).ToList();
+
+        Assert.Equal(sources.Length, ordered.Count);
+        Assert.Equal(sources.OrderBy(s => s), ordered.OrderBy(s => s));
+    }
+
+    /// <summary>
+    /// Different seeds generally give different orders, which is what stops every season of a show
+    /// from sampling the same episodes.
+    /// </summary>
+    [Fact]
+    public void OrderSources_VariesAcrossSeeds()
+    {
+        var sources = new[] { "a", "b", "c", "d", "e", "f", "g", "h" };
+
+        var orders = Enumerable.Range(0, 12)
+            .Select(seed => string.Join("", FramePoolService.OrderSources(sources, seed)))
+            .Distinct()
+            .Count();
+
+        Assert.True(orders > 1, "Twelve seeds produced a single ordering, so the seed is being ignored.");
+    }
+
+    /// <summary>An empty or single-item list is handled without special-casing by the caller.</summary>
+    [Fact]
+    public void OrderSources_HandlesTrivialLists()
+    {
+        Assert.Empty(FramePoolService.OrderSources(Array.Empty<string>(), 7));
+        Assert.Equal(new[] { "only" }, FramePoolService.OrderSources(new[] { "only" }, 7));
+    }
 }

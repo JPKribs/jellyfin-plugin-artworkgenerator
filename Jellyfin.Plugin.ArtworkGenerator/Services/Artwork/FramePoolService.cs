@@ -323,7 +323,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
         // OrderSources
         // Shuffles the sources deterministically for a seed.
-        internal static IEnumerable<Video> OrderSources(IReadOnlyList<Video> sources, int seed)
+        internal static IEnumerable<T> OrderSources<T>(IReadOnlyList<T> sources, int seed)
         {
             var random = new Random(seed);
             return sources

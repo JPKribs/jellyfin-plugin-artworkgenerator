@@ -284,7 +284,7 @@ export default function (view) {
         var isDefault = !!profile.IsDefault;
         view.querySelector('#btnDeleteProfile').classList.toggle('hidden', isDefault);
         view.querySelector('#btnRenameProfile').classList.toggle('hidden', isDefault);
-        view.querySelector('#seriesAssignmentSection').style.display = isDefault ? 'none' : 'block';
+        view.querySelector('#assignmentSection').style.display = isDefault ? 'none' : 'block';
 
         if (!isDefault) renderAssignments();
         renderMatrix();
@@ -609,15 +609,15 @@ export default function (view) {
         block.appendChild(label);
 
         var list = document.createElement('div');
-        list.className = 'assigned-series-container';
+        list.className = 'assigned-list';
         block.appendChild(list);
 
         var ids = assignedIds(profile, target);
         if (ids.length === 0) {
             var msg = document.createElement('div');
-            msg.className = 'series-empty-state';
+            msg.className = 'assigned-empty';
             var icon = document.createElement('span');
-            icon.className = 'series-empty-state-icon';
+            icon.className = 'assigned-empty-icon';
             icon.innerHTML = '&#9888;';
             msg.appendChild(icon);
             msg.appendChild(document.createTextNode(' ' + target.empty));
@@ -644,19 +644,19 @@ export default function (view) {
 
     function buildAssignedTag(item, target, id) {
         var tag = document.createElement('div');
-        tag.className = 'series-tag';
+        tag.className = 'assigned-tag';
 
         var img = document.createElement('img');
-        img.className = 'series-tag-poster';
+        img.className = 'assigned-tag-poster';
         img.src = ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
         img.onerror = function () { this.style.display = 'none'; };
 
         var name = document.createElement('span');
-        name.className = 'series-tag-name';
+        name.className = 'assigned-tag-name';
         name.textContent = item.Name;
 
         var remove = document.createElement('span');
-        remove.className = 'series-tag-remove';
+        remove.className = 'assigned-tag-remove';
         remove.textContent = '\u00d7';
         remove.addEventListener('click', function () { removeAssignment(target, id); });
 
@@ -686,9 +686,9 @@ export default function (view) {
         _modalTrigger = document.activeElement;
         _modalTarget = target;
 
-        view.querySelector('#seriesModalTitle').textContent = target.modalTitle;
-        view.querySelector('#seriesSearchInput').placeholder = target.search;
-        view.querySelector('#seriesSelectionModal').style.display = 'flex';
+        view.querySelector('#pickerTitle').textContent = target.modalTitle;
+        view.querySelector('#pickerSearch').placeholder = target.search;
+        view.querySelector('#pickerModal').style.display = 'flex';
 
         document.addEventListener('keydown', onSelectionModalKeydown);
         populateSelectionModal();
@@ -696,8 +696,8 @@ export default function (view) {
 
     function populateSelectionModal() {
         var target = _modalTarget;
-        var listContainer = view.querySelector('#seriesCheckboxList');
-        var summaryEl = view.querySelector('#seriesSelectionSummary');
+        var listContainer = view.querySelector('#pickerList');
+        var summaryEl = view.querySelector('#pickerSummary');
         var current = assignedIds(getCurrentProfile(), target);
         var elsewhere = getAssignedElsewhere(target);
         var availableCount = 0;
@@ -710,38 +710,38 @@ export default function (view) {
             if (!isElsewhere) availableCount++;
 
             var item = document.createElement('label');
-            item.className = 'series-checkbox-item' + (isElsewhere ? ' disabled' : '');
+            item.className = 'picker-row' + (isElsewhere ? ' disabled' : '');
 
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.className = 'series-checkbox';
+            checkbox.className = 'picker-check';
             checkbox.value = entry.Id;
             checkbox.checked = isHere;
             checkbox.disabled = isElsewhere;
 
             var poster = document.createElement('img');
-            poster.className = 'series-item-poster';
+            poster.className = 'picker-item-poster';
             poster.src = ApiClient.getImageUrl(entry.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
             poster.onerror = function () { this.style.visibility = 'hidden'; };
 
             var info = document.createElement('div');
-            info.className = 'series-item-info';
+            info.className = 'picker-item-info';
 
             var nameSpan = document.createElement('span');
-            nameSpan.className = 'series-item-name';
+            nameSpan.className = 'picker-item-name';
             nameSpan.textContent = entry.Name;
             info.appendChild(nameSpan);
 
             if (entry.ProductionYear) {
                 var yearSpan = document.createElement('span');
-                yearSpan.className = 'series-item-year';
+                yearSpan.className = 'picker-item-year';
                 yearSpan.textContent = entry.ProductionYear;
                 info.appendChild(yearSpan);
             }
 
             if (isElsewhere) {
                 var badge = document.createElement('span');
-                badge.className = 'series-item-badge';
+                badge.className = 'picker-item-badge';
                 badge.textContent = 'In another profile';
                 info.appendChild(badge);
             }
@@ -755,28 +755,28 @@ export default function (view) {
         });
 
         function updateSummary() {
-            var checked = listContainer.querySelectorAll('.series-checkbox:checked').length;
+            var checked = listContainer.querySelectorAll('.picker-check:checked').length;
             summaryEl.textContent = checked + ' of ' + availableCount + ' available ' + target.noun + ' selected';
         }
 
         updateSummary();
 
-        var searchInput = view.querySelector('#seriesSearchInput');
+        var searchInput = view.querySelector('#pickerSearch');
         searchInput.value = '';
         searchInput.focus();
     }
 
     var filterSelectionList = debounce(function () {
-        var term = view.querySelector('#seriesSearchInput').value.toLowerCase();
-        view.querySelectorAll('.series-checkbox-item').forEach(function (item) {
-            var name = item.querySelector('.series-item-name');
+        var term = view.querySelector('#pickerSearch').value.toLowerCase();
+        view.querySelectorAll('.picker-row').forEach(function (item) {
+            var name = item.querySelector('.picker-item-name');
             item.style.display = (name ? name.textContent : item.textContent).toLowerCase().includes(term) ? '' : 'none';
         });
     }, 200);
 
     function confirmSelection() {
         var selected = [];
-        view.querySelectorAll('.series-checkbox:checked').forEach(function (cb) { selected.push(cb.value); });
+        view.querySelectorAll('.picker-check:checked').forEach(function (cb) { selected.push(cb.value); });
         getCurrentProfile()[_modalTarget.key] = selected;
         renderAssignments();
         closeSelectionModal();
@@ -788,12 +788,12 @@ export default function (view) {
             e.preventDefault();
             closeSelectionModal();
         } else {
-            trapFocus(view.querySelector('.series-modal-content'), e);
+            trapFocus(view.querySelector('.picker-content'), e);
         }
     }
 
     function closeSelectionModal() {
-        view.querySelector('#seriesSelectionModal').style.display = 'none';
+        view.querySelector('#pickerModal').style.display = 'none';
         document.removeEventListener('keydown', onSelectionModalKeydown);
         if (_modalTrigger && _modalTrigger.focus) _modalTrigger.focus();
         _modalTrigger = null;
@@ -926,13 +926,13 @@ export default function (view) {
         view.querySelector('#btnRenameProfile').addEventListener('click', renameCurrentProfile);
         view.querySelector('#btnDeleteProfile').addEventListener('click', deleteCurrentProfile);
 
-        view.querySelector('#btnCancelSeriesSelection').addEventListener('click', closeSelectionModal);
-        view.querySelector('#btnCloseSeriesModal').addEventListener('click', closeSelectionModal);
-        view.querySelector('#btnConfirmSeriesSelection').addEventListener('click', confirmSelection);
-        view.querySelector('#seriesSelectionModal').addEventListener('click', function (e) {
+        view.querySelector('#btnCancelPicker').addEventListener('click', closeSelectionModal);
+        view.querySelector('#btnClosePicker').addEventListener('click', closeSelectionModal);
+        view.querySelector('#btnConfirmPicker').addEventListener('click', confirmSelection);
+        view.querySelector('#pickerModal').addEventListener('click', function (e) {
             if (e.target === this) closeSelectionModal();
         });
-        view.querySelector('#seriesSearchInput').addEventListener('input', filterSelectionList);
+        view.querySelector('#pickerSearch').addEventListener('input', filterSelectionList);
 
         view.querySelectorAll('[data-backdrop-setting]').forEach(function (el) {
             var evt = el.type === 'checkbox' ? 'change' : 'input';

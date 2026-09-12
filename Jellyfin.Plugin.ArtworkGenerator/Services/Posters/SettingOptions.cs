@@ -65,6 +65,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 }
             }
 
+            // Not a design setting, so it is not on PosterSettings: the Designs page's preview picker
+            // offers the kinds of item a preview can draw, which are the item kinds themselves. It is
+            // served here so that page has no hardcoded list of its own either.
+            options["PreviewKind"] = typeof(ArtworkItemKind)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Select(field => new SettingOption(field.Name, LabelFor(field)))
+                .ToList();
+
             return options;
         }
 

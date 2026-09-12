@@ -30,7 +30,7 @@
                     </div>
 
                     <!-- Series Assignment -->
-                    <div id="seriesAssignmentSection" style="display: none; margin-bottom: 1.5em;">
+                    <div id="assignmentSection" style="display: none; margin-bottom: 1.5em;">
                         <div id="assignmentBlocks"></div>
                         <div class="fieldDescription">Pick the series and films this profile draws. Anything not picked uses the default profile.</div>
                     </div>
@@ -120,20 +120,20 @@
     </div>
 
     <!-- Series Selection Modal -->
-    <div id="seriesSelectionModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="seriesModalTitle">
-        <div class="jpk-dialog-content series-modal-content">
-            <button type="button" id="btnCloseSeriesModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
-            <h2 id="seriesModalTitle" class="jpk-modal-title">Select Series</h2>
-            <div class="series-modal-search">
-                <input is="emby-input" type="text" id="seriesSearchInput" placeholder="Search series..." />
+    <div id="pickerModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+        <div class="jpk-dialog-content picker-content">
+            <button type="button" id="btnClosePicker" class="jpk-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="pickerTitle" class="jpk-modal-title">Select Series</h2>
+            <div class="picker-search">
+                <input is="emby-input" type="text" id="pickerSearch" placeholder="Search series..." />
             </div>
-            <div class="series-modal-summary" id="seriesSelectionSummary"></div>
-            <div id="seriesCheckboxList" class="series-modal-list"></div>
+            <div class="picker-summary" id="pickerSummary"></div>
+            <div id="pickerList" class="picker-list"></div>
             <div class="jpk-modal-button-row">
-                <button is="emby-button" type="button" id="btnCancelSeriesSelection" class="raised jpk-modal-button">
+                <button is="emby-button" type="button" id="btnCancelPicker" class="raised jpk-modal-button">
                     <span>Cancel</span>
                 </button>
-                <button is="emby-button" type="button" id="btnConfirmSeriesSelection" class="raised button-submit jpk-modal-button">
+                <button is="emby-button" type="button" id="btnConfirmPicker" class="raised button-submit jpk-modal-button">
                     <span>Save Selection</span>
                 </button>
             </div>
