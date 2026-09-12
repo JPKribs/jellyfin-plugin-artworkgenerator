@@ -37,7 +37,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public const string SecondaryFontColor = "SecondaryFontColor";
 
         /// <summary>Which edge of a framed poster the title sits in.</summary>
-        public const string TextEdge = "TextEdge";
+        // LoneLineFollowsTitle
+        // What a framed design does when the item carries only one of its two lines.
+        public const string LoneLineFollowsTitle = "LoneLineFollowsTitle";
 
         // TextPosition
         // Where the text block sits. Hidden on the designs that make the text part of the artwork.
@@ -79,7 +81,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         {
             var rules = new Dictionary<string, PosterSettingState>(System.StringComparer.Ordinal)
             {
-                [TextEdge] = PosterSettingState.Hidden,
+                [LoneLineFollowsTitle] = PosterSettingState.Hidden,
                 [CutoutType] = PosterSettingState.Hidden,
                 [CutoutBorder] = PosterSettingState.Hidden,
                 [LogoPosition] = PosterSettingState.Hidden,

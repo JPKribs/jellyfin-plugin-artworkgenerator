@@ -54,8 +54,8 @@ public class SettingOptionsTests
     /// words from its own name.
     /// </summary>
     [Theory]
-    [InlineData("TextEdge", "TopFirst", "Top edge first")]
-    [InlineData("TextEdge", "AlwaysBottom", "Title always bottom")]
+    [InlineData("TextPosition", "Auto", "Design default")]
+    [InlineData("TextAlignment", "Right", "Right")]
     [InlineData("CanvasSource", "Extract", "Extract Frame from Video")]
     [InlineData("OverlayGradient", "LeftToRight", "Left to Right")]
     [InlineData("PosterStyle", "FrostedGlass", "Frosted Glass")]
@@ -103,7 +103,7 @@ public class SettingOptionsTests
 
         Assert.Equal(expected.PosterStyle.ToString(), defaults["PosterStyle"]);
         Assert.Equal(expected.CanvasSource.ToString(), defaults["CanvasSource"]);
-        Assert.Equal(expected.TextEdge.ToString(), defaults["TextEdge"]);
+        Assert.Equal(expected.TextPosition.ToString(), defaults["TextPosition"]);
         Assert.Equal(expected.PrimaryFontSize, defaults["PrimaryFontSize"]);
         Assert.Equal(expected.ShowPrimary, defaults["ShowPrimary"]);
         Assert.Equal(expected.PosterDimensionRatio, defaults["PosterDimensionRatio"]);

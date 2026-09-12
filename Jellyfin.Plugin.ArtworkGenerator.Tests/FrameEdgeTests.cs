@@ -1,56 +1,62 @@
-using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
+using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Xunit;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
 
 /// <summary>
-/// Tests for which edge of a framed poster each line takes.
+/// Which border edge each line of a framed poster takes. The title goes where the ordinary text
+/// position puts it and the subtitle takes the other edge, which replaced a setting of this design's
+/// own that spoke of edges filling rather than of a title and a subtitle.
 /// </summary>
 public class FrameEdgeTests
 {
-    /// <summary>
-    /// With both lines, the chosen edge takes the title and the other takes the subtitle.
-    /// </summary>
     [Theory]
-    [InlineData(TextEdge.TopFirst, false, true)]
-    [InlineData(TextEdge.BottomFirst, true, false)]
-    [InlineData(TextEdge.AlwaysTop, false, true)]
-    [InlineData(TextEdge.AlwaysBottom, true, false)]
-    public void BothLines_PutTheTitleOnTheChosenEdge(TextEdge edge, bool primaryAtBottom, bool secondaryAtBottom)
+    [InlineData(LayoutAnchor.Top, false, true)]
+    [InlineData(LayoutAnchor.Bottom, true, false)]
+    public void BothLines_PutTheTitleWhereThePositionSaysAndTheSubtitleOpposite(
+        LayoutAnchor anchor, bool primaryAtBottom, bool secondaryAtBottom)
     {
-        var edges = FramePosterGenerator.ResolveEdges(edge, showPrimary: true);
+        var edges = FramePosterGenerator.ResolveEdges(anchor, loneLineFollowsTitle: true, showPrimary: true);
 
         Assert.Equal(primaryAtBottom, edges.PrimaryAtBottom);
         Assert.Equal(secondaryAtBottom, edges.SecondaryAtBottom);
     }
 
     /// <summary>
-    /// A lone subtitle, such as a season named after nothing but its number, takes the edge that
-    /// fills first, so it lands where a lone title would. The pinned choices leave it where it is.
+    /// A lone subtitle, such as a season named after nothing but its number, moves up into the
+    /// title's edge so an item with one line looks the same whichever line it has.
     /// </summary>
     [Theory]
-    [InlineData(TextEdge.TopFirst, false)]
-    [InlineData(TextEdge.BottomFirst, true)]
-    [InlineData(TextEdge.AlwaysTop, true)]
-    [InlineData(TextEdge.AlwaysBottom, false)]
-    public void WithNoTitle_TheSubtitleTakesTheFillingEdge(TextEdge edge, bool secondaryAtBottom)
+    [InlineData(LayoutAnchor.Top, false)]
+    [InlineData(LayoutAnchor.Bottom, true)]
+    public void WithNoTitle_ALoneSubtitleFollowsTheTitlesEdge(LayoutAnchor anchor, bool secondaryAtBottom)
     {
-        var edges = FramePosterGenerator.ResolveEdges(edge, showPrimary: false);
+        var edges = FramePosterGenerator.ResolveEdges(anchor, loneLineFollowsTitle: true, showPrimary: false);
 
         Assert.Equal(secondaryAtBottom, edges.SecondaryAtBottom);
     }
 
     /// <summary>
-    /// A lone line lands in the same place whichever line it is, so a series and its seasons match.
+    /// Switched off, the subtitle keeps its own edge and the title's is left empty.
     /// </summary>
     [Theory]
-    [InlineData(TextEdge.TopFirst)]
-    [InlineData(TextEdge.BottomFirst)]
-    public void ALoneLineLandsInTheSamePlaceEitherWay(TextEdge edge)
+    [InlineData(LayoutAnchor.Top, true)]
+    [InlineData(LayoutAnchor.Bottom, false)]
+    public void WithNoTitle_ALoneSubtitleCanStayOnItsOwnEdge(LayoutAnchor anchor, bool secondaryAtBottom)
     {
-        var loneTitle = FramePosterGenerator.ResolveEdges(edge, showPrimary: true).PrimaryAtBottom;
-        var loneSubtitle = FramePosterGenerator.ResolveEdges(edge, showPrimary: false).SecondaryAtBottom;
+        var edges = FramePosterGenerator.ResolveEdges(anchor, loneLineFollowsTitle: false, showPrimary: false);
+
+        Assert.Equal(secondaryAtBottom, edges.SecondaryAtBottom);
+    }
+
+    [Theory]
+    [InlineData(LayoutAnchor.Top)]
+    [InlineData(LayoutAnchor.Bottom)]
+    public void ALoneLineLandsInTheSamePlaceEitherWay(LayoutAnchor anchor)
+    {
+        var loneTitle = FramePosterGenerator.ResolveEdges(anchor, true, showPrimary: true).PrimaryAtBottom;
+        var loneSubtitle = FramePosterGenerator.ResolveEdges(anchor, true, showPrimary: false).SecondaryAtBottom;
 
         Assert.Equal(loneTitle, loneSubtitle);
     }

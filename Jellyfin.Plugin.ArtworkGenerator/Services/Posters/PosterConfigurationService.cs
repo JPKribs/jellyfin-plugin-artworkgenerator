@@ -206,9 +206,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // primary and secondary lines every style draws. A value saved under an old name is copied
         // onto its replacement and cleared, so an existing design keeps the fonts and colors the
         // user chose rather than quietly reverting to the defaults.
-        private static bool MigrateTextVocabulary(PosterSettings settings)
+        internal static bool MigrateTextVocabulary(PosterSettings settings)
         {
             var migrated = false;
+
+            // A framed design used to name its own edges. The title's edge is now the ordinary text
+            // position, and whether a lone line follows it is what the "first" choices really meant.
+            if (settings.TextEdge is { } edge)
+            {
+                settings.TextPosition = edge is TextEdge.BottomFirst or TextEdge.AlwaysBottom
+                    ? TextPosition.Bottom
+                    : TextPosition.Top;
+                settings.LoneLineFollowsTitle = edge is TextEdge.TopFirst or TextEdge.BottomFirst;
+                settings.TextEdge = null;
+                migrated = true;
+            }
 
             if (settings.ShowTitle is { } showPrimary)
             {

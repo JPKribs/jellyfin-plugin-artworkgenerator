@@ -17,14 +17,14 @@ public class TextPositionTests
 {
     /// <summary>
     /// The designs that cannot honour a position: the lettering is cut out of the image, rides a
-    /// tilted sash, runs sideways up an edge, or is already placed by the frame's own edge control.
+    /// tilted sash, or runs sideways up an edge. Frame is no longer among them — the title takes
+    /// whichever border edge the position names, which replaced a control of its own.
     /// </summary>
     private static readonly PosterStyle[] CannotBePositioned =
     {
         PosterStyle.Cutout,
         PosterStyle.Striped,
-        PosterStyle.Fade,
-        PosterStyle.Frame
+        PosterStyle.Fade
     };
 
     [Fact]
@@ -216,7 +216,6 @@ public class TextPositionTests
     [InlineData(PosterStyle.Cutout)]
     [InlineData(PosterStyle.Striped)]
     [InlineData(PosterStyle.Fade)]
-    [InlineData(PosterStyle.Frame)]
     public void HiddenDesigns_IgnoreThePositionEntirely(PosterStyle style)
     {
         var auto = Render(style, TextPosition.Auto);

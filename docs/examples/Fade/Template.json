@@ -14,7 +14,6 @@
     "ExtractWindowEnd": 80,
     "PosterStyle": "Fade",
     "CutoutType": "Code",
-    "TextEdge": "TopFirst",
     "CutoutBorder": true,
     "LogoPosition": "Center",
     "LogoAlignment": "Center",

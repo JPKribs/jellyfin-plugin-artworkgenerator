@@ -60,13 +60,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Type", Description = "Show the episode as a code like S01E01 or as a word like ONE.")]
         public CutoutType CutoutType { get; set; } = CutoutType.Code;
 
-        /// <summary>
-        /// Gets or sets how a framed poster fills its two edges. The "first" choices fill that edge
-        /// with whichever line the item has, so a poster carrying one line always looks the same;
-        /// the "always" choices pin the title to an edge and leave it empty when there is no title.
-        /// </summary>
-        [Display(Name = "Text Edges", Description = "How the border's two edges are filled. The first two fill that edge with whichever line the item has: the title normally, or the subtitle when there is no title, such as on a numbered season. The last two pin the title to one edge and the subtitle to the other, leaving an edge empty when its line is missing.")]
-        public TextEdge TextEdge { get; set; } = TextEdge.TopFirst;
 
         /// <summary>
         /// Gets or sets where the title and subtitle sit inside the safe area. Left on its default,
@@ -81,6 +74,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// </summary>
         [Display(Name = "Text Alignment", Description = "Which side the title and subtitle are pulled to.")]
         public TextAlignment TextAlignment { get; set; } = TextAlignment.Auto;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether an item carrying only one of the two lines puts
+        /// it where the title goes. Off, the title's place is left empty and the lone subtitle stays
+        /// in its own.
+        /// </summary>
+        [Display(Name = "Lone Line Follows Title", Description = "An item with only one line puts it where the title goes.")]
+        public bool LoneLineFollowsTitle { get; set; } = true;
 
         [Display(Name = "Enable Outline", Description = "Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.")]
         public bool CutoutBorder { get; set; } = true;

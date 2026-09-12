@@ -18,23 +18,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Image inside a decorative border. Polished gallery look.";
 
+        // NaturalTextPosition
+        // The border's top edge, which is where this design has always put the title.
+        protected override TextPosition NaturalTextPosition => TextPosition.Top;
+
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set on whichever border edge the text edges setting gives it.";
+            => "The title is the item's own name, set into the top or bottom edge of the border.";
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, set on the border edge left to it by the title.";
+            => "The subtitle is the episode code, set into whichever border edge the title does not take.";
 
         // The frame is drawn around the title, so the title is always there, and this style is the
         // one that decides which edge holds it.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.ShowPrimary, PosterSettingState.Required),
-            (PosterSettingRules.TextEdge, PosterSettingState.Optional),
-            // Text position is hidden here: the two border edges are this design's own placement control.
-            (PosterSettingRules.TextPosition, PosterSettingState.Hidden),
+            // The title takes the edge the text position names and the subtitle takes the other, so
+            // this design needs no placement control of its own beyond what to do with a lone line.
+            (PosterSettingRules.LoneLineFollowsTitle, PosterSettingState.Optional),
+            // Both lines are centred along their edge, so there is no side to pull them to.
             (PosterSettingRules.TextAlignment, PosterSettingState.Hidden));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
@@ -68,7 +73,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var showPrimary = ShowsPrimary(settings, subject);
             var showSecondary = ShowsSecondary(settings, subject);
 
-            var (primaryAtBottom, secondaryAtBottom) = ResolveEdges(settings.TextEdge, showPrimary);
+            var (primaryAtBottom, secondaryAtBottom) = ResolveEdges(ResolveTextAnchor(settings), settings.LoneLineFollowsTitle, showPrimary);
 
             TextInfo? topInfo = null;
             TextInfo? bottomInfo = null;
@@ -108,12 +113,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // the item has, so a poster carrying a single line always looks the same whether that line
         // is a title or a subtitle. The pinned choices keep the title on its edge and leave the
         // other one empty when its line is missing.
-        internal static (bool PrimaryAtBottom, bool SecondaryAtBottom) ResolveEdges(TextEdge edge, bool showPrimary)
+        // ResolveEdges
+        // Which border edge each line takes. The title goes where the text position says; the
+        // subtitle takes the other edge. When the item has no title, the subtitle either moves up
+        // into the title's edge or stays in its own, which is what the lone line setting decides.
+        internal static (bool PrimaryAtBottom, bool SecondaryAtBottom) ResolveEdges(LayoutAnchor titleAnchor, bool loneLineFollowsTitle, bool showPrimary)
         {
-            var fillsBottom = edge is TextEdge.BottomFirst or TextEdge.AlwaysBottom;
-            var pinned = edge is TextEdge.AlwaysTop or TextEdge.AlwaysBottom;
+            var titleAtBottom = titleAnchor == LayoutAnchor.Bottom;
 
-            return (fillsBottom, pinned || showPrimary ? !fillsBottom : fillsBottom);
+            if (showPrimary || !loneLineFollowsTitle)
+            {
+                return (titleAtBottom, !titleAtBottom);
+            }
+
+            // A lone subtitle takes the title's edge, so an item with only one line looks the same
+            // whichever of the two lines it happens to have.
+            return (titleAtBottom, titleAtBottom);
         }
 
         // DrawPrimaryLine

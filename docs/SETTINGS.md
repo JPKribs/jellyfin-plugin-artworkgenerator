@@ -56,7 +56,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Portrait Aspect Ratio**: output aspect ratio for portrait images. Default 2:3.
 * **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short side and the same pixel amount is used on all four sides. Default 5.
 * **Element Spacing**: gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
-* **Text Position**: where the title and subtitle sit, Top, Center, or Bottom. Left on Design default each style keeps the placement it was built around, which is why turning this setting on moved nothing. Cutout, Fade, Striped, and Frame do not offer it: their text is part of the artwork rather than a block laid over it, and Frame has its own Text Edges instead. Default Design default.
+* **Text Position**: where the title and subtitle sit, Top, Center, or Bottom. Left on Design default each style keeps the placement it was built around. On Frame it chooses which border edge the title takes. Cutout, Fade, and Striped do not offer it: their text is part of the artwork rather than a block laid over it. Default Design default.
 * **Text Alignment**: which side the title and subtitle are pulled to, Left, Center, or Right. Left on Design default each style keeps the side it was built around, which is the center for most and the left for Brush and Timeline. Cutout offers it for the title under its lettering, though the lettering itself stays centered. Striped, Fade, and Frame do not offer it: their text rides a sash, runs sideways up an edge, or is already placed along a border. Default Design default.
 
 ## Outline (Style is Cutout or Brush)
@@ -69,9 +69,9 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Frame (Style is Frame)
 
-* **Text Edges**: how the border's two edges are filled.
-  * **Top edge first** and **Bottom edge first** put whichever line the item has into that edge, the other line taking the opposite one. A series with only a title and a season with only a subtitle therefore look the same. Default is top edge first.
-  * **Title always top** and **Title always bottom** pin the title to one edge and the subtitle to the other, so an item missing one of them leaves that edge empty.
+The title takes the top or bottom edge of the border, whichever **Text Position** names, and the subtitle takes the other.
+
+* **Lone Line Follows Title**: an item carrying only one of the two lines, such as a season named after nothing but its number, puts it where the title goes, so an item with one line looks the same whichever line it has. Off, the subtitle keeps its own edge and the title's is left empty. Default on.
 
 ## Logo (Style is Logo)
 

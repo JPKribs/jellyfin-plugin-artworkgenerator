@@ -83,10 +83,10 @@ public class PosterSettingRulesTests
     /// Only the style that draws a border decides which edge holds the title.
     /// </summary>
     [Fact]
-    public void OnlyFrameOffersTheTextEdge()
+    public void OnlyFrameOffersTheLoneLineSetting()
     {
-        Assert.Equal(PosterSettingState.Optional, Generator(PosterStyle.Frame).SettingRules[PosterSettingRules.TextEdge]);
-        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Standard).SettingRules[PosterSettingRules.TextEdge]);
-        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Cutout).SettingRules[PosterSettingRules.TextEdge]);
+        Assert.Equal(PosterSettingState.Optional, Generator(PosterStyle.Frame).SettingRules[PosterSettingRules.LoneLineFollowsTitle]);
+        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Standard).SettingRules[PosterSettingRules.LoneLineFollowsTitle]);
+        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Cutout).SettingRules[PosterSettingRules.LoneLineFollowsTitle]);
     }
 }

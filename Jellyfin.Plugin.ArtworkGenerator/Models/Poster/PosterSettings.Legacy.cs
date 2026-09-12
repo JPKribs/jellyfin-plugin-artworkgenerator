@@ -11,6 +11,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     /// </summary>
     public partial class PosterSettings
     {
+        /// <summary>
+        /// How a framed poster used to fill its two border edges, before the title's placement
+        /// became the ordinary <see cref="TextPosition"/> every other design uses.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public TextEdge? TextEdge { get; set; }
+
         /// <summary>Former name of <see cref="ShowPrimary"/>.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? ShowTitle { get; set; }

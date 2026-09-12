@@ -14,7 +14,6 @@
     "ExtractWindowEnd": 80,
     "PosterStyle": "Frame",
     "CutoutType": "Code",
-    "TextEdge": "TopFirst",
     "CutoutBorder": true,
     "LogoPosition": "Center",
     "LogoAlignment": "Center",
@@ -47,6 +46,8 @@
     "GraphicPath": "",
     "GraphicSize": 25,
     "GraphicPosition": "Center",
-    "GraphicAlignment": "Center"
+    "GraphicAlignment": "Center",
+    "TextPosition": "Top",
+    "LoneLineFollowsTitle": true
   }
 }
