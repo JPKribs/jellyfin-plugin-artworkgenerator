@@ -15,6 +15,7 @@ export default function (view) {
     var _previewObjectUrl = null;
     var _previewSeq = 0;
     var _fontsPromise = null;
+    var logoSettingText = {};
 
     var LOGO_DEFAULTS = {
         TitleSource: 'Title',
@@ -227,6 +228,46 @@ export default function (view) {
 
     // ── Loading ─────────────────────────────────────────────
 
+    // A logo setting's label and help text come from LogoSettings in C#, the same way the Designs
+    // page reads them off PosterSettings, so the wording lives beside the setting.
+    function loadSettingText() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
+            dataType: 'json'
+        }).then(function (payload) {
+            logoSettingText = (payload && (payload.text || payload.Text)) || {};
+            applySettingText();
+        }).catch(function (error) {
+            console.error('Failed to load setting text:', error);
+        });
+    }
+
+    function applySettingText() {
+        view.querySelectorAll('[data-setting]').forEach(function (el) {
+            var key = el.getAttribute('data-setting');
+            var text = logoSettingText[key];
+            if (!text) return;
+
+            var container = el.closest('.inputContainer, .checkboxContainer, .jpk-field');
+            if (!container) return;
+
+            var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
+
+            // The colour field swaps its own wording between colour and opacity, so it keeps it.
+            if (label && !label.hasAttribute('data-color-label')) {
+                var name = text.label || text.Label || '';
+                label.textContent = el.type === 'checkbox' ? name : name + ':';
+            }
+
+            var description = container.querySelector('.fieldDescription');
+            var help = text.description || text.Description || '';
+            if (description && help && !description.hasAttribute('data-color-desc')) {
+                description.textContent = help;
+            }
+        });
+    }
+
     function loadFonts() {
         if (_fontsPromise) return _fontsPromise;
 
@@ -267,7 +308,7 @@ export default function (view) {
 
     function loadConfig() {
         Dashboard.showLoadingMsg();
-        Promise.all([loadFonts(), fetchLogos(), shared.getConfig()]).then(function (results) {
+        Promise.all([loadFonts(), fetchLogos(), shared.getConfig(), loadSettingText()]).then(function (results) {
             logoDesigns = results[1] || [];
             fullConfig = results[2] || {};
             fullConfig.Profiles = fullConfig.Profiles || [];

@@ -683,6 +683,7 @@ export default function (view) {
 
     var posterSettingOptions = {};
     var posterSettingDefaults = {};
+    var posterSettingText = {};
     var posterStyleDescriptions = {};
     var posterStyleShapes = {};
     var posterStyleSettings = {};
@@ -716,6 +717,7 @@ export default function (view) {
     }
 
     function optionsFor(setting) { return lookup(posterSettingOptions, setting); }
+    function textFor(setting) { return lookup(posterSettingText, setting); }
     function defaultFor(setting) { return lookup(posterSettingDefaults, setting); }
 
     // Pull every setting's choices and starting value from the settings model itself
@@ -729,9 +731,38 @@ export default function (view) {
         }).then(function (payload) {
             posterSettingOptions = (payload && (payload.options || payload.Options)) || {};
             posterSettingDefaults = (payload && (payload.defaults || payload.Defaults)) || {};
+            posterSettingText = (payload && (payload.text || payload.Text)) || {};
             populateSettingOptions();
+            applySettingText();
         }).catch(function (error) {
             console.error('Failed to load setting options:', error);
+        });
+    }
+
+    // Each setting's label and help text come from the settings model, so the wording lives next to
+    // the setting in C# rather than in this page. Only the label and description inside a setting's
+    // own container are touched: section intros and notes that describe a row are not setting text.
+    function applySettingText() {
+        view.querySelectorAll('[data-setting]').forEach(function (el) {
+            var text = textFor(el.getAttribute('data-setting'));
+            if (!text) return;
+
+            var container = el.closest('.inputContainer, .checkboxContainer, .jpk-field');
+            if (!container) return;
+
+            var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
+
+            // The colour fields swap their own wording between colour and opacity, so they keep it.
+            if (label && !label.hasAttribute('data-color-label')) {
+                var name = text.label || text.Label || '';
+                label.textContent = el.type === 'checkbox' ? name : name + ':';
+            }
+
+            var description = container.querySelector('.fieldDescription');
+            var help = text.description || text.Description || '';
+            if (description && help && !description.hasAttribute('data-color-desc')) {
+                description.textContent = help;
+            }
         });
     }
 

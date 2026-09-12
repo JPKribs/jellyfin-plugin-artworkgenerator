@@ -116,7 +116,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
             return Ok(new
             {
                 options = SettingOptions.All(),
-                defaults = SettingOptions.Defaults()
+                defaults = SettingOptions.Defaults(),
+                text = SettingOptions.Text()
             });
         }
 

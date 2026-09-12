@@ -89,16 +89,16 @@
                         <div id="posterContent" class="jpk-section-content">
 
                             <div class="inputContainer">
-                                <label for="selectPosterStyle">Style:</label>
+                                <label for="selectPosterStyle"></label>
                                 <select is="emby-select" id="selectPosterStyle" data-setting="PosterStyle" data-default="Standard"></select>
                                 <div id="posterStyleDescription" class="fieldDescription"></div>
                             </div>
 
                             <div class="cutout-logo-group" id="frameOptions">
                                 <div class="inputContainer">
-                                    <label for="selectTextEdge">Text Edges:</label>
+                                    <label for="selectTextEdge"></label>
                                     <select is="emby-select" id="selectTextEdge" data-setting="TextEdge" data-default="TopFirst"></select>
-                                    <div class="fieldDescription">How the border's two edges are filled. The first two fill that edge with whichever line the item has: the title normally, or the subtitle when there is no title, such as on a numbered season. The last two pin the title to one edge and the subtitle to the other, leaving an edge empty when its line is missing.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
@@ -106,35 +106,35 @@
                                 <div class="checkboxContainer">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkCutoutBorder" data-setting="CutoutBorder" />
-                                        <span class="checkboxLabel">Enable Outline</span>
+                                        <span class="checkboxLabel"></span>
                                     </label>
-                                    <div class="fieldDescription">Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="cutout-logo-group" id="cutoutOptions">
                                 <div class="inputContainer">
-                                    <label for="selectCutoutType">Type:</label>
+                                    <label for="selectCutoutType"></label>
                                     <select is="emby-select" id="selectCutoutType" data-setting="CutoutType" data-default="Code"></select>
-                                    <div class="fieldDescription">Show the episode as a code like S01E01 or as a word like ONE.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="cutout-logo-group" id="logoOptions">
                                 <div class="inputContainer">
-                                    <label for="selectLogoAlignment">Logo Alignment:</label>
+                                    <label for="selectLogoAlignment"></label>
                                     <select is="emby-select" id="selectLogoAlignment" data-setting="LogoAlignment" data-default="Center"></select>
-                                    <div class="fieldDescription">Horizontal alignment of the series logo on the poster.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectLogoPosition">Logo Position:</label>
+                                    <label for="selectLogoPosition"></label>
                                     <select is="emby-select" id="selectLogoPosition" data-setting="LogoPosition" data-default="Center"></select>
-                                    <div class="fieldDescription">Vertical position of the series logo on the poster.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="txtLogoHeight">Logo Height:</label>
+                                    <label for="txtLogoHeight"></label>
                                     <input is="emby-input" type="number" id="txtLogoHeight" min="1.0" max="100.0" data-setting="LogoHeight" data-type="number" />
-                                    <div class="fieldDescription">Logo height as a percent of the poster's short side, 1 to 100.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
@@ -150,66 +150,66 @@
                         <div id="canvasContent" class="jpk-collapsible-content collapsed">
 
                             <div class="inputContainer">
-                                <label for="selectCanvasSource">Canvas Background:</label>
+                                <label for="selectCanvasSource"></label>
                                 <select is="emby-select" id="selectCanvasSource" data-setting="CanvasSource" data-default="Extract"></select>
-                                <div class="fieldDescription">Determine where the poster background should come from.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="nested-settings" data-depends-on-canvas="Extract">
                                 <div class="jpk-field-row">
                                     <div class="jpk-field">
-                                        <label for="txtExtractWindowStart">Extraction Start (%):</label>
+                                        <label for="txtExtractWindowStart"></label>
                                         <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-setting="ExtractWindowStart" data-type="number" />
                                     </div>
                                     <div class="jpk-field">
-                                        <label for="txtExtractWindowEnd">Extraction End (%):</label>
+                                        <label for="txtExtractWindowEnd"></label>
                                         <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-setting="ExtractWindowEnd" data-type="number" />
                                     </div>
                                 </div>
                                 <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
                                 <div class="inputContainer">
-                                    <label for="txtBrightenHDR">Brighten HDR (%):</label>
+                                    <label for="txtBrightenHDR"></label>
                                     <input is="emby-input" type="number" id="txtBrightenHDR" min="0" max="100" data-setting="BrightenHDR" data-type="number" />
-                                    <div class="fieldDescription">Brighten frames from HDR sources by this percent.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="checkboxContainer" data-depends-on-canvas="Extract">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkEnableLetterboxDetection" data-setting="EnableLetterboxDetection" />
-                                    <span class="checkboxLabel">Enable Letterbox Detection</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Detect and crop black bars from extracted frames.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="selectPosterFill">Fill Strategy:</label>
+                                <label for="selectPosterFill"></label>
                                 <select is="emby-select" id="selectPosterFill" data-setting="PosterFill" data-default="Original"></select>
-                                <div class="fieldDescription">How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="jpk-field-row">
                                 <div class="jpk-field">
-                                    <label for="txtPosterDimensionRatio">Landscape Aspect Ratio:</label>
+                                    <label for="txtPosterDimensionRatio"></label>
                                     <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
                                 </div>
                                 <div class="jpk-field">
-                                    <label for="txtPortraitDimensionRatio">Portrait Aspect Ratio:</label>
+                                    <label for="txtPortraitDimensionRatio"></label>
                                     <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
                                 </div>
                             </div>
                             <div id="ratioNote" class="fieldDescription">The shape each image is cropped to, such as 16:9 and 2:3.</div>
 
                             <div class="inputContainer">
-                                <label for="txtPosterSafeArea">Safe Area:</label>
+                                <label for="txtPosterSafeArea"></label>
                                 <input is="emby-input" type="number" id="txtPosterSafeArea" min="1.0" max="100.0" data-setting="PosterSafeArea" data-type="number" />
-                                <div class="fieldDescription">Margin kept clear around all edges, as a percent of the poster's short side. The same pixel amount is used on every side.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="txtElementSpacing">Element Spacing:</label>
+                                <label for="txtElementSpacing"></label>
                                 <input is="emby-input" type="number" id="txtElementSpacing" min="0" max="20" step="0.5" data-setting="ElementSpacing" data-type="number" />
-                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Raise it if elements sit too close together. Default is 2.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                         </div>
@@ -226,9 +226,9 @@
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkPaletteDerivedColors" data-setting="PaletteDerivedColors" data-default-unchecked />
-                                    <span class="checkboxLabel">Palette-Derived Colors</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Use the dominant color from each episode's image as the overlay color. The alpha values below still apply.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
@@ -243,9 +243,9 @@
                             </div>
 
                             <div class="inputContainer">
-                                <label for="selectOverlayGradient">Overlay Gradient:</label>
+                                <label for="selectOverlayGradient"></label>
                                 <select is="emby-select" id="selectOverlayGradient" data-setting="OverlayGradient" data-default="None"></select>
-                                <div class="fieldDescription">Gradient direction from the overlay color to the secondary color.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="nested-settings" data-depends-on-gradient="selectOverlayGradient">
@@ -273,26 +273,26 @@
                         <div id="graphicContent" class="jpk-collapsible-content collapsed">
 
                             <div class="inputContainer">
-                                <label for="txtGraphicPath">Graphic File Path:</label>
+                                <label for="txtGraphicPath"></label>
                                 <input is="emby-input" type="text" id="txtGraphicPath" placeholder="/path/to/graphic.png" data-setting="GraphicPath" />
-                                <div class="fieldDescription">Optional path to a graphic drawn above the image and below text. PNG, JPG, or WEBP. Leave empty to disable.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="cutout-logo-group" data-depends-on-value="txtGraphicPath">
                                 <div class="inputContainer">
-                                    <label for="selectGraphicPosition">Graphic Position:</label>
+                                    <label for="selectGraphicPosition"></label>
                                     <select is="emby-select" id="selectGraphicPosition" data-setting="GraphicPosition" data-default="Center"></select>
-                                    <div class="fieldDescription">Vertical position of the static graphic on the poster.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectGraphicAlignment">Graphic Alignment:</label>
+                                    <label for="selectGraphicAlignment"></label>
                                     <select is="emby-select" id="selectGraphicAlignment" data-setting="GraphicAlignment" data-default="Center"></select>
-                                    <div class="fieldDescription">Horizontal alignment of the static graphic on the poster.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="txtGraphicSize">Graphic Size (%):</label>
+                                    <label for="txtGraphicSize"></label>
                                     <input is="emby-input" type="number" id="txtGraphicSize" min="1.0" max="100.0" data-setting="GraphicSize" data-type="number" />
-                                    <div class="fieldDescription">Size of the graphic as a percent of the poster's short side, 1 to 100. It keeps its own proportions inside that size.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
@@ -310,28 +310,28 @@
                             <div class="checkboxContainer" id="showEpisodeRow">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkShowSecondary" data-setting="ShowSecondary" />
-                                    <span class="checkboxLabel">Show Subtitle</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Display the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="checkboxContainer" data-depends-on="chkShowSecondary">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkSecondaryUseCustomFont" data-setting="SecondaryUseCustomFont" />
-                                    <span class="checkboxLabel">Use Custom Font</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Use a font file instead of a built in font.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowSecondary,chkSecondaryUseCustomFont">
-                                <label for="txtSecondaryFontPath">Font Path:</label>
+                                <label for="txtSecondaryFontPath"></label>
                                 <input is="emby-input" type="text" id="txtSecondaryFontPath" placeholder="/path/to/font.ttf" data-setting="SecondaryFontPath" />
-                                <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div data-hide-when-checked="chkSecondaryUseCustomFont" data-depends-on="chkShowSecondary">
                                 <div class="inputContainer">
-                                    <label for="selectSecondaryFontFamily">Font:</label>
+                                    <label for="selectSecondaryFontFamily"></label>
                                     <select is="emby-select" id="selectSecondaryFontFamily" data-setting="SecondaryFontFamily" data-default="Arial">
                                         <option value="Arial">Arial</option>
                                         <option value="Arial Black">Arial Black</option>
@@ -363,23 +363,23 @@
                                         <option value="Trebuchet MS">Trebuchet MS</option>
                                         <option value="Verdana">Verdana</option>
                                     </select>
-                                    <div class="fieldDescription">Font family for the subtitle.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectSecondaryFontStyle">Font Style:</label>
+                                    <label for="selectSecondaryFontStyle"></label>
                                     <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold"></select>
-                                    <div class="fieldDescription">Font style for the subtitle.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowSecondary">
-                                <label for="txtSecondaryFontSize">Font Size:</label>
+                                <label for="txtSecondaryFontSize"></label>
                                 <input is="emby-input" type="number" id="txtSecondaryFontSize" min="1.0" max="100.0" data-setting="SecondaryFontSize" data-type="number" />
-                                <div class="fieldDescription">Text size as a percent of the poster's short side, 1 to 100.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowSecondary">
-                                <label for="txtSecondaryFontColor">Font Color:</label>
+                                <label for="txtSecondaryFontColor"></label>
                                 <div class="color-control-group">
                                     <input type="color" id="colorSecondaryFontColor" class="color-picker" />
                                     <input type="range" id="alphaSecondaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
@@ -403,34 +403,34 @@
                             <div class="checkboxContainer" id="showTitleRow">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkShowPrimary" data-setting="ShowPrimary" />
-                                    <span class="checkboxLabel">Show Title</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Display the title, the larger line. An episode shows its own name; a season or series shows the show name.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowPrimary">
-                                <label for="selectLongTextHandling">Long Titles:</label>
+                                <label for="selectLongTextHandling"></label>
                                 <select is="emby-select" id="selectLongTextHandling" data-setting="LongTextHandling" data-default="Ellipsis"></select>
-                                <div class="fieldDescription">What to do when a title does not fit. Ellipsis trims it. Abbreviate tries the first part of the title, then initials with periods. Drop Name hides it.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="checkboxContainer" data-depends-on="chkShowPrimary">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkPrimaryUseCustomFont" data-setting="PrimaryUseCustomFont" />
-                                    <span class="checkboxLabel">Use Custom Font</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Use a font file instead of a built in font.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowPrimary,chkPrimaryUseCustomFont">
-                                <label for="txtPrimaryFontPath">Font Path:</label>
+                                <label for="txtPrimaryFontPath"></label>
                                 <input is="emby-input" type="text" id="txtPrimaryFontPath" placeholder="/path/to/font.ttf" data-setting="PrimaryFontPath" />
-                                <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div data-hide-when-checked="chkPrimaryUseCustomFont" data-depends-on="chkShowPrimary">
                                 <div class="inputContainer">
-                                    <label for="selectPrimaryFontFamily">Font:</label>
+                                    <label for="selectPrimaryFontFamily"></label>
                                     <select is="emby-select" id="selectPrimaryFontFamily" data-setting="PrimaryFontFamily" data-default="Arial">
                                         <option value="Arial">Arial</option>
                                         <option value="Arial Black">Arial Black</option>
@@ -462,23 +462,23 @@
                                         <option value="Trebuchet MS">Trebuchet MS</option>
                                         <option value="Verdana">Verdana</option>
                                     </select>
-                                    <div class="fieldDescription">Font family for the title text.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectPrimaryFontStyle">Font Style:</label>
+                                    <label for="selectPrimaryFontStyle"></label>
                                     <select is="emby-select" id="selectPrimaryFontStyle" data-setting="PrimaryFontStyle" data-default="Bold"></select>
-                                    <div class="fieldDescription">Font style for the title text.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowPrimary">
-                                <label for="txtPrimaryFontSize">Font Size:</label>
+                                <label for="txtPrimaryFontSize"></label>
                                 <input is="emby-input" type="number" id="txtPrimaryFontSize" min="1.0" max="100.0" data-setting="PrimaryFontSize" data-type="number" />
-                                <div class="fieldDescription">Title size as a percent of the poster's short side, 1 to 100.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowPrimary">
-                                <label for="txtPrimaryFontColor">Font Color:</label>
+                                <label for="txtPrimaryFontColor"></label>
                                 <div class="color-control-group">
                                     <input type="color" id="colorPrimaryFontColor" class="color-picker" />
                                     <input type="range" id="alphaPrimaryFontColor" class="alpha-slider" min="0" max="255" value="255" />

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +12,11 @@ using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
+    /// <summary>The words a page shows for one setting.</summary>
+    /// <param name="Label">The field's label.</param>
+    /// <param name="Description">The help text beneath it, empty when the field needs none.</param>
+    public sealed record SettingText(string Label, string Description);
+
     /// <summary>One choice offered for a setting.</summary>
     /// <param name="Value">The value stored in the design.</param>
     /// <param name="Label">What the configuration page shows for it.</param>
@@ -74,6 +80,39 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 .ToList();
 
             return options;
+        }
+
+        /// <summary>
+        /// Gets the label and help text for every setting, read from the settings models. The
+        /// configuration pages render these rather than carrying their own copy, so the wording of a
+        /// setting is changed in one place, next to the setting itself.
+        /// </summary>
+        public static IReadOnlyDictionary<string, SettingText> Text()
+        {
+            var text = new Dictionary<string, SettingText>(StringComparer.Ordinal);
+
+            foreach (var property in Settable().Concat(SettableLogoProperties()))
+            {
+                var display = property.GetCustomAttribute<DisplayAttribute>();
+                if (display?.Name == null)
+                {
+                    continue;
+                }
+
+                text[property.Name] = new SettingText(display.Name, display.Description ?? string.Empty);
+            }
+
+            return text;
+        }
+
+        // SettableLogoProperties
+        // A logo design's settings, which the Logos page renders the same way.
+        private static IEnumerable<PropertyInfo> SettableLogoProperties()
+        {
+            return typeof(LogoSettings)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanRead && p.CanWrite)
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null);
         }
 
         /// <summary>

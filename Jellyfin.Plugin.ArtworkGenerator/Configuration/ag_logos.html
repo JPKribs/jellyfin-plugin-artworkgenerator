@@ -63,26 +63,26 @@
                         <div class="jpk-section-title">Text</div>
                         <div class="jpk-section-content">
                             <div class="inputContainer">
-                                <label for="selectTitleSource">Name From:</label>
+                                <label for="selectTitleSource"></label>
                                 <select is="emby-select" id="selectTitleSource" data-setting="TitleSource" data-default="Title">
                                     <option value="Title">Title</option>
                                     <option value="OriginalTitle">Original Title</option>
                                     <option value="SortTitle">Sort Title</option>
                                     <option value="FolderName">Folder Name</option>
                                 </select>
-                                <div class="fieldDescription">Which name the logo shows. Falls back to the title when the chosen name is empty.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkStripYear" data-setting="StripYear" />
-                                    <span class="checkboxLabel">Remove Year</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Remove a year in brackets, such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345].</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="selectSubtitleMode">Names With a Subtitle:</label>
+                                <label for="selectSubtitleMode"></label>
                                 <select is="emby-select" id="selectSubtitleMode" data-setting="SubtitleMode" data-default="Keep">
                                     <option value="Keep">Draw the whole name</option>
                                     <option value="TitleOnly">Title only</option>
@@ -90,35 +90,35 @@
                                     <option value="TitleLarge">Title large, subtitle small below</option>
                                     <option value="SubtitleLarge">Subtitle large, title small above</option>
                                 </select>
-                                <div class="fieldDescription">How to treat a name split by a colon or spaced dash, such as "Star Wars: Andor". The last two draw both parts at two sizes, the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" id="secondarySizeContainer">
-                                <label for="txtSecondarySize">Small Line Size (%):</label>
+                                <label for="txtSecondarySize"></label>
                                 <input is="emby-input" type="number" id="txtSecondarySize" min="20" max="90" step="5" data-setting="SecondarySize" data-type="number" />
-                                <div class="fieldDescription">The small line's size as a percent of the large one. Default is 45.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="txtCustomRegex">Remove Pattern:</label>
+                                <label for="txtCustomRegex"></label>
                                 <input is="emby-input" type="text" id="txtCustomRegex" placeholder="^The\s+" data-setting="CustomRegex" />
-                                <div class="fieldDescription">Optional regular expression. Anything it matches is removed. An invalid pattern is ignored.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkUppercase" data-setting="Uppercase" data-default-unchecked />
-                                    <span class="checkboxLabel">All Capitals</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="selectMaxLines">Lines:</label>
+                                <label for="selectMaxLines"></label>
                                 <select is="emby-select" id="selectMaxLines" data-setting="MaxLines" data-default="2" data-type="number">
                                     <option value="1">One line</option>
                                     <option value="2">Up to two lines</option>
                                 </select>
-                                <div class="fieldDescription">A long name splits onto two lines only when that lets the text grow noticeably.</div>
+                                <div class="fieldDescription"></div>
                             </div>
                         </div>
                     </div>
@@ -133,26 +133,26 @@
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkLogoUseCustomFont" data-setting="UseCustomFont" data-default-unchecked />
-                                    <span class="checkboxLabel">Use Custom Font</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription">Use a font file instead of an installed font.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkLogoUseCustomFont">
-                                <label for="txtLogoFontPath">Font Path:</label>
+                                <label for="txtLogoFontPath"></label>
                                 <input is="emby-input" type="text" id="txtLogoFontPath" placeholder="/path/to/font.ttf" data-setting="FontPath" />
-                                <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div data-hide-when-checked="chkLogoUseCustomFont">
                                 <div class="inputContainer">
-                                    <label for="selectLogoFontFamily">Font:</label>
+                                    <label for="selectLogoFontFamily"></label>
                                     <select is="emby-select" id="selectLogoFontFamily" data-setting="FontFamily" data-default="Arial">
                                         <option value="Arial">Arial</option>
                                     </select>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectLogoFontStyle">Font Style:</label>
+                                    <label for="selectLogoFontStyle"></label>
                                     <select is="emby-select" id="selectLogoFontStyle" data-setting="FontStyle" data-default="Bold">
                                         <option value="Normal">Normal</option>
                                         <option value="Bold">Bold</option>
@@ -172,22 +172,22 @@
                         </button>
                         <div id="logoColorContent" class="jpk-collapsible-content collapsed">
                             <div class="inputContainer">
-                                <label for="selectLogoFill">Letters Filled With:</label>
+                                <label for="selectLogoFill"></label>
                                 <select is="emby-select" id="selectLogoFill" data-setting="Fill" data-default="Color">
                                     <option value="Color">A color</option>
                                     <option value="Photo">A frame from the show</option>
                                 </select>
-                                <div class="fieldDescription">A frame fill cuts the letters out of a picture from the show, using the same frames its other images come from. A heavy font shows more of the picture, and an outline keeps the letters readable over a busy background.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-hide-for-fill="Photo">
-                                <label for="selectColorSource">Color From:</label>
+                                <label for="selectColorSource"></label>
                                 <select is="emby-select" id="selectColorSource" data-setting="ColorSource" data-default="Fixed">
                                     <option value="Fixed">Chosen Color</option>
                                     <option value="SeriesPoster">Series Poster</option>
                                     <option value="SeriesBackdrop">Series Backdrop</option>
                                 </select>
-                                <div class="fieldDescription">Sample the main color of the series artwork, lifted to stay legible, or use a color you pick.</div>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer" data-hide-for-fill="Photo">
@@ -204,13 +204,13 @@
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkLogoOutline" data-setting="OutlineEnabled" data-default-unchecked />
-                                    <span class="checkboxLabel">Outline</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
                             </div>
 
                             <div class="nested-settings" data-depends-on="chkLogoOutline">
                                 <div class="inputContainer">
-                                    <label for="txtLogoOutlineColor">Outline Color:</label>
+                                    <label for="txtLogoOutlineColor"></label>
                                     <div class="color-control-group">
                                         <input type="color" id="colorLogoOutlineColor" class="color-picker" />
                                         <input type="range" id="alphaLogoOutlineColor" class="alpha-slider" min="0" max="255" value="255" />
@@ -219,16 +219,16 @@
                                     </div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="txtLogoOutlineWidth">Outline Width (%):</label>
+                                    <label for="txtLogoOutlineWidth"></label>
                                     <input is="emby-input" type="number" id="txtLogoOutlineWidth" min="0" max="20" step="0.5" data-setting="OutlineWidth" data-type="number" />
-                                    <div class="fieldDescription">Stroke width as a percent of the font size.</div>
+                                    <div class="fieldDescription"></div>
                                 </div>
                             </div>
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkLogoShadow" data-setting="ShadowEnabled" data-default-unchecked />
-                                    <span class="checkboxLabel">Drop Shadow</span>
+                                    <span class="checkboxLabel"></span>
                                 </label>
                             </div>
                         </div>
@@ -242,13 +242,13 @@
                         </button>
                         <div id="logoSizeContent" class="jpk-collapsible-content collapsed">
                             <div class="inputContainer">
-                                <label for="txtLogoWidth">Width:</label>
+                                <label for="txtLogoWidth"></label>
                                 <input is="emby-input" type="number" id="txtLogoWidth" min="100" max="4000" step="1" data-setting="Width" data-type="number" />
                             </div>
                             <div class="inputContainer">
-                                <label for="txtLogoHeight">Height:</label>
+                                <label for="txtLogoHeight"></label>
                                 <input is="emby-input" type="number" id="txtLogoHeight" min="40" max="2000" step="1" data-setting="Height" data-type="number" />
-                                <div class="fieldDescription">Canvas size in pixels. 800 by 310 matches the common HD clear logo size, so generated logos sit alongside downloaded ones.</div>
+                                <div class="fieldDescription"></div>
                             </div>
                         </div>
                     </div>
