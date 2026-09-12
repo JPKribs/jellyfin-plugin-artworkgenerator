@@ -44,16 +44,14 @@
                                             <span>Light Background</span>
                                         </button>
                                     </div>
-                                    <div class="inputContainer poster-preview-kind">
-                                        <label for="txtSampleName">Sample Name:</label>
-                                        <input is="emby-input" type="text" id="txtSampleName" placeholder="Show Name: Subtitle" />
-                                        <div class="fieldDescription">A name to preview with. It is not saved, so try the names your own shows have.</div>
+                                    <div class="poster-preview-components" id="logoColorSourceRow" style="display: none;">
+                                        <div class="poster-component" id="logoColorSourceComponent">
+                                            <img class="poster-component-img" id="logoColorSourceImage" src="" alt="Artwork the color is sampled from" />
+                                            <span class="poster-component-label" id="logoColorSourceLabel"></span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="poster-preview-components" id="logoColorSourceRow" style="display: none;">
-                                    <div class="poster-component" id="logoColorSourceComponent">
-                                        <img class="poster-component-img" id="logoColorSourceImage" src="" alt="Artwork the colour is sampled from" />
-                                        <span class="poster-component-label" id="logoColorSourceLabel"></span>
+                                    <div class="inputContainer poster-preview-kind">
+                                        <input is="emby-input" type="text" id="txtSampleName" placeholder="Demo Logo Text" />
                                     </div>
                                 </div>
                             </div>
@@ -174,7 +172,7 @@
                                     <span class="alpha-label">255</span>
                                     <input is="emby-input" type="text" id="txtLogoColor" placeholder="#FFFFFFFF" data-setting="Color" class="hex-input" />
                                 </div>
-                                <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn, 0 to 255. The color itself comes from the series artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
+                                <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn, 0 to 255. The color itself comes from the item's own artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
                             </div>
 
                             <div class="checkboxContainer">

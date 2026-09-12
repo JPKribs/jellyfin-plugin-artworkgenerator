@@ -92,20 +92,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     }
 
     /// <summary>
-    /// Where a generated logo takes its colour from.
+    /// Where a generated logo takes its color from.
     /// </summary>
     public enum LogoColorSource
     {
-        /// <summary>The configured colour.</summary>
+        /// <summary>The configured color.</summary>
         [Description("Chosen Color")]
         Fixed,
 
-        /// <summary>The dominant colour of the series poster.</summary>
-        [Description("Series Poster")]
+        /// <summary>The dominant color of the top level poster: a series' own, or a film's.</summary>
+        [Description("Top Level Poster")]
         SeriesPoster,
 
-        /// <summary>The dominant colour of the series backdrop.</summary>
-        [Description("Series Backdrop")]
+        /// <summary>The dominant color of the top level backdrop: a series' own, or a film's.</summary>
+        [Description("Top Level Backdrop")]
         SeriesBackdrop
     }
 
@@ -140,7 +140,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     /// </summary>
     public enum LogoFill
     {
-        /// <summary>A solid colour.</summary>
+        /// <summary>A solid color.</summary>
         [Description("A color")]
         Color,
 

@@ -47,15 +47,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Font Path", Description = "Path to a TTF, OTF, or TTC font file readable by the server.")]
         public string FontPath { get; set; } = string.Empty;
 
-        /// <summary>Gets or sets what fills the letters: a colour, or a frame from the series.</summary>
+        /// <summary>Gets or sets what fills the letters: a color, or a frame from the series.</summary>
         [Display(Name = "Letters Filled With", Description = "A frame fill cuts the letters out of a picture from the show, using the same frames its other images come from. A heavy font shows more of the picture, and an outline keeps the letters readable over a busy background.")]
         public LogoFill Fill { get; set; } = LogoFill.Color;
 
-        /// <summary>Gets or sets where the text colour comes from, when the fill is a colour.</summary>
-        [Display(Name = "Color From", Description = "Sample the main color of the series artwork, lifted to stay legible, or use a color you pick.")]
+        /// <summary>Gets or sets where the text color comes from, when the fill is a color.</summary>
+        [Display(Name = "Color From", Description = "Sample the main color of the item's own artwork, lifted to stay legible, or use a color you pick.")]
         public LogoColorSource ColorSource { get; set; } = LogoColorSource.Fixed;
 
-        /// <summary>Gets or sets the ARGB text colour, and the fallback when sampling fails.</summary>
+        /// <summary>Gets or sets the ARGB text color, and the fallback when sampling fails.</summary>
         [Display(Name = "Text Color")]
         public string Color { get; set; } = "#FFFFFFFF";
 

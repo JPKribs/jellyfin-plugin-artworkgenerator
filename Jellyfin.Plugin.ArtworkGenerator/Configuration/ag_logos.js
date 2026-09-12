@@ -260,7 +260,7 @@ export default function (view) {
 
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
 
-            // The colour field swaps its own wording between colour and opacity, so it keeps it.
+            // The color field swaps its own wording between color and opacity, so it keeps it.
             if (label && !label.hasAttribute('data-color-label')) {
                 var name = text.label || text.Label || '';
                 label.textContent = el.type === 'checkbox' ? name : name + ':';
@@ -423,18 +423,18 @@ export default function (view) {
 
     // ── Visibility ──────────────────────────────────────────
 
-    // Where a sampled colour comes from. The preview draws its logo over the bundled demo art, and
-    // these are the same two images the renderer samples: the series poster, or the backdrop.
+    // Where a sampled color comes from. The preview draws its logo over the bundled demo art, and
+    // these are the same two images the renderer samples: the item's own poster, or its backdrop.
     var COLOR_SOURCES = {
-        SeriesPoster: { component: 'poster', label: 'Colour sampled from this poster' },
-        SeriesBackdrop: { component: 'canvas', label: 'Colour sampled from this backdrop' }
+        SeriesPoster: { component: 'poster', label: 'Color sampled from this poster' },
+        SeriesBackdrop: { component: 'canvas', label: 'Color sampled from this backdrop' }
     };
 
     var _colorSourceUrl = null;
     var _colorSourceComponent = null;
 
     // A tinted logo with no visible source looks arbitrary, so the artwork it was sampled from is
-    // shown beside it. A fixed colour has no source, so nothing is shown.
+    // shown beside it. A fixed color has no source, so nothing is shown.
     function updateColorSourceSample() {
         var row = view.querySelector('#logoColorSourceRow');
         if (!row) return;
@@ -463,7 +463,7 @@ export default function (view) {
             _colorSourceUrl = URL.createObjectURL(blob);
             view.querySelector('#logoColorSourceImage').src = _colorSourceUrl;
         }).catch(function (error) {
-            console.error('Failed to load the colour source image:', error);
+            console.error('Failed to load the color source image:', error);
             row.style.display = 'none';
             _colorSourceComponent = null;
         });
@@ -474,8 +474,8 @@ export default function (view) {
         var twoSizes = mode === 'TitleLarge' || mode === 'SubtitleLarge';
         view.querySelector('#secondarySizeContainer').style.display = twoSizes ? 'block' : 'none';
 
-        // Sampling takes the colour from the artwork, so leaving a swatch on screen would imply the
-        // chosen colour still paints the text. The control collapses to the opacity it does control.
+        // Sampling takes the color from the artwork, so leaving a swatch on screen would imply the
+        // chosen color still paints the text. The control collapses to the opacity it does control.
         var sampling = view.querySelector('#selectColorSource').value !== 'Fixed';
         var group = view.querySelector('#txtLogoColor').closest('.color-control-group');
         if (group) group.classList.toggle('palette-derived', sampling);
@@ -492,7 +492,7 @@ export default function (view) {
 
         updateColorSourceSample();
 
-        // A frame fill has no colour to pick, so the colour controls step aside for it.
+        // A frame fill has no color to pick, so the color controls step aside for it.
         var fill = view.querySelector('#selectLogoFill').value;
         view.querySelectorAll('[data-hide-for-fill]').forEach(function (el) {
             el.style.display = el.getAttribute('data-hide-for-fill') === fill ? 'none' : 'block';
