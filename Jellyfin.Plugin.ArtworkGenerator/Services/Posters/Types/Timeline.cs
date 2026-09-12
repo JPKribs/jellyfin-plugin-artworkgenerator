@@ -34,13 +34,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         private const string LabelsBlock = "labels";
         private const string BarBlock = "bar";
 
-        private readonly ILogger<TimelinePosterGenerator> _logger;
-
         // TimelinePosterGenerator
         // Initializes a new instance of the timeline poster generator with logging support.
         public TimelinePosterGenerator(ILogger<TimelinePosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderTypography
@@ -149,11 +147,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             rightStyle.Draw(canvas, subject.ProgressText, slot.Right, baselineY);
         }
 
-        // LogError
-        // Logs an error that occurred during timeline poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate timeline poster for {EpisodeName}", episodeName);
-        }
     }
 }

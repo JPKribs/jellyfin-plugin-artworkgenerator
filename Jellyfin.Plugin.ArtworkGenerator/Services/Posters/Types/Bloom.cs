@@ -51,13 +51,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override string SecondaryDescription
             => "The subtitle is the episode code, centered over the bloom just above the title.";
 
-        private readonly ILogger<BloomPosterGenerator> _logger;
-
         // BloomPosterGenerator
         // Initializes a new instance of the bloom poster generator with logging support.
         public BloomPosterGenerator(ILogger<BloomPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderOverlay
@@ -69,13 +67,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (string.IsNullOrEmpty(settings.OverlayColor))
-            {
-                return;
-            }
-
-            var centreColor = ColorUtils.ParseHexColor(settings.OverlayColor);
-            if (centreColor.Alpha == 0)
+            if (!TryGetOverlayColor(settings, out var centreColor))
             {
                 return;
             }
@@ -207,11 +199,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
         }
 
-        // LogError
-        // Logs an error that occurred during bloom poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate bloom poster for {EpisodeName}", episodeName);
-        }
     }
 }

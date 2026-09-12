@@ -33,8 +33,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override string SecondaryDescription
             => "The subtitle is the episode code, centered on the panel above the title.";
 
-        private readonly ILogger<FrostedGlassPosterGenerator> _logger;
-
         // The base canvas bitmap, captured during the canvas layer so the typography layer
         // can re-draw a blurred copy of it inside the panel. A generator renders one poster at a
         // time, so holding the reference between layers is safe.
@@ -43,8 +41,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // FrostedGlassPosterGenerator
         // Initializes a new instance of the frosted glass poster generator with logging support.
         public FrostedGlassPosterGenerator(ILogger<FrostedGlassPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderCanvas
@@ -184,11 +182,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             skCanvas.DrawRoundRect(panel, borderPaint);
         }
 
-        // LogError
-        // Logs an error that occurred during frosted glass poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate frosted glass poster for {EpisodeName}", episodeName);
-        }
     }
 }

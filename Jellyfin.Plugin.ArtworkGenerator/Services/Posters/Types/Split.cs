@@ -31,13 +31,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // The layout puts a portrait series poster beside a frame, which needs a wide canvas.
         public override ArtworkShapes SupportedShapes => ArtworkShapes.Landscape;
 
-        private readonly ILogger<SplitPosterGenerator> _logger;
-
         // SplitPosterGenerator
         // Initializes a new instance of the split poster generator with logging support.
         public SplitPosterGenerator(ILogger<SplitPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderCanvas
@@ -57,7 +55,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (string.IsNullOrEmpty(seriesPosterPath) || !File.Exists(seriesPosterPath))
             {
-                _logger.LogDebug("No series poster available, using fallback");
+                Logger.LogDebug("No series poster available, using fallback");
                 DrawFallbackPoster(skCanvas, posterWidth, height);
                 return;
             }
@@ -69,7 +67,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
                 if (seriesPoster == null)
                 {
-                    _logger.LogWarning("Failed to decode series poster: {Path}", seriesPosterPath);
+                    Logger.LogWarning("Failed to decode series poster: {Path}", seriesPosterPath);
                     DrawFallbackPoster(skCanvas, posterWidth, height);
                     return;
                 }
@@ -79,7 +77,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load series poster: {Path}", seriesPosterPath);
+                Logger.LogError(ex, "Failed to load series poster: {Path}", seriesPosterPath);
                 DrawFallbackPoster(skCanvas, posterWidth, height);
             }
         }
@@ -99,12 +97,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (string.IsNullOrEmpty(settings.OverlayColor))
+            if (!TryGetOverlayColor(settings, out var primaryColor))
+            {
                 return;
-
-            var primaryColor = ColorUtils.ParseHexColor(settings.OverlayColor);
-            if (primaryColor.Alpha == 0)
-                return;
+            }
 
             var posterWidth = CalculatePosterWidth(height);
             var rightRect = SKRect.Create(posterWidth, 0, width - posterWidth, height);
@@ -144,12 +140,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             DrawTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
 
-        // LogError
-        // Logs an error that occurred during split poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate split poster for {EpisodeName}", episodeName);
-        }
 
         // CalculatePosterWidth
         // Calculates the width for a 2:3 aspect ratio poster that fills the full height.

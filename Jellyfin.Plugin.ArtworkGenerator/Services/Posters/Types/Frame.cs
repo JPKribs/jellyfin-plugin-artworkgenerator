@@ -44,13 +44,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Gap between the frame line and the text set into it, as a share of the size unit.
         private const float TextPaddingRatio = 0.01f;
 
-        private readonly ILogger<FramePosterGenerator> _logger;
-
         // FramePosterGenerator
         // Initializes a new instance of the frame poster generator with logging support.
         public FramePosterGenerator(ILogger<FramePosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderTypography
@@ -103,12 +101,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             DrawFrameBorder(skCanvas, safeArea, topInfo, bottomInfo, spacing, unit);
         }
 
-        // LogError
-        // Logs an error that occurred during frame poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate frame poster for {EpisodeName}", episodeName);
-        }
 
         // ResolveEdges
         // Which edge each line takes. The "first" choices fill the chosen edge with whichever line

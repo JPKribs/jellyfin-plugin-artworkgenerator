@@ -33,13 +33,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             (PosterSettingRules.ShowSecondary, PosterSettingState.Required),
             (PosterSettingRules.SecondaryFontSize, PosterSettingState.Hidden));
 
-        private readonly ILogger<NumeralPosterGenerator> _logger;
-
         // NumeralPosterGenerator
         // Initializes a new instance of the numeral poster generator with logging support.
         public NumeralPosterGenerator(ILogger<NumeralPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderTypography
@@ -80,19 +78,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
         }
 
-        // LogError
-        // Logs an error that occurred during numeral poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate numeral poster for {EpisodeName}", episodeName);
-        }
 
         // DrawFocalText
         // Draws the focal text, a Roman numeral or a series name, sized to fill, and centered on its
         // ink in, the area.
         private static void DrawFocalText(SKCanvas canvas, string numeralText, PosterSettings config, SKRect area, int unit)
         {
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
+            var typeface = ResolveSecondaryTypeface(config);
 
             float fontSize = FontUtils.CalculateOptimalFontSize(numeralText, typeface, area.Width, area.Height);
 

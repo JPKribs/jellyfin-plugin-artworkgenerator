@@ -22,14 +22,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
         // Builds the stroke geometry. Exactly one SKPath is returned; any other path allocated
         // along the way is released, including when stroke building or Simplify throws part way
         // through — these are native handles, so they cannot be left to the success path alone.
-        public SKPath BuildStrokePath(SKRect bounds, SKRect textArea, float unit)
+        public SKPath BuildStrokePath(SKRect bounds, float unit)
         {
             SKPath? combined = new SKPath { FillType = SKPathFillType.Winding };
             SKPath? simplified = null;
 
             try
             {
-                return BuildStrokePathCore(bounds, textArea, unit, ref combined, ref simplified);
+                return BuildStrokePathCore(bounds, unit, ref combined, ref simplified);
             }
             finally
             {
@@ -41,21 +41,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
         // BuildStrokePathCore
         // Hands ownership of whichever path it returns back to the caller by nulling the
         // corresponding ref, so the caller's finally disposes only the one left behind.
-        private SKPath BuildStrokePathCore(SKRect bounds, SKRect textArea, float unit, ref SKPath? combined, ref SKPath? simplified)
+        private SKPath BuildStrokePathCore(SKRect bounds, float unit, ref SKPath? combined, ref SKPath? simplified)
         {
             var working = combined!;
 
-            var textBuffer = bounds.Height * 0.05f;
-            var keepClear = new SKRect(
-                textArea.Left - textBuffer,
-                textArea.Top - textBuffer,
-                textArea.Right + textBuffer,
-                textArea.Bottom + textBuffer
-            );
-
-            float usableTop = bounds.Top + bounds.Height * 0.06f;
-            float usableBottom = keepClear.Top - bounds.Height * 0.04f;
-            float usableHeight = usableBottom - usableTop;
+            // The strokes are the composition, so they take the middle of the frame and stay there.
+            // They used to be squeezed into whatever room the text left above itself, which tied
+            // the artwork to the text's placement and collapsed the band when the text moved up.
+            float margin = bounds.Height * 0.06f;
+            float usableTop = bounds.Top + margin;
+            float usableHeight = bounds.Height - (margin * 2f);
 
             int strokeCount = _random.Next(2) == 0 ? 2 : 3;
             float perStrokeHeight = strokeCount == 2 ? unit * 0.48f : unit * 0.38f;

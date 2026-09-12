@@ -15,13 +15,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Full frame image with text at the bottom. Clean and versatile.";
 
-        private readonly ILogger<StandardPosterGenerator> _logger;
-
         // StandardPosterGenerator
         // Initializes a new instance of the standard poster generator with logging support.
         public StandardPosterGenerator(ILogger<StandardPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderTypography
@@ -35,11 +33,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             DrawTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
 
-        // LogError
-        // Logs an error that occurred during standard poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate standard poster for {EpisodeName}", episodeName);
-        }
     }
 }

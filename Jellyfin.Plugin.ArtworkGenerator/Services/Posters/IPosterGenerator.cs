@@ -55,6 +55,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
     public abstract class BasePosterGenerator : IPosterGenerator
     {
+        // Logger
+        // The style's own logger, for the few styles that report more than a failed render.
+        protected ILogger Logger { get; }
+
+        // BasePosterGenerator
+        // Every style logs the same way about the same pipeline, so the logger lives here. Styles
+        // still pass their own typed logger, which keeps each one's log category its own.
+        protected BasePosterGenerator(ILogger logger)
+        {
+            Logger = logger;
+        }
+
         // Style
         // The poster style this generator produces.
         public abstract PosterStyle Style { get; }
@@ -183,8 +195,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(settings);
 
             var fontSize = FontUtils.CalculateFontSizeFromPercentage(settings.SecondaryFontSize, height);
-            var typeface = ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.SecondaryFontStyle));
+            var typeface = ResolveSecondaryTypeface(settings);
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.SecondaryFontColor), fontSize, typeface, height, align, withShadow);
+        }
+
+        // ResolveSecondaryTypeface
+        // The subtitle's typeface in the weight the settings ask for, which is what every caller
+        // wanted; the explicit-style overload below is for the few that override the weight.
+        protected static SKTypeface ResolveSecondaryTypeface(PosterSettings settings)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            return ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.SecondaryFontStyle));
         }
 
         // ResolveSecondaryTypeface
@@ -419,45 +440,156 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Applies a color overlay with optional gradient to the poster.
         protected virtual void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            if (string.IsNullOrEmpty(settings.OverlayColor))
+            if (!TryGetOverlayColor(settings, out var primaryColor))
+            {
                 return;
+            }
 
-            var primaryColor = ColorUtils.ParseHexColor(settings.OverlayColor);
-            if (primaryColor.Alpha == 0)
-                return;
+            FillOverlay(skCanvas, settings, SKRect.Create(width, height), primaryColor);
+        }
 
-            var rect = SKRect.Create(width, height);
+        // TryGetOverlayColor
+        // The guard every overlay shares: an unset or fully transparent overlay color means the
+        // style draws no overlay at all.
+        protected static bool TryGetOverlayColor(PosterSettings settings, out SKColor color)
+        {
+            color = SKColors.Empty;
 
-            // Solid color overlay branch
+            if (settings == null || string.IsNullOrEmpty(settings.OverlayColor))
+            {
+                return false;
+            }
+
+            color = ColorUtils.ParseHexColor(settings.OverlayColor);
+            return color.Alpha != 0;
+        }
+
+        // FillOverlay
+        // Paints the overlay across a rectangle, flat or as the configured gradient. Every style
+        // that lays down an overlay goes through here, so a style that punches a shape out of one
+        // gets the same gradient support as a style that does not.
+        protected void FillOverlay(SKCanvas canvas, PosterSettings settings, SKRect rect, SKColor primaryColor)
+        {
+            ArgumentNullException.ThrowIfNull(canvas);
+            ArgumentNullException.ThrowIfNull(settings);
+
             if (settings.OverlayGradient == OverlayGradient.None)
             {
-                using var overlayPaint = new SKPaint
+                using var flatPaint = new SKPaint
                 {
                     Color = primaryColor,
                     Style = SKPaintStyle.Fill
                 };
-                skCanvas.DrawRect(rect, overlayPaint);
+                canvas.DrawRect(rect, flatPaint);
+                return;
             }
-            // Gradient overlay branch
-            else
-            {
-                var secondaryColor = ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
-                if (secondaryColor.Alpha == 0) secondaryColor = primaryColor;
 
-                // SKPaint does not own its shader, so the gradient is disposed here rather
-                // than left to the finalizer — a full library run creates one per poster.
-                using var gradient = CreateOverlayGradient(settings.OverlayGradient, rect, primaryColor, secondaryColor);
-                if (gradient != null)
-                {
-                    using var overlayPaint = new SKPaint
-                    {
-                        Shader = gradient,
-                        Style = SKPaintStyle.Fill,
-                        IsDither = true
-                    };
-                    skCanvas.DrawRect(rect, overlayPaint);
-                }
+            var secondaryColor = ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
+            if (secondaryColor.Alpha == 0)
+            {
+                secondaryColor = primaryColor;
             }
+
+            // SKPaint does not own its shader, so the gradient is disposed here rather than left to
+            // the finalizer — a full library run creates one per poster.
+            using var gradient = CreateOverlayGradient(settings.OverlayGradient, rect, primaryColor, secondaryColor);
+            if (gradient == null)
+            {
+                return;
+            }
+
+            using var gradientPaint = new SKPaint
+            {
+                Shader = gradient,
+                Style = SKPaintStyle.Fill,
+                IsDither = true
+            };
+            canvas.DrawRect(rect, gradientPaint);
+        }
+
+        // DrawPunchedOverlay
+        // The shape Cutout and Brush share: lay the overlay into its own layer, erase something out
+        // of it so the image shows through the hole, then optionally trace the hole's edge. The
+        // outline has to be drawn after the layer is restored in some styles and before the punch
+        // in others, which is why both moments are offered rather than one.
+        protected void DrawPunchedOverlay(
+            SKCanvas canvas,
+            PosterSettings settings,
+            int width,
+            int height,
+            Action<SKCanvas, SKColor> punch,
+            Action<SKCanvas, SKColor>? afterRestore = null)
+        {
+            ArgumentNullException.ThrowIfNull(canvas);
+            ArgumentNullException.ThrowIfNull(punch);
+
+            if (!TryGetOverlayColor(settings, out var overlayColor))
+            {
+                return;
+            }
+
+            canvas.SaveLayer();
+            FillOverlay(canvas, settings, SKRect.Create(width, height), overlayColor);
+            punch(canvas, overlayColor);
+            canvas.Restore();
+
+            afterRestore?.Invoke(canvas, overlayColor);
+        }
+
+        // CreatePunchPaint
+        // Erases whatever is drawn with it out of the overlay layer. A blur radius feathers the
+        // edge, which reads as paint rather than as a digital cut.
+        protected static SKPaint CreatePunchPaint(float blurRadius = 0f)
+        {
+            var paint = new SKPaint
+            {
+                Color = SKColors.Black,
+                Style = SKPaintStyle.Fill,
+                BlendMode = SKBlendMode.DstOut,
+                IsAntialias = true
+            };
+
+            if (blurRadius > 0f)
+            {
+                // SKPaint does not own its mask filter, so it is disposed with the paint below.
+                paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurRadius);
+            }
+
+            return paint;
+        }
+
+        // CreateOutlinePaint
+        // The contrasting line traced around a punched hole, shared by every style that offers the
+        // cutout border toggle.
+        protected static SKPaint CreateOutlinePaint(SKColor overlayColor, float strokeWidth)
+        {
+            return new SKPaint
+            {
+                Color = ColorUtils.GetContrastingOutline(overlayColor),
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = Math.Max(1f, strokeWidth),
+                IsAntialias = true,
+                StrokeCap = SKStrokeCap.Round,
+                StrokeJoin = SKStrokeJoin.Round
+            };
+        }
+
+        // CenterInSafeArea
+        // Puts a band of the given height in the middle of the safe area. A style whose focal
+        // element is the composition — lettering cut out of the image, a run of brush strokes —
+        // sits it here, so moving the text does not drag the artwork around with it.
+        protected static SKRect CenterInSafeArea(SKRect safeArea, float bandHeight)
+        {
+            var clamped = Math.Min(bandHeight, safeArea.Height);
+            return SKRect.Create(safeArea.Left, safeArea.MidY - (clamped / 2f), safeArea.Width, clamped);
+        }
+
+        // FocalBandHeight
+        // How much room the focal element gets once the text zone is reserved, never letting it
+        // fall below the floor a style sets for itself.
+        protected static float FocalBandHeight(SKRect safeArea, float remainingHeight, float minimumRatio)
+        {
+            return Math.Max(remainingHeight, safeArea.Height * minimumRatio);
         }
 
         // CreateOverlayGradient
@@ -537,8 +669,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // LogError
-        // Logs an error that occurred during poster generation.
-        protected abstract void LogError(Exception ex, string? episodeName);
+        // Reports a failed render. The style names itself, so this is written once rather than
+        // twelve times with one word changed.
+        protected void LogError(Exception ex, string? itemName)
+        {
+            Logger.LogError(ex, "Failed to generate {Style} artwork for {Item}", Style, itemName);
+        }
 
         // CalculateGraphicRect
         // Calculates the destination rectangle for a graphic while preserving aspect ratio.

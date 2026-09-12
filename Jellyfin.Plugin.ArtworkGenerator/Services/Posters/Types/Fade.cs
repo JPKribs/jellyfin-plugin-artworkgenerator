@@ -57,13 +57,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override string SecondaryDescription
             => "The subtitle is the item's number, drawn as the big number at the foot of the image.";
 
-        private readonly ILogger<FadePosterGenerator> _logger;
-
         // FadePosterGenerator
         // Initializes a new instance of the fade poster generator with logging support.
         public FadePosterGenerator(ILogger<FadePosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderOverlay
@@ -74,13 +72,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (string.IsNullOrEmpty(settings.OverlayColor))
-            {
-                return;
-            }
-
-            var primaryColor = ColorUtils.ParseHexColor(settings.OverlayColor);
-            if (primaryColor.Alpha == 0)
+            if (!TryGetOverlayColor(settings, out var primaryColor))
             {
                 return;
             }
@@ -139,7 +131,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         private static void DrawEpisodeNumber(SKCanvas canvas, int number, PosterSettings config, SKRect safeArea, int unit, float widthRatio)
         {
             var numberText = number.ToString("D2", CultureInfo.InvariantCulture);
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
+            var typeface = ResolveSecondaryTypeface(config);
 
             float maxWidth = safeArea.Width * widthRatio;
             float maxHeight = safeArea.Height * NumberZoneHeightRatio;
@@ -228,11 +220,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.PrimaryFontColor), fontSize, typeface, unit, SKTextAlign.Left);
         }
 
-        // LogError
-        // Logs an error that occurred during fade poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate fade poster for {EpisodeName}", episodeName);
-        }
     }
 }

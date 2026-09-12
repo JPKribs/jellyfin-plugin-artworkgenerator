@@ -45,13 +45,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override string SecondaryDescription
             => "The subtitle is the episode code, set in the corner, or on the sash itself when there is no title.";
 
-        private readonly ILogger<StripedPosterGenerator> _logger;
-
         // StripedPosterGenerator
         // Initializes a new instance of the striped poster generator with logging support.
         public StripedPosterGenerator(ILogger<StripedPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderOverlay
@@ -62,13 +60,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (string.IsNullOrEmpty(settings.OverlayColor))
-            {
-                return;
-            }
-
-            var bandColor = ColorUtils.ParseHexColor(settings.OverlayColor);
-            if (bandColor.Alpha == 0)
+            if (!TryGetOverlayColor(settings, out var bandColor))
             {
                 return;
             }
@@ -155,7 +147,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
 
             float configuredCode = FontUtils.CalculateFontSizeFromPercentage(settings.SecondaryFontSize, unit);
-            var codeTypeface = ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.SecondaryFontStyle));
+            var codeTypeface = ResolveSecondaryTypeface(settings);
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.SecondaryFontColor), Math.Min(configuredCode, bandCap), codeTypeface, unit);
         }
 
@@ -192,11 +184,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             style.Draw(canvas, code, safeArea.Right, style.BaselineAtTop(safeArea));
         }
 
-        // LogError
-        // Logs an error that occurred during striped poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate striped poster for {EpisodeName}", episodeName);
-        }
     }
 }

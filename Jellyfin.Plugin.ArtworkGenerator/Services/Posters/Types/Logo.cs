@@ -37,13 +37,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // The logo is never squeezed below this share of the safe height, however much text is configured.
         private const float MinimumLogoAreaRatio = 0.2f;
 
-        private readonly ILogger<LogoPosterGenerator> _logger;
-
         // LogoPosterGenerator
         // Initializes a new instance of the logo poster generator with logging support.
         public LogoPosterGenerator(ILogger<LogoPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderGraphics
@@ -81,12 +79,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
         }
 
-        // LogError
-        // Logs an error that occurred during logo poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate logo poster for {EpisodeName}", episodeName);
-        }
 
         // GetText
         // The headline and the code line, the same way for every item: its title above its code. A
@@ -146,10 +138,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var remaining = BuildColumn(subject, config, width, height, primaryStyle, secondaryStyle).Remaining;
             var safeArea = GetSafeAreaBounds(width, height, config);
 
-            var minHeight = safeArea.Height * MinimumLogoAreaRatio;
-            return remaining.Height >= minHeight
+            // Same floor every focal element gets: the text zone may shrink this, never erase it.
+            var floor = FocalBandHeight(safeArea, remaining.Height, MinimumLogoAreaRatio);
+            return remaining.Height >= floor
                 ? remaining
-                : SKRect.Create(safeArea.Left, safeArea.Top, safeArea.Width, minHeight);
+                : SKRect.Create(safeArea.Left, safeArea.Top, safeArea.Width, floor);
         }
 
         // GetSeriesLogoPath
@@ -168,7 +161,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error checking series logo path");
+                Logger.LogWarning(ex, "Error checking series logo path");
                 return null;
             }
         }
@@ -214,7 +207,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to draw series logo image: {Path}", logoPath);
+                Logger.LogWarning(ex, "Failed to draw series logo image: {Path}", logoPath);
             }
         }
 
@@ -223,7 +216,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         private static void DrawSeriesLogoText(SKCanvas canvas, string seriesName, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
             var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.SecondaryFontSize * RenderConstants.LineHeightMultiplier, unit);
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
+            var typeface = ResolveSecondaryTypeface(config);
             var textAlign = GetSKTextAlign(alignment);
 
             using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.SecondaryFontColor), fontSize, typeface, unit, textAlign);

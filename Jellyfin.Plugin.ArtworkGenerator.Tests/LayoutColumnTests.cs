@@ -49,23 +49,6 @@ public class LayoutColumnTests
     }
 
     /// <summary>
-    /// Anything that has to keep clear of the text asks the column where it put itself, rather than
-    /// subtracting from an edge it assumes the text is still against.
-    /// </summary>
-    [Theory]
-    [InlineData(LayoutAnchor.Bottom, 690f)]
-    [InlineData(LayoutAnchor.Top, 0f)]
-    [InlineData(LayoutAnchor.Center, 345f)]
-    public void Span_ReportsWhereTheAnchorPutTheRun(LayoutAnchor anchor, float expectedTop)
-    {
-        var stack = new LayoutColumn(Bounds, 10f, anchor);
-        stack.Add("code", 100f).Add("title", 200f);
-
-        Assert.Equal(expectedTop, stack.Span.Top, 3);
-        Assert.Equal(expectedTop + 310f, stack.Span.Bottom, 3);
-    }
-
-    /// <summary>
     /// A centered run leaves a band above and below, and a caller asking what is left wants the one
     /// it can actually draw in.
     /// </summary>

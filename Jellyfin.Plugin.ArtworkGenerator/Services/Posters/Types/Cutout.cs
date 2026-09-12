@@ -49,14 +49,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         private const float MinimumCutoutAreaRatio = 0.6f;
 
-        private readonly ILogger<CutoutPosterGenerator> _logger;
         private static readonly char[] WordSeparators = { ' ', '-' };
 
         // CutoutPosterGenerator
         // Initializes a new instance of the cutout poster generator with logging support.
         public CutoutPosterGenerator(ILogger<CutoutPosterGenerator> logger)
+            : base(logger)
         {
-            _logger = logger;
         }
 
         // RenderOverlay
@@ -64,31 +63,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // through the letters.
         protected override void RenderOverlay(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
-            ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (string.IsNullOrEmpty(settings.OverlayColor))
-            {
-                return;
-            }
-
-            var overlayColor = ColorUtils.ParseHexColor(settings.OverlayColor);
-            if (overlayColor.Alpha == 0)
-            {
-                return;
-            }
-
-            skCanvas.SaveLayer();
-
-            using (var overlayPaint = PaintFactory.CreateFillPaint(overlayColor))
-            {
-                skCanvas.DrawRect(SKRect.Create(width, height), overlayPaint);
-            }
-
-            DrawCutoutText(skCanvas, subject, settings, width, height, overlayColor);
-
-            skCanvas.Restore();
+            DrawPunchedOverlay(
+                skCanvas,
+                settings,
+                width,
+                height,
+                (canvas, overlayColor) => DrawCutoutText(canvas, subject, settings, width, height, overlayColor));
         }
 
         // RenderTypography
@@ -115,12 +98,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
         }
 
-        // LogError
-        // Logs an error that occurred during cutout poster generation.
-        protected override void LogError(Exception ex, string? episodeName)
-        {
-            _logger.LogError(ex, "Failed to generate cutout poster for {EpisodeName}", episodeName);
-        }
 
         // BuildColumn
         // The one description of the vertical layout: a fixed two line title zone against the
@@ -133,7 +110,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // CalculateCutoutArea
-        // The area left for the cutout text once the title zone is reserved.
+        // How much room the lettering gets, centered in the frame. The title zone still decides the
+        // size, so the letters never grow into the text, but it does not decide the placement: the
+        // cut is the composition, and it stays put when the text moves.
         private static SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int unit, bool reserveTitle)
         {
             if (!config.ShowPrimary || !reserveTitle)
@@ -144,10 +123,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             using var primaryStyle = CreatePrimaryStyle(config, unit);
             var remaining = BuildColumn(safeArea, config, unit, primaryStyle, reserveTitle).Remaining;
 
-            var minHeight = safeArea.Height * MinimumCutoutAreaRatio;
-            return remaining.Height >= minHeight
-                ? remaining
-                : SKRect.Create(safeArea.Left, safeArea.Top, safeArea.Width, minHeight);
+            return CenterInSafeArea(safeArea, FocalBandHeight(safeArea, remaining.Height, MinimumCutoutAreaRatio));
         }
 
         // DrawCutoutText
@@ -166,7 +142,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // nothing but its number.
             var reserveTitle = !subject.CutoutIsPrimary && !string.IsNullOrWhiteSpace(subject.Primary);
             var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight), reserveTitle);
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
+            var typeface = ResolveSecondaryTypeface(config);
             float fontSize = CalculateOptimalCutoutFontSize(words, typeface, cutoutArea);
 
             using var font = PaintFactory.CreateFont(typeface, fontSize);
@@ -175,23 +151,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // leaving only the half of the stroke that lies outside the letter edge.
             if (config.CutoutBorder)
             {
-                using var borderPaint = new SKPaint
-                {
-                    Color = ColorUtils.GetContrastingOutline(overlayColor),
-                    Style = SKPaintStyle.Stroke,
-                    StrokeWidth = Math.Max(1f, fontSize * 0.015f),
-                    IsAntialias = true,
-                    StrokeCap = SKStrokeCap.Round,
-                    StrokeJoin = SKStrokeJoin.Round
-                };
+                using var borderPaint = CreateOutlinePaint(overlayColor, fontSize * 0.015f);
                 DrawCutoutTextCentered(canvas, words, font, borderPaint, cutoutArea);
             }
 
-            using var cutoutPaint = new SKPaint
-            {
-                BlendMode = SKBlendMode.DstOut,
-                IsAntialias = true
-            };
+            using var cutoutPaint = CreatePunchPaint();
             DrawCutoutTextCentered(canvas, words, font, cutoutPaint, cutoutArea);
         }
 

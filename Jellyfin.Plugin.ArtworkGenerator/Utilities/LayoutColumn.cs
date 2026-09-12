@@ -74,13 +74,6 @@ public sealed class LayoutColumn
     };
 
     /// <summary>
-    /// Gets the rectangle the placed blocks occupy as one run, gaps included. A caller that has to
-    /// keep clear of the stack asks for this rather than re-deriving it from the anchor, which is
-    /// the arithmetic this type exists to stop being copied.
-    /// </summary>
-    public SKRect Span => SKRect.Create(_bounds.Left, StartY, _bounds.Width, Consumed);
-
-    /// <summary>
     /// Gets the part of the bounds no block occupies, already inset by one gap so anything drawn
     /// there keeps its distance from the stack. Empty (zero height) when the blocks fill the bounds.
     /// A centered stack leaves a band on each side, and the taller one is returned, since a caller
