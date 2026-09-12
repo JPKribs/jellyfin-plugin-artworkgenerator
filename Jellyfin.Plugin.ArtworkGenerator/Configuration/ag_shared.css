@@ -262,12 +262,6 @@
     font-size: 0.9em;
 }
 
-.poster-preview-caption {
-    margin-top: 0.5em;
-    color: var(--ag-text-secondary);
-    font-size: 0.85em;
-}
-
 /* ── Shapes, Logos, Profiles ───────────────────────────── */
 
 .poster-preview-pair {
@@ -332,10 +326,24 @@
     max-width: 40ch;
 }
 
-/* The logo page puts its color source under the preview rather than in a side column, so it needs
-   the gap the side column got from the layout. */
-#logoColorSourceRow {
+/* The logo preview's controls line up with the image's left edge rather than centering under it,
+   so the column is capped to the frame's own width and packs its children to the left. */
+#logoPreviewColumn {
+    align-items: flex-start;
+    width: 100%;
+    max-width: 560px;
+}
+
+.logo-preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     margin-top: 0.75em;
+}
+
+/* Inside that row it is one item beside the button, not the page's right hand column. */
+.logo-preview-controls #logoColorSourceRow {
+    width: auto;
 }
 
 .logo-preview-frame {
