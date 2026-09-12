@@ -71,7 +71,7 @@ Roman numeral episode numbers with optional overlapping title.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
-| ![Numeral Example 1](docs/examples/NumeralFull/Example1.png) | ![Numeral Example 2](docs/examples/NumeralFull/Example2.png) | ![Numeral Example 3](docs/examples/NumeralFull/Example3.png) |
+| ![Numeral Example 1](docs/examples/Numeral/Example1.png) | ![Numeral Example 2](docs/examples/Numeral/Example2.png) | ![Numeral Example 3](docs/examples/Numeral/Example3.png) |
 
 ### Split Style
 Episode screenshot with overlay text and episode information, split alongside the series poster.
@@ -108,12 +108,26 @@ Progress bar filled to the item's position, with an optional title and subtitle.
 |-----------|-----------|-----------|
 | ![Timeline Example 1](docs/examples/Timeline/Example1.png) | ![Timeline Example 2](docs/examples/Timeline/Example2.png) | ![Timeline Example 3](docs/examples/Timeline/Example3.png) |
 
+### Bloom Style
+A soft pool of color in the middle of the frame with the text set over it, fading out to leave the corners clear.
+
+| Example 1 | Example 2 | Example 3 |
+|-----------|-----------|-----------|
+| ![Bloom Example 1](docs/examples/Bloom/Example1.png) | ![Bloom Example 2](docs/examples/Bloom/Example2.png) | ![Bloom Example 3](docs/examples/Bloom/Example3.png) |
+
+### Text Position
+Most styles let the title and subtitle sit at the top, the center, or the bottom of the frame. Styles that make the text part of the artwork, such as Cutout and Fade, keep their own placement.
+
+| Top | Center | Bottom |
+|-----|--------|--------|
+| ![Text at the top](docs/examples/StandardGradient/Example1.png) | ![Text centered](docs/examples/GlassGradient/Example1.png) | ![Text at the bottom](docs/examples/Standard/Example1.png) |
+
 ### Palette Derived Colors
 Overlay colors sampled from the dominant color of each episode's frame instead of a fixed color. Works with every style. The configured alpha values are preserved.
 
 | Brush | Cutout | Fade |
 |-------|--------|------|
-| ![Palette Brush](docs/examples/BrushPalette/Example7.png) | ![Palette Cutout](docs/examples/CutoutPalette/Example7.png) | ![Palette Fade](docs/examples/Fade/Example7.png) |
+| ![Palette Brush](docs/examples/BrushPalette/Example7.png) | ![Palette Cutout](docs/examples/CutoutGradient/Example7.png) | ![Palette Fade](docs/examples/Fade/Example7.png) |
 
 ## Poster Architecture
 

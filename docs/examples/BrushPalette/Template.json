@@ -1,6 +1,6 @@
 {
-  "name": "BrushPalette",
-  "description": "Brush strokes over a solid overlay colored from the episode's own frame.",
+  "name": "Palette Brush",
+  "description": "Brush strokes revealing the frame through an overlay colored from the frame itself.",
   "author": "Joseph Kribs",
   "version": "10.11.25.0",
   "createdDate": "2026-07-04T12:00:00.000Z",
@@ -47,6 +47,7 @@
     "GraphicPath": "",
     "GraphicSize": 25,
     "GraphicPosition": "Center",
-    "GraphicAlignment": "Center"
+    "GraphicAlignment": "Center",
+    "TextPosition": "Bottom"
   }
 }

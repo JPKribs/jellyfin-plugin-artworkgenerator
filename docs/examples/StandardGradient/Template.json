@@ -1,6 +1,6 @@
 {
   "name": "Gradient Standard",
-  "description": "Standard poster with a gradient overlay in Jellyfin colors. Simplified to only the episode name in a yellow font to stand out.",
+  "description": "A gradient in Jellyfin's colors, cut back to the episode name alone and set at the top of the frame.",
   "author": "Joseph Kribs",
   "version": "10.11.25.0",
   "createdDate": "2025-10-21T12:43:25.367Z",
@@ -47,6 +47,7 @@
     "GraphicPath": "",
     "GraphicSize": 25,
     "GraphicPosition": "Center",
-    "GraphicAlignment": "Center"
+    "GraphicAlignment": "Center",
+    "TextPosition": "Top"
   }
 }

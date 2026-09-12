@@ -1,6 +1,6 @@
 {
   "name": "Numeral Palette",
-  "description": "Oversized number lifted off a gradient sampled from the image.",
+  "description": "An oversized number lifted off a gradient sampled from the frame, with the title moved above it.",
   "author": "Joseph Kribs",
   "version": "12.0.1.0",
   "createdDate": "2026-09-11T00:00:00.000Z",
@@ -47,6 +47,7 @@
     "GraphicPath": "",
     "GraphicSize": 25,
     "GraphicPosition": "Center",
-    "GraphicAlignment": "Center"
+    "GraphicAlignment": "Center",
+    "TextPosition": "Top"
   }
 }

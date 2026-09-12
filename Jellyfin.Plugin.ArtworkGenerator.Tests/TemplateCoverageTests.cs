@@ -108,36 +108,38 @@ public class TemplateCoverageTests
         }
     }
 
-    /// <summary>Every poster style has at least one example, so no style goes unseen in the demos.</summary>
+    /// <summary>
+    /// Every poster style has exactly two examples. One would not show what a style can be talked
+    /// into; a pile of near-identical ones buries the differences, which is what the set had become.
+    /// </summary>
     [Fact]
-    public void EveryStyleHasATemplate()
+    public void EveryStyleHasExactlyTwoTemplates()
     {
-        var covered = Templates()
-            .Select(t => t.Settings.GetProperty("PosterStyle").GetString())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var counts = Templates()
+            .GroupBy(t => t.Settings.GetProperty("PosterStyle").GetString(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key!, g => g.Count(), StringComparer.OrdinalIgnoreCase);
 
         foreach (var style in Enum.GetNames<PosterStyle>())
         {
-            Assert.True(covered.Contains(style), $"No example template uses the {style} style.");
+            counts.TryGetValue(style, out var count);
+            Assert.True(count == 2, $"The {style} style has {count} example templates; it should have exactly 2.");
         }
     }
 
     /// <summary>
-    /// Every text edge choice has an example. The edges decide which line fills which side of a
-    /// framed poster, and only a rendered example shows that the pinned and fill-first choices
-    /// actually differ.
+    /// The framed pair shows the two text edge behaviours that differ in kind: one edge filled by
+    /// whichever line the item has, and the lines pinned to an edge each. Which four names those
+    /// are is the enum's business; that both behaviours are on show is this set's business.
     /// </summary>
     [Fact]
-    public void EveryTextEdgeHasATemplate()
+    public void TheFramedPairShowsBothTextEdgeBehaviours()
     {
-        var covered = Templates()
+        var edges = Templates()
             .Where(t => string.Equals(t.Settings.GetProperty("PosterStyle").GetString(), nameof(PosterStyle.Frame), StringComparison.OrdinalIgnoreCase))
-            .Select(t => t.Settings.GetProperty("TextEdge").GetString())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .Select(t => Enum.Parse<TextEdge>(t.Settings.GetProperty("TextEdge").GetString()!, ignoreCase: true))
+            .ToList();
 
-        foreach (var edge in Enum.GetNames<TextEdge>())
-        {
-            Assert.True(covered.Contains(edge), $"No framed example template uses the {edge} text edge.");
-        }
+        Assert.Contains(edges, e => e is TextEdge.TopFirst or TextEdge.BottomFirst);
+        Assert.Equal(2, edges.Distinct().Count());
     }
 }
