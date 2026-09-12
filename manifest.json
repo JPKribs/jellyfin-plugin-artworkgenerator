@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.0.1.0",
+        "changelog": "## Features\r\n- Shadows, rules, and the Frame border now scale with the poster, so they read the same on a 4K frame as on a DVD rip instead of turning into a hairline or a slab\r\n- Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word\r\n\r\n## Fixes\r\n- Frame drew no border at all for an episode without a name, and ignored the Show Title setting\r\n- Cutout no longer lets a two line title run into the bottom of the cutout letters\r\n- Split centre-crops the series poster into its panel instead of stretching artwork that is not 2:3\r\n- Brush honours the Show Episode setting and keeps a wrapped title inside the area the strokes leave clear\r\n- Timeline keeps the marker dot inside the safe area on the first and last episode\r\n- Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area\r\n\r\n## Developer\r\n- Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 packages Jellyfin 12.0 ships, since the plugin binds to the server's copies at runtime\r\n- Text drawing moved from the removed SKPaint text members to SKFont, wrapped in a shared TextStyle so every style measures and draws with the same objects\r\n- Standard and Split share one text stack; Numeral, Cutout, Brush, and Frame no longer hand-build their own paints\r\n- Cutout renders through a canvas layer instead of a full-size scratch bitmap per poster; Split and Brush dispose their gradient shaders\r\n- Letterbox detection scans the pixel buffer directly instead of a native call per pixel\r\n- Bitmap scaling uses explicit cubic resampling now that FilterQuality is gone",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-episodepostergenerator/releases/download/v12.0.1.0/jellyfin-plugin-episodepostergenerator-12.0.1.0.zip",
+        "checksum": "7a3cddbb4817e1ff4a78b66b978d127e",
+        "timestamp": "2026-09-11T20:21:18Z"
+      },
+      {
         "version": "12.0.0.0",
         "changelog": "## Developer\r\n- Rebuilt for Jellyfin 12.0 on .NET 10, with the target ABI raised to 12.0.0.0\r\n- The dashboard menu entry now shows a icon instead of the generic folder\r\n- CI builds, tests, and CodeQL now run on .NET 10, and label sync has the token scope it needs",
         "targetAbi": "12.0.0.0",
