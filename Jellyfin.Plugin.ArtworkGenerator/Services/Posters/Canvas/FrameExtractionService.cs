@@ -404,7 +404,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 luma[i] = value;
                 totalLuma += value;
 
-                // Hasler and Susstrunk's opponent axes: a frame with no colour scores near zero on
+                // Hasler and Susstrunk's opponent axes: a frame with no color scores near zero on
                 // both, which is how a flat grey shot is told from a striking one.
                 rg[i] = Math.Abs(c.Red - c.Green);
                 yb[i] = Math.Abs((0.5 * (c.Red + c.Green)) - c.Blue);
