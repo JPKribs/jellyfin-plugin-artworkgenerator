@@ -1107,7 +1107,7 @@ export default function (view) {
 
     function bindEventListeners() {
         // Form save
-        view.querySelector('#EpgPostersForm').addEventListener('submit', function (e) {
+        view.querySelector('#AgPostersForm').addEventListener('submit', function (e) {
             e.preventDefault();
             saveConfig();
         });

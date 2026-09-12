@@ -912,7 +912,7 @@ export default function (view) {
     // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
-        view.querySelector('#EpgProfilesForm').addEventListener('submit', function (e) {
+        view.querySelector('#AgProfilesForm').addEventListener('submit', function (e) {
             e.preventDefault();
             saveConfig();
         });

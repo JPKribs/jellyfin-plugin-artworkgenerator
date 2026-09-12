@@ -615,7 +615,7 @@ export default function (view) {
     // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
-        view.querySelector('#EpgLogosForm').addEventListener('submit', function (e) {
+        view.querySelector('#AgLogosForm').addEventListener('submit', function (e) {
             e.preventDefault();
             saveConfig();
         });
