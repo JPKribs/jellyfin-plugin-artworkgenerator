@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
@@ -25,6 +26,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A series has no number, so its name runs the full height instead. This is how much of
         // the width the rotated letters may be tall.
         private const float FocalTitleThicknessRatio = 0.35f;
+
+        // Probe size for measuring a focal title. Text metrics scale linearly, so one measurement
+        // sizes it.
+        private const float FocalProbeSize = 100f;
 
         // Style
         // The poster style this generator produces.
@@ -158,7 +163,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 return;
             }
 
-            var lines = TextUtils.FitTitleLines(text, style.Font, availableRun, config.LongTitleHandling);
+            // A focal title is already sized to run the whole height on one row. Wrapping it would
+            // stack rows across the poster instead of along it, which is how it ran off the edge.
+            var lines = focal
+                ? (IReadOnlyList<string>)new[] { text }
+                : TextUtils.FitTitleLines(text, style.Font, availableRun, config.LongTitleHandling);
             if (lines.Count == 0)
             {
                 return;
@@ -185,7 +194,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static TextStyle CreateFocalTitleStyle(PosterSettings config, int unit, string text, float run, float thickness)
         {
             var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
-            float fontSize = FontUtils.CalculateOptimalFontSize(text, typeface, run, thickness);
+
+            // Sized from what the canvas actually draws: the advance width along the run, and the
+            // line box across it. Sizing from the glyphs' ink instead let the name run past the
+            // safe area, since ink is narrower than the advance the draw call uses.
+            using var probe = PaintFactory.CreateFont(typeface, FocalProbeSize);
+            var metrics = probe.Metrics;
+            float advance = probe.MeasureText(text);
+            float lineBox = -metrics.Ascent + metrics.Descent;
+
+            float byRun = advance > 0f ? run / advance * FocalProbeSize : run;
+            float byThickness = lineBox > 0f ? thickness / lineBox * FocalProbeSize : thickness;
+            float fontSize = Math.Max(8f, Math.Min(byRun, byThickness));
 
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.TitleFontColor), fontSize, typeface, unit, SKTextAlign.Left);
         }

@@ -31,6 +31,7 @@ changelog:
   - The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning
   - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   fixes:
+  - Fade's sideways series name could wrap into two rows that stacked across the poster and ran off the edge; it is sized from the text the canvas actually draws and stays on one row inside the safe area
   - A static graphic could be stretched, because its width and height were set independently; it now keeps its proportions inside a single size
   - Fade drew a series name flat in the number's corner; it now runs sideways like every other Fade title, sized to fill the poster
   - Frame left the bottom of its border bare on a series; the title moves down into it when there is no season and episode line
