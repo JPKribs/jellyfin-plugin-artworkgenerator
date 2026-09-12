@@ -37,15 +37,36 @@ public class FrameQualityTests
 
     /// <summary>
     /// A blown out frame is as useless as a crushed one, and only the crushed one was ever
-    /// penalised: the old score rose monotonically with brightness and topped out at 5% grey.
+    /// penalised: the old score rose with brightness and then sat at its ceiling from 5% grey up.
+    /// The two frames here carry the same texture at the same amplitude and differ only in level,
+    /// so nothing but the tone term can separate them.
     /// </summary>
     [Fact]
     public void ABlownOutFrameScoresBelowAMidToneOne()
     {
-        using var midTone = Frame(160, 90, (x, y) => Grey((byte)(90 + ((x * 7 + y * 5) % 80))));
-        using var blownOut = Frame(160, 90, (x, y) => Grey((byte)(230 + ((x * 7 + y * 5) % 25))));
+        byte Texture(int x, int y, int floor) => (byte)(floor + ((x * 7 + y * 5) % 40));
 
-        Assert.True(Score(midTone) > Score(blownOut));
+        using var midTone = Frame(160, 90, (x, y) => Grey(Texture(x, y, 110)));
+        using var blownOut = Frame(160, 90, (x, y) => Grey(Texture(x, y, 215)));
+
+        using var midAnalysis = FrameExtractionService.CreateAnalysisBitmap(midTone);
+        using var blownAnalysis = FrameExtractionService.CreateAnalysisBitmap(blownOut);
+        var mid = FrameExtractionService.AnalyzeFrame(midAnalysis);
+        var blown = FrameExtractionService.AnalyzeFrame(blownAnalysis);
+
+        // Same texture, so the detail the old score leaned on is a wash between them.
+        Assert.Equal(Math.Round(mid.Sharpness, 1), Math.Round(blown.Sharpness, 1));
+
+        Assert.True(
+            FrameExtractionService.CalculateQualityScore(mid) > FrameExtractionService.CalculateQualityScore(blown),
+            "a mid tone frame must outrank a blown out one");
+
+        // The score this replaced: brightness and sharpness each against a pass mark, both long
+        // since saturated, which rated these two identically.
+        static double Superseded(FrameExtractionService.FrameQuality q)
+            => (Math.Min(q.Brightness / 0.05, 1.0) * 0.5) + (Math.Min(q.Sharpness / 100.0, 1.0) * 0.5);
+
+        Assert.Equal(Superseded(mid), Superseded(blown), 3);
     }
 
     [Fact]
