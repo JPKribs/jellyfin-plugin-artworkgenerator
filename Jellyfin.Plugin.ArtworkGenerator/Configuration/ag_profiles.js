@@ -609,18 +609,14 @@ export default function (view) {
         block.appendChild(label);
 
         var list = document.createElement('div');
-        list.className = 'assigned-list';
+        list.className = 'jpk-tags';
         block.appendChild(list);
 
         var ids = assignedIds(profile, target);
         if (ids.length === 0) {
             var msg = document.createElement('div');
-            msg.className = 'assigned-empty';
-            var icon = document.createElement('span');
-            icon.className = 'assigned-empty-icon';
-            icon.innerHTML = '&#9888;';
-            msg.appendChild(icon);
-            msg.appendChild(document.createTextNode(' ' + target.empty));
+            msg.className = 'jpk-empty';
+            msg.textContent = '\u26a0 ' + target.empty;
             list.appendChild(msg);
         } else {
             ids.forEach(function (id) {
@@ -644,19 +640,18 @@ export default function (view) {
 
     function buildAssignedTag(item, target, id) {
         var tag = document.createElement('div');
-        tag.className = 'assigned-tag';
+        tag.className = 'jpk-tag';
 
         var img = document.createElement('img');
-        img.className = 'assigned-tag-poster';
+        img.className = 'jpk-check-thumb';
         img.src = ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
         img.onerror = function () { this.style.display = 'none'; };
 
         var name = document.createElement('span');
-        name.className = 'assigned-tag-name';
         name.textContent = item.Name;
 
         var remove = document.createElement('span');
-        remove.className = 'assigned-tag-remove';
+        remove.className = 'jpk-tag-remove';
         remove.textContent = '\u00d7';
         remove.addEventListener('click', function () { removeAssignment(target, id); });
 
@@ -710,38 +705,38 @@ export default function (view) {
             if (!isElsewhere) availableCount++;
 
             var item = document.createElement('label');
-            item.className = 'picker-row' + (isElsewhere ? ' disabled' : '');
+            item.className = 'jpk-check-row' + (isElsewhere ? ' jpk-check-row-disabled' : '');
 
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.className = 'picker-check';
+            checkbox.className = 'jpk-check-row-input';
             checkbox.value = entry.Id;
             checkbox.checked = isHere;
             checkbox.disabled = isElsewhere;
 
             var poster = document.createElement('img');
-            poster.className = 'picker-item-poster';
+            poster.className = 'jpk-check-thumb';
             poster.src = ApiClient.getImageUrl(entry.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
             poster.onerror = function () { this.style.visibility = 'hidden'; };
 
             var info = document.createElement('div');
-            info.className = 'picker-item-info';
+            info.className = 'jpk-check-text';
 
             var nameSpan = document.createElement('span');
-            nameSpan.className = 'picker-item-name';
+            nameSpan.className = 'jpk-check-label';
             nameSpan.textContent = entry.Name;
             info.appendChild(nameSpan);
 
             if (entry.ProductionYear) {
                 var yearSpan = document.createElement('span');
-                yearSpan.className = 'picker-item-year';
+                yearSpan.className = 'jpk-check-sub';
                 yearSpan.textContent = entry.ProductionYear;
                 info.appendChild(yearSpan);
             }
 
             if (isElsewhere) {
                 var badge = document.createElement('span');
-                badge.className = 'picker-item-badge';
+                badge.className = 'jpk-check-note';
                 badge.textContent = 'In another profile';
                 info.appendChild(badge);
             }
@@ -755,7 +750,7 @@ export default function (view) {
         });
 
         function updateSummary() {
-            var checked = listContainer.querySelectorAll('.picker-check:checked').length;
+            var checked = listContainer.querySelectorAll('.jpk-check-row-input:checked').length;
             summaryEl.textContent = checked + ' of ' + availableCount + ' available ' + target.noun + ' selected';
         }
 
@@ -768,15 +763,15 @@ export default function (view) {
 
     var filterSelectionList = debounce(function () {
         var term = view.querySelector('#pickerSearch').value.toLowerCase();
-        view.querySelectorAll('.picker-row').forEach(function (item) {
-            var name = item.querySelector('.picker-item-name');
+        view.querySelectorAll('.jpk-check-row').forEach(function (item) {
+            var name = item.querySelector('.jpk-check-label');
             item.style.display = (name ? name.textContent : item.textContent).toLowerCase().includes(term) ? '' : 'none';
         });
     }, 200);
 
     function confirmSelection() {
         var selected = [];
-        view.querySelectorAll('.picker-check:checked').forEach(function (cb) { selected.push(cb.value); });
+        view.querySelectorAll('.jpk-check-row-input:checked').forEach(function (cb) { selected.push(cb.value); });
         getCurrentProfile()[_modalTarget.key] = selected;
         renderAssignments();
         closeSelectionModal();

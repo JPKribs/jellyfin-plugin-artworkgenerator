@@ -1,13 +1,6 @@
 /* ── Custom Properties ────────────────────────────────── */
 :root {
-    --ag-border-subtle: rgba(255, 255, 255, 0.1);
-    --ag-border-muted: rgba(85, 85, 85, 0.3);
-    --ag-border-medium: #555;
-    --ag-bg-surface: rgba(255, 255, 255, 0.05);
-    --ag-bg-input: rgba(0, 0, 0, 0.1);
     --ag-text-secondary: rgba(255, 255, 255, 0.5);
-    --ag-warning-text: rgba(255, 200, 50, 0.85);
-    --ag-success-text: rgba(76, 175, 80, 0.85);
 }
 
 /* Config selector (.jpk-selector*), icon buttons (.jpk-icon-btn), the dropdown
@@ -23,7 +16,7 @@
 }
 
 .nested-settings {
-    border-left: 2px solid var(--ag-border-muted);
+    border-left: 2px solid var(--jpk-border);
 }
 
 /* Beat base form.css .pluginConfigurationPage .inputContainer (0,2,0 !important) on the indent */
@@ -50,15 +43,15 @@
     align-items: center;
     flex-wrap: wrap;
     padding: 8px;
-    border: 1px solid var(--ag-border-muted);
+    border: 1px solid var(--jpk-border);
     border-radius: 4px;
-    background: var(--ag-bg-input);
+    background: var(--jpk-surface);
 }
 
 .color-picker {
     width: 50px;
     height: 40px;
-    border: 1px solid var(--ag-border-medium);
+    border: 1px solid var(--jpk-border);
     border-radius: 3px;
     background: none;
     cursor: pointer;
@@ -100,73 +93,6 @@
 }
 
 /* ── Series Assignment ───────────────────────────────── */
-.assigned-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid var(--ag-border-muted);
-    border-radius: 4px;
-    background: var(--ag-bg-input);
-    min-height: 48px;
-}
-
-.assigned-empty {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    color: rgba(255, 200, 50, 0.8);
-    font-size: 14px;
-}
-
-.assigned-empty-icon {
-    font-size: 18px;
-}
-
-.assigned-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 12px 6px 6px;
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid var(--ag-border-subtle);
-    border-radius: 6px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.assigned-tag:hover {
-    background: rgba(40, 40, 40, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.assigned-tag-poster {
-    width: 32px;
-    height: 48px;
-    border-radius: 3px;
-    object-fit: cover;
-    background: var(--ag-bg-surface);
-}
-
-.assigned-tag-name {
-    flex: 1;
-    font-weight: 500;
-}
-
-.assigned-tag-remove {
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 18px;
-    color: rgba(231, 76, 60, 0.7);
-    padding: 0 4px;
-    transition: color 0.2s ease;
-}
-
-.assigned-tag-remove:hover {
-    color: rgba(231, 76, 60, 1);
-}
-
 /* The dialog/modal shell (.jpk-dialog, .jpk-dialog-content[-narrow],
    .jpk-dialog-close, .jpk-modal-title/-body/-field/-button-row/-button) all come
    from the base shared CSS. Only the EPG-specific bits inside the dialogs live here. */
@@ -193,95 +119,7 @@
     color: var(--ag-text-secondary);
 }
 
-.picker-list {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-    max-height: 50vh;
-    margin: 0 -8px;
-}
-
 /* ── Series Checkbox Items ───────────────────────────── */
-.picker-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-
-.picker-row:hover {
-    background: rgba(255, 255, 255, 0.06);
-}
-
-.picker-row.disabled {
-    opacity: 0.4;
-    cursor: default;
-}
-
-.picker-row.disabled:hover {
-    background: none;
-}
-
-.picker-row input[type="checkbox"] {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    margin-top: 28px;
-    cursor: pointer;
-}
-
-.picker-row.disabled input[type="checkbox"] {
-    cursor: default;
-}
-
-.picker-item-poster {
-    width: 50px;
-    height: 75px;
-    border-radius: 4px;
-    object-fit: cover;
-    background: var(--ag-bg-surface);
-    flex-shrink: 0;
-}
-
-.picker-item-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 2px 0;
-    max-height: 75px;
-    overflow: hidden;
-}
-
-.picker-item-name {
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.picker-item-year {
-    font-size: 12px;
-    color: var(--ag-text-secondary);
-}
-
-.picker-item-badge {
-    display: inline-block;
-    align-self: flex-start;
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.45);
-    margin-top: 2px;
-}
-
 /* Input modal is now built entirely from base dialog/modal components
    (.jpk-dialog-content-narrow, .jpk-modal-title/-body/-field/-button-row). */
 
@@ -318,28 +156,10 @@
     .picker-content {
         width: 95vw;
     }
-    .assigned-tag {
-        font-size: 13px;
-    }
-    .assigned-tag-poster {
-        width: 28px;
-        height: 42px;
-    }
-}
+        }
 
 @media (max-width: 480px) {
-    .picker-row {
-        padding: 8px;
-        gap: 8px;
-    }
-    .picker-item-poster {
-        width: 40px;
-        height: 60px;
-    }
-    .picker-row input[type="checkbox"] {
-        margin-top: 20px;
-    }
-    .cutout-logo-group,
+                .cutout-logo-group,
     .nested-settings {
         margin-left: 0.75em !important;
         padding-left: 0.5em !important;
@@ -385,15 +205,15 @@
 }
 
 .poster-component:hover {
-    background: var(--ag-bg-surface);
+    background: var(--jpk-surface);
 }
 
 .poster-component-img {
     width: 48px;
     height: 48px;
     object-fit: contain;
-    background: var(--ag-bg-input);
-    border: 1px solid var(--ag-border-medium);
+    background: var(--jpk-surface);
+    border: 1px solid var(--jpk-border);
     border-radius: 4px;
     flex-shrink: 0;
 }
@@ -419,8 +239,8 @@
     width: 100%;
     max-width: 480px;
     aspect-ratio: 16 / 9;
-    background: var(--ag-bg-input);
-    border: 1px solid var(--ag-border-medium);
+    background: var(--jpk-surface);
+    border: 1px solid var(--jpk-border);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -484,7 +304,7 @@
 
 .poster-preview-note {
     margin-top: 0.4em;
-    color: var(--ag-warning-text);
+    color: var(--jpk-warning);
     font-size: 0.9em;
     text-align: center;
     display: none;
@@ -528,7 +348,7 @@
     width: 100%;
     max-width: 560px;
     aspect-ratio: 800 / 310;
-    border: 1px solid var(--ag-border-medium);
+    border: 1px solid var(--jpk-border);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -572,7 +392,7 @@
 .slot-matrix th,
 .slot-matrix td {
     padding: 0.7em 0.6em;
-    border-bottom: 1px solid var(--ag-border-subtle);
+    border-bottom: 1px solid var(--jpk-border);
     text-align: left;
     vertical-align: top;
 }
@@ -609,9 +429,9 @@
 .slot-cell .slot-select {
     width: 100%;
     padding: 0.35em 0.5em;
-    background: var(--ag-bg-input);
+    background: var(--jpk-surface);
     color: inherit;
-    border: 1px solid var(--ag-border-muted);
+    border: 1px solid var(--jpk-border);
     border-radius: 4px;
 }
 
