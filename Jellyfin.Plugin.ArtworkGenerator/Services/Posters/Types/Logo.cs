@@ -147,12 +147,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // GetSeriesLogoPath
-        // Returns the path to the series logo file if it exists.
+        // Returns the path to the logo selected for the item, its season, or its series, if the
+        // file exists.
         private string? GetSeriesLogoPath(ArtworkSubject subject)
         {
             try
             {
-                var path = subject.VideoMetadata?.SeriesLogoFilePath;
+                var path = subject.VideoMetadata?.LogoFilePath;
                 if (!string.IsNullOrEmpty(path) && File.Exists(path))
                 {
                     return path;

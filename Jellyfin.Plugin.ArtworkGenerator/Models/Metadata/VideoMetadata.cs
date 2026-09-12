@@ -13,7 +13,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         private const int DefaultWidth = 1920;
         private const int DefaultHeight = 1080;
 
-        public string? SeriesLogoFilePath { get; set; }
+        /// <summary>
+        /// Gets or sets the logo set on the item, or failing that on its season or series. Only a
+        /// logo actually selected for the item counts; nothing is rendered in its place.
+        /// </summary>
+        public string? LogoFilePath { get; set; }
 
         public string? SeriesPosterFilePath { get; set; }
 
@@ -32,8 +36,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public long VideoLengthTicks { get; set; }
 
         // Create
-        // Builds the metadata for an item: series artwork paths, and the geometry of the episode
-        // that will supply frames, when there is one.
+        // Builds the metadata for an item: its logo and series artwork paths, and the geometry of
+        // the episode that will supply frames, when there is one.
         public static VideoMetadata Create(BaseItem item, Series? series, Video? source)
         {
             var metadata = new VideoMetadata
@@ -41,9 +45,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 SourcePath = source?.Path ?? item?.Path
             };
 
+            metadata.LogoFilePath = FindLogo(item, series);
+
             if (series != null)
             {
-                metadata.SeriesLogoFilePath = series.GetImages(ImageType.Logo).FirstOrDefault()?.Path;
                 metadata.SeriesPosterFilePath = series.GetImages(ImageType.Primary).FirstOrDefault()?.Path;
                 metadata.SeriesBackdropFilePath = series.GetImages(ImageType.Backdrop).FirstOrDefault()?.Path;
             }
@@ -57,6 +62,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             }
 
             return metadata;
+        }
+
+        // FindLogo
+        // The logo selected for the item itself, then for its season, then for its series. A film
+        // has no series, so its own logo is the only one it can draw.
+        private static string? FindLogo(BaseItem? item, Series? series)
+        {
+            var owners = new[] { item, (item as Episode)?.Season, series };
+            return owners
+                .Select(owner => owner?.GetImages(ImageType.Logo).FirstOrDefault()?.Path)
+                .FirstOrDefault(path => !string.IsNullOrEmpty(path));
         }
     }
 }

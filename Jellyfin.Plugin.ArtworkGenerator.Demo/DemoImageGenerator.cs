@@ -138,7 +138,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
             // poster, and any style can fall back to the backdrop.
             if (File.Exists(_logoImagePath))
             {
-                videoMetadata.SeriesLogoFilePath = _logoImagePath;
+                videoMetadata.LogoFilePath = _logoImagePath;
             }
 
             if (File.Exists(_seriesPosterPath))

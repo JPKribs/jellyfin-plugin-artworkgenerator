@@ -319,7 +319,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             {
                 VideoWidth = width,
                 VideoHeight = height,
-                SeriesLogoFilePath = Path.Combine(assetDir, "demo-logo.png"),
+                LogoFilePath = Path.Combine(assetDir, "demo-logo.png"),
                 SeriesPosterFilePath = Path.Combine(assetDir, "demo-poster.jpg"),
                 SeriesBackdropFilePath = Path.Combine(assetDir, "demo-base.png")
             };
