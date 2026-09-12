@@ -192,6 +192,11 @@ public static class FontUtils
         return (int)(posterHeight * (percentage / (100f - (posterMargin * 2))));
     }
 
+    // FontStyles
+    // The style strings GetFontStyle understands, in the order the configuration page offers them.
+    // Declared here so the list and the parser below cannot drift apart.
+    public static IReadOnlyList<string> FontStyles { get; } = new[] { "Normal", "Bold", "Italic", "Bold Italic" };
+
     // GetFontStyle
     // Converts a font style string to an SKFontStyle enumeration.
     public static SKFontStyle GetFontStyle(string fontStyle)

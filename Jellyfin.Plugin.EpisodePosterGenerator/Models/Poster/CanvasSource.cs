@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 {
     // CanvasSource
@@ -5,12 +7,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
     public enum CanvasSource
     {
         // No background - a transparent canvas is used (overlay/text only).
+        [Description("No Background")]
         None,
 
         // Extract a representative frame from the episode video.
+        [Description("Extract Frame from Video")]
         Extract,
 
         // Use the parent series' backdrop image as the canvas.
+        [Description("Use Series Backdrop")]
         SeriesBackdrop
     }
 }

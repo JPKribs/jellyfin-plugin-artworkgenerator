@@ -70,6 +70,8 @@ changelog:
   - Timeline keeps the marker dot inside the safe area on the first and last episode
   - Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area
   developer:
+  - The configuration page builds every dropdown and a new design's starting values from the settings model itself, so adding a value to an enum in C# offers it in the UI without touching the page
+  - Option labels that read as prose rather than as their member name are declared on the enum members beside the values they name
   - The example templates are checked by the test suite — every style and text edge must have one, and every key a template sets must name a real setting, so a renamed setting cannot silently fall back to its default
   - Every style now reads one primary and one secondary line from the item, rather than a title, a label and a code, so a style no longer needs to know what kind of item it is drawing
   - The repeated "is this line drawn and does the item have one" check is asked once, in the base class, instead of in each style

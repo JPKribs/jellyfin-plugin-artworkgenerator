@@ -357,7 +357,10 @@ export default function (view) {
     // patched per setting. The default comes from data-default because for seven of these the
     // correct default is not the first option.
     function applySelectValue(el, val) {
-        var fallback = el.getAttribute('data-default');
+        // The default comes from the server, which reads it off the settings model. The markup
+        // attribute stays as a fallback for the moment before that call returns.
+        var served = defaultFor(el.getAttribute('data-setting'));
+        var fallback = served !== undefined && served !== null ? String(served) : el.getAttribute('data-default');
 
         if (val !== undefined && val !== null && val !== '') {
             el.value = val;
@@ -425,49 +428,7 @@ export default function (view) {
             var newConfig = {
                 Id: generateGuid(),
                 Name: name.trim(),
-                Settings: {
-                    CanvasSource: 'Extract',
-                    GenerateBackdrop: false,
-                    EnableLetterboxDetection: true,
-                    LetterboxBlackThreshold: 25,
-                    LetterboxConfidence: 85.0,
-                    ExtractWindowStart: 20.0,
-                    ExtractWindowEnd: 80.0,
-                    PosterStyle: 'Standard',
-                    CutoutType: 'Code',
-                    CutoutBorder: true,
-                    LogoPosition: 'Center',
-                    LogoAlignment: 'Center',
-                    LogoHeight: 30.0,
-                    BrightenHDR: 25.0,
-                    PosterFill: 'Original',
-                    PosterDimensionRatio: '16:9',
-                    PosterSafeArea: 5.0,
-                    ElementSpacing: 2.0,
-                    ShowSecondary: true,
-                    SecondaryFontFamily: 'Arial',
-                    SecondaryUseCustomFont: false,
-                    SecondaryFontPath: '',
-                    SecondaryFontStyle: 'Bold',
-                    SecondaryFontSize: 7.0,
-                    SecondaryFontColor: '#FFFFFFFF',
-                    ShowPrimary: true,
-                    PrimaryFontFamily: 'Arial',
-                    PrimaryUseCustomFont: false,
-                    PrimaryFontPath: '',
-                    PrimaryFontStyle: 'Bold',
-                    PrimaryFontSize: 10.0,
-                    PrimaryFontColor: '#FFFFFFFF',
-                    LongTextHandling: 'Ellipsis',
-                    OverlayColor: '#66000000',
-                    OverlayGradient: 'None',
-                    OverlaySecondaryColor: '#66000000',
-                    PaletteDerivedColors: false,
-                    GraphicPath: '',
-                    GraphicSize: 25.0,
-                    GraphicPosition: 'Center',
-                    GraphicAlignment: 'Center'
-                },
+                Settings: Object.assign({}, posterSettingDefaults),
                 SeriesIds: []
             };
 
@@ -720,6 +681,8 @@ export default function (view) {
 
     // ── Style Descriptions ──────────────────────────────────
 
+    var posterSettingOptions = {};
+    var posterSettingDefaults = {};
     var posterStyleDescriptions = {};
     var posterStyleShapes = {};
     var posterStyleSettings = {};
@@ -738,6 +701,58 @@ export default function (view) {
             });
             updateStyleAvailability();
             updateStyleDescription();
+        });
+    }
+
+    // The server may serialize these keys in either case, so they are matched without regard to it.
+    function lookup(map, key) {
+        if (!map || !key) return undefined;
+        if (map[key] !== undefined) return map[key];
+        var wanted = key.toLowerCase();
+        for (var k in map) {
+            if (Object.prototype.hasOwnProperty.call(map, k) && k.toLowerCase() === wanted) return map[k];
+        }
+        return undefined;
+    }
+
+    function optionsFor(setting) { return lookup(posterSettingOptions, setting); }
+    function defaultFor(setting) { return lookup(posterSettingDefaults, setting); }
+
+    // Pull every setting's choices and starting value from the settings model itself
+    // (Plugins/EpisodePosterGenerator/SettingOptions), so adding a value to an enum in C# offers it
+    // here with no change to this page.
+    function loadSettingOptions() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/EpisodePosterGenerator/SettingOptions'),
+            dataType: 'json'
+        }).then(function (payload) {
+            posterSettingOptions = (payload && (payload.options || payload.Options)) || {};
+            posterSettingDefaults = (payload && (payload.defaults || payload.Defaults)) || {};
+            populateSettingOptions();
+        }).catch(function (error) {
+            console.error('Failed to load setting options:', error);
+        });
+    }
+
+    // Fills each bound <select> from the server's list. Font families are left alone: they have
+    // their own loader below, which keeps the markup list as a fallback.
+    function populateSettingOptions() {
+        view.querySelectorAll('select[data-setting]').forEach(function (select) {
+            var options = optionsFor(select.getAttribute('data-setting'));
+            if (!options || !options.length) return;
+
+            var previous = select.value;
+            select.innerHTML = '';
+
+            options.forEach(function (option) {
+                var el = document.createElement('option');
+                el.value = option.value !== undefined ? option.value : option.Value;
+                el.textContent = option.label !== undefined ? option.label : option.Label;
+                select.appendChild(el);
+            });
+
+            if (previous) select.value = previous;
         });
     }
 
@@ -778,7 +793,7 @@ export default function (view) {
     // applied so a stored font or style is never treated as an unknown option.
     function loadStaticData() {
         if (!_staticDataPromise) {
-            _staticDataPromise = Promise.all([loadPosterStyles(), loadFontFamilies()]);
+            _staticDataPromise = Promise.all([loadSettingOptions(), loadPosterStyles(), loadFontFamilies()]);
         }
         return _staticDataPromise;
     }

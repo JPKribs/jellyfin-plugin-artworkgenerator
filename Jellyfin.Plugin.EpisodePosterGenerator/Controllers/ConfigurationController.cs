@@ -107,6 +107,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Controllers
             return Ok(styles);
         }
 
+        // MARK: SettingOptions
+        // Returns the choices and the starting value for every setting, read from the settings
+        // themselves, so the configuration page never keeps its own copy of an enum or a default.
+        [HttpGet("SettingOptions")]
+        public IActionResult GetSettingOptions()
+        {
+            return Ok(new
+            {
+                options = SettingOptions.All(),
+                defaults = SettingOptions.Defaults()
+            });
+        }
+
         // MARK: Fonts
         // Returns the font families actually installed on the server. The configuration page uses
         // this instead of a hardcoded list, which on a container image would offer fonts that are

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using SkiaSharp;
+using System.Linq;
 using Xunit;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Tests;
@@ -119,5 +120,21 @@ public class FontUtilsTests
         Assert.Equal(SKFontStyle.Italic, FontUtils.GetFontStyle("italic"));
         Assert.Equal(SKFontStyle.BoldItalic, FontUtils.GetFontStyle("Bold Italic"));
         Assert.Equal(SKFontStyle.Normal, FontUtils.GetFontStyle("something else"));
+    }
+
+
+    /// <summary>
+    /// Every offered font style is one the parser actually understands, and they map to distinct
+    /// faces: the list and the parser sit next to each other so they cannot drift apart.
+    /// </summary>
+    [Fact]
+    public void FontStyles_AreAllUnderstoodAndDistinct()
+    {
+        var resolved = FontUtils.FontStyles.Select(FontUtils.GetFontStyle).ToList();
+
+        Assert.Equal(FontUtils.FontStyles.Count, resolved.Distinct().Count());
+        Assert.Equal(SKFontStyle.Bold, FontUtils.GetFontStyle("Bold"));
+        Assert.Equal(SKFontStyle.BoldItalic, FontUtils.GetFontStyle("Bold Italic"));
+        Assert.Equal(SKFontStyle.Normal, FontUtils.GetFontStyle("Normal"));
     }
 }

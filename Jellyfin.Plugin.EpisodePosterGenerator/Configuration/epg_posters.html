@@ -96,32 +96,14 @@
 
                             <div class="inputContainer">
                                 <label for="selectPosterStyle">Style:</label>
-                                <select is="emby-select" id="selectPosterStyle" data-setting="PosterStyle" data-default="Standard">
-                                    <option value="Standard">Standard</option>
-                                    <option value="Bloom">Bloom</option>
-                                    <option value="Brush">Brush</option>
-                                    <option value="Cutout">Cutout</option>
-                                    <option value="Fade">Fade</option>
-                                    <option value="Frame">Frame</option>
-                                    <option value="FrostedGlass">Frosted Glass</option>
-                                    <option value="Logo">Logo</option>
-                                    <option value="Numeral">Numeral</option>
-                                    <option value="Split">Split</option>
-                                    <option value="Striped">Striped</option>
-                                    <option value="Timeline">Timeline</option>
-                                </select>
+                                <select is="emby-select" id="selectPosterStyle" data-setting="PosterStyle" data-default="Standard"></select>
                                 <div id="posterStyleDescription" class="fieldDescription"></div>
                             </div>
 
                             <div class="cutout-logo-group" id="frameOptions">
                                 <div class="inputContainer">
                                     <label for="selectTextEdge">Text Edges:</label>
-                                    <select is="emby-select" id="selectTextEdge" data-setting="TextEdge" data-default="TopFirst">
-                                        <option value="TopFirst">Top edge first</option>
-                                        <option value="BottomFirst">Bottom edge first</option>
-                                        <option value="AlwaysTop">Title always top</option>
-                                        <option value="AlwaysBottom">Title always bottom</option>
-                                    </select>
+                                    <select is="emby-select" id="selectTextEdge" data-setting="TextEdge" data-default="TopFirst"></select>
                                     <div class="fieldDescription">How the border's two edges are filled. The first two fill that edge with whichever line the item has: the title normally, or the subtitle when there is no title, such as on a numbered season. The last two pin the title to one edge and the subtitle to the other, leaving an edge empty when its line is missing.</div>
                                 </div>
                             </div>
@@ -139,10 +121,7 @@
                             <div class="cutout-logo-group" id="cutoutOptions">
                                 <div class="inputContainer">
                                     <label for="selectCutoutType">Type:</label>
-                                    <select is="emby-select" id="selectCutoutType" data-setting="CutoutType" data-default="Code">
-                                        <option value="Code">Code</option>
-                                        <option value="Text">Text</option>
-                                    </select>
+                                    <select is="emby-select" id="selectCutoutType" data-setting="CutoutType" data-default="Code"></select>
                                     <div class="fieldDescription">Show the episode as a code like S01E01 or as a word like ONE.</div>
                                 </div>
                             </div>
@@ -150,20 +129,12 @@
                             <div class="cutout-logo-group" id="logoOptions">
                                 <div class="inputContainer">
                                     <label for="selectLogoAlignment">Logo Alignment:</label>
-                                    <select is="emby-select" id="selectLogoAlignment" data-setting="LogoAlignment" data-default="Center">
-                                        <option value="Left">Left</option>
-                                        <option value="Center">Center</option>
-                                        <option value="Right">Right</option>
-                                    </select>
+                                    <select is="emby-select" id="selectLogoAlignment" data-setting="LogoAlignment" data-default="Center"></select>
                                     <div class="fieldDescription">Horizontal alignment of the series logo on the poster.</div>
                                 </div>
                                 <div class="inputContainer">
                                     <label for="selectLogoPosition">Logo Position:</label>
-                                    <select is="emby-select" id="selectLogoPosition" data-setting="LogoPosition" data-default="Center">
-                                        <option value="Top">Top</option>
-                                        <option value="Center">Center</option>
-                                        <option value="Bottom">Bottom</option>
-                                    </select>
+                                    <select is="emby-select" id="selectLogoPosition" data-setting="LogoPosition" data-default="Center"></select>
                                     <div class="fieldDescription">Vertical position of the series logo on the poster.</div>
                                 </div>
                                 <div class="inputContainer">
@@ -186,11 +157,7 @@
 
                             <div class="inputContainer">
                                 <label for="selectCanvasSource">Canvas Background:</label>
-                                <select is="emby-select" id="selectCanvasSource" data-setting="CanvasSource" data-default="Extract">
-                                    <option value="None">No Background</option>
-                                    <option value="Extract">Extract Frame from Video</option>
-                                    <option value="SeriesBackdrop">Use Series Backdrop</option>
-                                </select>
+                                <select is="emby-select" id="selectCanvasSource" data-setting="CanvasSource" data-default="Extract"></select>
                                 <div class="fieldDescription">Determine where the poster background should come from.</div>
                             </div>
 
@@ -223,11 +190,7 @@
 
                             <div class="inputContainer">
                                 <label for="selectPosterFill">Fill Strategy:</label>
-                                <select is="emby-select" id="selectPosterFill" data-setting="PosterFill" data-default="Original">
-                                    <option value="Original">Original</option>
-                                    <option value="Fill">Fill</option>
-                                    <option value="Fit">Fit</option>
-                                </select>
+                                <select is="emby-select" id="selectPosterFill" data-setting="PosterFill" data-default="Original"></select>
                                 <div class="fieldDescription">How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.</div>
                             </div>
 
@@ -287,13 +250,7 @@
 
                             <div class="inputContainer">
                                 <label for="selectOverlayGradient">Overlay Gradient:</label>
-                                <select is="emby-select" id="selectOverlayGradient" data-setting="OverlayGradient" data-default="None">
-                                    <option value="None">None</option>
-                                    <option value="LeftToRight">Left to Right</option>
-                                    <option value="BottomToTop">Bottom to Top</option>
-                                    <option value="TopLeftCornerToBottomRightCorner">Top Left Corner to Bottom Right Corner</option>
-                                    <option value="TopRightCornerToBottomLeftCorner">Top Right Corner to Bottom Left Corner</option>
-                                </select>
+                                <select is="emby-select" id="selectOverlayGradient" data-setting="OverlayGradient" data-default="None"></select>
                                 <div class="fieldDescription">Gradient direction from the overlay color to the secondary color.</div>
                             </div>
 
@@ -330,20 +287,12 @@
                             <div class="cutout-logo-group" data-depends-on-value="txtGraphicPath">
                                 <div class="inputContainer">
                                     <label for="selectGraphicPosition">Graphic Position:</label>
-                                    <select is="emby-select" id="selectGraphicPosition" data-setting="GraphicPosition" data-default="Center">
-                                        <option value="Top">Top</option>
-                                        <option value="Center">Center</option>
-                                        <option value="Bottom">Bottom</option>
-                                    </select>
+                                    <select is="emby-select" id="selectGraphicPosition" data-setting="GraphicPosition" data-default="Center"></select>
                                     <div class="fieldDescription">Vertical position of the static graphic on the poster.</div>
                                 </div>
                                 <div class="inputContainer">
                                     <label for="selectGraphicAlignment">Graphic Alignment:</label>
-                                    <select is="emby-select" id="selectGraphicAlignment" data-setting="GraphicAlignment" data-default="Center">
-                                        <option value="Left">Left</option>
-                                        <option value="Center">Center</option>
-                                        <option value="Right">Right</option>
-                                    </select>
+                                    <select is="emby-select" id="selectGraphicAlignment" data-setting="GraphicAlignment" data-default="Center"></select>
                                     <div class="fieldDescription">Horizontal alignment of the static graphic on the poster.</div>
                                 </div>
                                 <div class="inputContainer">
@@ -424,12 +373,7 @@
                                 </div>
                                 <div class="inputContainer">
                                     <label for="selectSecondaryFontStyle">Font Style:</label>
-                                    <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold">
-                                        <option value="Normal">Normal</option>
-                                        <option value="Bold">Bold</option>
-                                        <option value="Italic">Italic</option>
-                                        <option value="Bold Italic">Bold Italic</option>
-                                    </select>
+                                    <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold"></select>
                                     <div class="fieldDescription">Font style for the subtitle.</div>
                                 </div>
                             </div>
@@ -472,11 +416,7 @@
 
                             <div class="inputContainer" data-depends-on="chkShowPrimary">
                                 <label for="selectLongTextHandling">Long Titles:</label>
-                                <select is="emby-select" id="selectLongTextHandling" data-setting="LongTextHandling" data-default="Ellipsis">
-                                    <option value="Ellipsis">Ellipsis</option>
-                                    <option value="Abbreviate">Abbreviate</option>
-                                    <option value="DropName">Drop Name</option>
-                                </select>
+                                <select is="emby-select" id="selectLongTextHandling" data-setting="LongTextHandling" data-default="Ellipsis"></select>
                                 <div class="fieldDescription">What to do when a title does not fit. Ellipsis trims it. Abbreviate tries the first part of the title, then initials with periods. Drop Name hides it.</div>
                             </div>
 
@@ -532,12 +472,7 @@
                                 </div>
                                 <div class="inputContainer">
                                     <label for="selectPrimaryFontStyle">Font Style:</label>
-                                    <select is="emby-select" id="selectPrimaryFontStyle" data-setting="PrimaryFontStyle" data-default="Bold">
-                                        <option value="Normal">Normal</option>
-                                        <option value="Bold">Bold</option>
-                                        <option value="Italic">Italic</option>
-                                        <option value="Bold Italic">Bold Italic</option>
-                                    </select>
+                                    <select is="emby-select" id="selectPrimaryFontStyle" data-setting="PrimaryFontStyle" data-default="Bold"></select>
                                     <div class="fieldDescription">Font style for the title text.</div>
                                 </div>
                             </div>
