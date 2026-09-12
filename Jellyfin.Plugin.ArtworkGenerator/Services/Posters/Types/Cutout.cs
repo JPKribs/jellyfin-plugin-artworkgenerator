@@ -37,7 +37,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             (PosterSettingRules.SecondaryFontSize, PosterSettingState.Hidden),
             (PosterSettingRules.SecondaryFontColor, PosterSettingState.Hidden),
             // Text position is hidden here: the lettering is cut out of the image and has to stay centered in it.
-            // The lettering is cut centred into the image and stays there, but the title line
+            // The lettering is cut centered into the image and stays there, but the title line
             // beneath it is ordinary text and can be pulled to a side.
             (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
 

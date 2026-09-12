@@ -71,7 +71,7 @@ public class PosterSettingRulesTests
     /// Cutout sizes and colors its letters from the cutout itself, so the text settings would lie.
     /// </summary>
     [Fact]
-    public void CutoutHidesTheTextSizeAndColour()
+    public void CutoutHidesTheTextSizeAndColor()
     {
         var rules = Generator(PosterStyle.Cutout).SettingRules;
 

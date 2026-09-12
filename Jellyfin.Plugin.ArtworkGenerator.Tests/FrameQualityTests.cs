@@ -27,7 +27,7 @@ public class FrameQualityTests
         return bitmap;
     }
 
-    private static SKColor Grey(byte v) => new(v, v, v);
+    private static SKColor Gray(byte v) => new(v, v, v);
 
     private static double Score(SKBitmap frame)
     {
@@ -37,7 +37,7 @@ public class FrameQualityTests
 
     /// <summary>
     /// A blown out frame is as useless as a crushed one, and only the crushed one was ever
-    /// penalised: the old score rose with brightness and then sat at its ceiling from 5% grey up.
+    /// penalized: the old score rose with brightness and then sat at its ceiling from 5% gray up.
     /// The two frames here carry the same texture at the same amplitude and differ only in level,
     /// so nothing but the tone term can separate them.
     /// </summary>
@@ -46,8 +46,8 @@ public class FrameQualityTests
     {
         byte Texture(int x, int y, int floor) => (byte)(floor + ((x * 7 + y * 5) % 40));
 
-        using var midTone = Frame(160, 90, (x, y) => Grey(Texture(x, y, 110)));
-        using var blownOut = Frame(160, 90, (x, y) => Grey(Texture(x, y, 215)));
+        using var midTone = Frame(160, 90, (x, y) => Gray(Texture(x, y, 110)));
+        using var blownOut = Frame(160, 90, (x, y) => Gray(Texture(x, y, 215)));
 
         using var midAnalysis = FrameExtractionService.CreateAnalysisBitmap(midTone);
         using var blownAnalysis = FrameExtractionService.CreateAnalysisBitmap(blownOut);
@@ -72,7 +72,7 @@ public class FrameQualityTests
     [Fact]
     public void ABlackFrameIsRejectedOutright()
     {
-        using var black = Frame(160, 90, (_, _) => Grey(2));
+        using var black = Frame(160, 90, (_, _) => Gray(2));
 
         using var analysis = FrameExtractionService.CreateAnalysisBitmap(black);
         var quality = FrameExtractionService.AnalyzeFrame(analysis);
@@ -88,8 +88,8 @@ public class FrameQualityTests
     [Fact]
     public void MoreDetailKeepsScoringHigher()
     {
-        using var flat = Frame(160, 90, (x, y) => Grey((byte)(110 + ((x / 40) * 6))));
-        using var detailed = Frame(160, 90, (x, y) => Grey((byte)(110 + (((x + y) % 2) * 60))));
+        using var flat = Frame(160, 90, (x, y) => Gray((byte)(110 + ((x / 40) * 6))));
+        using var detailed = Frame(160, 90, (x, y) => Gray((byte)(110 + (((x + y) % 2) * 60))));
 
         var flatScore = Score(flat);
         var detailedScore = Score(detailed);
@@ -105,10 +105,10 @@ public class FrameQualityTests
     [Fact]
     public void LetterboxBarsAreLeftOutOfTheAnalysis()
     {
-        SKColor Picture(int x, int y) => Grey((byte)(120 + ((x * 3 + y * 5) % 60)));
+        SKColor Picture(int x, int y) => Gray((byte)(120 + ((x * 3 + y * 5) % 60)));
 
         using var clean = Frame(160, 60, Picture);
-        using var barred = Frame(160, 90, (x, y) => y < 15 || y >= 75 ? Grey(0) : Picture(x, y - 15));
+        using var barred = Frame(160, 90, (x, y) => y < 15 || y >= 75 ? Gray(0) : Picture(x, y - 15));
 
         using var cleanAnalysis = FrameExtractionService.CreateAnalysisBitmap(clean);
         using var barredAnalysis = FrameExtractionService.CreateAnalysisBitmap(barred);
@@ -127,10 +127,10 @@ public class FrameQualityTests
     [Fact]
     public void AFrameWithARestfulBandHasMoreHeadroomThanABusyOne()
     {
-        SKColor Busy(int x, int y) => Grey((byte)(110 + (((x + y) % 2) * 70)));
+        SKColor Busy(int x, int y) => Gray((byte)(110 + (((x + y) % 2) * 70)));
 
         using var busyThroughout = Frame(160, 90, Busy);
-        using var calmFoot = Frame(160, 90, (x, y) => y > 64 ? Grey(115) : Busy(x, y));
+        using var calmFoot = Frame(160, 90, (x, y) => y > 64 ? Gray(115) : Busy(x, y));
 
         using var busyAnalysis = FrameExtractionService.CreateAnalysisBitmap(busyThroughout);
         using var calmAnalysis = FrameExtractionService.CreateAnalysisBitmap(calmFoot);

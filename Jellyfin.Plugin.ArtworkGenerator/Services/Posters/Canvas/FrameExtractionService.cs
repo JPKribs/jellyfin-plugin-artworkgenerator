@@ -373,7 +373,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
         // AnalyzeFrame
         // Measures the frame once and reports everything the score is built from, so the pixels are
-        // marshalled to managed memory a single time.
+        // marshaled to managed memory a single time.
         internal static FrameQuality AnalyzeFrame(SKBitmap? analysis)
         {
             if (analysis == null)
@@ -405,7 +405,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 totalLuma += value;
 
                 // Hasler and Susstrunk's opponent axes: a frame with no color scores near zero on
-                // both, which is how a flat grey shot is told from a striking one.
+                // both, which is how a flat gray shot is told from a striking one.
                 rg[i] = Math.Abs(c.Red - c.Green);
                 yb[i] = Math.Abs((0.5 * (c.Red + c.Green)) - c.Blue);
                 totalRg += rg[i];
@@ -509,7 +509,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         internal static double CalculateQualityScore(in FrameQuality quality)
         {
             // Mid tones win: a crushed frame and a blown out one are both bad, and only the first
-            // of those was ever penalised.
+            // of those was ever penalized.
             var offset = quality.Brightness - IdealBrightness;
             var tone = Math.Exp(-(offset * offset) / (2 * BrightnessSpread * BrightnessSpread));
 

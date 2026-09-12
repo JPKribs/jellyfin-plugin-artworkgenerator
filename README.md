@@ -139,7 +139,7 @@ The foundation layer that provides the visual background for the poster.
 **Options:**
 
 - **Video Frame Extraction**: Automatically extracts a frame from the video file using configurable extraction windows. A field of candidates is sampled at widely spaced points across the window and every one is scored before any is chosen, so the frame used is the best of the set rather than the first that was good enough. The sampling starts from a different point on each run, so refreshing offers a different frame rather than the same one.
-- **Frame Scoring**: Each candidate is measured with its letterbox bars removed, since bars are not picture and scoring them drags every measurement toward black. Five things are weighed: tone, which favours a mid-exposed frame and marks down the blown out as well as the crushed; fine detail; tonal range; colorfulness, which separates a striking frame from a flat grey one; and headroom, which prefers a frame with a calm band for the title to sit in.
+- **Frame Scoring**: Each candidate is measured with its letterbox bars removed, since bars are not picture and scoring them drags every measurement toward black. Five things are weighed: tone, which favors a mid-exposed frame and marks down the blown out as well as the crushed; fine detail; tonal range; colorfulness, which separates a striking frame from a flat gray one; and headroom, which prefers a frame with a calm band for the title to sit in.
 - **Series Backdrop**: Uses the series' own backdrop image as the poster background, falling back to a transparent canvas when the series has none.
 - **Transparent Background**: Creates a solid color or transparent canvas.
 

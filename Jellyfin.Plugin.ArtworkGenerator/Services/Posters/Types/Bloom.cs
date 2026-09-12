@@ -25,7 +25,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         private const float CoreStop = 0.22f;
 
         // Share of the safe width the text may use, so lines wrap inside the bloom rather than
-        // running out into the uncoloured corners.
+        // running out into the uncolored corners.
         private const float TextWidthRatio = 0.8f;
 
         // Style
@@ -67,7 +67,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(skCanvas);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (!TryGetOverlayColor(settings, out var centreColor))
+            if (!TryGetOverlayColor(settings, out var centerColor))
             {
                 return;
             }
@@ -75,11 +75,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // A zero-alpha secondary keeps the meaning it has everywhere else in the plugin: there
             // is no second color, so the bloom simply fades out.
             var edgeColor = string.IsNullOrEmpty(settings.OverlaySecondaryColor)
-                ? centreColor.WithAlpha(0)
+                ? centerColor.WithAlpha(0)
                 : ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
             if (edgeColor.Alpha == 0)
             {
-                edgeColor = centreColor.WithAlpha(0);
+                edgeColor = centerColor.WithAlpha(0);
             }
 
             var rect = SKRect.Create(width, height);
@@ -90,9 +90,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var colors = new SKColor[FalloffSteps + 2];
             var positions = new float[FalloffSteps + 2];
 
-            colors[0] = centreColor;
+            colors[0] = centerColor;
             positions[0] = 0f;
-            colors[1] = centreColor;
+            colors[1] = centerColor;
             positions[1] = CoreStop;
 
             for (int step = 1; step <= FalloffSteps; step++)
@@ -103,7 +103,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 // at the rim gently instead of stopping dead.
                 var eased = travelled * travelled * (3f - (2f * travelled));
 
-                colors[step + 1] = Blend(centreColor, edgeColor, eased);
+                colors[step + 1] = Blend(centerColor, edgeColor, eased);
                 positions[step + 1] = CoreStop + (travelled * (1f - CoreStop));
             }
 

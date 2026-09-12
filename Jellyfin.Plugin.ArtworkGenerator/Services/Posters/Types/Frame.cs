@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // The title takes the edge the text position names and the subtitle takes the other, so
             // this design needs no placement control of its own beyond what to do with a lone line.
             (PosterSettingRules.LoneLineFollowsTitle, PosterSettingState.Optional),
-            // Both lines are centred along their edge, so there is no side to pull them to.
+            // Both lines are centered along their edge, so there is no side to pull them to.
             (PosterSettingRules.TextAlignment, PosterSettingState.Hidden));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.

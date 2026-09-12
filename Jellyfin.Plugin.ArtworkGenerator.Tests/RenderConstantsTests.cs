@@ -47,7 +47,7 @@ public class RenderConstantsTests
     }
 
     [Fact]
-    public void TextStyle_CentresARunInsideItsSlot()
+    public void TextStyle_CentersARunInsideItsSlot()
     {
         using var style = PaintFactory.CreateTextStyle(SKColors.White, 40f, SKTypeface.Default, 1080f);
         var slot = SKRect.Create(0, 100, 500, style.BlockHeight(2));
