@@ -114,6 +114,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // RenderTypography
         // Draws the title along the sash and the code in the top-right corner. When there is no
         // title the code rides the sash instead.
+        // MeasureTypography
+        // The title rides the sash, which is the design itself rather than a block laid over it.
+        protected override SKRect MeasureTypography(ArtworkSubject subject, PosterSettings settings, int width, int height)
+            => SKRect.Empty;
+
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(subject);

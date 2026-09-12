@@ -40,6 +40,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // Share of the safe width the text may use. The stroke keep-clear zone is measured from
         // the same figure, so a wrapped title can never run under a stroke edge.
+        // Air left around the text when the strokes are cut back from it.
+        private const float TextClearanceRatio = 0.02f;
+
         private const float TextWidthRatio = 0.6f;
 
         // BrushPosterGenerator
@@ -63,7 +66,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // layout, but different items vary. Falls back to series id + season + episode when
             // there is no path (the preview and demo generator).
             var strokeBuilder = new BrushStrokeBuilder(GenerateBrushSeed(subject));
-            using var brushMask = strokeBuilder.BuildStrokePath(safeArea, unit);
+            using var strokes = strokeBuilder.BuildStrokePath(safeArea, unit);
+
+            // The strokes stay the centered composition they are drawn as, and the text's area is
+            // cut out of them rather than pushing them around. The paint simply stops short of the
+            // words instead of running under them.
+            using var brushMask = KeepClearOfText(strokes, unit);
 
             DrawPunchedOverlay(
                 skCanvas,
@@ -89,6 +97,36 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                     using var outlinePaint = CreateOutlinePaint(overlayColor, unit * 0.003f);
                     canvas.DrawPath(brushMask, outlinePaint);
                 });
+        }
+
+        // KeepClearOfText
+        // Removes whatever the layout map has claimed from the stroke path, with a little air
+        // around it so the paint does not crowd the letters.
+        private SKPath KeepClearOfText(SKPath strokes, int unit)
+        {
+            if (Layout.IsEmpty)
+            {
+                return new SKPath(strokes);
+            }
+
+            var margin = unit * TextClearanceRatio;
+            var result = new SKPath(strokes);
+
+            foreach (var claim in Layout.Claimed)
+            {
+                using var hole = new SKPath();
+                hole.AddRect(SKRect.Create(
+                    claim.Left - margin,
+                    claim.Top - margin,
+                    claim.Width + (margin * 2),
+                    claim.Height + (margin * 2)));
+
+                using var previous = result;
+                var trimmed = previous.Op(hole, SKPathOp.Difference);
+                result = trimmed ?? new SKPath(previous);
+            }
+
+            return result;
         }
 
         // GenerateBrushSeed

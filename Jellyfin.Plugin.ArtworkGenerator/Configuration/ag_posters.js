@@ -1124,6 +1124,13 @@ export default function (view) {
             el.classList.toggle('nested-settings', gradientOffered);
         });
 
+        // Show when another input has been filled in, such as the graphic's placement once there
+        // is a graphic to place.
+        view.querySelectorAll('[data-depends-on-value]').forEach(function (el) {
+            var input = view.querySelector('#' + el.getAttribute('data-depends-on-value'));
+            el.style.display = (input && input.value && input.value.trim() !== '') ? 'block' : 'none';
+        });
+
         // Hide when checkbox is checked (inverse dependency)
         view.querySelectorAll('[data-hide-when-checked]').forEach(function (el) {
             var cb = view.querySelector('#' + el.getAttribute('data-hide-when-checked'));

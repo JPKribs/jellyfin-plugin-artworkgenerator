@@ -62,6 +62,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
     public abstract partial class BasePosterGenerator : IPosterGenerator
     {
+        // Layout
+        // What the layers of this poster have claimed. Rebuilt for every render.
+        protected PosterLayout Layout { get; private set; } = new();
+
         // Logger
         // The style's own logger, for the few styles that report more than a failed render.
         protected ILogger Logger { get; }
@@ -212,6 +216,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 var skCanvas = surface.Canvas;
                 skCanvas.Clear(SKColors.Transparent);
 
+                // The text is measured before anything is drawn and claims its area first. Every
+                // layer above the canvas then knows where it must not go, rather than each placing
+                // itself and hoping.
+                Layout = new PosterLayout();
+                Layout.Claim(MeasureTypography(subject, settings, width, height));
+
                 // Layer 1: Canvas (base layer)
                 RenderCanvas(skCanvas, canvas, subject, settings, width, height);
 
@@ -298,6 +308,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return Math.Max(remainingHeight, safeArea.Height * minimumRatio);
         }
 
+        // MeasureTypography
+        // Where this design's text will land, so the layers drawn before it can keep clear. The
+        // default is the stacked run most designs use. A design whose text is part of the artwork,
+        // rather than a block laid over it, says so by returning nothing.
+        protected virtual SKRect MeasureTypography(ArtworkSubject subject, PosterSettings settings, int width, int height)
+        {
+            return DrawTextStack(null, GetSafeAreaBounds(width, height, settings), subject, settings, SizeUnit(width, height));
+        }
+
         // RenderGraphics
         // Loads and draws a static graphic image within the safe area.
         protected virtual void RenderGraphics(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
@@ -320,6 +339,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
                 ApplySafeAreaConstraints(width, height, settings, out float safeWidth, out float safeHeight, out float safeLeft, out float safeTop);
                 var graphicRect = CalculateGraphicRect(graphicBitmap, width, height, safeLeft, safeTop, safeWidth, safeHeight, settings);
+
+                // A graphic set where the text goes used to be drawn behind it. It now steps aside
+                // to the nearest clear band, keeping the side it was aligned to.
+                graphicRect = Layout.Avoid(graphicRect, SKRect.Create(safeLeft, safeTop, safeWidth, safeHeight));
+                Layout.Claim(graphicRect);
 
                 using var graphicPaint = new SKPaint { IsAntialias = true };
                 PaintFactory.DrawBitmap(skCanvas, graphicBitmap, graphicRect, graphicPaint);

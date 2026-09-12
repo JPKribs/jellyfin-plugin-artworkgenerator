@@ -114,6 +114,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // RenderTypography
         // Renders a large number pinned to the bottom left with the title rotated vertically along
         // the left edge above it. A series has no number, so its title runs the full height.
+        // MeasureTypography
+        // The title runs sideways up the edge and the number is pinned to the foot, both part of
+        // the artwork rather than a block laid over it.
+        protected override SKRect MeasureTypography(ArtworkSubject subject, PosterSettings settings, int width, int height)
+            => SKRect.Empty;
+
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(subject);

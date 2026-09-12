@@ -112,11 +112,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 .Add(PrimaryBlock, settings.ShowPrimary && reserveTitle ? primaryStyle.BlockHeight(2) : 0f);
         }
 
+        // MeasureTypography
+        // This design sets its title in a column of its own rather than the shared stack, so it
+        // reports that column instead of letting the default guess at it.
+        protected override SKRect MeasureTypography(ArtworkSubject subject, PosterSettings settings, int width, int height)
+        {
+            if (!settings.ShowPrimary || subject.CutoutIsPrimary || string.IsNullOrEmpty(subject.Primary))
+            {
+                return SKRect.Empty;
+            }
+
+            var unit = SizeUnit(width, height);
+            var safeArea = GetSafeAreaBounds(width, height, settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit);
+
+            return BuildColumn(safeArea, settings, unit, primaryStyle, true).Span;
+        }
+
         // CalculateCutoutArea
         // How much room the lettering gets, centered in the frame. The title zone still decides the
         // size, so the letters never grow into the text, but it does not decide the placement: the
         // cut is the composition, and it stays put when the text moves.
-        private static SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int unit, bool reserveTitle)
+        private SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int unit, bool reserveTitle)
         {
             if (!config.ShowPrimary || !reserveTitle)
             {
@@ -126,12 +143,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             using var primaryStyle = CreatePrimaryStyle(config, unit);
             var remaining = BuildColumn(safeArea, config, unit, primaryStyle, reserveTitle).Remaining;
 
-            return CenterInSafeArea(safeArea, FocalBandHeight(safeArea, remaining.Height, MinimumCutoutAreaRatio));
+            // Centered in the room actually free, not in the whole frame, so the lettering keeps
+            // its composition without running into the title beneath it.
+            var free = Layout.LargestFreeBand(safeArea);
+            var height = Math.Min(
+                FocalBandHeight(safeArea, remaining.Height, MinimumCutoutAreaRatio),
+                free.Height);
+
+            return CenterInSafeArea(free, height);
         }
 
         // DrawCutoutText
         // Draws the code as transparent cutouts in the overlay, with an optional outline.
-        private static void DrawCutoutText(SKCanvas canvas, ArtworkSubject subject, PosterSettings config, int canvasWidth, int canvasHeight, SKColor overlayColor)
+        private void DrawCutoutText(SKCanvas canvas, ArtworkSubject subject, PosterSettings config, int canvasWidth, int canvasHeight, SKColor overlayColor)
         {
             string cutoutText = subject.CutoutText(config.CutoutType);
             var words = cutoutText.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);

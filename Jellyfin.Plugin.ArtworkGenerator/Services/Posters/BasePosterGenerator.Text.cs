@@ -200,9 +200,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // DrawTextStack
         // The layout Standard and Split share: an identity line, a rule, and a two line title zone
-        // packed against whichever edge the text position asks for. An episode's identity line is its season and
+        // packed against whichever edge the text position asks for. Returns the area the run
+        // occupies, and with no canvas measures without drawing, so the layout map can be told what
+        // to keep clear before anything is put down. An episode's identity line is its season and
         // episode numbers; a season or series draws its label, such as SEASON 2, instead.
-        protected void DrawTextStack(SKCanvas canvas, SKRect area, ArtworkSubject subject, PosterSettings settings, int unit)
+        protected SKRect DrawTextStack(SKCanvas? canvas, SKRect area, ArtworkSubject subject, PosterSettings settings, int unit)
         {
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
@@ -225,7 +227,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 .Add(SeparatorBlock, showSeparator ? RenderConstants.SeparatorSlotHeight(unit) : 0f)
                 .Add(PrimaryBlock, showPrimary ? primaryStyle.BlockHeight(2) : 0f);
 
-            if (column.TryGetSlot(SecondaryBlock, out var secondarySlot))
+            if (canvas != null && column.TryGetSlot(SecondaryBlock, out var secondarySlot))
             {
                 if (parts.Count > 1)
                 {
@@ -237,15 +239,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 }
             }
 
-            if (column.TryGetSlot(SeparatorBlock, out var separatorSlot))
+            if (canvas != null && column.TryGetSlot(SeparatorBlock, out var separatorSlot))
             {
                 DrawSeparatorLine(canvas, settings, unit, separatorSlot);
             }
 
-            if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
+            if (canvas != null && column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
                 DrawPrimaryInSlot(canvas, subject.Primary!, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
+
+            return column.Span;
         }
 
         // DrawnFromCenter
