@@ -42,7 +42,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
         public string Name => ProviderName;
 
         // Supports
-        // Series, seasons, and episodes.
+        // Series, seasons, episodes, films, and any other standalone video.
         public bool Supports(BaseItem item) => item != null && ArtworkService.GetKind(item) != null;
 
         // GetSupportedImages
