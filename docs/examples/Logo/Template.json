@@ -19,7 +19,7 @@
     "LogoPosition": "Center",
     "LogoAlignment": "Center",
     "LogoHeight": 50,
-    "BrightenHDR": 25,
+    "BrightenHDR": 0,
     "PosterFill": "Fit",
     "PosterDimensionRatio": "16:9",
     "PortraitDimensionRatio": "2:3",
