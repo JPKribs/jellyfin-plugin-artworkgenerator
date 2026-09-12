@@ -214,10 +214,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>Legacy per-axis height. See <see cref="GraphicWidth"/>.</summary>
         public float? GraphicHeight { get; set; }
 
-        [Display(Name = "Graphic Position", Description = "Vertical position of the static graphic on the poster.")]
+        [Display(Name = "Graphic Position", Description = "Where the graphic sits, top to bottom.")]
         public Position GraphicPosition { get; set; } = Position.Center;
 
-        [Display(Name = "Graphic Alignment", Description = "Horizontal alignment of the static graphic on the poster.")]
+        [Display(Name = "Graphic Alignment", Description = "Which side the graphic is pulled to.")]
         public Alignment GraphicAlignment { get; set; } = Alignment.Center;
 
         /// <summary>
