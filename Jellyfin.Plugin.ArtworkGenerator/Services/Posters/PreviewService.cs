@@ -191,22 +191,50 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         {
             ArgumentNullException.ThrowIfNull(loggerFactory);
 
-            return style switch
+            // Found rather than listed: a new design is a class and an enum value, with nothing to
+            // remember to register here. A style with no generator falls back to Standard, which is
+            // what an unknown value stored by a newer version should draw.
+            var type = GeneratorTypes.TryGetValue(style, out var found)
+                ? found
+                : GeneratorTypes[PosterStyle.Standard];
+
+            var logger = LoggerFor(type, loggerFactory);
+            return (IPosterGenerator)Activator.CreateInstance(type, logger)!;
+        }
+
+        // GeneratorTypes
+        // Every concrete generator in the assembly, keyed by the style it says it draws. Built once:
+        // the reflection happens on first use rather than per poster.
+        private static readonly Dictionary<PosterStyle, Type> GeneratorTypes = DiscoverGenerators();
+
+        private static Dictionary<PosterStyle, Type> DiscoverGenerators()
+        {
+            var generators = new Dictionary<PosterStyle, Type>();
+
+            foreach (var type in typeof(BasePosterGenerator).Assembly.GetTypes())
             {
-                PosterStyle.Logo => new LogoPosterGenerator(loggerFactory.CreateLogger<LogoPosterGenerator>()),
-                PosterStyle.Numeral => new NumeralPosterGenerator(loggerFactory.CreateLogger<NumeralPosterGenerator>()),
-                PosterStyle.Cutout => new CutoutPosterGenerator(loggerFactory.CreateLogger<CutoutPosterGenerator>()),
-                PosterStyle.Standard => new StandardPosterGenerator(loggerFactory.CreateLogger<StandardPosterGenerator>()),
-                PosterStyle.Frame => new FramePosterGenerator(loggerFactory.CreateLogger<FramePosterGenerator>()),
-                PosterStyle.Brush => new BrushPosterGenerator(loggerFactory.CreateLogger<BrushPosterGenerator>()),
-                PosterStyle.Split => new SplitPosterGenerator(loggerFactory.CreateLogger<SplitPosterGenerator>()),
-                PosterStyle.FrostedGlass => new FrostedGlassPosterGenerator(loggerFactory.CreateLogger<FrostedGlassPosterGenerator>()),
-                PosterStyle.Fade => new FadePosterGenerator(loggerFactory.CreateLogger<FadePosterGenerator>()),
-                PosterStyle.Timeline => new TimelinePosterGenerator(loggerFactory.CreateLogger<TimelinePosterGenerator>()),
-                PosterStyle.Striped => new StripedPosterGenerator(loggerFactory.CreateLogger<StripedPosterGenerator>()),
-                PosterStyle.Bloom => new BloomPosterGenerator(loggerFactory.CreateLogger<BloomPosterGenerator>()),
-                _ => new StandardPosterGenerator(loggerFactory.CreateLogger<StandardPosterGenerator>())
-            };
+                if (type.IsAbstract || !typeof(BasePosterGenerator).IsAssignableFrom(type))
+                {
+                    continue;
+                }
+
+                // The style is an instance property, so a throwaway instance is the only way to ask
+                // a generator which style it draws. NullLogger keeps that free of side effects.
+                var probe = (IPosterGenerator)Activator.CreateInstance(type, LoggerFor(type, NullLoggerFactory.Instance))!;
+                generators[probe.Style] = type;
+            }
+
+            return generators;
+        }
+
+        // LoggerFor
+        // A generator takes ILogger<itself>, so the logger is made for the type being built.
+        private static object LoggerFor(Type generator, ILoggerFactory loggerFactory)
+        {
+            return typeof(LoggerFactoryExtensions)
+                .GetMethod(nameof(LoggerFactoryExtensions.CreateLogger), new[] { typeof(ILoggerFactory) })!
+                .MakeGenericMethod(generator)
+                .Invoke(null, new object[] { loggerFactory })!;
         }
 
         // GetStyleCatalog

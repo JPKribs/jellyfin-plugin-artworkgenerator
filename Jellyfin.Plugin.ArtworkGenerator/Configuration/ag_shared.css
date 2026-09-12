@@ -462,3 +462,10 @@
 .ag-section-note {
     margin: 0 0 1.25em;
 }
+
+/* Jellyfin upgrades an emby-input after the page loads, so the real input is not always a direct
+   child of the field and Base's child-scoped margin reset stops reaching it. That left the two
+   ratio boxes carrying a bottom margin and their help line sitting lower than every other row's. */
+.jpk-field-row .jpk-field input {
+    margin-bottom: 0;
+}

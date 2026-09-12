@@ -72,10 +72,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             {
                 if (property.PropertyType.IsEnum)
                 {
-                    options[property.Name] = property.PropertyType
-                        .GetFields(BindingFlags.Public | BindingFlags.Static)
-                        .Select(field => new SettingOption(field.Name, LabelFor(field)))
-                        .ToList();
+                    options[property.Name] = Choices(property.PropertyType);
                 }
                 else if (Explicit.TryGetValue(property.Name, out var values))
                 {
@@ -86,12 +83,31 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // Not a design setting, so it is not on PosterSettings: the Designs page's preview picker
             // offers the kinds of item a preview can draw, which are the item kinds themselves. It is
             // served here so that page has no hardcoded list of its own either.
-            options["PreviewKind"] = typeof(ArtworkItemKind)
+            options["PreviewKind"] = Choices(typeof(ArtworkItemKind));
+
+            return options;
+        }
+
+        // Choices
+        // An enum's values as options. The poster styles are the one list a reader scans rather than
+        // recognizes, so it leads with the plain one and alphabetizes the rest. Every other enum
+        // keeps the order it is declared in, which is usually meaningful.
+        private static List<SettingOption> Choices(Type type)
+        {
+            var choices = type
                 .GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Select(field => new SettingOption(field.Name, LabelFor(field)))
                 .ToList();
 
-            return options;
+            if (type != typeof(PosterStyle))
+            {
+                return choices;
+            }
+
+            return choices
+                .OrderByDescending(choice => string.Equals(choice.Value, nameof(PosterStyle.Standard), StringComparison.Ordinal))
+                .ThenBy(choice => choice.Label, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         /// <summary>
