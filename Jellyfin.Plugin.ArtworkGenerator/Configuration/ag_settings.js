@@ -24,7 +24,10 @@ export default function (view) {
     function currentState() {
         return JSON.stringify({
             ImageChoiceCount: view.querySelector('#txtImageChoiceCount').value,
-            FixedExtractionSeed: view.querySelector('#txtFixedSeed').value
+            FixedExtractionSeed: view.querySelector('#txtFixedSeed').value,
+            FrameExtraction: frameFields().map(function (el) {
+                return el.type === 'checkbox' ? el.checked : el.value;
+            }).join('|')
         });
     }
 
@@ -80,11 +83,72 @@ export default function (view) {
 
     // ===== Config =====
 
+    // The frame extraction fields carry the name of the property they set, so loading and saving
+    // them is one loop rather than a line each.
+    function frameFields() {
+        return Array.prototype.slice.call(view.querySelectorAll('[data-frame-setting]'));
+    }
+
+    // Their labels and help text come from the settings model, like every other page.
+    function loadFrameText() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
+            dataType: 'json'
+        }).then(function (payload) {
+            var text = (payload && (payload.frameText || payload.FrameText)) || {};
+
+            frameFields().forEach(function (el) {
+                var entry = text[el.getAttribute('data-frame-setting')];
+                if (!entry) return;
+
+                var container = el.closest('.inputContainer, .checkboxContainer, .jpk-field');
+                if (!container) return;
+
+                var name = entry.label || entry.Label || '';
+                var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
+                if (label && name) {
+                    label.textContent = el.type === 'checkbox' ? name : name + ':';
+                }
+
+                var description = container.querySelector('.fieldDescription');
+                var help = entry.description || entry.Description || '';
+                if (description && help) {
+                    description.textContent = help;
+                }
+            });
+        }).catch(function (error) {
+            console.error('Failed to load frame extraction text:', error);
+        });
+    }
+
+    // The letterbox thresholds only matter while detection is on.
+    function updateFrameVisibility() {
+        var on = view.querySelector('#chkLetterboxDetection');
+        view.querySelectorAll('[data-depends-on="chkLetterboxDetection"]').forEach(function (el) {
+            el.hidden = !(on && on.checked);
+        });
+    }
+
     function loadConfig() {
         Dashboard.showLoadingMsg();
         shared.getConfig().then(function (config) {
             view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 3;
             view.querySelector('#txtFixedSeed').value = (config.FixedExtractionSeed === null || config.FixedExtractionSeed === undefined) ? '' : config.FixedExtractionSeed;
+
+            var frame = config.FrameExtraction || {};
+            frameFields().forEach(function (el) {
+                var value = frame[el.getAttribute('data-frame-setting')];
+                if (value === undefined || value === null) return;
+
+                if (el.type === 'checkbox') {
+                    el.checked = !!value;
+                } else {
+                    el.value = value;
+                }
+            });
+
+            updateFrameVisibility();
             takeSnapshot();
             markClean();
             Dashboard.hideLoadingMsg();
@@ -113,6 +177,21 @@ export default function (view) {
             var seedText = view.querySelector('#txtFixedSeed').value.trim();
             var seed = parseInt(seedText, 10);
             config.FixedExtractionSeed = seedText === '' || isNaN(seed) ? null : seed;
+
+            config.FrameExtraction = config.FrameExtraction || {};
+            frameFields().forEach(function (el) {
+                var name = el.getAttribute('data-frame-setting');
+
+                if (el.type === 'checkbox') {
+                    config.FrameExtraction[name] = el.checked;
+                    return;
+                }
+
+                var number = parseFloat(el.value);
+                if (!isNaN(number)) {
+                    config.FrameExtraction[name] = number;
+                }
+            });
 
             return shared.saveConfig(config);
         }).then(function (result) {
@@ -145,9 +224,17 @@ export default function (view) {
             view.querySelector('#btnSavePlugin').addEventListener('click', savePluginSettings);
             view.querySelector('#txtImageChoiceCount').addEventListener('input', checkDirty);
             view.querySelector('#txtFixedSeed').addEventListener('input', checkDirty);
+
+            frameFields().forEach(function (el) {
+                el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', function () {
+                    updateFrameVisibility();
+                    checkDirty();
+                });
+            });
         }
 
         window.addEventListener('beforeunload', onBeforeUnload);
+        loadFrameText();
         loadConfig();
     });
 

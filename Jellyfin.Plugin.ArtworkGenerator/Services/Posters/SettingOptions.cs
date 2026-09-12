@@ -138,6 +138,35 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         /// several of their names — the extraction window, the letterbox thresholds — are also
         /// design setting names, and one dictionary would let the two overwrite each other.
         /// </summary>
+        /// <summary>
+        /// Gets the label and help text for the frame extraction settings, which live on the server
+        /// rather than on a design and so are not in either of the maps above.
+        /// </summary>
+        public static IReadOnlyDictionary<string, SettingText> FrameExtractionText()
+        {
+            return TextFrom(typeof(FrameExtractionSettings));
+        }
+
+        // TextFrom
+        // Every Display attribute on a settings model, keyed by property name.
+        private static Dictionary<string, SettingText> TextFrom(Type type)
+        {
+            var text = new Dictionary<string, SettingText>(StringComparer.Ordinal);
+
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var display = property.GetCustomAttribute<DisplayAttribute>();
+                if (display?.Name == null)
+                {
+                    continue;
+                }
+
+                text[property.Name] = new SettingText(display.Name, display.Description ?? string.Empty);
+            }
+
+            return text;
+        }
+
         public static IReadOnlyDictionary<string, SettingText> BackdropText()
         {
             var text = new Dictionary<string, SettingText>(StringComparer.Ordinal);

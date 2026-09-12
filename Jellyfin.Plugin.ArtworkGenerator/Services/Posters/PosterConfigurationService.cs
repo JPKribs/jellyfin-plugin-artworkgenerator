@@ -53,6 +53,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             ArgumentNullException.ThrowIfNull(config);
 
             MigrateLegacySettings(config);
+            MigrateFrameExtraction(config);
 
             var design = EnsureDefaultDesign(config);
             RetireSynthesizedPortraitDesign(config, design);
@@ -200,6 +201,42 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
         }
 
+
+        // MigrateFrameExtraction
+        // These were once a copy on every design and every profile's backdrop. The default design's
+        // values are the ones the user actually set, so they become the server's, once.
+        private void MigrateFrameExtraction(PluginConfiguration config)
+        {
+            if (config.FrameExtractionMigrated)
+            {
+                return;
+            }
+
+            config.FrameExtractionMigrated = true;
+
+            var source = config.PosterConfigurations.FirstOrDefault(c => c.IsDefault)?.Settings
+                ?? config.PosterConfigurations.FirstOrDefault()?.Settings;
+
+            if (source == null)
+            {
+                return;
+            }
+
+            config.FrameExtraction = new FrameExtractionSettings
+            {
+                ExtractWindowStart = source.ExtractWindowStart,
+                ExtractWindowEnd = source.ExtractWindowEnd,
+                BrightenFrame = source.BrightenHDR,
+                EnableLetterboxDetection = source.EnableLetterboxDetection,
+                LetterboxBlackThreshold = source.LetterboxBlackThreshold,
+                LetterboxConfidence = source.LetterboxConfidence
+            };
+
+            _logger.LogInformation(
+                "Brought the frame extraction settings forward from the default design: {Start} to {End} percent",
+                config.FrameExtraction.ExtractWindowStart,
+                config.FrameExtraction.ExtractWindowEnd);
+        }
 
         // MigrateTextVocabulary
         // These settings were once named for a title and an episode; they are now named for the
@@ -544,15 +581,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 Id = id,
                 Name = name,
                 IsDefault = isDefault,
-                Backdrop = new BackdropSettings
-                {
-                    EnableLetterboxDetection = source.EnableLetterboxDetection,
-                    LetterboxBlackThreshold = source.LetterboxBlackThreshold,
-                    LetterboxConfidence = source.LetterboxConfidence,
-                    BrightenHDR = source.BrightenHDR,
-                    ExtractWindowStart = source.ExtractWindowStart,
-                    ExtractWindowEnd = source.ExtractWindowEnd
-                }
+                Backdrop = new BackdropSettings()
             };
 
             Add(profile, ArtworkItemKind.Series, ArtworkSlot.Primary, true, design.Id);

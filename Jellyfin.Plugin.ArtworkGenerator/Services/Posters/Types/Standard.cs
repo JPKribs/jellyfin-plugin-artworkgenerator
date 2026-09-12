@@ -22,6 +22,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         {
         }
 
+        // ApplyFrameExtraction
+        // Exposes the shared stamping for the tests, so what they check is what the renderer calls.
+        internal static PosterSettings ApplyFrameExtraction(PosterSettings settings, FrameExtractionSettings extraction)
+            => WithFrameExtraction(settings, extraction);
+
         // DrawsSecondary
         // Exposes the shared rule for the tests, so what they check is what the designs call.
         internal static bool DrawsSecondary(PosterSettings settings, ArtworkSubject subject)

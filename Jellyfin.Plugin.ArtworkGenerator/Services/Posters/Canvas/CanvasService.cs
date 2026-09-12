@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
+using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
 using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
@@ -109,18 +110,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(backdrop);
 
-            var settings = new PosterSettings
-            {
-                CanvasSource = CanvasSource.Extract,
-                EnableLetterboxDetection = backdrop.EnableLetterboxDetection,
-                LetterboxBlackThreshold = backdrop.LetterboxBlackThreshold,
-                LetterboxConfidence = backdrop.LetterboxConfidence,
-                BrightenHDR = backdrop.BrightenHDR,
-                ExtractWindowStart = backdrop.ExtractWindowStart,
-                ExtractWindowEnd = backdrop.ExtractWindowEnd,
-                PosterFill = PosterFill.Fit,
-                PosterDimensionRatio = string.IsNullOrWhiteSpace(backdrop.AspectRatio) ? "16:9" : backdrop.AspectRatio
-            };
+            // A backdrop is a frame with no design on it, so the only thing it needs beyond the
+            // server's extraction settings is the shape it is cropped to.
+            var settings = BasePosterGenerator.WithFrameExtraction(
+                new PosterSettings
+                {
+                    CanvasSource = CanvasSource.Extract,
+                    PosterFill = PosterFill.Fit,
+                    PosterDimensionRatio = string.IsNullOrWhiteSpace(backdrop.AspectRatio) ? "16:9" : backdrop.AspectRatio
+                },
+                Plugin.Instance?.Configuration?.FrameExtraction);
 
             try
             {

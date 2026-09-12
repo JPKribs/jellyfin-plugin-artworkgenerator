@@ -122,6 +122,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
                 defaults = SettingOptions.Defaults(),
                 text = SettingOptions.Text(),
                 backdropText = SettingOptions.BackdropText(),
+                frameText = SettingOptions.FrameExtractionText(),
                 logoDefaults = SettingOptions.LogoDefaults()
             });
         }

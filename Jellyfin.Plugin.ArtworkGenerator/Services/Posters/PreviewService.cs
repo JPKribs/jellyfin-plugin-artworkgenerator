@@ -67,6 +67,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             var shaped = settings.Clone();
             shaped.Shape = shape;
+            BasePosterGenerator.WithFrameExtraction(shaped, Plugin.Instance?.Configuration?.FrameExtraction);
 
             var assetDir = EnsureAssetsExtracted();
             var basePath = Path.Combine(assetDir, "demo-base.png");

@@ -33,17 +33,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// </summary>
         public bool GenerateBackdrop { get; set; }
 
-        [Display(Name = "Enable Letterbox Detection", Description = "Detect and crop black bars from extracted frames.")]
         public bool EnableLetterboxDetection { get; set; } = true;
 
         public int LetterboxBlackThreshold { get; set; } = 25;
 
         public float LetterboxConfidence { get; set; } = 85.0f;
 
-        [Display(Name = "Extraction Start (%)", Description = "How far into each episode extraction begins.")]
         public float ExtractWindowStart { get; set; } = 20.0f;
 
-        [Display(Name = "Extraction End (%)", Description = "How far into each episode extraction stops.")]
         public float ExtractWindowEnd { get; set; } = 80.0f;
 
         [Display(Name = "Style")]
@@ -95,7 +92,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Logo Height", Description = "Logo height as a percent of the poster's short side, 1 to 100.")]
         public float LogoHeight { get; set; } = 30.0f;
 
-        [Display(Name = "Brighten Frame (%)", Description = "How much every extracted frame is brightened.")]
         public float BrightenHDR { get; set; }
 
         [Display(Name = "Fill Strategy", Description = "How the image is resized to fit the poster.")]

@@ -1118,6 +1118,10 @@ export default function (view) {
             var wanted = !gradientOffered || (select && select.value !== 'None');
 
             el.style.display = wanted ? 'block' : 'none';
+
+            // Nested styling says "this belongs to the control above it". With no gradient above
+            // it, the second color stands on its own and the indent reads as a mistake.
+            el.classList.toggle('nested-settings', gradientOffered);
         });
 
         // Value dependency (show when input has a value)
@@ -1149,16 +1153,31 @@ export default function (view) {
             var container = group.closest('.inputContainer');
             if (!container) return;
 
+            // A design may name the overlay for what it actually draws, such as the bloom or the
+            // sash, and that wins over the generic wording when a color is being set.
+            var field = container.querySelector('[data-setting]');
+            var own = field ? textFor(field.getAttribute('data-setting')) : null;
+
             var label = container.querySelector('.color-control-label');
             if (label) {
                 var key = on ? 'data-opacity-label' : 'data-color-label';
-                if (label.getAttribute(key)) label.textContent = label.getAttribute(key);
+                var ownLabel = !on && own && (own.label || own.Label);
+                if (ownLabel) {
+                    label.textContent = ownLabel + ':';
+                } else if (label.getAttribute(key)) {
+                    label.textContent = label.getAttribute(key);
+                }
             }
 
             var desc = container.querySelector('.fieldDescription');
             if (desc) {
                 var dkey = on ? 'data-opacity-desc' : 'data-color-desc';
-                if (desc.getAttribute(dkey)) desc.textContent = desc.getAttribute(dkey);
+                var ownDesc = !on && own && (own.description || own.Description);
+                if (ownDesc) {
+                    desc.textContent = ownDesc;
+                } else if (desc.getAttribute(dkey)) {
+                    desc.textContent = desc.getAttribute(dkey);
+                }
             }
         });
     }

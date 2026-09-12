@@ -14,7 +14,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Configuration
             PosterConfigurations = new List<PosterConfiguration>();
             LogoConfigurations = new List<LogoConfiguration>();
             Profiles = new List<ArtworkProfile>();
+            FrameExtraction = new FrameExtractionSettings();
         }
+
+        /// <summary>
+        /// Gets or sets how frames are pulled from a video and cleaned up. One set for the server,
+        /// used for every poster and every backdrop, rather than a copy on each design and profile.
+        /// </summary>
+        public FrameExtractionSettings FrameExtraction { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the frame extraction settings have been taken
+        /// from the default design yet. They used to live on every design, so the first load after
+        /// the move brings the default design's values forward and sets this.
+        /// </summary>
+        public bool FrameExtractionMigrated { get; set; }
 
         /// <summary>
         /// Gets or sets the number of alternates offered when replacing an image from the Edit Images

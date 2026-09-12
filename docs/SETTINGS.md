@@ -7,6 +7,16 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 * **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An item with no image of that type is only offered one, because that request comes from an automatic refresh that keeps a single image. Default 3.
 * **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
 
+### Frame Extraction
+
+How frames are taken from a video and cleaned up, for every poster and every backdrop. These used to be a copy on each design and each profile, which let the same decision disagree with itself; they are set once here.
+
+* **Extraction Start (%)** and **Extraction End (%)**: the stretch of each episode frames are taken from, skipping intros and credits. Default 20 and 80.
+* **Brighten Frame (%)**: how much every extracted frame is brightened. Default 0.
+* **Detect Letterboxing**: crop black bars off an extracted frame. Default on.
+* **Black Threshold**: brightness below which a pixel counts as black. Default 25.
+* **Detection Confidence (%)**: percent of pixels that must be black to count as letterboxing. Default 85.
+
 ## Profiles
 
 * **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.
@@ -16,7 +26,7 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
   * **Thumb**: a landscape image, offered for every kind. An episode thumb is what many clients show in the next-up and resume rows.
   * **Logo**: a transparent text logo for a series or a film, drawn with a logo design.
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
-* **Backdrops**: aspect ratio, letterbox detection, HDR brightening, and extraction window for backdrop frames.
+* **Backdrops**: the aspect ratio a backdrop is cropped to. How its frame is taken from the video is in Settings, under Frame Extraction.
 
 Jellyfin only asks the plugin for series and season images in libraries where **Artwork Generator** is ticked under Image Fetchers for those item types in the library's settings. Episodes work as before.
 
@@ -38,13 +48,6 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 ## Canvas
 
 * **Canvas Background**: the poster's base image. Extract Frame from Video, Use Series Backdrop, or No Background. Seasons and series extract from their own episodes. Default Extract Frame.
-* **Extraction Start (%)**: earliest point to pull a frame from, as a percent of runtime. Default 20.
-* **Extraction End (%)**: latest point to pull a frame from, as a percent of runtime. Default 80.
-* **Brighten Frame (%)**: percent every extracted frame is brightened by. Default 0, which leaves the frame as it was extracted.
-
-## Letterbox
-
-* **Enable Letterbox Detection**: crop black bars off an extracted frame. Default on.
 
 ## Poster
 

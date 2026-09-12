@@ -97,6 +97,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             var settings = design.Clone();
             settings.Shape = shape;
 
+            // Frame extraction belongs to the server, not to the design, so whatever a saved design
+            // or an imported template still carries is replaced here before anything is drawn.
+            BasePosterGenerator.WithFrameExtraction(settings, Plugin.Instance?.Configuration?.FrameExtraction);
+
             var ratio = CroppingService.ParseAspectRatio(settings.PosterDimensionRatio);
             if (shape == ArtworkShape.Portrait)
             {

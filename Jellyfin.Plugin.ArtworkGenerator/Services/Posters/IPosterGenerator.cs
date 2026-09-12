@@ -245,6 +245,29 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 && numbered == subject.FeaturedNumber.Value;
         }
 
+        // WithFrameExtraction
+        // Stamps the server's frame extraction settings onto a design's render settings. The design
+        // no longer chooses these, so whatever a saved design or an imported template still carries
+        // is replaced by the one set that applies everywhere.
+        public static PosterSettings WithFrameExtraction(PosterSettings settings, FrameExtractionSettings? extraction)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+
+            if (extraction == null)
+            {
+                return settings;
+            }
+
+            settings.ExtractWindowStart = extraction.ExtractWindowStart;
+            settings.ExtractWindowEnd = extraction.ExtractWindowEnd;
+            settings.BrightenHDR = extraction.BrightenFrame;
+            settings.EnableLetterboxDetection = extraction.EnableLetterboxDetection;
+            settings.LetterboxBlackThreshold = extraction.LetterboxBlackThreshold;
+            settings.LetterboxConfidence = extraction.LetterboxConfidence;
+
+            return settings;
+        }
+
         // SizeUnit
         // The length every size setting is a percentage of: the poster's short side. A landscape
         // poster's short side is what these sizes always measured against, so existing designs are

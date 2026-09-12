@@ -24,6 +24,58 @@
                         <div class="fieldDescription">Any whole number makes frame choice repeatable, so an item always gets the same frames. Empty picks new ones each refresh.</div>
                     </div>
 
+                    <!-- Frame Extraction -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="frameExtractionContent" data-target="frameExtractionContent">
+                            <span class="jpk-collapsible-title">Frame Extraction</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="frameExtractionContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="fieldDescription ag-section-note">How frames are taken from a video and cleaned up, for every poster and every backdrop.</div>
+
+                            <div class="jpk-field-row">
+                                <div class="jpk-field">
+                                    <label for="txtExtractWindowStart"></label>
+                                    <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-frame-setting="ExtractWindowStart" data-type="number" />
+                                </div>
+                                <div class="jpk-field">
+                                    <label for="txtExtractWindowEnd"></label>
+                                    <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-frame-setting="ExtractWindowEnd" data-type="number" />
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
+
+                            <div class="inputContainer">
+                                <label for="txtBrightenFrame"></label>
+                                <input is="emby-input" type="number" id="txtBrightenFrame" min="0" max="100" data-frame-setting="BrightenFrame" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="checkboxContainer">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkLetterboxDetection" data-frame-setting="EnableLetterboxDetection" />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="nested-settings" data-depends-on="chkLetterboxDetection">
+                                <div class="inputContainer">
+                                    <label for="txtLetterboxBlack"></label>
+                                    <input is="emby-input" type="number" id="txtLetterboxBlack" min="0" max="255" data-frame-setting="LetterboxBlackThreshold" data-type="number" />
+                                    <div class="fieldDescription"></div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="txtLetterboxConfidence"></label>
+                                    <input is="emby-input" type="number" id="txtLetterboxConfidence" min="50" max="100" step="1" data-frame-setting="LetterboxConfidence" data-type="number" />
+                                    <div class="fieldDescription"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
                     <!-- Save -->
                     <div class="inputContainer">
                         <button is="emby-button" type="button" id="btnSavePlugin" class="raised button-submit block">
