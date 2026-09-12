@@ -12,15 +12,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         AsWritten,
 
         /// <summary>Every letter capital.</summary>
-        [Description("UPPERCASE")]
+        [Description("Uppercase")]
         Uppercase,
 
         /// <summary>Every letter small.</summary>
-        [Description("lowercase")]
+        [Description("Lowercase")]
         Lowercase,
 
         /// <summary>The first letter of each word capital.</summary>
-        [Description("Title Case")]
+        [Description("Title case")]
         TitleCase
     }
 }

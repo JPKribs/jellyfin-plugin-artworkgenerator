@@ -128,12 +128,12 @@ Logo designs are stored in their own file, `logos.json`, in the plugin's data di
 
 * **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
 * **Sample name**: the box under the preview, which starts out reading Demo Logo Text. What you type is previewed but never saved.
-* **Name From**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
+* **Logo Source**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
 * **Remove Year**: remove a year in brackets such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345]. Default on.
-* **Names With a Subtitle**: how to treat a name split by a colon or spaced dash. Draw the whole name, keep only the title, keep only the subtitle, or draw both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
+* **Names With a Subtitle**: how to treat a name split by a colon or spaced dash. Whole name, title only, subtitle only, or both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
 * **Small Line Size (%)**: the small line's size as a percent of the large one, in the two-size layouts. Default 45.
 * **Remove Pattern**: an optional regular expression whose matches are removed. An invalid pattern is ignored.
-* **Letter Case**: how the letters are cased, whatever case the name arrives in. As written, UPPERCASE, lowercase, or Title Case. Default as written.
+* **Letter Case**: how the letters are cased, whatever case the name arrives in. As written, uppercase, lowercase, or title case. Default as written.
 * **Line Limit**: the most lines a name may wrap onto, 1 to 4. An extra line is only used when it lets the lettering grow noticeably, so a short name stays on one line. Default 2.
 * **Font, Font Style, Use Custom Font, Font Path**: the typeface. Default Arial Bold.
 * **Letters Filled With**: a color, or a frame from the show. A frame fill cuts the letters out of a picture, taken from the same shared set of frames the show's other images come from, and brightened so it still reads on a dark background. A heavy font shows more of the picture and an outline helps it stand out. With a frame fill, the Edit Images dialog offers several logos, each cut from a different frame. Default a color.

@@ -1,4 +1,4 @@
-import { setTabs, createShared } from '/web/configurationpage?name=ag_jpkribs_shared.js';
+import { initCollapsibles, setTabs, createShared } from '/web/configurationpage?name=ag_jpkribs_shared.js';
 
 export default function (view) {
     'use strict';
@@ -221,6 +221,7 @@ export default function (view) {
 
         if (!_initialized) {
             _initialized = true;
+            initCollapsibles(view);
             view.querySelector('#btnSavePlugin').addEventListener('click', savePluginSettings);
             view.querySelector('#txtImageChoiceCount').addEventListener('input', checkDirty);
             view.querySelector('#txtFixedSeed').addEventListener('input', checkDirty);

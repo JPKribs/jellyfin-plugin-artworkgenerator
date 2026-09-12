@@ -9,7 +9,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public class LogoSettings
     {
         /// <summary>Gets or sets where the logo text comes from.</summary>
-        [Display(Name = "Name From", Description = "Which name the logo shows.")]
+        [Display(Name = "Logo Source", Description = "Which name the logo shows.")]
         public LogoTitleSource TitleSource { get; set; } = LogoTitleSource.Title;
 
         /// <summary>Gets or sets a value indicating whether a year such as (2019) is removed.</summary>
