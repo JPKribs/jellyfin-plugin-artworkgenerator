@@ -31,6 +31,7 @@ changelog:
   - The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning
   - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   fixes:
+  - Portrait text looked small against a tall frame, because every size was a percent of the short side, which in portrait is the width; portrait now measures sizes against the average of the two sides, roughly a quarter larger, and landscape is unchanged
   - Brush piled its strokes into a cross on a tall poster, because a stroke's height came from the short side while its length always came from the width; a stroke is now capped against its own length, which leaves wide posters untouched
   - Fade's sideways series name could wrap into two rows that stacked across the poster and ran off the edge; it is sized from the text the canvas actually draws and stays on one row inside the safe area
   - A static graphic could be stretched, because its width and height were set independently; it now keeps its proportions inside a single size

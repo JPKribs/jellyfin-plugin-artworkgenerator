@@ -32,8 +32,9 @@ public class ArtworkServiceTests
     }
 
     /// <summary>
-    /// Text sizes come from the short edge, which in portrait is the width, so portrait scales
-    /// them down to keep both shapes in proportion. Landscape uses the sizes as set.
+    /// Text sizes come from the short side, which in portrait is the width, so a portrait render
+    /// measures them against the average of the two sides instead. A 2:3 poster therefore draws
+    /// text about a quarter larger than its width alone would give. Landscape uses the sizes as set.
     /// </summary>
     [Fact]
     public void ShapeAdjust_PortraitScalesTheText()
@@ -43,8 +44,8 @@ public class ArtworkServiceTests
         var portrait = ArtworkService.ShapeAdjust(design, ArtworkShape.Portrait);
         var landscape = ArtworkService.ShapeAdjust(design, ArtworkShape.Landscape);
 
-        Assert.Equal(8.0, portrait.TitleFontSize, 3);
-        Assert.Equal(5.6, portrait.EpisodeFontSize, 3);
+        Assert.Equal(12.247, portrait.TitleFontSize, 3);
+        Assert.Equal(8.573, portrait.EpisodeFontSize, 3);
         Assert.Equal(10.0, landscape.TitleFontSize, 3);
         Assert.Equal(10.0, design.TitleFontSize, 3);
     }

@@ -29,11 +29,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         public const int MaxCandidates = 10;
 
         /// <summary>
-        /// How much of a design's text size a portrait render uses. Sizes are measured from the
-        /// poster's short side, and a portrait crop has a shorter one, so the same percent reads
-        /// larger there. This keeps the two shapes in proportion without asking the user.
+        /// The most a portrait render may enlarge a design's text. A very tall crop would otherwise
+        /// scale it past what the frame can hold.
         /// </summary>
-        private const float PortraitTextScale = 0.8f;
+        private const float MaxPortraitTextScale = 1.6f;
 
         private readonly ILogger<ArtworkService> _logger;
         private readonly ILoggerFactory _loggerFactory;
@@ -104,13 +103,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 {
                     settings.PosterDimensionRatio = settings.PortraitDimensionRatio;
                 }
-                else if (!(ratio > 0f && ratio < 1f))
+                else if (ratio > 0f && ratio < 1f)
+                {
+                    portrait = ratio;
+                }
+                else
                 {
                     settings.PosterDimensionRatio = "2:3";
+                    portrait = 2f / 3f;
                 }
 
-                settings.TitleFontSize *= PortraitTextScale;
-                settings.EpisodeFontSize *= PortraitTextScale;
+                // Every size is a percent of the short side, which in portrait is the width, so the
+                // same percent draws text that looks small against a tall frame. Measuring against
+                // the average of the two sides instead gives the text the same weight in both
+                // shapes: a 2:3 poster takes about a quarter more than its width alone would give.
+                var textScale = Math.Clamp(MathF.Sqrt(1f / portrait), 1f, MaxPortraitTextScale);
+                settings.TitleFontSize *= textScale;
+                settings.EpisodeFontSize *= textScale;
                 settings.PosterFill = PosterFill.Fit;
             }
             else if (ratio < 1f)
