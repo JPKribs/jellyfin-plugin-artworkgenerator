@@ -9,13 +9,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 {
     public class BloomPosterGenerator : BasePosterGenerator
     {
-        // How far the bloom reaches, as a share of the size unit, so the glow keeps the same
-        // weight on a portrait poster as on a landscape one rather than stretching with the frame.
-        private const float RadiusRatio = 0.62f;
+        // How far the bloom reaches, as a share of the size unit, so the glow keeps the same weight
+        // on a portrait poster as on a landscape one rather than stretching with the frame. Kept
+        // well under half the short side on purpose: a radius that runs past the frame leaves tint
+        // on every edge, which reads as an overall haze instead of a pool of colour.
+        private const float RadiusRatio = 0.85f;
 
-        // The bloom holds its full colour this far out before it begins falling away, which keeps
-        // a readable pool of colour behind the text instead of a single bright point.
-        private const float CoreStop = 0.18f;
+        // The bloom holds its full colour only this far out, leaving nearly all of the radius to the
+        // eased falloff. That is what spreads the colour widely and gently; a long core concentrates
+        // it into a dark disc with a visible edge instead.
+        // The falloff is sampled at this many stops and eased rather than ramped straight down.
+        // A straight ramp changes slope abruptly where the core ends, and the eye reads that as the
+        // edge of a drawn disc; easing spreads it out so the pool reads as light.
+        private const int FalloffSteps = 6;
+        private const float CoreStop = 0.22f;
 
         // Share of the safe width the text may use, so lines wrap inside the bloom rather than
         // running out into the uncoloured corners.
@@ -73,11 +80,31 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             // Clamp means everything past the radius keeps the rim colour, so the corners of a wide
             // poster are covered by the same colour the bloom ends on.
+            var colors = new SKColor[FalloffSteps + 2];
+            var positions = new float[FalloffSteps + 2];
+
+            colors[0] = centreColor;
+            positions[0] = 0f;
+            colors[1] = centreColor;
+            positions[1] = CoreStop;
+
+            for (int step = 1; step <= FalloffSteps; step++)
+            {
+                var travelled = step / (float)FalloffSteps;
+
+                // Smoothstep: leaves the core gently instead of turning a corner there, and arrives
+                // at the rim gently instead of stopping dead.
+                var eased = travelled * travelled * (3f - (2f * travelled));
+
+                colors[step + 1] = Blend(centreColor, edgeColor, eased);
+                positions[step + 1] = CoreStop + (travelled * (1f - CoreStop));
+            }
+
             using var shader = SKShader.CreateRadialGradient(
                 new SKPoint(rect.MidX, rect.MidY),
                 radius,
-                new[] { centreColor, centreColor, edgeColor },
-                new[] { 0f, CoreStop, 1f },
+                colors,
+                positions,
                 SKShaderTileMode.Clamp);
 
             using var overlayPaint = new SKPaint
@@ -87,6 +114,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 IsDither = true
             };
             skCanvas.DrawRect(rect, overlayPaint);
+        }
+
+        // Blend
+        // Mixes two colours, alpha included. A bloom that fades out has an edge colour holding the
+        // centre's own channels at zero alpha, so mixing towards it fades without drifting in hue.
+        private static SKColor Blend(SKColor from, SKColor to, float amount)
+        {
+            static byte Mix(byte a, byte b, float t) => (byte)Math.Clamp(a + ((b - a) * t), 0f, 255f);
+
+            return new SKColor(
+                Mix(from.Red, to.Red, amount),
+                Mix(from.Green, to.Green, amount),
+                Mix(from.Blue, to.Blue, amount),
+                Mix(from.Alpha, to.Alpha, amount));
         }
 
         // RenderTypography
