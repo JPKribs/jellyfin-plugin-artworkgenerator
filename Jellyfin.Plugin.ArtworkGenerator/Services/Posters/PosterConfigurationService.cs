@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
     /// Resolves which profile, poster design, and logo design apply to an item, and brings older
     /// configurations up to the profile model.
     /// </summary>
-    public class PosterConfigurationService
+    public partial class PosterConfigurationService
     {
         /// <summary>Id of the separate portrait design an earlier build synthesized. Every design now renders both shapes, so it is retired on load.</summary>
         public static readonly Guid DefaultPortraitDesignId = new("6f1c2a4e-3b7d-4e21-9a55-0c8d7e1f2a01");
@@ -52,13 +52,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         {
             ArgumentNullException.ThrowIfNull(config);
 
-            MigrateLegacySettings(config);
-            MigrateFrameExtraction(config);
-
             var design = EnsureDefaultDesign(config);
-            RetireSynthesizedPortraitDesign(config, design);
-            var logoDesigns = LoadLogoDesigns(config);
+
+            // TODO (12.0.2.1): delete this call and PosterConfigurationService.Migration.cs.
+            MigrateConfiguration(config, design);
+
+            var logoDesigns = LoadLogoDesigns();
             var logo = logoDesigns[0];
+
+            // TODO (12.0.2.1): delete this call and PosterConfigurationService.Migration.cs.
+            MigrateLegacyDesignsToProfiles(config, design, logo);
 
             EnsureProfiles(config, design, logo);
             foreach (var profile in config.Profiles)
@@ -163,251 +166,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 : snapshot.DefaultLogo;
         }
 
-        // MigrateLegacySettings
-        // Brings older designs forward in memory: the pre-10.11.23 ExtractPoster boolean becomes a
-        // CanvasSource, and a per-axis graphic size becomes the single box size.
-        private void MigrateLegacySettings(PluginConfiguration config)
-        {
-            var migrated = false;
-
-            foreach (var posterConfig in config.PosterConfigurations)
-            {
-                var settings = posterConfig.Settings;
-                migrated |= MigrateTextVocabulary(settings);
-                if (settings.ExtractPoster.HasValue)
-                {
-                    settings.CanvasSource = settings.ExtractPoster.Value ? CanvasSource.Extract : CanvasSource.None;
-                    settings.ExtractPoster = null;
-                    migrated = true;
-                }
-
-                // A graphic used to be sized per axis, which could stretch it. The larger of the two
-                // becomes the box it is now fitted inside.
-                if (settings.GraphicWidth.HasValue || settings.GraphicHeight.HasValue)
-                {
-                    var size = Math.Max(settings.GraphicWidth ?? 0f, settings.GraphicHeight ?? 0f);
-                    if (size > 0f)
-                    {
-                        settings.GraphicSize = size;
-                    }
-
-                    settings.GraphicWidth = null;
-                    settings.GraphicHeight = null;
-                    migrated = true;
-                }
-            }
-
-            if (migrated)
-            {
-                _logger.LogInformation("Brought legacy design settings forward to the current names");
-            }
-        }
-
-
-        // MigrateFrameExtraction
-        // These were once a copy on every design and every profile's backdrop. The default design's
-        // values are the ones the user actually set, so they become the server's, once.
-        private void MigrateFrameExtraction(PluginConfiguration config)
-        {
-            if (config.FrameExtractionMigrated)
-            {
-                return;
-            }
-
-            config.FrameExtractionMigrated = true;
-
-            var source = config.PosterConfigurations.FirstOrDefault(c => c.IsDefault)?.Settings
-                ?? config.PosterConfigurations.FirstOrDefault()?.Settings;
-
-            if (source == null)
-            {
-                return;
-            }
-
-            config.FrameExtraction = new FrameExtractionSettings
-            {
-                ExtractWindowStart = source.ExtractWindowStart,
-                ExtractWindowEnd = source.ExtractWindowEnd,
-                BrightenFrame = source.BrightenHDR,
-                EnableLetterboxDetection = source.EnableLetterboxDetection,
-                LetterboxBlackThreshold = source.LetterboxBlackThreshold,
-                LetterboxConfidence = source.LetterboxConfidence
-            };
-
-            _logger.LogInformation(
-                "Brought the frame extraction settings forward from the default design: {Start} to {End} percent",
-                config.FrameExtraction.ExtractWindowStart,
-                config.FrameExtraction.ExtractWindowEnd);
-        }
-
-        // MigrateTextVocabulary
-        // These settings were once named for a title and an episode; they are now named for the
-        // primary and secondary lines every style draws. A value saved under an old name is copied
-        // onto its replacement and cleared, so an existing design keeps the fonts and colors the
-        // user chose rather than quietly reverting to the defaults.
-        internal static bool MigrateTextVocabulary(PosterSettings settings)
-        {
-            var migrated = false;
-
-            // A framed design used to name its own edges. The title's edge is now the ordinary text
-            // position, and whether a lone line follows it is what the "first" choices really meant.
-            if (settings.TextEdge is { } edge)
-            {
-                settings.TextPosition = edge is TextEdge.BottomFirst or TextEdge.AlwaysBottom
-                    ? TextPosition.Bottom
-                    : TextPosition.Top;
-                settings.LoneLineFollowsTitle = edge is TextEdge.TopFirst or TextEdge.BottomFirst;
-                settings.TextEdge = null;
-                migrated = true;
-            }
-
-            if (settings.ShowTitle is { } showPrimary)
-            {
-                settings.ShowPrimary = showPrimary;
-                settings.ShowTitle = null;
-                migrated = true;
-            }
-
-            if (settings.ShowEpisode is { } showSecondary)
-            {
-                settings.ShowSecondary = showSecondary;
-                settings.ShowEpisode = null;
-                migrated = true;
-            }
-
-            if (settings.TitleUseCustomFont is { } primaryUseCustomFont)
-            {
-                settings.PrimaryUseCustomFont = primaryUseCustomFont;
-                settings.TitleUseCustomFont = null;
-                migrated = true;
-            }
-
-            if (settings.EpisodeUseCustomFont is { } secondaryUseCustomFont)
-            {
-                settings.SecondaryUseCustomFont = secondaryUseCustomFont;
-                settings.EpisodeUseCustomFont = null;
-                migrated = true;
-            }
-
-            if (settings.TitleFontSize is { } primaryFontSize)
-            {
-                settings.PrimaryFontSize = primaryFontSize;
-                settings.TitleFontSize = null;
-                migrated = true;
-            }
-
-            if (settings.EpisodeFontSize is { } secondaryFontSize)
-            {
-                settings.SecondaryFontSize = secondaryFontSize;
-                settings.EpisodeFontSize = null;
-                migrated = true;
-            }
-
-            if (settings.TitleEdge is { } textEdge)
-            {
-                settings.TextEdge = textEdge;
-                settings.TitleEdge = null;
-                migrated = true;
-            }
-
-            if (settings.LongTitleHandling is { } longTextHandling)
-            {
-                settings.LongTextHandling = longTextHandling;
-                settings.LongTitleHandling = null;
-                migrated = true;
-            }
-
-            if (settings.TitleFontFamily != null)
-            {
-                if (settings.TitleFontFamily.Length > 0)
-                {
-                    settings.PrimaryFontFamily = settings.TitleFontFamily;
-                }
-
-                settings.TitleFontFamily = null;
-                migrated = true;
-            }
-
-            if (settings.TitleFontPath != null)
-            {
-                if (settings.TitleFontPath.Length > 0)
-                {
-                    settings.PrimaryFontPath = settings.TitleFontPath;
-                }
-
-                settings.TitleFontPath = null;
-                migrated = true;
-            }
-
-            if (settings.TitleFontStyle != null)
-            {
-                if (settings.TitleFontStyle.Length > 0)
-                {
-                    settings.PrimaryFontStyle = settings.TitleFontStyle;
-                }
-
-                settings.TitleFontStyle = null;
-                migrated = true;
-            }
-
-            if (settings.TitleFontColor != null)
-            {
-                if (settings.TitleFontColor.Length > 0)
-                {
-                    settings.PrimaryFontColor = settings.TitleFontColor;
-                }
-
-                settings.TitleFontColor = null;
-                migrated = true;
-            }
-
-            if (settings.EpisodeFontFamily != null)
-            {
-                if (settings.EpisodeFontFamily.Length > 0)
-                {
-                    settings.SecondaryFontFamily = settings.EpisodeFontFamily;
-                }
-
-                settings.EpisodeFontFamily = null;
-                migrated = true;
-            }
-
-            if (settings.EpisodeFontPath != null)
-            {
-                if (settings.EpisodeFontPath.Length > 0)
-                {
-                    settings.SecondaryFontPath = settings.EpisodeFontPath;
-                }
-
-                settings.EpisodeFontPath = null;
-                migrated = true;
-            }
-
-            if (settings.EpisodeFontStyle != null)
-            {
-                if (settings.EpisodeFontStyle.Length > 0)
-                {
-                    settings.SecondaryFontStyle = settings.EpisodeFontStyle;
-                }
-
-                settings.EpisodeFontStyle = null;
-                migrated = true;
-            }
-
-            if (settings.EpisodeFontColor != null)
-            {
-                if (settings.EpisodeFontColor.Length > 0)
-                {
-                    settings.SecondaryFontColor = settings.EpisodeFontColor;
-                }
-
-                settings.EpisodeFontColor = null;
-                migrated = true;
-            }
-
-            return migrated;
-        }
-
         // EnsureDefaultDesign
         // The one default landscape design, created in memory when missing.
         private PosterConfiguration EnsureDefaultDesign(PluginConfiguration config)
@@ -430,60 +188,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             return defaults[0];
         }
 
-        // RetireSynthesizedPortraitDesign
-        // An earlier build of this version created a separate "Default Portrait" design, before
-        // every design learned to render both shapes. It is dropped in memory and anything that
-        // pointed at it points at the default design instead; the user's next save persists that.
-        private void RetireSynthesizedPortraitDesign(PluginConfiguration config, PosterConfiguration design)
-        {
-            var removed = config.PosterConfigurations.RemoveAll(c => c.Id == DefaultPortraitDesignId && !c.IsDefault);
-            if (removed == 0)
-            {
-                return;
-            }
-
-            foreach (var slot in config.Profiles.SelectMany(p => p.Slots).Where(s => s.DesignId == DefaultPortraitDesignId))
-            {
-                slot.DesignId = design.Id;
-            }
-
-            _logger.LogInformation("Retired the separate portrait design; every design now renders both shapes");
-        }
-
         // LoadLogoDesigns
         // Logo designs live in their own file beside the configuration, so a logo edit never
-        // rewrites the whole configuration. Designs left in an older configuration move across on
-        // first load and the configuration's copy is dropped, which the next save persists.
-        private List<LogoConfiguration> LoadLogoDesigns(PluginConfiguration config)
+        // rewrites the whole configuration. A first run has no file and gets one design.
+        private List<LogoConfiguration> LoadLogoDesigns()
         {
             var logos = _logoStore.Load().ToList();
             var changed = false;
 
-            if (config.LogoConfigurations.Count > 0)
-            {
-                if (logos.Count == 0)
-                {
-                    logos = config.LogoConfigurations.ToList();
-                    _logger.LogInformation(
-                        "Moved {Count} logo design(s) out of the plugin configuration into their own file",
-                        logos.Count);
-                }
-
-                config.LogoConfigurations.Clear();
-                changed = true;
-            }
-
             if (logos.Count == 0)
             {
                 logos.Add(new LogoConfiguration { Id = DefaultLogoDesignId, Name = DefaultName });
-                changed = true;
-            }
-
-            // An earlier build called the synthesized design "Default Logo"; every synthesized
-            // default is simply "Default".
-            foreach (var logo in logos.Where(l => l.Id == DefaultLogoDesignId && l.Name == "Default Logo"))
-            {
-                logo.Name = DefaultName;
                 changed = true;
             }
 
@@ -534,25 +249,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         // EnsureProfiles
-        // Builds profiles for a configuration that predates them. The default profile reproduces
-        // the old behavior for episodes and turns on the new slots with the default designs; every
-        // design that had series assigned becomes a profile carrying those series, so each series
-        // keeps the episode poster design it had.
+        // Gives a configuration with no profiles the one default profile everything falls back to,
+        // and makes sure exactly one profile is marked default.
         private void EnsureProfiles(PluginConfiguration config, PosterConfiguration design, LogoConfiguration logo)
         {
             if (config.Profiles.Count == 0)
             {
                 config.Profiles.Add(CreateProfile(DefaultProfileId, DefaultName, true, design, design, logo));
-
-                foreach (var legacy in config.PosterConfigurations.Where(c => !c.IsDefault && c.SeriesIds.Count > 0))
-                {
-                    var profile = CreateProfile(legacy.Id, legacy.Name, false, legacy, design, logo);
-                    profile.SeriesIds.AddRange(legacy.SeriesIds);
-                    legacy.SeriesIds.Clear();
-                    config.Profiles.Add(profile);
-                }
-
-                _logger.LogInformation("Created {Count} profile(s) from the existing designs", config.Profiles.Count);
+                _logger.LogInformation("Created the default profile");
             }
 
             var defaults = config.Profiles.Where(p => p.IsDefault).ToList();
@@ -569,7 +273,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
         }
 
-        private static ArtworkProfile CreateProfile(
+        internal static ArtworkProfile CreateProfile(
             Guid id,
             string name,
             bool isDefault,
@@ -624,7 +328,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
         }
 
-        private static void Add(ArtworkProfile profile, ArtworkItemKind kind, ArtworkSlot slot, bool enabled, Guid designId)
+        internal static void Add(ArtworkProfile profile, ArtworkItemKind kind, ArtworkSlot slot, bool enabled, Guid designId)
         {
             profile.Slots.Add(new SlotAssignment { Kind = kind, Slot = slot, Enabled = enabled, DesignId = designId });
         }

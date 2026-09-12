@@ -27,6 +27,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Configuration
         /// Gets or sets a value indicating whether the frame extraction settings have been taken
         /// from the default design yet. They used to live on every design, so the first load after
         /// the move brings the default design's values forward and sets this.
+        ///
+        /// TODO (12.0.2.1): remove with PosterConfigurationService.Migration.cs.
         /// </summary>
         public bool FrameExtractionMigrated { get; set; }
 

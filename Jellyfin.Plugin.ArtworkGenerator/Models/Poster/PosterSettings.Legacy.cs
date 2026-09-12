@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
     /// <summary>
+    /// TODO (12.0.2.1): delete this file alongside PosterConfigurationService.Migration.cs.
+    ///
     /// The settings' former names, from when a design spoke of a title and an episode rather than a
     /// primary and a secondary line. They exist only so configurations and templates written before
     /// the rename still load: each one is null on anything saved since, and
@@ -81,5 +83,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>Former name of <see cref="LongTextHandling"/>.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public LongTextHandling? LongTitleHandling { get; set; }
+        /// <summary>
+        /// Former boolean for whether a poster extracted a frame, before the choice became
+        /// <see cref="CanvasSource"/>. Null on anything saved since.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? ExtractPoster { get; set; }
+
+        /// <summary>
+        /// Former per-axis graphic width, from when the two axes were set independently and could
+        /// stretch the graphic. The larger of the two became <see cref="GraphicSize"/>.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? GraphicWidth { get; set; }
+
+        /// <summary>Former per-axis graphic height. See <see cref="GraphicWidth"/>.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? GraphicHeight { get; set; }
     }
 }

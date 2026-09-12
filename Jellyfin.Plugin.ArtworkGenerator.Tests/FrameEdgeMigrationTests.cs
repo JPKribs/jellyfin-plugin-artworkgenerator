@@ -6,6 +6,8 @@ using Xunit;
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
 
 /// <summary>
+/// TODO (12.0.2.1): delete this file alongside PosterConfigurationService.Migration.cs.
+///
 /// A framed design used to name its own border edges. Saved configurations still carry that name,
 /// so it has to arrive as the ordinary text position plus the lone line setting, and land on the
 /// same layout it did before.

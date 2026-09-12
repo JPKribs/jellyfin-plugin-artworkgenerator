@@ -18,12 +18,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [JsonIgnore]
         public string? EffectivePrimaryFontPath => PrimaryUseCustomFont ? PrimaryFontPath : null;
 
-        /// <summary>
-        /// Legacy flag retained only for migration of pre-10.11.23 configurations.
-        /// Null on new configurations; when present it is migrated to <see cref="CanvasSource"/>.
-        /// </summary>
-        public bool? ExtractPoster { get; set; }
-
         [Display(Name = "Canvas Background", Description = "Determine where the poster background should come from.")]
         public CanvasSource CanvasSource { get; set; } = CanvasSource.Extract;
 
@@ -212,15 +206,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// </summary>
         [Display(Name = "Graphic Size (%)", Description = "Size of the graphic as a percent of the short side.")]
         public float GraphicSize { get; set; } = 25.0f;
-
-        /// <summary>
-        /// Legacy per-axis width, retained only to migrate designs that sized the graphic on each
-        /// axis independently, which could stretch it. Null on new designs.
-        /// </summary>
-        public float? GraphicWidth { get; set; }
-
-        /// <summary>Legacy per-axis height. See <see cref="GraphicWidth"/>.</summary>
-        public float? GraphicHeight { get; set; }
 
         [Display(Name = "Graphic Position", Description = "Where the graphic sits, top to bottom.")]
         public Position GraphicPosition { get; set; } = Position.Center;
