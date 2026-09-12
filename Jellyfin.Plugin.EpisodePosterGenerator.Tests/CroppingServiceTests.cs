@@ -1,6 +1,10 @@
+using System;
 using System.Globalization;
 using System.Threading;
 using Jellyfin.Plugin.EpisodePosterGenerator.Services;
+using Jellyfin.Plugin.EpisodePosterGenerator.Models;
+using Microsoft.Extensions.Logging.Abstractions;
+using SkiaSharp;
 using Xunit;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Tests;
@@ -60,5 +64,115 @@ public class CroppingServiceTests
             CultureInfo.CurrentCulture = original;
             Thread.CurrentThread.CurrentCulture = original;
         }
+    }
+
+
+    /// <summary>
+    /// A poster cropped down by letterbox removal is brought back up to a usable short side, so it
+    /// does not sit beside a full size one in the picker at half the resolution.
+    /// </summary>
+    [Fact]
+    public void NormalizedSize_ScalesACroppedPosterUpToTheMinimumShortSide()
+    {
+        var (width, height) = CroppingService.NormalizedSize(533, 800);
+
+        Assert.Equal(720, Math.Min(width, height));
+
+        // The shape is kept: 533x800 is 2:3, and so is the result.
+        Assert.InRange((float)width / height, (2f / 3f) - 0.01f, (2f / 3f) + 0.01f);
+    }
+
+    /// <summary>A poster already at a good size is left exactly as it is.</summary>
+    [Theory]
+    [InlineData(720, 1080)]
+    [InlineData(1920, 1080)]
+    [InlineData(1000, 1500)]
+    public void NormalizedSize_LeavesAdequatePostersAlone(int width, int height)
+    {
+        Assert.Equal((width, height), CroppingService.NormalizedSize(width, height));
+    }
+
+    /// <summary>
+    /// A very small frame is not blown up without limit: past the cap the result would be soft
+    /// rather than detailed.
+    /// </summary>
+    [Fact]
+    public void NormalizedSize_StopsAtTheUpscaleCap()
+    {
+        var (width, height) = CroppingService.NormalizedSize(100, 150);
+
+        Assert.Equal((200, 300), (width, height));
+        Assert.True(Math.Min(width, height) < 720, "The cap is expected to win over the target here.");
+    }
+
+    /// <summary>A degenerate size is returned untouched rather than throwing or dividing by zero.</summary>
+    [Theory]
+    [InlineData(0, 100)]
+    [InlineData(100, 0)]
+    [InlineData(-10, 10)]
+    public void NormalizedSize_IgnoresDegenerateSizes(int width, int height)
+    {
+        Assert.Equal((width, height), CroppingService.NormalizedSize(width, height));
+    }
+
+
+    // Letterboxed
+    // A frame with black bars top and bottom, like a scope film in a 16:9 container.
+    private static SKBitmap Letterboxed(int width, int height, int barHeight)
+    {
+        var bitmap = new SKBitmap(width, height);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            canvas.Clear(SKColors.Black);
+            using var paint = new SKPaint { Color = new SKColor(180, 140, 90) };
+            canvas.DrawRect(new SKRect(0, barHeight, width, height - barHeight), paint);
+        }
+
+        return bitmap;
+    }
+
+    /// <summary>
+    /// The whole crop path, not just the arithmetic: a letterboxed frame cropped to a portrait
+    /// poster comes out at a usable size rather than at whatever few pixels survived the bars.
+    /// This is the case that put a 503x755 poster next to a 720x1080 one in the image picker.
+    /// </summary>
+    [Fact]
+    public void CropPoster_ScalesAHeavilyLetterboxedPortraitPosterBackUp()
+    {
+        var service = new CroppingService(NullLogger<CroppingService>.Instance);
+        using var source = Letterboxed(1920, 1080, 140);
+        var settings = new PosterSettings
+        {
+            EnableLetterboxDetection = true,
+            PosterFill = PosterFill.Fit,
+            PosterDimensionRatio = "2:3"
+        };
+
+        using var result = service.CropPoster(source, settings);
+
+        Assert.Equal(720, Math.Min(result.Width, result.Height));
+        Assert.InRange((float)result.Width / result.Height, (2f / 3f) - 0.01f, (2f / 3f) + 0.01f);
+    }
+
+    /// <summary>
+    /// Original means the frame exactly as it came, so it is never scaled up even when small.
+    /// </summary>
+    [Fact]
+    public void CropPoster_LeavesOriginalFillAtItsOwnSize()
+    {
+        var service = new CroppingService(NullLogger<CroppingService>.Instance);
+        using var source = Letterboxed(1920, 1080, 140);
+        var settings = new PosterSettings
+        {
+            EnableLetterboxDetection = true,
+            PosterFill = PosterFill.Original,
+            PosterDimensionRatio = "2:3"
+        };
+
+        using var result = service.CropPoster(source, settings);
+
+        // The bars are gone, but nothing has been magnified.
+        Assert.Equal(1920, result.Width);
+        Assert.Equal(800, result.Height);
     }
 }

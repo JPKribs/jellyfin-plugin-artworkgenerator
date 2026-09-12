@@ -16,6 +16,16 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         private const float AspectRatioTolerance = 0.01f;
         private const int MinCropPercentage = 4; // Minimum 25% of original (divisor)
 
+        // A frame that lost most of its height to letterbox removal carries far fewer pixels than a
+        // clean one, so the poster built from it came out visibly smaller than its neighbours in the
+        // image picker. Cropped posters are scaled up until their short side reaches this, which is
+        // the short side of a 2:3 poster 1080 tall.
+        private const int MinShortSide = 720;
+
+        // Never magnify more than this. Past it the result is soft rather than detailed, and a poster
+        // that is honestly small beats one blown up into mush.
+        private const float MaxUpscale = 2.0f;
+
         private readonly ILogger<CroppingService> _logger;
 
         // CroppingService
@@ -77,7 +87,66 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 _logger.LogDebug("PosterFill.Original selected - using image as-is after letterbox removal");
             }
 
+            // Branch: bring a heavily cropped poster back up to a usable size. Original is left
+            // alone, since it asks for the frame exactly as it came.
+            if (settings.PosterFill != PosterFill.Original)
+            {
+                var (targetWidth, targetHeight) = NormalizedSize(result.Width, result.Height);
+                if (targetWidth != result.Width || targetHeight != result.Height)
+                {
+                    _logger.LogInformation("Poster scaled up: {Original} -> {New}",
+                        $"{result.Width}x{result.Height}", $"{targetWidth}x{targetHeight}");
+
+                    var scaled = ScaleTo(result, targetWidth, targetHeight);
+                    if (result != source)
+                    {
+                        using (result) { }
+                    }
+
+                    result = scaled;
+                }
+            }
+
             return result;
+        }
+
+        // NormalizedSize
+        // The size a cropped poster is brought up to: scaled about its short side until that reaches
+        // MinShortSide, preserving the aspect ratio, and never magnified beyond MaxUpscale.
+        internal static (int Width, int Height) NormalizedSize(int width, int height)
+        {
+            if (width <= 0 || height <= 0)
+            {
+                return (width, height);
+            }
+
+            var shortSide = Math.Min(width, height);
+            if (shortSide >= MinShortSide)
+            {
+                return (width, height);
+            }
+
+            var scale = Math.Min((float)MinShortSide / shortSide, MaxUpscale);
+
+            return (Math.Max(1, (int)Math.Round(width * scale)), Math.Max(1, (int)Math.Round(height * scale)));
+        }
+
+        // ScaleTo
+        // Redraws the bitmap at the given size with the same high quality sampling the fill uses.
+        private static SKBitmap ScaleTo(SKBitmap source, int width, int height)
+        {
+            var scaled = new SKBitmap(width, height, source.ColorType, source.AlphaType);
+            using var canvas = new SKCanvas(scaled);
+
+            PaintFactory.DrawBitmap(
+                canvas,
+                source,
+                new SKRect(0, 0, source.Width, source.Height),
+                new SKRect(0, 0, width, height),
+                null,
+                RenderConstants.HighQualitySampling);
+
+            return scaled;
         }
 
         // ParseAspectRatio

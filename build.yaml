@@ -14,6 +14,7 @@ artifacts:
 - "Jellyfin.Plugin.EpisodePosterGenerator.dll"
 changelog:
   features:
+  - A season or series poster now draws its candidates from as many different episodes as you ask for images, rather than from at most three
   - A new Bloom poster style that pools a colour in the centre of the frame and sets the text over it, taking that colour from the frame itself when palette colours are on
   - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colours, and text edge over automatically
   - Eleven more example designs, covering every framed text edge and the palette and gradient variants of the striped, split, numeral, timeline, fade, glass, and cutout styles
@@ -41,6 +42,8 @@ changelog:
   - "Three clean designs added to the examples: Minimal, Editorial and Bordered"
   - "The Frame style chooses how its two edges fill: top or bottom edge first, where a lone line takes that edge whether it is the title or the subtitle, or the title pinned always top or always bottom"
   fixes:
+  - The image picker no longer offers several candidates cut from the same episode — frames are ranked so consecutive choices come from different episodes wherever the season allows
+  - A poster built from a heavily letterboxed frame is scaled back up to a usable size, so candidates no longer sit side by side at wildly different resolutions
   - An item with no name of its own, such as a season named after nothing but its number, now says that one line in the larger primary type rather than in the small subtitle, and it reads the same way in every style
   - A design drawing a single line of text now always puts it in the same place, so a series and its seasons match; Frame's lone line takes the edge the design chose
   - A poster for an item with no title of its own drew a placeholder dash and held space for it, and Cutout shrank its letters to make room for a title that was not there

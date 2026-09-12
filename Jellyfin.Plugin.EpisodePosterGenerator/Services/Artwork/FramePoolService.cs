@@ -27,7 +27,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
     public sealed class FramePoolService : IDisposable
     {
         private const int MaxPools = 16;
-        private const int MaxSourcesPerPool = 3;
+        // The fewest episodes a season or series pool draws from. A pool asked for more frames than
+        // this takes in more episodes rather than more frames per episode, so a request for N
+        // candidates can return N different episodes.
+        private const int MinSourcesPerPool = 3;
 
         // Each growth round starts the extraction walk this many attempts further along, beyond the
         // most a single extraction run can use, so asking for more frames never revisits one.
@@ -198,7 +201,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             int needed,
             CancellationToken cancellationToken)
         {
-            var chosen = OrderSources(sources, pool.Seed).Take(MaxSourcesPerPool).ToList();
+            var chosen = OrderSources(sources, pool.Seed).Take(Math.Max(MinSourcesPerPool, needed)).ToList();
             var missing = needed - pool.Frames.Count;
             var perSource = Math.Max(1, (int)Math.Ceiling(missing / (double)chosen.Count));
             var attemptOffset = pool.Rounds * GrowthAttemptStride;
@@ -243,7 +246,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 return;
             }
 
-            foreach (var (frame, source) in batch.OrderByDescending(b => b.Frame.Score))
+            foreach (var (frame, source) in InterleaveBySource(batch, b => b.Source, b => b.Frame.Score))
             {
                 var destination = Path.Combine(
                     pool.Directory,
@@ -267,6 +270,43 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 pool.Seed,
                 pool.Frames.Count,
                 chosen.Count);
+        }
+
+
+        // InterleaveBySource
+        // Ranks the frames so that consecutive ranks come from different episodes wherever the batch
+        // allows. Each episode's frames are ordered among themselves by score, the episodes are
+        // ordered by their best frame, and then one frame is taken from each in turn. Ranking purely
+        // by score let a single episode supply nearly every candidate the image picker offered,
+        // because one good-looking episode tends to score well throughout.
+        internal static IReadOnlyList<T> InterleaveBySource<T>(
+            IReadOnlyList<T> items,
+            Func<T, string> source,
+            Func<T, double> score)
+        {
+            ArgumentNullException.ThrowIfNull(items);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(score);
+
+            var groups = items
+                .GroupBy(source, StringComparer.Ordinal)
+                .Select(group => group.OrderByDescending(score).ToList())
+                .OrderByDescending(group => score(group[0]))
+                .ToList();
+
+            var ordered = new List<T>(items.Count);
+            for (int round = 0; ordered.Count < items.Count; round++)
+            {
+                foreach (var group in groups)
+                {
+                    if (round < group.Count)
+                    {
+                        ordered.Add(group[round]);
+                    }
+                }
+            }
+
+            return ordered;
         }
 
         // CreateSeed
