@@ -1060,12 +1060,19 @@ export default function (view) {
 
         applyStyleRules(posterStyle);
 
-        // Both ratios stay on screen, and the note says which one the chosen fill actually uses.
+        // The Original strategy keeps a landscape frame's own shape, so the landscape ratio does
+        // nothing there and is taken off screen rather than left to be set and ignored.
+        var landscapeRatioApplies = posterFill !== 'Original';
+        var landscapeRatio = view.querySelector('#landscapeRatioField');
+        if (landscapeRatio) {
+            landscapeRatio.hidden = !landscapeRatioApplies;
+        }
+
         var ratioNote = view.querySelector('#ratioNote');
         if (ratioNote) {
-            ratioNote.textContent = posterFill === 'Original'
-                ? 'Portrait images always crop to the portrait ratio. Landscape images keep the frame\'s own shape, so the landscape ratio applies only with the Fill or Fit strategy.'
-                : 'The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.';
+            ratioNote.textContent = landscapeRatioApplies
+                ? 'The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.'
+                : 'Portrait images always crop to the portrait ratio. Landscape images keep the frame\'s own shape.';
         }
 
         // Hide elements for specific fill modes

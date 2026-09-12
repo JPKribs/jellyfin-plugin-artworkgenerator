@@ -16,23 +16,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public bool EnableLetterboxDetection { get; set; } = true;
 
         /// <summary>Gets or sets the brightness at or below which a pixel counts as black.</summary>
-        [Display(Name = "Black Threshold", Description = "Brightness below which a pixel counts as black, 0 to 255.")]
+        [Display(Name = "Black Threshold", Description = "Brightness below which a pixel counts as black.")]
         public int LetterboxBlackThreshold { get; set; } = 25;
 
         /// <summary>Gets or sets the percent of a row that must be black to count as letterboxing.</summary>
-        [Display(Name = "Detection Confidence (%)", Description = "Percent of pixels that must be black to count as letterboxing, 50 to 100.")]
+        [Display(Name = "Detection Confidence (%)", Description = "Percent of pixels that must be black to count as letterboxing.")]
         public float LetterboxConfidence { get; set; } = 85.0f;
 
         /// <summary>Gets or sets the percent every extracted frame is brightened by.</summary>
-        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent. Default 0, which leaves the frame as it was extracted.")]
+        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent.")]
         public float BrightenHDR { get; set; }
 
         /// <summary>Gets or sets the percent of each episode skipped before frames are considered.</summary>
-        [Display(Name = "Extraction Start (%)", Description = "Skip this percent of each episode before extracting, avoiding intros.")]
+        [Display(Name = "Extraction Start (%)", Description = "Skip this percent of each episode before extracting.")]
         public float ExtractWindowStart { get; set; } = 20.0f;
 
         /// <summary>Gets or sets the percent of each episode after which frames are no longer considered.</summary>
-        [Display(Name = "Extraction End (%)", Description = "Stop extracting at this percent of each episode, avoiding credits.")]
+        [Display(Name = "Extraction End (%)", Description = "Stop extracting at this percent of each episode.")]
         public float ExtractWindowEnd { get; set; } = 80.0f;
     }
 }

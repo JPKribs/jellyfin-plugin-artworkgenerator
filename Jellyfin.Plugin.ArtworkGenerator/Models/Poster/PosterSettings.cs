@@ -43,7 +43,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Extraction Start (%)")]
         public float ExtractWindowStart { get; set; } = 20.0f;
 
-        [Display(Name = "Extraction End (%)", Description = "The stretch of each episode frames are taken from, skipping intros and credits.")]
+        [Display(Name = "Extraction End (%)", Description = "Stop extracting at this percent of each episode.")]
         public float ExtractWindowEnd { get; set; } = 80.0f;
 
         [Display(Name = "Style")]
@@ -72,14 +72,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// Gets or sets where the title and subtitle sit inside the safe area. Left on its default,
         /// each design keeps the placement it was drawn around.
         /// </summary>
-        [Display(Name = "Text Position", Description = "Where the title and subtitle sit on the image. Left on the design default, each design keeps the placement it was built around. Designs that make the text part of the artwork, such as Cutout and Fade, do not offer this.")]
+        [Display(Name = "Text Position", Description = "Where the title and subtitle sit.")]
         public TextPosition TextPosition { get; set; } = TextPosition.Auto;
 
         /// <summary>
         /// Gets or sets which side the title and subtitle are pulled to. Left on its default, each
         /// design keeps the side it was drawn around.
         /// </summary>
-        [Display(Name = "Text Alignment", Description = "Which side the title and subtitle are pulled to. Left on the design default, each design keeps the side it was built around. Designs that make the text part of the artwork, such as Cutout and Fade, do not offer this.")]
+        [Display(Name = "Text Alignment", Description = "Which side the title and subtitle are pulled to.")]
         public TextAlignment TextAlignment { get; set; } = TextAlignment.Auto;
 
         [Display(Name = "Enable Outline", Description = "Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.")]
@@ -94,10 +94,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Logo Height", Description = "Logo height as a percent of the poster's short side, 1 to 100.")]
         public float LogoHeight { get; set; } = 30.0f;
 
-        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent. Default 0, which leaves the frame as it was extracted.")]
+        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent.")]
         public float BrightenHDR { get; set; }
 
-        [Display(Name = "Fill Strategy", Description = "How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.")]
+        [Display(Name = "Fill Strategy", Description = "How the image is resized to fit the poster.")]
         public PosterFill PosterFill { get; set; } = PosterFill.Original;
 
         [Display(Name = "Landscape Aspect Ratio")]
@@ -109,7 +109,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Portrait Aspect Ratio")]
         public string PortraitDimensionRatio { get; set; } = "2:3";
 
-        [Display(Name = "Safe Area", Description = "Margin kept clear around all edges, as a percent of the poster's short side. The same pixel amount is used on every side.")]
+        [Display(Name = "Safe Area", Description = "Margin kept clear around all edges, as a percent of the poster's short side.")]
         public float PosterSafeArea { get; set; } = 5.0f;
 
         /// <summary>
@@ -118,10 +118,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// the single knob every style uses to keep elements apart, so raising it pushes them
         /// further from each other everywhere rather than in one style.
         /// </summary>
-        [Display(Name = "Element Spacing", Description = "Gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Raise it if elements sit too close together. Default is 2.")]
+        [Display(Name = "Element Spacing", Description = "Gap between stacked elements, as a percent of the short side.")]
         public float ElementSpacing { get; set; } = 2.0f;
 
-        [Display(Name = "Show Subtitle", Description = "Display the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none.")]
+        [Display(Name = "Show Subtitle", Description = "Draw the subtitle, the smaller line.")]
         public bool ShowSecondary { get; set; } = true;
 
         [Display(Name = "Font", Description = "Font family for the subtitle.")]
@@ -142,7 +142,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Font Color")]
         public string SecondaryFontColor { get; set; } = "#FFFFFFFF";
 
-        [Display(Name = "Show Title", Description = "Display the title, the larger line. An episode shows its own name; a season or series shows the show name.")]
+        [Display(Name = "Show Title", Description = "Draw the title, the larger line.")]
         public bool ShowPrimary { get; set; } = true;
 
         [Display(Name = "Font", Description = "Font family for the title text.")]
@@ -166,7 +166,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>
         /// How to handle episode titles that do not fit the poster's text area.
         /// </summary>
-        [Display(Name = "Long Titles", Description = "What to do when a title does not fit. Ellipsis trims it. Abbreviate tries the first part of the title, then initials with periods. Drop Name hides it.")]
+        [Display(Name = "Long Titles", Description = "What to do when a title does not fit.")]
         public LongTextHandling LongTextHandling { get; set; } = LongTextHandling.Ellipsis;
 
         [Display(Name = "Overlay Color")]
@@ -182,17 +182,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// When enabled, the overlay color channels are replaced per episode by the dominant
         /// color sampled from the canvas image. The configured alpha values are preserved.
         /// </summary>
-        [Display(Name = "Palette-Derived Colors", Description = "Use the dominant color from each episode's image as the overlay color. The alpha values below still apply.")]
+        [Display(Name = "Palette-Derived Colors", Description = "Take the overlay colors from each image.")]
         public bool PaletteDerivedColors { get; set; }
 
-        [Display(Name = "Graphic File Path", Description = "Optional path to a graphic drawn above the image and below text. PNG, JPG, or WEBP. Leave empty to disable.")]
+        [Display(Name = "Graphic File Path", Description = "Optional graphic drawn above the image and below the text.")]
         public string GraphicPath { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the graphic's size as a percent of the poster's short side. The graphic is
         /// fitted inside a box that size, so it always keeps its own proportions.
         /// </summary>
-        [Display(Name = "Graphic Size (%)", Description = "Size of the graphic as a percent of the poster's short side, 1 to 100. It keeps its own proportions inside that size.")]
+        [Display(Name = "Graphic Size (%)", Description = "Size of the graphic as a percent of the short side.")]
         public float GraphicSize { get; set; } = 25.0f;
 
         /// <summary>

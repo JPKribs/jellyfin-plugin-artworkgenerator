@@ -9,26 +9,26 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public class LogoSettings
     {
         /// <summary>Gets or sets where the logo text comes from.</summary>
-        [Display(Name = "Name From", Description = "Which name the logo shows. Falls back to the title when the chosen name is empty.")]
+        [Display(Name = "Name From", Description = "Which name the logo shows.")]
         public LogoTitleSource TitleSource { get; set; } = LogoTitleSource.Title;
 
         /// <summary>Gets or sets a value indicating whether a year such as (2019) is removed.</summary>
-        [Display(Name = "Remove Year", Description = "Remove a year in brackets, such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345].")]
+        [Display(Name = "Remove Year", Description = "Remove a year in brackets, such as (2019).")]
         public bool StripYear { get; set; } = true;
 
         /// <summary>Gets or sets how a name with a subtitle, such as "Star Wars: Andor", is laid out.</summary>
-        [Display(Name = "Names With a Subtitle", Description = "How to treat a name split by a colon or spaced dash. The last two draw both parts at two sizes, the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole.")]
+        [Display(Name = "Names With a Subtitle", Description = "How to treat a name split by a colon or dash.")]
         public LogoSubtitleMode SubtitleMode { get; set; } = LogoSubtitleMode.Keep;
 
         /// <summary>
         /// Gets or sets the small line's size as a percent of the large line, when the subtitle mode
         /// draws the title and subtitle at two sizes.
         /// </summary>
-        [Display(Name = "Small Line Size (%)", Description = "The small line's size as a percent of the large one. Default is 45.")]
+        [Display(Name = "Small Line Size (%)", Description = "The small line's size as a percent of the large one.")]
         public float SecondarySize { get; set; } = 45.0f;
 
         /// <summary>Gets or sets an optional regular expression whose matches are removed from the text.</summary>
-        [Display(Name = "Remove Pattern", Description = "Optional regular expression. Anything it matches is removed. An invalid pattern is ignored.")]
+        [Display(Name = "Remove Pattern", Description = "Optional regular expression; anything it matches is removed.")]
         public string CustomRegex { get; set; } = string.Empty;
 
         /// <summary>Gets or sets a value indicating whether the text is drawn in capitals.</summary>
@@ -48,7 +48,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public string FontPath { get; set; } = string.Empty;
 
         /// <summary>Gets or sets what fills the letters: a color, or a frame from the series.</summary>
-        [Display(Name = "Letters Filled With", Description = "A frame fill cuts the letters out of a picture from the show, using the same frames its other images come from. A heavy font shows more of the picture, and an outline keeps the letters readable over a busy background.")]
+        [Display(Name = "Letters Filled With", Description = "A color, or a frame from the show cut into the letters.")]
         public LogoFill Fill { get; set; } = LogoFill.Color;
 
         /// <summary>Gets or sets where the text color comes from, when the fill is a color.</summary>
@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public int Width { get; set; } = 800;
 
         /// <summary>Gets or sets the height of the space the lettering is laid out in.</summary>
-        [Display(Name = "Height", Description = "The room the lettering is laid out in, not the size of the file: the finished logo is trimmed to its own artwork. 800 by 310 matches the common HD clear logo, so the proportions sit alongside downloaded ones.")]
+        [Display(Name = "Height", Description = "The room the lettering gets; the finished logo is trimmed to its artwork.")]
         public int Height { get; set; } = 310;
 
         /// <summary>Gets the font file to use, or null when the custom font is off.</summary>
