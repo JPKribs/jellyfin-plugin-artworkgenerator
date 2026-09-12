@@ -88,7 +88,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 }
 
                 using var image = surface.Snapshot();
-                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+                // Width and height are the room the lettering is laid out in, not the size of the
+                // file: a clear logo is expected to be trimmed to its artwork, so the empty margin
+                // the layout left over is cut away before the PNG is written.
+                using var trimmed = TrimToContent(image);
+                using var data = (trimmed ?? image).Encode(SKEncodedImageFormat.Png, 100);
                 return data?.ToArray();
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -96,6 +101,59 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 _logger.LogError(ex, "Failed to render logo for {SeriesName}", subject.SeriesName);
                 return null;
             }
+        }
+
+        // TrimToContent
+        // Crops away fully transparent edges, leaving a couple of pixels so an antialiased stroke
+        // is not shaved. Returns null when there is nothing to trim, or nothing drawn at all.
+        private static SKImage? TrimToContent(SKImage image)
+        {
+            using var pixmap = image.PeekPixels();
+            if (pixmap == null)
+            {
+                return null;
+            }
+
+            var pixels = pixmap.GetPixelSpan();
+            int rowBytes = pixmap.RowBytes;
+            int left = image.Width, right = -1, top = image.Height, bottom = -1;
+
+            for (int y = 0; y < image.Height; y++)
+            {
+                int row = y * rowBytes;
+                for (int x = 0; x < image.Width; x++)
+                {
+                    // RGBA8888: alpha is the fourth byte of each pixel.
+                    if (pixels[row + (x * 4) + 3] == 0)
+                    {
+                        continue;
+                    }
+
+                    if (x < left) left = x;
+                    if (x > right) right = x;
+                    if (y < top) top = y;
+                    bottom = y;
+                }
+            }
+
+            if (right < 0 || bottom < 0)
+            {
+                return null;
+            }
+
+            const int Bleed = 2;
+            var crop = new SKRectI(
+                Math.Max(0, left - Bleed),
+                Math.Max(0, top - Bleed),
+                Math.Min(image.Width, right + 1 + Bleed),
+                Math.Min(image.Height, bottom + 1 + Bleed));
+
+            if (crop.Width >= image.Width && crop.Height >= image.Height)
+            {
+                return null;
+            }
+
+            return image.Subset(crop);
         }
 
         // Layout

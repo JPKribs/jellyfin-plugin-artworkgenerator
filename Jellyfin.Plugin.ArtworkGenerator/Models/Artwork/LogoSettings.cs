@@ -76,12 +76,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Lines", Description = "A long name splits onto two lines only when that lets the text grow noticeably.")]
         public int MaxLines { get; set; } = 2;
 
-        /// <summary>Gets or sets the canvas width. 800 by 310 matches the common HD clear logo size.</summary>
+        /// <summary>Gets or sets the width of the space the lettering is laid out in.</summary>
         [Display(Name = "Width")]
         public int Width { get; set; } = 800;
 
-        /// <summary>Gets or sets the canvas height.</summary>
-        [Display(Name = "Height", Description = "Canvas size in pixels. 800 by 310 matches the common HD clear logo size, so generated logos sit alongside downloaded ones.")]
+        /// <summary>Gets or sets the height of the space the lettering is laid out in.</summary>
+        [Display(Name = "Height", Description = "The room the lettering is laid out in, not the size of the file: the finished logo is trimmed to its own artwork. 800 by 310 matches the common HD clear logo, so the proportions sit alongside downloaded ones.")]
         public int Height { get; set; } = 310;
 
         /// <summary>Gets the font file to use, or null when the custom font is off.</summary>

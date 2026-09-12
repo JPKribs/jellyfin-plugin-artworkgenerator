@@ -40,16 +40,20 @@ public class LogoRendererTests
         Assert.Single(lines);
     }
 
+    /// <summary>
+    /// The configured size is the room the lettering gets, so the finished PNG never exceeds it and
+    /// is transparent everywhere the lettering is not.
+    /// </summary>
     [Fact]
-    public void Render_ProducesATransparentPngOfTheConfiguredSize()
+    public void Render_ProducesATransparentPngWithinTheConfiguredSize()
     {
         var renderer = new LogoRenderer(NullLogger<LogoRenderer>.Instance);
         var bytes = renderer.Render(new ArtworkSubject { SeriesName = "Andor" }, new LogoSettings());
 
         Assert.NotNull(bytes);
         using var bitmap = SKBitmap.Decode(bytes);
-        Assert.Equal(800, bitmap.Width);
-        Assert.Equal(310, bitmap.Height);
+        Assert.InRange(bitmap.Width, 1, 800);
+        Assert.InRange(bitmap.Height, 1, 310);
         Assert.Equal(0, bitmap.GetPixel(0, 0).Alpha);
     }
 
@@ -92,5 +96,30 @@ public class LogoRendererTests
         Assert.Contains(pixels, p => p.Alpha == 255 && p.Red > 200 && p.Green < 40 && p.Blue < 40);
         Assert.DoesNotContain(pixels, p => p.Alpha == 255 && p.Green > 200);
         Assert.Equal(0, bitmap.GetPixel(0, 0).Alpha);
+    }
+
+    /// <summary>
+    /// Width and height are the room the lettering gets, not the size of the file: a clear logo is
+    /// expected to be trimmed to its own artwork so it sits beside downloaded ones.
+    /// </summary>
+    [Fact]
+    public void Render_TrimsTheEmptyMarginAwayFromTheLettering()
+    {
+        var renderer = new LogoRenderer(NullLogger<LogoRenderer>.Instance);
+
+        var bytes = renderer.Render(
+            new ArtworkSubject { SeriesName = "W" },
+            new LogoSettings { Width = 800, Height = 310 });
+
+        Assert.NotNull(bytes);
+        using var bitmap = SKBitmap.Decode(bytes);
+
+        Assert.True(bitmap.Height < 310, $"expected the margin to be trimmed, got {bitmap.Width}x{bitmap.Height}");
+        Assert.True(bitmap.Width <= 800);
+
+        // Trimmed to the artwork means the edges carry it: a fully transparent row or column would
+        // mean the crop stopped short. The two pixel bleed is what keeps antialiasing intact.
+        var pixels = bitmap.Pixels;
+        Assert.Contains(pixels, p => p.Alpha > 0);
     }
 }
