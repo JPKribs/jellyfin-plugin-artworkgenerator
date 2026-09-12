@@ -78,4 +78,15 @@ public class PosterSettingRulesTests
         Assert.Equal(PosterSettingState.Hidden, rules[PosterSettingRules.EpisodeFontSize]);
         Assert.Equal(PosterSettingState.Hidden, rules[PosterSettingRules.EpisodeFontColor]);
     }
+
+    /// <summary>
+    /// Only the style that draws a border decides which edge holds the title.
+    /// </summary>
+    [Fact]
+    public void OnlyFrameOffersTheTitleEdge()
+    {
+        Assert.Equal(PosterSettingState.Optional, Generator(PosterStyle.Frame).SettingRules[PosterSettingRules.TitleEdge]);
+        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Standard).SettingRules[PosterSettingRules.TitleEdge]);
+        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Cutout).SettingRules[PosterSettingRules.TitleEdge]);
+    }
 }

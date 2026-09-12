@@ -30,7 +30,7 @@
     "EpisodeFontStyle": "Bold",
     "EpisodeFontSize": 7,
     "EpisodeFontColor": "#FFFEFC78",
-    "ShowTitle": false,
+    "ShowTitle": true,
     "TitleFontFamily": "Trebuchet MS",
     "TitleUseCustomFont": false,
     "TitleFontPath": "",

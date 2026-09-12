@@ -18,9 +18,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Image inside a decorative border. Polished gallery look.";
 
-        // The frame is drawn around the title, so the title is always there.
+        // The frame is drawn around the title, so the title is always there, and this style is the
+        // one that decides which edge holds it.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
-            (PosterSettingRules.ShowTitle, PosterSettingState.Required));
+            (PosterSettingRules.ShowTitle, PosterSettingState.Required),
+            (PosterSettingRules.TitleEdge, PosterSettingState.Optional));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
         private const float BorderStrokeReference = 4f;
@@ -40,9 +42,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // RenderTypography
-        // Renders the title and the label set into the frame's edges, and the border itself, which
-        // closes over any edge with no text in it. The bottom edge carries the label when there is
-        // one; a series has none, so its title sits there instead of leaving the bottom bare.
+        // Renders the title and the subtitle set into the frame's edges, and the border itself,
+        // which closes over any edge with no text in it. The title takes the edge the design asks
+        // for and the subtitle takes the other.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(subject);
@@ -53,30 +55,47 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             float spacing = GetElementSpacing(settings, unit);
 
             var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
-            var showLabel = settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label);
+            var showSubtitle = settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label);
 
-            TextInfo? titleInfo = null;
-            TextInfo? episodeInfo = null;
-
-            if (showLabel)
+            // Automatic keeps the title at the top while a subtitle holds the bottom, and moves it
+            // down when there is none, so a series does not leave the bottom edge bare.
+            var titleAtBottom = settings.TitleEdge switch
             {
-                episodeInfo = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea);
-            }
+                TitleEdge.Top => false,
+                TitleEdge.Bottom => true,
+                _ => !showSubtitle
+            };
+
+            TextInfo? topInfo = null;
+            TextInfo? bottomInfo = null;
 
             if (showTitle)
             {
-                var info = DrawEpisodeTitle(skCanvas, subject.Title!, settings, unit, safeArea, !showLabel);
-                if (showLabel)
+                var info = DrawEpisodeTitle(skCanvas, subject.Title!, settings, unit, safeArea, titleAtBottom);
+                if (titleAtBottom)
                 {
-                    titleInfo = info;
+                    bottomInfo = info;
                 }
                 else
                 {
-                    episodeInfo = info;
+                    topInfo = info;
                 }
             }
 
-            DrawFrameBorder(skCanvas, safeArea, titleInfo, episodeInfo, spacing, unit);
+            if (showSubtitle)
+            {
+                var info = DrawEpisodeInfo(skCanvas, subject.Label, settings, unit, safeArea, !titleAtBottom);
+                if (titleAtBottom)
+                {
+                    topInfo = info;
+                }
+                else
+                {
+                    bottomInfo = info;
+                }
+            }
+
+            DrawFrameBorder(skCanvas, safeArea, topInfo, bottomInfo, spacing, unit);
         }
 
         // LogError
@@ -118,12 +137,27 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // DrawEpisodeInfo
-        // Draws the label across the bottom of the safe area and returns its extent.
-        private static TextInfo DrawEpisodeInfo(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea)
+        // Draws the subtitle into whichever edge the title did not take, and returns its extent.
+        private static TextInfo DrawEpisodeInfo(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
             using var style = CreateEpisodeStyle(config, unit);
+            var padding = unit * TextPaddingRatio;
 
-            var bottom = safeArea.Bottom - (unit * TextPaddingRatio);
+            if (!atBottom)
+            {
+                var top = safeArea.Top + padding;
+                style.Draw(canvas, label, safeArea.MidX, top + style.Ascent);
+
+                return new TextInfo
+                {
+                    Height = style.LineBox,
+                    Width = style.MeasureWidth(label),
+                    CenterX = safeArea.MidX,
+                    Y = top
+                };
+            }
+
+            var bottom = safeArea.Bottom - padding;
             style.Draw(canvas, label, safeArea.MidX, bottom - style.Descent);
 
             return new TextInfo

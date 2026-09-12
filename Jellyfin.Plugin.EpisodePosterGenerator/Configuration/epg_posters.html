@@ -112,6 +112,18 @@
                                 <div id="posterStyleDescription" class="fieldDescription"></div>
                             </div>
 
+                            <div class="cutout-logo-group" id="frameOptions">
+                                <div class="inputContainer">
+                                    <label for="selectTitleEdge">Title Edge:</label>
+                                    <select is="emby-select" id="selectTitleEdge" data-setting="TitleEdge" data-default="Automatic">
+                                        <option value="Automatic">Automatic</option>
+                                        <option value="Top">Top</option>
+                                        <option value="Bottom">Bottom</option>
+                                    </select>
+                                    <div class="fieldDescription">Which edge of the border holds the title, the subtitle taking the other. Automatic keeps the title at the top while there is a subtitle to hold the bottom, and moves it down when there is none, such as on a series poster.</div>
+                                </div>
+                            </div>
+
                             <div class="cutout-logo-group" id="outlineOptions">
                                 <div class="checkboxContainer">
                                     <label class="emby-checkbox-label">

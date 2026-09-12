@@ -32,7 +32,9 @@ changelog:
   - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   - Four bundled designs set a caption-sized title, which left a series poster's name looking like an afterthought; they now use the same title size as the rest
   - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
+  - The Frame style chooses which edge of its border holds the title, the subtitle taking the other; Automatic keeps the title at the top while there is a subtitle to hold the bottom
   fixes:
+  - The Simple design drew only the subtitle, so a series, which has none, came out with no text at all; it now draws the title too
   - Brush strokes on a tall poster are thicker again, revealing more of the frame, while wide posters keep the stroke layout they had
   - Fade sized a short series name until it filled the whole poster; its focal name is now bounded in thickness and length
   - The Logo style drew nothing but the logo for a series; it shows the name beneath the logo, the same way it shows an episode's name

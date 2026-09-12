@@ -36,6 +36,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         /// <summary>The number and code colour.</summary>
         public const string EpisodeFontColor = "EpisodeFontColor";
 
+        /// <summary>Which edge of a framed poster the title sits in.</summary>
+        public const string TitleEdge = "TitleEdge";
+
         /// <summary>The cutout's text choice.</summary>
         public const string CutoutType = "CutoutType";
 
@@ -67,6 +70,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         {
             var rules = new Dictionary<string, PosterSettingState>(System.StringComparer.Ordinal)
             {
+                [TitleEdge] = PosterSettingState.Hidden,
                 [CutoutType] = PosterSettingState.Hidden,
                 [CutoutBorder] = PosterSettingState.Hidden,
                 [LogoPosition] = PosterSettingState.Hidden,

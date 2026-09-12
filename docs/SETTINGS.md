@@ -66,6 +66,10 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 * **Type**: what the cutout shows. Code such as S01E05, or Text spelled out. Default Code.
 
+## Frame (Style is Frame)
+
+* **Title Edge**: which edge of the border holds the title, the subtitle taking the other. Automatic keeps the title at the top while there is a subtitle to hold the bottom, and moves it down when there is none, such as on a series poster. Default Automatic.
+
 ## Logo (Style is Logo)
 
 * **Logo Position**: vertical placement. Top, Center, or Bottom. Default Center.
