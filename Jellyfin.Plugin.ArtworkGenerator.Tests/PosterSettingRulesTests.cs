@@ -121,8 +121,10 @@ public class PosterSettingRulesTests
     {
         var frame = Generator(PosterStyle.Frame);
 
+        // Only the position needs rewording: the lone line setting is this design's alone, so its
+        // own words live on the setting itself.
         Assert.True(frame.SettingText.ContainsKey(PosterSettingRules.TextPosition));
-        Assert.True(frame.SettingText.ContainsKey(PosterSettingRules.LoneLineFollowsTitle));
+        Assert.Contains("edge", frame.SettingText[PosterSettingRules.TextPosition].Label, System.StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("subtitle sit", frame.SettingText[PosterSettingRules.TextPosition].Description, System.StringComparison.OrdinalIgnoreCase);
     }
 }

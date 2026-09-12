@@ -80,7 +80,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// it where the title goes. Off, the title's place is left empty and the lone subtitle stays
         /// in its own.
         /// </summary>
-        [Display(Name = "Lone Line Follows Title", Description = "An item with only one line puts it where the title goes.")]
+        [Display(Name = "Lone Subtitle Uses the Title's Edge", Description = "An item with no title of its own puts its subtitle where the title would go.")]
         public bool LoneLineFollowsTitle { get; set; } = true;
 
         [Display(Name = "Enable Outline", Description = "Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.")]

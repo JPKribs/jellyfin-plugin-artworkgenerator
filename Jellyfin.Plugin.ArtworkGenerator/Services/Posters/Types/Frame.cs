@@ -44,16 +44,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // SettingText
         // The two lines take opposite edges here, so "where the text sits" would be misleading: the
-        // position names the title's edge and the subtitle takes whatever is left.
+        // position names the title's edge and the subtitle takes whatever is left. The lone line
+        // setting is this design's alone, so its own wording lives on the setting itself.
         public override IReadOnlyDictionary<string, SettingText> SettingText { get; }
             = new Dictionary<string, SettingText>(StringComparer.Ordinal)
             {
                 [PosterSettingRules.TextPosition] = new(
                     "Title Edge",
-                    "Which edge of the border the title takes. The subtitle takes the other one."),
-                [PosterSettingRules.LoneLineFollowsTitle] = new(
-                    "Lone Subtitle Uses the Title's Edge",
-                    "An item with no title of its own, such as a numbered season, puts its subtitle where the title would go instead of leaving that edge empty.")
+                    "Which edge of the border the title takes. The subtitle takes the other one.")
             };
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
