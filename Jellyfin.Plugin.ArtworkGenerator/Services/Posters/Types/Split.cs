@@ -102,30 +102,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 return;
             }
 
+            // Only the right hand side is tinted; the poster panel keeps its own artwork. The fill
+            // itself is the shared one, so flat and gradient behave here exactly as everywhere else.
             var posterWidth = CalculatePosterWidth(height);
             var rightRect = SKRect.Create(posterWidth, 0, width - posterWidth, height);
 
-            if (settings.OverlayGradient == OverlayGradient.None)
-            {
-                using var overlayPaint = PaintFactory.CreateFillPaint(primaryColor);
-                skCanvas.DrawRect(rightRect, overlayPaint);
-                return;
-            }
-
-            var secondaryColor = ColorUtils.ParseHexColor(settings.OverlaySecondaryColor);
-            if (secondaryColor.Alpha == 0) secondaryColor = primaryColor;
-
-            using var gradient = CreateOverlayGradient(settings.OverlayGradient, rightRect, primaryColor, secondaryColor);
-            if (gradient == null)
-                return;
-
-            using var gradientPaint = new SKPaint
-            {
-                Shader = gradient,
-                Style = SKPaintStyle.Fill,
-                IsDither = true
-            };
-            skCanvas.DrawRect(rightRect, gradientPaint);
+            FillOverlay(skCanvas, settings, rightRect, primaryColor);
         }
 
         // RenderTypography
