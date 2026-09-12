@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
+using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
 using MediaBrowser.Controller.Entities;
@@ -60,6 +61,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             try
             {
+                if (settings.CanvasSource == CanvasSource.Grid)
+                {
+                    var grids = await GridCanvasesAsync(item, subject, settings, rankOffset, count, cancellationToken).ConfigureAwait(false);
+                    if (grids.Count > 0)
+                    {
+                        return grids;
+                    }
+
+                    _logger.LogInformation("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
+                }
+
                 if (settings.CanvasSource == CanvasSource.Extract)
                 {
                     var extracted = await ExtractCanvasesAsync(item, subject, settings, rankOffset, count, cancellationToken).ConfigureAwait(false);
@@ -213,6 +225,103 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // PrepareFrame
         // Decodes a pooled frame, crops it, and brightens it. Pooled frames are kept raw so each
         // consumer can apply its own crop; the pool file itself is never modified.
+        // GridCanvasesAsync
+        // One canvas per requested candidate, each a grid of frames rather than a single one. The
+        // pool is asked for enough frames to fill every grid, so no two candidates are the same.
+        private async Task<IReadOnlyList<SKBitmap>> GridCanvasesAsync(
+            BaseItem item,
+            ArtworkSubject subject,
+            PosterSettings settings,
+            int rankOffset,
+            int count,
+            CancellationToken cancellationToken)
+        {
+            var sources = ArtworkSources.GetPlayableSources(item);
+            if (sources.Count == 0)
+            {
+                return Array.Empty<SKBitmap>();
+            }
+
+            var cells = GridComposer.Clamp(settings.GridFrames);
+            var key = FramePoolService.KeyFor(item.Id, settings.ExtractWindowStart, settings.ExtractWindowEnd);
+
+            using var lease = await _framePool.AcquireAsync(
+                key,
+                sources,
+                settings.ExtractWindowStart,
+                settings.ExtractWindowEnd,
+                (rankOffset + count) * cells,
+                cancellationToken).ConfigureAwait(false);
+
+            if (lease.Paths.Count == 0)
+            {
+                return Array.Empty<SKBitmap>();
+            }
+
+            var canvases = new List<SKBitmap>(count);
+
+            try
+            {
+                for (var candidate = 0; candidate < count; candidate++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var grid = ComposeGrid(lease.Paths, (rankOffset + candidate) * cells, cells, settings);
+                    if (grid != null)
+                    {
+                        canvases.Add(grid);
+                    }
+                }
+            }
+            catch
+            {
+                foreach (var canvas in canvases)
+                {
+                    canvas.Dispose();
+                }
+
+                throw;
+            }
+
+            return canvases;
+        }
+
+        // ComposeGrid
+        // The first frame is prepared the usual way to settle the canvas size, and every frame is
+        // then tiled into it. A pool smaller than the grid wraps around rather than leaving holes.
+        private SKBitmap? ComposeGrid(IReadOnlyList<string> paths, int offset, int cells, PosterSettings settings)
+        {
+            using var shaped = PrepareFrame(paths[offset % paths.Count], settings);
+            if (shaped == null)
+            {
+                return null;
+            }
+
+            var frames = new List<SKBitmap>(cells);
+
+            try
+            {
+                for (var i = 0; i < cells; i++)
+                {
+                    var frame = SKBitmap.Decode(paths[(offset + i) % paths.Count]);
+                    if (frame != null)
+                    {
+                        frames.Add(frame);
+                    }
+                }
+
+                var gap = Math.Min(shaped.Width, shaped.Height) * (Math.Clamp(settings.GridGap, 0f, 25f) / 100f);
+                return GridComposer.Compose(frames, shaped.Width, shaped.Height, gap);
+            }
+            finally
+            {
+                foreach (var frame in frames)
+                {
+                    frame.Dispose();
+                }
+            }
+        }
+
         private SKBitmap? PrepareFrame(string path, PosterSettings settings)
         {
             if (!File.Exists(path))

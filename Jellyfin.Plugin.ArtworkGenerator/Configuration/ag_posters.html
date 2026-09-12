@@ -169,6 +169,20 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
+                            <div class="nested-settings" data-depends-on-canvas="Grid">
+                                <div class="jpk-field-row">
+                                    <div class="jpk-field">
+                                        <label for="txtGridFrames"></label>
+                                        <input is="emby-input" type="number" id="txtGridFrames" min="2" max="16" step="1" data-setting="GridFrames" data-type="number" />
+                                    </div>
+                                    <div class="jpk-field">
+                                        <label for="txtGridGap"></label>
+                                        <input is="emby-input" type="number" id="txtGridGap" min="0" max="25" step="0.5" data-setting="GridGap" data-type="number" />
+                                    </div>
+                                </div>
+                                <div class="fieldDescription">The frames are tiled as evenly as their number allows.</div>
+                            </div>
+
                             <div class="inputContainer">
                                 <label for="selectPosterFill"></label>
                                 <select is="emby-select" id="selectPosterFill" data-setting="PosterFill" data-default="Original"></select>

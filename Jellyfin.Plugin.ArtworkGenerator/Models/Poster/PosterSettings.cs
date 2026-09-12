@@ -27,6 +27,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Canvas Background", Description = "Determine where the poster background should come from.")]
         public CanvasSource CanvasSource { get; set; } = CanvasSource.Extract;
 
+        /// <summary>Gets or sets how many frames a grid canvas holds.</summary>
+        [Display(Name = "Grid Frames", Description = "How many frames the grid holds.")]
+        public int GridFrames { get; set; } = 4;
+
+        /// <summary>Gets or sets the gap between grid cells, as a percent of the short side.</summary>
+        [Display(Name = "Grid Gap (%)", Description = "Space between the frames, as a percent of the short side.")]
+        public float GridGap { get; set; } = 2.0f;
+
         /// <summary>
         /// When the canvas is an extracted frame, also upload the cropped canvas
         /// as the episode's backdrop image (the rendered poster remains the primary image).

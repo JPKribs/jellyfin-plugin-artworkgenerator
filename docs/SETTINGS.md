@@ -47,7 +47,9 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Canvas
 
-* **Canvas Background**: the poster's base image. Extract Frame from Video, Use Series Backdrop, or No Background. Seasons and series extract from their own episodes. Default Extract Frame.
+* **Canvas Background**: the poster's base image. Extract Frame from Video, Grid of Frames, Use Series Backdrop, or No Background. Seasons and series extract from their own episodes. Default Extract Frame.
+* **Grid Frames**: how many frames a grid holds, 2 to 16. They are tiled as evenly as their number allows, and a short last row is centered. Default 4.
+* **Grid Gap (%)**: the space between the frames, as a percent of the poster's short side. Default 2.
 
 ## Poster
 

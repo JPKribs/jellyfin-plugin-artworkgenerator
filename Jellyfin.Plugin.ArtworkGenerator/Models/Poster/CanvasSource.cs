@@ -16,6 +16,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         // Use the parent series' backdrop image as the canvas.
         [Description("Use Series Backdrop")]
-        SeriesBackdrop
+        SeriesBackdrop,
+
+        // Several frames tiled into one canvas, like a wall of photographs.
+        [Description("Grid of Frames")]
+        Grid
     }
 }

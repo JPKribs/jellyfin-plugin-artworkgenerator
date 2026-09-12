@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
+using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
 using MediaBrowser.Common.Configuration;
 using Microsoft.Extensions.Logging;
@@ -81,9 +82,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             var subject = CreateDemoSubject(kind, assetDir, baseImage.Width, baseImage.Height);
 
+            // A grid needs more than one picture to look like anything, so the preview alternates
+            // the two demo frames the way a real one alternates frames from the video.
+            using var gridImage = shaped.CanvasSource == CanvasSource.Grid
+                ? ComposeDemoGrid(assetDir, baseImage, shaped)
+                : null;
+
             var bytes = shaped.CanvasSource == CanvasSource.None
                 ? RenderTransparentPoster(baseImage.Width, baseImage.Height, subject, shaped)
-                : RenderPoster(baseImage, subject, shaped);
+                : RenderPoster(gridImage ?? baseImage, subject, shaped);
 
             if (bytes == null)
             {
@@ -119,6 +126,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             using var photo = SKBitmap.Decode(Path.Combine(assetDir, "demo-base.png"));
             return _logoRenderer.Render(subject, settings, photo);
+        }
+
+        // ComposeDemoGrid
+        // The preview's stand-in for a grid of frames, alternating the two demo pictures so the
+        // cells and the gap between them are visible.
+        private SKBitmap? ComposeDemoGrid(string assetDir, SKBitmap baseImage, PosterSettings settings)
+        {
+            using var alternate = SKBitmap.Decode(Path.Combine(assetDir, "demo-base-alt.png"));
+            if (alternate == null)
+            {
+                return null;
+            }
+
+            var cells = GridComposer.Clamp(settings.GridFrames);
+            var frames = new List<SKBitmap>(cells);
+            for (var i = 0; i < cells; i++)
+            {
+                frames.Add(i % 2 == 0 ? baseImage : alternate);
+            }
+
+            var gap = Math.Min(baseImage.Width, baseImage.Height) * (Math.Clamp(settings.GridGap, 0f, 25f) / 100f);
+            return GridComposer.Compose(frames, baseImage.Width, baseImage.Height, gap);
         }
 
         // RenderPoster
@@ -341,6 +370,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 Directory.CreateDirectory(_assetRoot);
 
                 ExtractAsset("demo-base.png", _assetRoot);
+                ExtractAsset("demo-base-alt.png", _assetRoot);
                 ExtractAsset("demo-logo.png", _assetRoot);
                 ExtractAsset("demo-graphic.png", _assetRoot);
                 ExtractAsset("demo-poster.jpg", _assetRoot);

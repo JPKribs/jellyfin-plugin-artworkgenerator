@@ -39,6 +39,7 @@
     <EmbeddedResource Include="Configuration\ag_profiles.js" />
     <EmbeddedResource Include="Configuration\ag_shared.css" />
     <EmbeddedResource Include="Assets\Demo\demo-base.png" />
+    <EmbeddedResource Include="Assets\Demo\demo-base-alt.png" />
     <EmbeddedResource Include="Assets\Demo\demo-logo.png" />
     <EmbeddedResource Include="Assets\Demo\demo-graphic.png" />
     <EmbeddedResource Include="Assets\Demo\demo-poster.jpg" />
