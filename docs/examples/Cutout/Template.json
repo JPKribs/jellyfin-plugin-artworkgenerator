@@ -14,6 +14,7 @@
     "ExtractWindowEnd": 80,
     "PosterStyle": "Cutout",
     "CutoutType": "Code",
+    "TitleEdge": "Automatic",
     "CutoutBorder": true,
     "LogoPosition": "Center",
     "LogoAlignment": "Center",
@@ -21,6 +22,7 @@
     "BrightenHDR": 25,
     "PosterFill": "Fit",
     "PosterDimensionRatio": "16:9",
+    "PortraitDimensionRatio": "2:3",
     "PosterSafeArea": 5,
     "ElementSpacing": 2,
     "ShowEpisode": true,
@@ -43,8 +45,7 @@
     "OverlaySecondaryColor": "#500096FF",
     "PaletteDerivedColors": false,
     "GraphicPath": "",
-    "GraphicWidth": 25,
-    "GraphicHeight": 25,
+    "GraphicSize": 25,
     "GraphicPosition": "Center",
     "GraphicAlignment": "Center"
   }
