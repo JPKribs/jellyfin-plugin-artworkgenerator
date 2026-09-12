@@ -21,18 +21,50 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
     /// </summary>
     public class FrameExtractionService
     {
-        private const int MaxRetries = 30;
-        private const int ExtraAttemptsPerCandidate = 6;
+        // How many frames are looked at before the best are kept. The scorer ranks rather than
+        // gates, so it needs a field to choose from: sampling one frame and taking it, which is what
+        // an early exit amounted to on real video, is the same as not scoring at all.
+        private const int MinimumSamples = 8;
+        private const int SamplesPerCandidate = 4;
         private const int MaxAttemptCeiling = 48;
-        private const int EarlyExitAttemptThreshold = 5;
-        private const double BrightnessThreshold = 0.05;
-        private const double SharpnessThreshold = 100.0;
-        private const double EarlyExitScoreThreshold = 0.6;
+        private const int ConsecutiveFailureLimit = 4;
+
+        // A frame this dark once its bars are off is a fade or a blackout, not a picture.
+        private const double MinimumBrightness = 0.02;
+
+        // Reference points the metrics are measured against: the value at which a measure counts as
+        // fully satisfied. Nothing is clamped below them, so frames rank against each other across
+        // the ordinary range rather than piling up at the top, which is what the old pass marks did.
+        // Calibrated against sixty frames sampled across four episodes, measured at the analysis
+        // size below and with the bars already removed, so they sit near the top of what real video
+        // actually produces rather than at a theoretical maximum.
+        private const double IdealBrightness = 0.42;
+        private const double BrightnessSpread = 0.18;
+        private const double SharpnessReference = 400.0;
+        private const double ContrastReference = 0.22;
+        private const double ColorfulnessReference = 0.08;
+
+        private const double ToneWeight = 0.30;
+        private const double DetailWeight = 0.30;
+        private const double ContrastWeight = 0.12;
+        private const double ColorfulnessWeight = 0.13;
+        private const double HeadroomWeight = 0.15;
+
         private const double DefaultDurationSeconds = 3600;
         private const double DefaultSeekStartPercent = 0.2;
         private const double DefaultSeekEndPercent = 0.8;
-        private const double BrightnessWeight = 0.5;
-        private const int AnalysisSize = 200;
+
+        // Laplacian variance measures fine detail, which a small analysis bitmap throws away before
+        // it can be counted. 480 keeps enough of it to tell focus from a flat wall.
+        private const int AnalysisSize = 480;
+
+        // The share of the frame taken as the top and bottom bands when judging how much room a
+        // design has for its text.
+        private const double TextBandRatio = 0.28;
+
+        // A row or column is part of a letterbox bar when every pixel sampled along it is this
+        // dark. Analysis only: the rendered image is cropped separately by the cropping service.
+        private const int BarLuma = 18;
 
         private readonly ILogger<FrameExtractionService> _logger;
         private readonly IMediaEncoder _mediaEncoder;
@@ -95,12 +127,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             // Candidates kept so far, worst-scoring first so eviction is cheap.
             var candidates = new List<FrameCandidate>(count);
-            var goodCount = 0;
 
-            var maxAttempts = Math.Clamp(
-                MaxRetries + ((count - 1) * ExtraAttemptsPerCandidate),
-                MaxRetries,
-                MaxAttemptCeiling);
+            // Every sample is taken before any is chosen. The old loop stopped at the first frame
+            // over a pass mark, which on real video was almost always the very first one.
+            var maxAttempts = Math.Clamp(count * SamplesPerCandidate, MinimumSamples, MaxAttemptCeiling);
+            var consecutiveFailures = 0;
 
             try
             {
@@ -134,8 +165,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                             continue;
                         }
 
-                        double brightness;
-                        double sharpness;
+                        FrameQuality quality;
                         using (var stream = File.OpenRead(extractedPath))
                         using (var frameBitmap = SKBitmap.Decode(stream))
                         {
@@ -145,47 +175,34 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                             }
 
                             using var analysisBitmap = CreateAnalysisBitmap(frameBitmap);
-                            AnalyzeFrame(analysisBitmap, out brightness, out sharpness);
+                            quality = AnalyzeFrame(analysisBitmap);
                         }
 
-                        var qualityScore = CalculateQualityScore(brightness, sharpness);
-                        var isGood = brightness > BrightnessThreshold && sharpness >= SharpnessThreshold;
+                        consecutiveFailures = 0;
 
-                        if (attempt < EarlyExitAttemptThreshold || isGood)
-                        {
-                            _logger.LogDebug("Attempt {Attempt}: Brightness {Brightness:F3}, Sharpness {Sharpness:F1}, Score {Score:F3}",
-                                attempt + 1, brightness, sharpness, qualityScore);
-                        }
+                        // A fade or a blackout is not a picture, whatever else it measures well on.
+                        var qualityScore = quality.Brightness > MinimumBrightness
+                            ? CalculateQualityScore(quality)
+                            : 0.0;
 
-                        keepFile = TryAddCandidate(candidates, count, extractedPath, qualityScore, isGood, ref goodCount);
+                        _logger.LogDebug(
+                            "Attempt {Attempt}: brightness {Brightness:F3}, contrast {Contrast:F3}, sharpness {Sharpness:F0}, color {Color:F3}, headroom {Headroom:F2}, score {Score:F3}",
+                            attempt + 1, quality.Brightness, quality.Contrast, quality.Sharpness, quality.Colorfulness, quality.Headroom, qualityScore);
 
-                        // Enough frames that clear both thresholds outright: stop early.
-                        if (goodCount >= count)
-                        {
-                            _logger.LogInformation("Found {Count} high-quality frame(s) after {Attempts} attempt(s)",
-                                goodCount, attempt + 1);
-                            break;
-                        }
-
-                        // Otherwise settle for a full set of merely acceptable frames once the
-                        // cheap attempts are spent, rather than exhausting every retry.
-                        if (candidates.Count >= count
-                            && attempt > EarlyExitAttemptThreshold
-                            && candidates.All(c => c.Score > EarlyExitScoreThreshold))
-                        {
-                            _logger.LogInformation("Found {Count} acceptable frame(s) after {Attempts} attempt(s)",
-                                candidates.Count, attempt + 1);
-                            break;
-                        }
+                        keepFile = TryAddCandidate(candidates, count, extractedPath, qualityScore);
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
                         _logger.LogWarning(ex, "Frame extraction failed on attempt {Attempt}", attempt + 1);
-                        if (attempt < 3)
+
+                        // A run of failures means the file cannot be read, not that this timestamp
+                        // was unlucky, so the sweep stops rather than working through every seek.
+                        if (++consecutiveFailures >= ConsecutiveFailureLimit)
                         {
-                            continue;
+                            break;
                         }
-                        break;
+
+                        continue;
                     }
                     finally
                     {
@@ -218,8 +235,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 .Select(c => new ExtractedFrame(c.Path, c.Score))
                 .ToArray();
 
-            _logger.LogInformation("Using {Count} frame(s) (best score: {Score:F3})",
-                ordered.Length, candidates.Max(c => c.Score));
+            _logger.LogInformation("Using {Count} of {Sampled} sampled frame(s) (best score: {Score:F3}, worst kept: {Worst:F3})",
+                ordered.Length, maxAttempts, ordered[0].Score, ordered[^1].Score);
 
             return ordered;
         }
@@ -231,14 +248,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             List<FrameCandidate> candidates,
             int capacity,
             string path,
-            double score,
-            bool isGood,
-            ref int goodCount)
+            double score)
         {
             if (candidates.Count < capacity)
             {
-                candidates.Add(new FrameCandidate(path, score, isGood));
-                if (isGood) goodCount++;
+                candidates.Add(new FrameCandidate(path, score));
                 return true;
             }
 
@@ -256,12 +270,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 return false;
             }
 
-            var evicted = candidates[weakestIndex];
-            TryDeleteFile(evicted.Path);
-            if (evicted.IsGood) goodCount--;
-
-            candidates[weakestIndex] = new FrameCandidate(path, score, isGood);
-            if (isGood) goodCount++;
+            TryDeleteFile(candidates[weakestIndex].Path);
+            candidates[weakestIndex] = new FrameCandidate(path, score);
             return true;
         }
 
@@ -289,51 +299,157 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             return (int)(startTime + fraction * (endTime - startTime));
         }
 
-        private static SKBitmap? CreateAnalysisBitmap(SKBitmap source)
+        // CreateAnalysisBitmap
+        // A downscaled copy with any letterbox bars removed. The bars are not picture, and scoring
+        // them as if they were dragged every measurement toward black: on a 2.39:1 film in a 16:9
+        // container they are a quarter of the frame and understated its brightness by a third.
+        internal static SKBitmap? CreateAnalysisBitmap(SKBitmap source)
         {
             if (source == null) return null;
 
-            float scale = Math.Min((float)AnalysisSize / source.Width, (float)AnalysisSize / source.Height);
-            int newWidth = Math.Max(1, (int)(source.Width * scale));
-            int newHeight = Math.Max(1, (int)(source.Height * scale));
+            var content = FindContentBounds(source);
+            if (content.Width <= 0 || content.Height <= 0)
+            {
+                return null;
+            }
+
+            float scale = Math.Min((float)AnalysisSize / content.Width, (float)AnalysisSize / content.Height);
+            int newWidth = Math.Max(1, (int)(content.Width * scale));
+            int newHeight = Math.Max(1, (int)(content.Height * scale));
 
             var resized = new SKBitmap(newWidth, newHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             using var canvas = new SKCanvas(resized);
-            PaintFactory.DrawBitmap(canvas, source, SKRect.Create(source.Width, source.Height), SKRect.Create(newWidth, newHeight), null, RenderConstants.FastSampling);
+            PaintFactory.DrawBitmap(canvas, source, content, SKRect.Create(newWidth, newHeight), null, RenderConstants.FastSampling);
 
             return resized;
         }
 
-        // AnalyzeFrame
-        // Computes mean luminance and Laplacian variance from a single pixel snapshot, so the
-        // analysis bitmap is only marshalled to managed memory once per frame.
-        private static void AnalyzeFrame(SKBitmap? analysis, out double brightness, out double sharpness)
+        // FindContentBounds
+        // The part of the frame that is picture rather than letterbox or pillarbox bar. Rows and
+        // columns are sampled rather than read whole, which is enough to spot a solid black band.
+        private static SKRect FindContentBounds(SKBitmap source)
         {
-            brightness = 0.0;
-            sharpness = 0.0;
+            int width = source.Width;
+            int height = source.Height;
+            int stepX = Math.Max(1, width / 32);
+            int stepY = Math.Max(1, height / 32);
 
-            if (analysis == null) return;
+            bool RowIsBar(int y)
+            {
+                for (int x = 0; x < width; x += stepX)
+                {
+                    if (Luma(source.GetPixel(x, y)) > BarLuma) return false;
+                }
+
+                return true;
+            }
+
+            bool ColumnIsBar(int x)
+            {
+                for (int y = 0; y < height; y += stepY)
+                {
+                    if (Luma(source.GetPixel(x, y)) > BarLuma) return false;
+                }
+
+                return true;
+            }
+
+            int top = 0;
+            while (top < height / 2 && RowIsBar(top)) top++;
+
+            int bottom = height - 1;
+            while (bottom > height / 2 && RowIsBar(bottom)) bottom--;
+
+            int left = 0;
+            while (left < width / 2 && ColumnIsBar(left)) left++;
+
+            int right = width - 1;
+            while (right > width / 2 && ColumnIsBar(right)) right--;
+
+            return new SKRect(left, top, right + 1, bottom + 1);
+        }
+
+        private static double Luma(SKColor c) => (0.2126 * c.Red) + (0.7152 * c.Green) + (0.0722 * c.Blue);
+
+        // AnalyzeFrame
+        // Measures the frame once and reports everything the score is built from, so the pixels are
+        // marshalled to managed memory a single time.
+        internal static FrameQuality AnalyzeFrame(SKBitmap? analysis)
+        {
+            if (analysis == null)
+            {
+                return default;
+            }
 
             var pixels = analysis.Pixels;
-            if (pixels == null || pixels.Length == 0) return;
+            if (pixels == null || pixels.Length == 0)
+            {
+                return default;
+            }
 
             int width = analysis.Width;
             int height = analysis.Height;
 
             var luma = new double[pixels.Length];
+            var rg = new double[pixels.Length];
+            var yb = new double[pixels.Length];
             double totalLuma = 0;
+            double totalRg = 0;
+            double totalYb = 0;
+
             for (int i = 0; i < pixels.Length; i++)
             {
                 var c = pixels[i];
-                var value = (0.2126 * c.Red) + (0.7152 * c.Green) + (0.0722 * c.Blue);
+                var value = Luma(c);
                 luma[i] = value;
                 totalLuma += value;
+
+                // Hasler and Susstrunk's opponent axes: a frame with no colour scores near zero on
+                // both, which is how a flat grey shot is told from a striking one.
+                rg[i] = Math.Abs(c.Red - c.Green);
+                yb[i] = Math.Abs((0.5 * (c.Red + c.Green)) - c.Blue);
+                totalRg += rg[i];
+                totalYb += yb[i];
             }
 
-            brightness = totalLuma / pixels.Length / 255.0;
+            double meanLuma = totalLuma / pixels.Length;
+            double brightness = meanLuma / 255.0;
 
-            double sum = 0;
+            double lumaVariance = 0;
+            for (int i = 0; i < luma.Length; i++)
+            {
+                var d = luma[i] - meanLuma;
+                lumaVariance += d * d;
+            }
+
+            double contrast = Math.Sqrt(lumaVariance / luma.Length) / 255.0;
+
+            double meanRg = totalRg / rg.Length;
+            double meanYb = totalYb / yb.Length;
+            double varRg = 0;
+            double varYb = 0;
+            for (int i = 0; i < rg.Length; i++)
+            {
+                var dr = rg[i] - meanRg;
+                var dy = yb[i] - meanYb;
+                varRg += dr * dr;
+                varYb += dy * dy;
+            }
+
+            double colorfulness =
+                (Math.Sqrt((varRg / rg.Length) + (varYb / yb.Length))
+                 + (0.3 * Math.Sqrt((meanRg * meanRg) + (meanYb * meanYb)))) / 255.0;
+
+            // Laplacian energy overall, and separately in the bands a design is most likely to set
+            // its text in, so a frame that leaves somewhere quiet for the title is preferred.
+            int bandHeight = Math.Max(1, (int)(height * TextBandRatio));
+            double total = 0;
+            double topBand = 0;
+            double bottomBand = 0;
             int count = 0;
+            int topCount = 0;
+            int bottomCount = 0;
+
             for (int y = 1; y < height - 1; y++)
             {
                 for (int x = 1; x < width - 1; x++)
@@ -344,21 +460,68 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                         - luma[((y + 1) * width) + x]
                         - luma[(y * width) + (x - 1)]
                         - luma[(y * width) + (x + 1)];
-                    sum += lap * lap;
+                    double energy = lap * lap;
+
+                    total += energy;
                     count++;
+
+                    if (y < bandHeight)
+                    {
+                        topBand += energy;
+                        topCount++;
+                    }
+                    else if (y >= height - bandHeight)
+                    {
+                        bottomBand += energy;
+                        bottomCount++;
+                    }
                 }
             }
 
-            sharpness = count > 0 ? sum / count : 0.0;
+            double sharpness = count > 0 ? total / count : 0.0;
+            double headroom = Headroom(
+                sharpness,
+                topCount > 0 ? topBand / topCount : 0.0,
+                bottomCount > 0 ? bottomBand / bottomCount : 0.0);
+
+            return new FrameQuality(brightness, contrast, sharpness, colorfulness, headroom);
         }
 
-        private static double CalculateQualityScore(double brightness, double sharpness)
+        // Headroom
+        // How much quieter the calmer of the two text bands is than the frame as a whole. A busy
+        // frame with one calm strip has somewhere for a title to go; a frame that is busy edge to
+        // edge does not, and text over it has to fight the picture.
+        private static double Headroom(double overall, double top, double bottom)
         {
-            double normalizedBrightness = Math.Min(brightness / BrightnessThreshold, 1.0);
-            double normalizedSharpness = Math.Min(sharpness / SharpnessThreshold, 1.0);
-            double sharpnessWeight = 1.0 - BrightnessWeight;
+            if (overall <= 0)
+            {
+                return 0.0;
+            }
 
-            return (normalizedBrightness * BrightnessWeight) + (normalizedSharpness * sharpnessWeight);
+            var calmest = Math.Min(top, bottom);
+            return Math.Clamp(1.0 - (calmest / overall), 0.0, 1.0);
+        }
+
+        // CalculateQualityScore
+        // Weighs the measures against reference points rather than against a pass mark. Nothing here
+        // saturates in the ordinary range, so frames rank against each other instead of tying at the
+        // top, which is what the old brightness and sharpness thresholds did to almost every frame.
+        internal static double CalculateQualityScore(in FrameQuality quality)
+        {
+            // Mid tones win: a crushed frame and a blown out one are both bad, and only the first
+            // of those was ever penalised.
+            var offset = quality.Brightness - IdealBrightness;
+            var tone = Math.Exp(-(offset * offset) / (2 * BrightnessSpread * BrightnessSpread));
+
+            var detail = Math.Min(Math.Log(1 + quality.Sharpness) / Math.Log(1 + SharpnessReference), 1.0);
+            var contrast = Math.Min(quality.Contrast / ContrastReference, 1.0);
+            var colorfulness = Math.Min(quality.Colorfulness / ColorfulnessReference, 1.0);
+
+            return (ToneWeight * tone)
+                + (DetailWeight * detail)
+                + (ContrastWeight * contrast)
+                + (ColorfulnessWeight * colorfulness)
+                + (HeadroomWeight * quality.Headroom);
         }
 
         private static void TryDeleteFile(string? path)
@@ -372,7 +535,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             catch (UnauthorizedAccessException) { }
         }
 
-        private readonly record struct FrameCandidate(string Path, double Score, bool IsGood);
+        private readonly record struct FrameCandidate(string Path, double Score);
+
+        // FrameQuality
+        // What one frame measures, before any of it is weighed into a score.
+        internal readonly record struct FrameQuality(
+            double Brightness,
+            double Contrast,
+            double Sharpness,
+            double Colorfulness,
+            double Headroom);
     }
 
     /// <summary>
