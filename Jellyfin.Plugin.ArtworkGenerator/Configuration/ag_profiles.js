@@ -24,12 +24,6 @@ export default function (view) {
         { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' }
     ];
 
-    var SCOPES = [
-        { value: 'Tv', label: 'TV' },
-        { value: 'Movies', label: 'Movies' },
-        { value: 'Both', label: 'TV and Movies' }
-    ];
-
     // Which kinds each scope draws, mirroring ArtworkProfile.AppliesTo on the server.
     var SCOPE_KINDS = {
         Tv: ['Series', 'Season', 'Episode'],
@@ -280,16 +274,19 @@ export default function (view) {
         loadCurrentProfile();
     }
 
-    function populateScopeOptions() {
-        var select = view.querySelector('#selectProfileScope');
-        if (!select || select.options.length) return;
+    // The scope is stored as one value, but it is really two independent questions, so the page
+    // asks them that way. Shows covers series, seasons, and episodes.
+    function applyScopeToCheckboxes(scope) {
+        view.querySelector('#chkScopeTv').checked = scope !== 'Movies';
+        view.querySelector('#chkScopeMovies').checked = scope !== 'Tv';
+    }
 
-        SCOPES.forEach(function (scope) {
-            var option = document.createElement('option');
-            option.value = scope.value;
-            option.textContent = scope.label;
-            select.appendChild(option);
-        });
+    function scopeFromCheckboxes() {
+        var tv = view.querySelector('#chkScopeTv').checked;
+        var movies = view.querySelector('#chkScopeMovies').checked;
+
+        if (tv && movies) return 'Both';
+        return movies ? 'Movies' : 'Tv';
     }
 
     function getCurrentProfile() {
@@ -307,8 +304,7 @@ export default function (view) {
 
         // A profile saved before films existed carries no scope, and was a TV profile.
         profile.Scope = profile.Scope || 'Tv';
-        populateScopeOptions();
-        view.querySelector('#selectProfileScope').value = profile.Scope;
+        applyScopeToCheckboxes(profile.Scope);
 
         var isDefault = !!profile.IsDefault;
         view.querySelector('#btnDeleteProfile').classList.toggle('hidden', isDefault);
@@ -862,13 +858,22 @@ export default function (view) {
     // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
-        view.querySelector('#selectProfileScope').addEventListener('change', function () {
-            var profile = getCurrentProfile();
-            if (!profile) return;
+        view.querySelectorAll('#chkScopeTv, #chkScopeMovies').forEach(function (box) {
+            box.addEventListener('change', function () {
+                var profile = getCurrentProfile();
+                if (!profile) return;
 
-            profile.Scope = this.value;
-            loadCurrentProfile();
-            checkDirty();
+                // A profile that draws neither draws nothing, so the last tick cannot be removed:
+                // it goes back rather than letting an empty scope reach the server.
+                if (!view.querySelector('#chkScopeTv').checked && !view.querySelector('#chkScopeMovies').checked) {
+                    this.checked = true;
+                    return;
+                }
+
+                profile.Scope = scopeFromCheckboxes();
+                loadCurrentProfile();
+                checkDirty();
+            });
         });
 
         view.querySelector('#EpgProfilesForm').addEventListener('submit', function (e) {

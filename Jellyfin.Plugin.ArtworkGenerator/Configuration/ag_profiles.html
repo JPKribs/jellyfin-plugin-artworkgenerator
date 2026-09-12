@@ -36,9 +36,20 @@
                     </div>
 
                     <div class="inputContainer" id="profileScopeSection">
-                        <label for="selectProfileScope">Used For:</label>
-                        <select is="emby-select" id="selectProfileScope" data-default="Tv"></select>
-                        <div class="fieldDescription">Which kind of library this profile draws.</div>
+                        <label>Used For:</label>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="chkScopeTv" />
+                                <span class="checkboxLabel">Shows</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="chkScopeMovies" />
+                                <span class="checkboxLabel">Movies</span>
+                            </label>
+                        </div>
+                        <div class="fieldDescription">Which libraries this profile draws. Shows covers series, seasons, and episodes. At least one is required.</div>
                     </div>
 
                     <!-- Series Assignment -->
