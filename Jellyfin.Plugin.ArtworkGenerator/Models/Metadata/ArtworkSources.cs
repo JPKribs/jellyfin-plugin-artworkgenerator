@@ -23,10 +23,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
             IEnumerable<Video> episodes = item switch
             {
-                Movie movie => new[] { (Video)movie },
-                Episode episode => new[] { (Video)episode },
                 Season season => SeasonEpisodes(season),
                 Series series => SafeRecursiveChildren(series),
+
+                // Anything else that is a video is its own source: a film, an episode asked for
+                // directly, a music video, a home video.
+                Video video => new[] { video },
                 _ => Array.Empty<Episode>()
             };
 

@@ -30,7 +30,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             (ArtworkItemKind.Movie, ArtworkSlot.Primary),
             (ArtworkItemKind.Movie, ArtworkSlot.Thumb),
             (ArtworkItemKind.Movie, ArtworkSlot.Logo),
-            (ArtworkItemKind.Movie, ArtworkSlot.Backdrop)
+            (ArtworkItemKind.Movie, ArtworkSlot.Backdrop),
+            (ArtworkItemKind.Video, ArtworkSlot.Primary),
+            (ArtworkItemKind.Video, ArtworkSlot.Thumb),
+            (ArtworkItemKind.Video, ArtworkSlot.Logo),
+            (ArtworkItemKind.Video, ArtworkSlot.Backdrop)
         };
 
         public ArtworkProfile()
@@ -39,6 +43,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             Name = "Profile";
             SeriesIds = new List<Guid>();
             MovieIds = new List<Guid>();
+            VideoIds = new List<Guid>();
             Slots = new List<SlotAssignment>();
             Backdrop = new BackdropSettings();
         }
@@ -67,6 +72,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
         public List<Guid> MovieIds { get; set; }
 
+        /// <summary>
+        /// Gets or sets the standalone videos assigned to this profile, such as music videos and
+        /// home videos.
+        /// </summary>
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
+        public List<Guid> VideoIds { get; set; }
+
         /// <summary>Gets or sets the shape of series primary images.</summary>
         public ArtworkShape SeriesPrimaryShape { get; set; } = ArtworkShape.Portrait;
 
@@ -78,6 +91,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         /// <summary>Gets or sets the shape of movie primary images.</summary>
         public ArtworkShape MoviePrimaryShape { get; set; } = ArtworkShape.Portrait;
+
+        /// <summary>Gets or sets the shape a standalone video's primary image is drawn in.</summary>
+        public ArtworkShape VideoPrimaryShape { get; set; } = ArtworkShape.Portrait;
 
         [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
@@ -109,6 +125,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             ArtworkItemKind.Series => SeriesPrimaryShape,
             ArtworkItemKind.Season => SeasonPrimaryShape,
             ArtworkItemKind.Movie => MoviePrimaryShape,
+            ArtworkItemKind.Video => VideoPrimaryShape,
             _ => EpisodePrimaryShape
         };
 

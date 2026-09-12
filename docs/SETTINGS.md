@@ -1,6 +1,6 @@
 # Artwork Generator Settings
 
-The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Artwork is made for series, seasons, episodes, and films. Labels below match the configuration pages.
+The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Artwork is made for series, seasons, episodes, films, and standalone videos such as music videos and home videos. Labels below match the configuration pages.
 
 ## Settings
 
@@ -20,8 +20,8 @@ How frames are taken from a video and cleaned up, for every poster and every bac
 ## Profiles
 
 * **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.
-* **Assigned Series** and **Assigned Movies**: the series and films that use the active profile. An item belongs to one profile at a time. A profile can carry both.
-* **Images**: one row each for series, seasons, episodes, and movies. Tick an image to generate it whenever an item is missing one.
+* **Assigned Series**, **Assigned Movies**, and **Assigned Videos**: the series, films, and standalone videos that use the active profile. An item belongs to one profile at a time. A profile can carry both.
+* **Images**: one row each for series, seasons, episodes, movies, and videos. Tick an image to generate it whenever an item is missing one.
   * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series, seasons, and movies default to portrait and episodes to landscape. Any design can draw either shape.
   * **Thumb**: a landscape image, offered for every kind. An episode thumb is what many clients show in the next-up and resume rows.
   * **Logo**: a transparent text logo for a series or a film, drawn with a logo design.
@@ -39,7 +39,7 @@ Sizes are a percent of the poster's short side. A portrait image measures them a
 * **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design. The default design cannot be renamed or deleted.
 * **New, Rename, Delete**: manage named designs.
 * **Export, Import**: save a design to JSON, or load one as a new design.
-* **Preview As**: whether the previews show a series, a season, an episode, or a film.
+* **Preview As**: whether the previews show a series, a season, an episode, a film, or a standalone video.
 
 What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
 

@@ -18,7 +18,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         Episode,
 
         /// <summary>A film.</summary>
-        Movie
+        Movie,
+
+        /// <summary>
+        /// A video that stands on its own rather than belonging to a series: a music video, a home
+        /// video, or anything else a library holds as a plain video.
+        /// </summary>
+        Video
     }
 
     /// <summary>
@@ -147,5 +153,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>A frame from the series, as if the letters were cut out of a photo.</summary>
         [Description("Frame")]
         Photo
+    }
+
+    /// <summary>
+    /// Helpers for reading an item kind.
+    /// </summary>
+    public static class ArtworkItemKinds
+    {
+        /// <summary>
+        /// Whether the kind stands on its own rather than belonging to a series. A film and a plain
+        /// video are both their own work: their own file is the source, their own name is the
+        /// title, and they are assigned to a profile by their own id.
+        /// </summary>
+        public static bool IsStandalone(this ArtworkItemKind kind)
+            => kind is ArtworkItemKind.Movie or ArtworkItemKind.Video;
     }
 }

@@ -62,6 +62,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             Season => ArtworkItemKind.Season,
             Series => ArtworkItemKind.Series,
             Movie => ArtworkItemKind.Movie,
+
+            // Last, because Episode, Movie and MusicVideo all derive from Video: anything still
+            // unclaimed here is a video that stands on its own.
+            Video => ArtworkItemKind.Video,
             _ => null
         };
 
@@ -405,7 +409,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         // by the series it belongs to.
         private static Guid ProfileKey(BaseItem item, ArtworkItemKind kind)
         {
-            return kind == ArtworkItemKind.Movie ? item.Id : GetSeriesId(item);
+            return kind.IsStandalone() ? item.Id : GetSeriesId(item);
         }
 
         private static Guid GetSeriesId(BaseItem item) => item switch

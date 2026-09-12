@@ -105,7 +105,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatFullText(SeasonNumber ?? 0, EpisodeNumberStart ?? 0, true, true),
             ArtworkItemKind.Season => SeasonLabel,
-            ArtworkItemKind.Movie => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            ArtworkItemKind.Movie or ArtworkItemKind.Video => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             _ => string.Empty
         };
 
@@ -150,7 +150,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatEpisodeCode(SeasonNumber ?? 0, EpisodeNumberStart ?? 0),
             ArtworkItemKind.Season => SeasonNumber.HasValue ? EpisodeCodeUtils.FormatSeasonCode(SeasonNumber.Value) : string.Empty,
-            ArtworkItemKind.Movie => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            ArtworkItemKind.Movie or ArtworkItemKind.Video => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             _ => string.Empty
         };
 
@@ -214,7 +214,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// Gets a value indicating whether a cutout style punches out the title itself. A series has
         /// no code or number, so its name becomes the cutout and is not drawn a second time.
         /// </summary>
-        public bool CutoutIsPrimary => Kind is ArtworkItemKind.Series or ArtworkItemKind.Movie || Promoted;
+        public bool CutoutIsPrimary => Kind is ArtworkItemKind.Series || Kind.IsStandalone() || Promoted;
 
         /// <summary>
         /// Returns the text a cutout style punches out: the featured number spelled out when the
@@ -245,7 +245,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             Season season => FromSeason(season),
             Series series => FromSeries(series),
             Movie movie => FromMovie(movie),
-            _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, and films.", nameof(item))
+
+            // Last, because the kinds above all derive from Video.
+            Video video => FromStandalone(video, ArtworkItemKind.Video),
+            _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, and videos.", nameof(item))
         };
 
         // FolderNameOf
@@ -264,22 +267,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         }
 
         // FromMovie
-        // Builds the subject for a film. Its own file is the video source, and its title is carried
-        // in SeriesName: that is the field every style and every logo already reads as "the name of
-        // the work", so a film needs no parallel one.
+        // Builds the subject for a film.
         public static ArtworkSubject FromMovie(Movie movie)
-        {
-            ArgumentNullException.ThrowIfNull(movie);
+            => FromStandalone(movie, ArtworkItemKind.Movie);
 
-            return new ArtworkSubject(VideoMetadata.Create(movie, null, movie))
+        // FromStandalone
+        // Builds the subject for a video that is its own work rather than part of a series: a film,
+        // a music video, a home video. Its own file is the video source, and its title is carried in
+        // SeriesName, the field every design and every logo already reads as "the name of the work",
+        // so none of them needs a parallel one.
+        public static ArtworkSubject FromStandalone(Video video, ArtworkItemKind kind)
+        {
+            ArgumentNullException.ThrowIfNull(video);
+
+            return new ArtworkSubject(VideoMetadata.Create(video, null, video))
             {
-                Kind = ArtworkItemKind.Movie,
-                ItemId = movie.Id,
-                SeriesName = movie.Name,
-                OriginalTitle = movie.OriginalTitle,
-                SortTitle = movie.SortName,
-                FolderName = FolderNameOf(movie.Path),
-                ProductionYear = movie.ProductionYear
+                Kind = kind,
+                ItemId = video.Id,
+                SeriesName = video.Name,
+                OriginalTitle = video.OriginalTitle,
+                SortTitle = video.SortName,
+                FolderName = FolderNameOf(video.Path),
+                ProductionYear = video.ProductionYear
             };
         }
 

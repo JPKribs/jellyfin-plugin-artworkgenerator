@@ -21,7 +21,8 @@ export default function (view) {
         { kind: 'Series', label: 'Series', shapeKey: 'SeriesPrimaryShape', defaultShape: 'Portrait' },
         { kind: 'Season', label: 'Seasons', shapeKey: 'SeasonPrimaryShape', defaultShape: 'Portrait' },
         { kind: 'Episode', label: 'Episodes', shapeKey: 'EpisodePrimaryShape', defaultShape: 'Landscape' },
-        { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' }
+        { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Video', label: 'Videos', shapeKey: 'VideoPrimaryShape', defaultShape: 'Portrait' }
     ];
 
     // Which kinds each scope draws, mirroring ArtworkProfile.AppliesTo on the server.
@@ -33,7 +34,8 @@ export default function (view) {
         Series: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
         Season: ['Primary', 'Thumb', 'Backdrop'],
         Episode: ['Primary', 'Thumb', 'Backdrop'],
-        Movie: ['Primary', 'Thumb', 'Logo', 'Backdrop']
+        Movie: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
+        Video: ['Primary', 'Thumb', 'Logo', 'Backdrop']
     };
 
     function getTabs() {
@@ -590,6 +592,21 @@ export default function (view) {
             search: 'Search movies...',
             empty: 'No movies assigned.',
             missing: 'No movies found. Make sure you have movies in your Jellyfin library.',
+            items: []
+        },
+        {
+            key: 'VideoIds',
+
+            // Music videos and home videos are both plain videos to Jellyfin, so one query covers
+            // everything a library holds that is not part of a series and not a film.
+            itemType: 'MusicVideo,Video',
+            noun: 'videos',
+            label: 'Assigned Videos:',
+            button: 'Edit Videos',
+            modalTitle: 'Select Videos',
+            search: 'Search videos...',
+            empty: 'No videos assigned.',
+            missing: 'No videos found. Make sure you have music videos or home videos in your Jellyfin library.',
             items: []
         }
     ];

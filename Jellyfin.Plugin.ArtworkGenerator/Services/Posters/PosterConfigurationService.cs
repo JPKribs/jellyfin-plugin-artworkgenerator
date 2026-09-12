@@ -92,12 +92,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     }
                 }
 
-                foreach (var movieId in profile.MovieIds ?? new List<Guid>())
+                // A film and a standalone video are both assigned by their own id, so they share
+                // one index rather than each having a near-identical copy.
+                foreach (var ownId in (profile.MovieIds ?? new List<Guid>()).Concat(profile.VideoIds ?? new List<Guid>()))
                 {
-                    if (!byMovie.TryAdd(movieId, profile))
+                    if (!byMovie.TryAdd(ownId, profile))
                     {
                         duplicates++;
-                        _logger.LogWarning("Film {MovieId} is assigned to more than one profile; using the first", movieId);
+                        _logger.LogWarning("Item {ItemId} is assigned to more than one profile; using the first", ownId);
                     }
                 }
             }
@@ -127,11 +129,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         /// covers every kind, so an item always has a profile.
         /// </summary>
         /// <param name="kind">The kind of item being drawn.</param>
-        /// <param name="id">The series id for a TV item, or the film's own id.</param>
+        /// <param name="id">The series id for a TV item, or the item's own id otherwise.</param>
         public ArtworkProfile GetProfileFor(ArtworkItemKind kind, Guid id)
         {
             var snapshot = _snapshot;
-            var index = kind == ArtworkItemKind.Movie ? snapshot.ByMovie : snapshot.BySeries;
+            var index = kind.IsStandalone() ? snapshot.ByOwnId : snapshot.BySeries;
 
             return id != Guid.Empty && index.TryGetValue(id, out var assigned)
                 ? assigned
@@ -635,7 +637,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             LogoSettings DefaultLogo,
             ArtworkProfile DefaultProfile,
             IReadOnlyDictionary<Guid, ArtworkProfile> BySeries,
-            IReadOnlyDictionary<Guid, ArtworkProfile> ByMovie)
+            IReadOnlyDictionary<Guid, ArtworkProfile> ByOwnId)
         {
             public static Snapshot Empty { get; } = new(
                 new Dictionary<Guid, PosterSettings>(),
