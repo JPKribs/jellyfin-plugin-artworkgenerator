@@ -16,18 +16,15 @@ public class PosterConfigurationServiceTests
 {
     private static PosterConfigurationService Service() => new(NullLogger<PosterConfigurationService>.Instance);
 
-    private static PluginConfiguration LegacyConfig(Guid seriesId, out PosterConfiguration custom)
+    private static PluginConfiguration Config()
     {
         var config = new PluginConfiguration();
         config.PosterConfigurations.Add(new PosterConfiguration { Name = "Default", IsDefault = true });
-
-        custom = new PosterConfiguration
+        config.PosterConfigurations.Add(new PosterConfiguration
         {
             Name = "Anime",
             Settings = new PosterSettings { PosterStyle = PosterStyle.Fade, GenerateBackdrop = true }
-        };
-        custom.SeriesIds.Add(seriesId);
-        config.PosterConfigurations.Add(custom);
+        });
 
         return config;
     }
@@ -35,7 +32,7 @@ public class PosterConfigurationServiceTests
     [Fact]
     public void Initialize_AddsALogoDesignAndPointsEveryPosterSlotAtTheDefaultDesign()
     {
-        var config = LegacyConfig(Guid.NewGuid(), out _);
+        var config = Config();
         var service = Service();
         service.Initialize(config);
 
@@ -57,7 +54,7 @@ public class PosterConfigurationServiceTests
     [Fact]
     public void Initialize_IsIdempotent()
     {
-        var config = LegacyConfig(Guid.NewGuid(), out _);
+        var config = Config();
         var service = Service();
 
         service.Initialize(config);
@@ -65,7 +62,7 @@ public class PosterConfigurationServiceTests
 
         Assert.Equal(2, config.PosterConfigurations.Count);
         Assert.Single(service.GetLogoDesigns());
-        Assert.Equal(2, config.Profiles.Count);
+        Assert.Single(config.Profiles);
         Assert.All(config.Profiles, p => Assert.Equal(ArtworkProfile.SupportedSlots.Count, p.Slots.Count));
     }
 
@@ -89,7 +86,7 @@ public class PosterConfigurationServiceTests
     [Fact]
     public void GetDesignForSlot_FallsBackToTheDefaultDesign()
     {
-        var config = LegacyConfig(Guid.NewGuid(), out _);
+        var config = Config();
         var service = Service();
         service.Initialize(config);
 
