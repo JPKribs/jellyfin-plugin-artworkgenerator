@@ -95,6 +95,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
 
             var images = new List<RemoteImageInfo>();
 
+            // The picker groups and filters by language. These are drawn from the item's own frames
+            // and its own name, so they belong to whatever language the item's metadata is in: the
+            // library's setting where it has one, the server's otherwise.
+            var language = item.PreferredMetadataLanguage;
+
             foreach (var type in plugin.ArtworkService.GetEnabledImageTypes(item))
             {
                 // Jellyfin also queries remote providers during a metadata refresh, for items
@@ -121,7 +126,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
                             ThumbnailUrl = url,
                             Type = type,
                             Width = artwork.Width,
-                            Height = artwork.Height
+                            Height = artwork.Height,
+                            Language = language
                         });
                     }
                 }
