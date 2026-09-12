@@ -530,7 +530,19 @@
 
 .poster-preview-kind {
     margin-top: 1em;
-    max-width: 480px;
+    max-width: 560px;
+}
+
+/* The control sits under a pair of previews far wider than it, so it fills its own box rather than
+   leaving a cramped island of a dropdown. */
+.poster-preview-kind select {
+    width: 100%;
+}
+
+/* The help text is capped to a short reading measure of its own: left to the control's width it
+   ran the full span as a dense two-line block. */
+.poster-preview-kind .fieldDescription {
+    max-width: 40ch;
 }
 
 .logo-preview-frame {
