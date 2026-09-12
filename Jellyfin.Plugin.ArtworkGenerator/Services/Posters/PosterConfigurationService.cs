@@ -82,29 +82,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             var duplicates = 0;
             foreach (var profile in config.Profiles.Where(p => !p.IsDefault))
             {
-                // A profile only claims the kinds its scope covers, so a TV profile's series list
-                // is honoured while its movie list, if it ever had one, is not.
-                if (profile.AppliesTo(ArtworkItemKind.Series))
+                foreach (var seriesId in profile.SeriesIds)
                 {
-                    foreach (var seriesId in profile.SeriesIds)
+                    if (!bySeries.TryAdd(seriesId, profile))
                     {
-                        if (!bySeries.TryAdd(seriesId, profile))
-                        {
-                            duplicates++;
-                            _logger.LogWarning("Series {SeriesId} is assigned to more than one profile; using the first", seriesId);
-                        }
+                        duplicates++;
+                        _logger.LogWarning("Series {SeriesId} is assigned to more than one profile; using the first", seriesId);
                     }
                 }
 
-                if (profile.AppliesTo(ArtworkItemKind.Movie))
+                foreach (var movieId in profile.MovieIds ?? new List<Guid>())
                 {
-                    foreach (var movieId in profile.MovieIds ?? new List<Guid>())
+                    if (!byMovie.TryAdd(movieId, profile))
                     {
-                        if (!byMovie.TryAdd(movieId, profile))
-                        {
-                            duplicates++;
-                            _logger.LogWarning("Film {MovieId} is assigned to more than one profile; using the first", movieId);
-                        }
+                        duplicates++;
+                        _logger.LogWarning("Film {MovieId} is assigned to more than one profile; using the first", movieId);
                     }
                 }
             }
@@ -141,23 +133,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         /// <summary>
-        /// Returns the profile that covers this kind of item, or null when none does. A profile only
-        /// claims the kinds its scope covers, so films get no artwork until a profile is scoped to
-        /// them rather than being swept up by whatever the TV default happens to be.
+        /// Returns the profile for an item: the one it is assigned to, or the default. Every profile
+        /// covers every kind, so an item always has a profile.
         /// </summary>
         /// <param name="kind">The kind of item being drawn.</param>
         /// <param name="id">The series id for a TV item, or the film's own id.</param>
-        public ArtworkProfile? GetProfileFor(ArtworkItemKind kind, Guid id)
+        public ArtworkProfile GetProfileFor(ArtworkItemKind kind, Guid id)
         {
             var snapshot = _snapshot;
             var index = kind == ArtworkItemKind.Movie ? snapshot.ByMovie : snapshot.BySeries;
 
-            if (id != Guid.Empty && index.TryGetValue(id, out var assigned) && assigned.AppliesTo(kind))
-            {
-                return assigned;
-            }
-
-            return snapshot.DefaultProfile.AppliesTo(kind) ? snapshot.DefaultProfile : null;
+            return id != Guid.Empty && index.TryGetValue(id, out var assigned)
+                ? assigned
+                : snapshot.DefaultProfile;
         }
 
         /// <summary>

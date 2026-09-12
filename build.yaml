@@ -15,8 +15,8 @@ artifacts:
 changelog:
   features:
   - Films are supported alongside TV, with their own posters, thumbs, logos, and backdrops drawn from the film's own video
-  - Each profile says what it is used for — TV, films, or both — and offers only the images that kind of item can carry
-  - A profile saved before films were supported stays a TV profile, so nothing starts drawing over a film library on upgrade
+  - Every profile covers films, series, seasons, and episodes; which items it draws is decided by assigning them to it
+  - The live preview can render a film, alongside a series, season, and episode
   - A season or series poster now draws its candidates from as many different episodes as you ask for images, rather than from at most three
   - A new Bloom poster style that pools a colour in the centre of the frame and sets the text over it, taking that colour from the frame itself when palette colours are on
   - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colours, and text edge over automatically

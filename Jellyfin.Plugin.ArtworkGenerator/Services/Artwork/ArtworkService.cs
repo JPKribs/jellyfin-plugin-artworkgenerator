@@ -161,11 +161,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             }
 
             var profile = _configService.GetProfileFor(kind.Value, ProfileKey(item, kind.Value));
-            if (profile == null)
-            {
-                return Array.Empty<ImageType>();
-            }
-
             return ArtworkProfile.SupportedSlots
                 .Where(s => s.Kind == kind.Value)
                 .Select(s => profile.GetSlot(s.Kind, s.Slot))
@@ -194,11 +189,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             }
 
             var profile = _configService.GetProfileFor(kind.Value, ProfileKey(item, kind.Value));
-            if (profile == null)
-            {
-                return Array.Empty<GeneratedArtwork>();
-            }
-
             var assignment = profile.GetSlot(kind.Value, slot.Value);
             if (assignment is not { Enabled: true })
             {

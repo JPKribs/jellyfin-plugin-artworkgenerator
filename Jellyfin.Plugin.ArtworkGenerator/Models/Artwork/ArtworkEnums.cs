@@ -21,22 +21,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     }
 
     /// <summary>
-    /// What a profile applies to. Tv is first so a profile saved before movies existed loads as a
-    /// TV profile rather than silently taking over a library's films.
-    /// </summary>
-    public enum ProfileScope
-    {
-        /// <summary>Series, seasons, and episodes.</summary>
-        Tv,
-
-        /// <summary>Films only.</summary>
-        Movies,
-
-        /// <summary>Both.</summary>
-        Both
-    }
-
-    /// <summary>
     /// The Jellyfin image slots the plugin can fill. Each maps onto one Jellyfin image type.
     /// </summary>
     public enum ArtworkSlot

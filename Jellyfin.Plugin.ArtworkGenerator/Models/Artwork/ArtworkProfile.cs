@@ -67,12 +67,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
         public List<Guid> MovieIds { get; set; }
 
-        /// <summary>
-        /// Gets or sets what this profile applies to. Defaults to TV, so a profile written before
-        /// movies were supported keeps doing exactly what it did.
-        /// </summary>
-        public ProfileScope Scope { get; set; } = ProfileScope.Tv;
-
         /// <summary>Gets or sets the shape of series primary images.</summary>
         public ArtworkShape SeriesPrimaryShape { get; set; } = ArtworkShape.Portrait;
 
@@ -117,20 +111,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             ArtworkItemKind.Movie => MoviePrimaryShape,
             _ => EpisodePrimaryShape
         };
-
-        /// <summary>
-        /// Returns true when this profile covers the given kind of item. A profile scoped to TV
-        /// never claims a film, and one scoped to movies never claims a series.
-        /// </summary>
-        public bool AppliesTo(ArtworkItemKind kind)
-        {
-            return Scope switch
-            {
-                ProfileScope.Both => true,
-                ProfileScope.Movies => kind == ArtworkItemKind.Movie,
-                _ => kind != ArtworkItemKind.Movie
-            };
-        }
 
         /// <summary>
         /// Returns the shape an image slot renders at. Thumbs and backdrops are always landscape.
