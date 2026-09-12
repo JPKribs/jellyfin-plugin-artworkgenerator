@@ -46,4 +46,5 @@ changelog:
   - Every label, option, and default is read from the settings models
   - The shared generator is split into pipeline, text, and overlay
   - Frame analysis is a single pass, under a megabyte per frame instead of three and a half
+  - Every one-time upgrade of an older configuration sits in its own file, to be deleted whole once installs have moved on
   - Tests hold the documentation, the templates, and US spelling to the code
