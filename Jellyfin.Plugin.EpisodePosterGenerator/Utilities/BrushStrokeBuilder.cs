@@ -6,6 +6,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
 {
     public class BrushStrokeBuilder
     {
+        // The tallest a stroke may be relative to its own length. A brush stroke reads as a stroke
+        // only while it is far longer than it is thick; past this it reads as a blob.
+        private const float MaxHeightToLengthRatio = 0.28f;
+
         private readonly Random _random;
 
         public BrushStrokeBuilder(int seed)
@@ -17,14 +21,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
         // Builds the stroke geometry. Exactly one SKPath is returned; any other path allocated
         // along the way is released, including when stroke building or Simplify throws part way
         // through — these are native handles, so they cannot be left to the success path alone.
-        public SKPath BuildStrokePath(SKRect bounds, SKRect textArea, float canvasHeight)
+        public SKPath BuildStrokePath(SKRect bounds, SKRect textArea, float unit)
         {
             SKPath? combined = new SKPath { FillType = SKPathFillType.Winding };
             SKPath? simplified = null;
 
             try
             {
-                return BuildStrokePathCore(bounds, textArea, canvasHeight, ref combined, ref simplified);
+                return BuildStrokePathCore(bounds, textArea, unit, ref combined, ref simplified);
             }
             finally
             {
@@ -36,7 +40,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
         // BuildStrokePathCore
         // Hands ownership of whichever path it returns back to the caller by nulling the
         // corresponding ref, so the caller's finally disposes only the one left behind.
-        private SKPath BuildStrokePathCore(SKRect bounds, SKRect textArea, float canvasHeight, ref SKPath? combined, ref SKPath? simplified)
+        private SKPath BuildStrokePathCore(SKRect bounds, SKRect textArea, float unit, ref SKPath? combined, ref SKPath? simplified)
         {
             var working = combined!;
 
@@ -53,11 +57,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Utilities
             float usableHeight = usableBottom - usableTop;
 
             int strokeCount = _random.Next(2) == 0 ? 2 : 3;
-            float perStrokeHeight = strokeCount == 2 ? canvasHeight * 0.48f : canvasHeight * 0.38f;
+            float perStrokeHeight = strokeCount == 2 ? unit * 0.48f : unit * 0.38f;
 
-            // Per-gap spacing ranges from 5% canvas overlap to 5% canvas gap (signed).
+            // A stroke's height comes from the short side, but its length is always the width. On a
+            // tall poster that leaves each stroke half as tall as it is long, so the stack cannot
+            // fit and the tilt turns it into a cross. Capping the height against the stroke's own
+            // length keeps the painted proportion in both shapes. On a wide poster the cap is never
+            // reached, so landscape output is unchanged, and the cap consumes no random numbers, so
+            // the stroke layout for a given item is untouched there.
+            perStrokeHeight = MathF.Min(perStrokeHeight, bounds.Width * 1.08f * MaxHeightToLengthRatio);
+
+            // Per-gap spacing ranges from 5% of the short side in overlap to the same in gap (signed).
             // If the resulting stack would exceed the usable area, force more overlap.
-            float desiredOverlap = ((float)_random.NextDouble() * 2f - 1f) * canvasHeight * 0.05f;
+            float desiredOverlap = ((float)_random.NextDouble() * 2f - 1f) * unit * 0.05f;
             float minOverlap = (strokeCount * perStrokeHeight - usableHeight) / (strokeCount - 1);
             float overlap = MathF.Max(desiredOverlap, minOverlap);
 
