@@ -1,11 +1,11 @@
 {
-  "name": "Gradient Standard",
-  "description": "A gradient in Jellyfin's colors, cut back to the episode name alone and set at the top of the frame.",
+  "name": "Photo Grid",
+  "description": "Four frames tiled into one canvas under a gradient, with the episode name across the top.",
   "author": "Joseph Kribs",
   "version": "10.11.25.0",
   "createdDate": "2025-10-21T12:43:25.367Z",
   "settings": {
-    "CanvasSource": "Extract",
+    "CanvasSource": "Grid",
     "GenerateBackdrop": false,
     "PosterStyle": "Standard",
     "CutoutType": "Code",
@@ -41,6 +41,8 @@
     "GraphicSize": 25,
     "GraphicPosition": "Center",
     "GraphicAlignment": "Center",
-    "TextPosition": "Top"
+    "TextPosition": "Top",
+    "GridFrames": 4,
+    "GridGap": 1.5
   }
 }

@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         SeriesBackdrop,
 
         // Several frames tiled into one canvas, like a wall of photographs.
-        [Description("Grid of Frames")]
+        [Description("Grid of Extracted Frames")]
         Grid
     }
 }

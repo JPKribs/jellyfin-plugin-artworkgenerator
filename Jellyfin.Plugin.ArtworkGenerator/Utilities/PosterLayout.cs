@@ -51,41 +51,6 @@ public sealed class PosterLayout
     }
 
     /// <summary>
-    /// The tallest horizontal band of the bounds that nothing has claimed. A design whose focal
-    /// element must stay centered puts it in the middle of this rather than of the whole frame, so
-    /// it keeps its composition without running into the text.
-    /// </summary>
-    public SKRect LargestFreeBand(SKRect bounds)
-    {
-        if (IsEmpty)
-        {
-            return bounds;
-        }
-
-        // Every claimed edge is a place the free space can start or stop.
-        var edges = new List<float> { bounds.Top, bounds.Bottom };
-        foreach (var claim in _claimed)
-        {
-            edges.Add(Math.Clamp(claim.Top, bounds.Top, bounds.Bottom));
-            edges.Add(Math.Clamp(claim.Bottom, bounds.Top, bounds.Bottom));
-        }
-
-        edges.Sort();
-
-        var best = SKRect.Empty;
-        for (var i = 0; i < edges.Count - 1; i++)
-        {
-            var band = SKRect.Create(bounds.Left, edges[i], bounds.Width, edges[i + 1] - edges[i]);
-            if (band.Height > best.Height && !Collides(band))
-            {
-                best = band;
-            }
-        }
-
-        return best.Height > 0 ? best : bounds;
-    }
-
-    /// <summary>
     /// Moves an area vertically until it clears what is already claimed, keeping it inside the
     /// bounds. Tries above the obstruction first, then below, and gives the original back when
     /// neither fits, since a poster with something slightly overlapped beats one with it missing.

@@ -1,11 +1,11 @@
 {
-  "name": "Gradient Glass",
-  "description": "A frosted panel floating in the middle of the frame over a soft left to right wash.",
+  "name": "Grid Glass",
+  "description": "A frosted panel floating over six frames tiled into a wall, with a soft wash across them.",
   "author": "Joseph Kribs",
   "version": "12.0.1.0",
   "createdDate": "2026-09-11T00:00:00.000Z",
   "settings": {
-    "CanvasSource": "Extract",
+    "CanvasSource": "Grid",
     "GenerateBackdrop": false,
     "PosterStyle": "FrostedGlass",
     "CutoutType": "Code",
@@ -41,6 +41,8 @@
     "GraphicSize": 25,
     "GraphicPosition": "Center",
     "GraphicAlignment": "Center",
-    "TextPosition": "Center"
+    "TextPosition": "Center",
+    "GridFrames": 6,
+    "GridGap": 1.0
   }
 }

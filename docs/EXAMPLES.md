@@ -1,11 +1,11 @@
 # Design Examples
 
 Every design ships with two worked examples: one showing it as it comes, and one pushed somewhere
-else with color, a gradient, the frame's own palette, or the text moved to another edge. Each is a
-real configuration you can import and edit.
+else with color, a gradient, the frame's own palette, a grid of frames, or the text moved to another
+edge. Each is a real configuration you can import and edit.
 
 Download a template, then import it from the plugin's **Designs** tab. Every image below was
-rendered by the plugin from the same public domain frame, so what differs between them is the
+rendered by the plugin from the same public domain frames, so what differs between them is the
 design and nothing else.
 
 | Design | | |
@@ -31,9 +31,9 @@ Standard poster with a thin, black overlay and all episode details visible.
 | | | | ![](examples/Standard/Example5.png) | ![](examples/Standard/Example6.png) | ![](examples/Standard/Example7.png) | ![](examples/Standard/Example8.png) |
 | | | | ![](examples/Standard/Example9.png) | ![](examples/Standard/Example10.png) | | |
 
-### Gradient Standard
+### Photo Grid
 
-A gradient in Jellyfin's colors, cut back to the episode name alone and set at the top of the frame.
+Four frames tiled into one canvas under a gradient, with the episode name across the top.
 
 [Download this template](examples/StandardGradient/Template.json)
 
@@ -115,9 +115,9 @@ Frosted glass panel behind the episode text, blurring the frame beneath it.
 | | | | ![](examples/FrostedGlass/Example5.png) | ![](examples/FrostedGlass/Example6.png) | ![](examples/FrostedGlass/Example7.png) | ![](examples/FrostedGlass/Example8.png) |
 | | | | ![](examples/FrostedGlass/Example9.png) | ![](examples/FrostedGlass/Example10.png) | | |
 
-### Gradient Glass
+### Grid Glass
 
-A frosted panel floating in the middle of the frame over a soft left to right wash.
+A frosted panel floating over six frames tiled into a wall, with a soft wash across them.
 
 [Download this template](examples/GlassGradient/Template.json)
 

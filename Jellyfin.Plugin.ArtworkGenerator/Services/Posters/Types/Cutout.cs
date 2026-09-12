@@ -143,14 +143,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             using var primaryStyle = CreatePrimaryStyle(config, unit);
             var remaining = BuildColumn(safeArea, config, unit, primaryStyle, reserveTitle).Remaining;
 
-            // Centered in the room actually free, not in the whole frame, so the lettering keeps
-            // its composition without running into the title beneath it.
-            var free = Layout.LargestFreeBand(safeArea);
-            var height = Math.Min(
-                FocalBandHeight(safeArea, remaining.Height, MinimumCutoutAreaRatio),
-                free.Height);
-
-            return CenterInSafeArea(free, height);
+            return CenterInSafeArea(safeArea, FocalBandHeight(safeArea, remaining.Height, MinimumCutoutAreaRatio));
         }
 
         // DrawCutoutText

@@ -82,15 +82,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             var subject = CreateDemoSubject(kind, assetDir, baseImage.Width, baseImage.Height);
 
-            // A grid needs more than one picture to look like anything, so the preview alternates
-            // the two demo frames the way a real one alternates frames from the video.
-            using var gridImage = shaped.CanvasSource == CanvasSource.Grid
-                ? ComposeDemoGrid(assetDir, baseImage, shaped)
-                : null;
-
             var bytes = shaped.CanvasSource == CanvasSource.None
                 ? RenderTransparentPoster(baseImage.Width, baseImage.Height, subject, shaped)
-                : RenderPoster(gridImage ?? baseImage, subject, shaped);
+                : RenderPoster(baseImage, subject, shaped);
 
             if (bytes == null)
             {
@@ -131,9 +125,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // ComposeDemoGrid
         // The preview's stand-in for a grid of frames, alternating the two demo pictures so the
         // cells and the gap between them are visible.
-        private SKBitmap? ComposeDemoGrid(string assetDir, SKBitmap baseImage, PosterSettings settings)
+        private SKBitmap? ComposeDemoGrid(SKBitmap baseImage, PosterSettings settings)
         {
-            using var alternate = SKBitmap.Decode(Path.Combine(assetDir, "demo-base-alt.png"));
+            using var alternate = SKBitmap.Decode(Path.Combine(EnsureAssetsExtracted(), "demo-base-alt.png"));
             if (alternate == null)
             {
                 return null;
@@ -163,7 +157,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var adjusted = ArtworkService.ShapeAdjust(settings, settings.Shape);
             ArtworkService.ApplySubjectRules(subject, adjusted);
 
-            var canvas = _croppingService.CropPoster(baseImage, adjusted);
+            // A grid needs more than one picture to look like anything, so the sample alternates the
+            // two demo frames the way a real poster alternates frames from the video.
+            using var grid = adjusted.CanvasSource == CanvasSource.Grid
+                ? ComposeDemoGrid(baseImage, adjusted)
+                : null;
+
+            var canvas = _croppingService.CropPoster(grid ?? baseImage, adjusted);
             try
             {
                 subject.VideoMetadata.VideoWidth = canvas.Width;
