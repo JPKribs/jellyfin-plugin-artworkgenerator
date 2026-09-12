@@ -62,7 +62,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 return;
             }
 
-            using var primaryStyle = CreatePrimaryStyle(settings, unit);
+            var align = ResolveTextAlign(settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
             var showPrimary = ShowsPrimary(settings, subject);
 
             // The title's zone is reserved before the numeral is sized, so the numeral fills what is
@@ -74,7 +75,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, primarySlot.MidX, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 

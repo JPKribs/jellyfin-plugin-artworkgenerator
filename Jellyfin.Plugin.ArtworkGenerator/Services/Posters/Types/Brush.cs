@@ -17,6 +17,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Brush strokes reveal the image through a flat overlay. Painted, editorial look.";
 
+        // NaturalTextAlignment
+        // Left rather than the center most designs use: its text sits in a left hand column over the strokes.
+        protected override TextAlignment NaturalTextAlignment => TextAlignment.Left;
+
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
@@ -148,19 +152,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
-            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
+            var align = ResolveTextAlign(settings);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, align);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
 
             var column = BuildTextColumn(safeArea, settings, unit, subject, secondaryStyle, primaryStyle);
 
             if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
-                secondaryStyle.Draw(skCanvas, subject.SecondaryShort, safeArea.Left, secondaryStyle.BaselineAtBottom(codeSlot));
+                secondaryStyle.Draw(skCanvas, subject.SecondaryShort, AlignedX(safeArea, align), secondaryStyle.BaselineAtBottom(codeSlot));
             }
 
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTextHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, AlignedX(safeArea, align), safeArea.Width * TextWidthRatio, settings.LongTextHandling);
             }
         }
 

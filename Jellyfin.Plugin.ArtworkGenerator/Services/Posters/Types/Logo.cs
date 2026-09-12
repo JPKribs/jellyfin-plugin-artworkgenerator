@@ -63,19 +63,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var (headline, code) = GetText(subject);
 
-            using var primaryStyle = CreatePrimaryStyle(settings, unit);
-            using var secondaryStyle = CreateSecondaryStyle(settings, unit);
+            var align = ResolveTextAlign(settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, align);
 
             var column = BuildColumn(subject, settings, width, height, primaryStyle, secondaryStyle);
 
             if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
-                secondaryStyle.Draw(skCanvas, code, codeSlot.MidX, secondaryStyle.BaselineAtBottom(codeSlot));
+                secondaryStyle.Draw(skCanvas, code, AlignedX(codeSlot, align), secondaryStyle.BaselineAtBottom(codeSlot));
             }
 
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawPrimaryInSlot(skCanvas, headline, primaryStyle, primarySlot, primarySlot.MidX, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
+                DrawPrimaryInSlot(skCanvas, headline, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 

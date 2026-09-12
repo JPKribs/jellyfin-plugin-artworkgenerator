@@ -43,6 +43,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Where the text block sits. Hidden on the designs that make the text part of the artwork.
         public const string TextPosition = "TextPosition";
 
+        // TextAlignment
+        // Which side the text block is pulled to. Hidden alongside TextPosition on the designs that
+        // make the text part of the artwork.
+        public const string TextAlignment = "TextAlignment";
+
         /// <summary>The cutout's text choice.</summary>
         public const string CutoutType = "CutoutType";
 

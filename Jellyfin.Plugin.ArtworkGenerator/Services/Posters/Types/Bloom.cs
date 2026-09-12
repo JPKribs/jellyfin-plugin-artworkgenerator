@@ -149,8 +149,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Center);
-            using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Center);
+            var align = ResolveTextAlign(settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, align);
 
             float maxTextWidth = safeArea.Width * TextWidthRatio;
 
@@ -190,12 +191,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (secondaryText != null && placed.TryGetSlot(SecondaryBlock, out var secondarySlot))
             {
-                secondaryStyle.Draw(skCanvas, secondaryText, safeArea.MidX, secondaryStyle.BaselineAtTop(secondarySlot));
+                secondaryStyle.Draw(skCanvas, secondaryText, AlignedX(safeArea, align), secondaryStyle.BaselineAtTop(secondarySlot));
             }
 
             if (primaryLines.Count > 0 && placed.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                primaryStyle.DrawLines(skCanvas, primaryLines, safeArea.MidX, primaryStyle.BaselineAtTop(primarySlot));
+                primaryStyle.DrawLines(skCanvas, primaryLines, AlignedX(safeArea, align), primaryStyle.BaselineAtTop(primarySlot));
             }
         }
 

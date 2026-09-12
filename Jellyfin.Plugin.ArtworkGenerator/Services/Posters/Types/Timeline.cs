@@ -17,6 +17,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A short, user facing description of this style shown in the configuration UI.
         public override string Description => "Progress bar with the subtitle, the position, and an optional title. Clean and data driven.";
 
+        // NaturalTextAlignment
+        // Left rather than the center most designs use: its title and labels line up with the progress bar below them.
+        protected override TextAlignment NaturalTextAlignment => TextAlignment.Left;
+
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
@@ -53,7 +57,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
+            var align = ResolveTextAlign(settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
             using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
 
             // A series has no position to mark, so it gets the title alone rather than a bar that
@@ -82,7 +87,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, primarySlot.Left, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 

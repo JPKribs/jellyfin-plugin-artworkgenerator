@@ -34,7 +34,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             (PosterSettingRules.ShowPrimary, PosterSettingState.Required),
             (PosterSettingRules.TextEdge, PosterSettingState.Optional),
             // Text position is hidden here: the two border edges are this design's own placement control.
-            (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
+            (PosterSettingRules.TextPosition, PosterSettingState.Hidden),
+            (PosterSettingRules.TextAlignment, PosterSettingState.Hidden));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
         private const float BorderStrokeReference = 4f;

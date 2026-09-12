@@ -33,7 +33,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // SettingRules
         // Text position is hidden here: the title rides the tilted sash, which is the design.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
-            (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
+            (PosterSettingRules.TextPosition, PosterSettingState.Hidden),
+            (PosterSettingRules.TextAlignment, PosterSettingState.Hidden));
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.

@@ -64,6 +64,86 @@ public class TextPositionTests
     public void DefaultIsAuto()
     {
         Assert.Equal(TextPosition.Auto, new PosterSettings().TextPosition);
+        Assert.Equal(TextAlignment.Auto, new PosterSettings().TextAlignment);
+    }
+
+    /// <summary>
+    /// The designs that cannot pull their text to a side: it rides a tilted sash, runs sideways up
+    /// an edge, or is already placed along a border by the frame's own control. Cutout is not among
+    /// them — its lettering is fixed, but the title line under it is ordinary text.
+    /// </summary>
+    private static readonly PosterStyle[] CannotBeAligned =
+    {
+        PosterStyle.Striped,
+        PosterStyle.Fade,
+        PosterStyle.Frame
+    };
+
+    [Fact]
+    public void EveryOtherDesignOffersTextAlignment()
+    {
+        foreach (var generator in PreviewService.GetStyleCatalog())
+        {
+            var offered = !generator.SettingRules.TryGetValue(PosterSettingRules.TextAlignment, out var state)
+                || state == PosterSettingState.Optional;
+
+            Assert.Equal(!CannotBeAligned.Contains(generator.Style), offered);
+        }
+    }
+
+    [Theory]
+    [InlineData(PosterStyle.Standard)]
+    [InlineData(PosterStyle.Bloom)]
+    [InlineData(PosterStyle.FrostedGlass)]
+    [InlineData(PosterStyle.Brush)]
+    [InlineData(PosterStyle.Logo)]
+    public void OfferedDesigns_DrawADifferentImageAtEachAlignment(PosterStyle style)
+    {
+        var left = RenderAligned(style, TextAlignment.Left);
+        var center = RenderAligned(style, TextAlignment.Center);
+        var right = RenderAligned(style, TextAlignment.Right);
+
+        Assert.False(left.SequenceEqual(center));
+        Assert.False(center.SequenceEqual(right));
+        Assert.False(left.SequenceEqual(right));
+    }
+
+    /// <summary>
+    /// Auto has to land on the design's own side, which is what let this be added without moving a
+    /// single existing image.
+    /// </summary>
+    [Theory]
+    [InlineData(PosterStyle.Standard, TextAlignment.Center)]
+    [InlineData(PosterStyle.Brush, TextAlignment.Left)]
+    [InlineData(PosterStyle.Timeline, TextAlignment.Left)]
+    public void AutoMatchesTheDesignsOwnSide(PosterStyle style, TextAlignment natural)
+    {
+        Assert.True(RenderAligned(style, TextAlignment.Auto).SequenceEqual(RenderAligned(style, natural)));
+    }
+
+    [Theory]
+    [InlineData(PosterStyle.Striped)]
+    [InlineData(PosterStyle.Fade)]
+    [InlineData(PosterStyle.Frame)]
+    public void HiddenDesigns_IgnoreTheAlignmentEntirely(PosterStyle style)
+    {
+        var auto = RenderAligned(style, TextAlignment.Auto);
+
+        Assert.True(auto.SequenceEqual(RenderAligned(style, TextAlignment.Left)));
+        Assert.True(auto.SequenceEqual(RenderAligned(style, TextAlignment.Right)));
+    }
+
+    private static byte[] RenderAligned(PosterStyle style, TextAlignment alignment)
+    {
+        var assetRoot = Path.Combine(Path.GetTempPath(), "ag-textposition-tests");
+        var preview = new Services.Posters.PreviewService(NullLoggerFactory.Instance, assetRoot);
+
+        var bytes = preview.GeneratePreview(
+            new PosterSettings { PosterStyle = style, TextAlignment = alignment },
+            ArtworkItemKind.Episode);
+
+        Assert.NotNull(bytes);
+        return bytes!;
     }
 
     [Fact]

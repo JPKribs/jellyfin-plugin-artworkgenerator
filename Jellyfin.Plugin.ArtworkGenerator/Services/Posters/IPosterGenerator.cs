@@ -123,6 +123,44 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             };
         }
 
+        // NaturalTextAlignment
+        // The side this style pulls its text to when the setting is left on its default. Most
+        // designs center it; the ones built around a left hand column say so.
+        protected virtual TextAlignment NaturalTextAlignment => TextAlignment.Center;
+
+        // ResolveTextAlign
+        // Turns the setting into the alignment the text is drawn with, falling back to the style's
+        // own side so an untouched configuration renders exactly as it always has.
+        protected SKTextAlign ResolveTextAlign(PosterSettings settings)
+        {
+            var alignment = settings?.TextAlignment ?? TextAlignment.Auto;
+
+            if (alignment == TextAlignment.Auto)
+            {
+                alignment = NaturalTextAlignment;
+            }
+
+            return alignment switch
+            {
+                TextAlignment.Left => SKTextAlign.Left,
+                TextAlignment.Right => SKTextAlign.Right,
+                _ => SKTextAlign.Center
+            };
+        }
+
+        // AlignedX
+        // The x a run of text is drawn from for a given alignment: SkiaSharp treats it as the left
+        // edge, the middle, or the right edge depending on the alignment it is given.
+        protected static float AlignedX(SKRect slot, SKTextAlign align)
+        {
+            return align switch
+            {
+                SKTextAlign.Left => slot.Left,
+                SKTextAlign.Right => slot.Right,
+                _ => slot.MidX
+            };
+        }
+
         // PlaceBlockTop
         // The top edge for a block of known height, for the styles that position a measured box
         // themselves — a frosted panel, a centered pair of lines — rather than through a column.
@@ -247,8 +285,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            using var primaryStyle = CreatePrimaryStyle(settings, unit);
-            using var secondaryStyle = CreateSecondaryStyle(settings, unit);
+            var align = ResolveTextAlign(settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, align);
 
             var parts = subject.SecondaryParts;
             var label = subject.Secondary;
@@ -272,7 +311,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 }
                 else
                 {
-                    secondaryStyle.Draw(canvas, label, secondarySlot.MidX, secondaryStyle.BaselineAtBottom(secondarySlot));
+                    secondaryStyle.Draw(canvas, label, AlignedX(secondarySlot, align), secondaryStyle.BaselineAtBottom(secondarySlot));
                 }
             }
 
@@ -283,8 +322,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawPrimaryInSlot(canvas, subject.Primary!, primaryStyle, primarySlot, primarySlot.MidX, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
+                DrawPrimaryInSlot(canvas, subject.Primary!, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
+        }
+
+        // DrawnFromCenter
+        // SkiaSharp draws from the left edge, the middle, or the right edge depending on the
+        // alignment it is given. A caller that knows where a run's center should be converts it
+        // here, so a piece lands in the same place whatever the style is aligned to.
+        private static float DrawnFromCenter(float centerX, float width, SKTextAlign align)
+        {
+            return align switch
+            {
+                SKTextAlign.Left => centerX - (width / 2f),
+                SKTextAlign.Right => centerX + (width / 2f),
+                _ => centerX
+            };
         }
 
         // DrawSeasonEpisodeInfo
@@ -295,8 +348,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(secondaryStyle);
             ArgumentNullException.ThrowIfNull(settings);
 
+            var align = secondaryStyle.Align;
+
             using var bulletStyle = PaintFactory.CreateTextStyle(
-                secondaryStyle.Fill.Color, secondaryStyle.Size, ResolveSecondaryTypeface(settings, SKFontStyle.Normal), height);
+                secondaryStyle.Fill.Color, secondaryStyle.Size, ResolveSecondaryTypeface(settings, SKFontStyle.Normal), height, align);
 
             var seasonText = seasonNumber.ToString(CultureInfo.InvariantCulture);
             var episodeText = episodeNumber.ToString(CultureInfo.InvariantCulture);
@@ -308,10 +363,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var episodeWidth = secondaryStyle.MeasureWidth(episodeText);
             var bulletWidth = bulletStyle.MeasureWidth(bulletText);
 
-            var bulletX = slot.MidX;
-            secondaryStyle.Draw(canvas, seasonText, bulletX - (bulletWidth / 2f) - (seasonWidth / 2f), baselineY);
-            bulletStyle.Draw(canvas, bulletText, bulletX, baselineY);
-            secondaryStyle.Draw(canvas, episodeText, bulletX + (bulletWidth / 2f) + (episodeWidth / 2f), baselineY);
+            // The three pieces are laid out around the bullet, so the run is anchored as a whole and
+            // then each piece is placed at its own center.
+            var bulletCenter = align switch
+            {
+                SKTextAlign.Left => slot.Left + seasonWidth + (bulletWidth / 2f),
+                SKTextAlign.Right => slot.Right - episodeWidth - (bulletWidth / 2f),
+                _ => slot.MidX
+            };
+
+            secondaryStyle.Draw(canvas, seasonText, DrawnFromCenter(bulletCenter - (bulletWidth / 2f) - (seasonWidth / 2f), seasonWidth, align), baselineY);
+            bulletStyle.Draw(canvas, bulletText, DrawnFromCenter(bulletCenter, bulletWidth, align), baselineY);
+            secondaryStyle.Draw(canvas, episodeText, DrawnFromCenter(bulletCenter + (bulletWidth / 2f) + (episodeWidth / 2f), episodeWidth, align), baselineY);
         }
 
         // DrawSeparatorLine

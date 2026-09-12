@@ -113,7 +113,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             float panelWidth = Math.Min(safeArea.Width, contentWidth + (2 * padX));
             float panelHeight = contentHeight + (2 * padY);
-            float panelLeft = safeArea.MidX - (panelWidth / 2f);
+            float panelLeft = ResolveTextAlign(settings) switch
+            {
+                SKTextAlign.Left => safeArea.Left,
+                SKTextAlign.Right => safeArea.Right - panelWidth,
+                _ => safeArea.MidX - (panelWidth / 2f)
+            };
             float panelTop = PlaceBlockTop(safeArea, panelHeight, settings);
             var panelRect = new SKRect(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight);
             using var roundedPanel = new SKRoundRect(panelRect, unit * CornerRadiusRatio);

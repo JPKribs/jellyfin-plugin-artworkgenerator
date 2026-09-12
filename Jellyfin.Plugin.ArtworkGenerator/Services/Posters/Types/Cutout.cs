@@ -37,6 +37,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             (PosterSettingRules.SecondaryFontSize, PosterSettingState.Hidden),
             (PosterSettingRules.SecondaryFontColor, PosterSettingState.Hidden),
             // Text position is hidden here: the lettering is cut out of the image and has to stay centered in it.
+            // The lettering is cut centred into the image and stays there, but the title line
+            // beneath it is ordinary text and can be pulled to a side.
             (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
 
         // Baseline-to-baseline spacing between stacked cutout words, relative to the font size.
@@ -89,12 +91,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            using var primaryStyle = CreatePrimaryStyle(settings, unit);
+            var align = ResolveTextAlign(settings);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
 
             var column = BuildColumn(safeArea, settings, unit, primaryStyle, true);
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawPrimaryInSlot(skCanvas, subject.Primary, primaryStyle, primarySlot, primarySlot.MidX, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 

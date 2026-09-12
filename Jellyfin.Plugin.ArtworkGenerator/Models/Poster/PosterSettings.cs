@@ -75,6 +75,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Text Position", Description = "Where the title and subtitle sit on the image. Left on the design default, each design keeps the placement it was built around. Designs that make the text part of the artwork, such as Cutout and Fade, do not offer this.")]
         public TextPosition TextPosition { get; set; } = TextPosition.Auto;
 
+        /// <summary>
+        /// Gets or sets which side the title and subtitle are pulled to. Left on its default, each
+        /// design keeps the side it was drawn around.
+        /// </summary>
+        [Display(Name = "Text Alignment", Description = "Which side the title and subtitle are pulled to. Left on the design default, each design keeps the side it was built around. Designs that make the text part of the artwork, such as Cutout and Fade, do not offer this.")]
+        public TextAlignment TextAlignment { get; set; } = TextAlignment.Auto;
+
         [Display(Name = "Enable Outline", Description = "Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.")]
         public bool CutoutBorder { get; set; } = true;
 
