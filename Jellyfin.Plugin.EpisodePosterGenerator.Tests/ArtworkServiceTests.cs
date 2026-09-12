@@ -39,15 +39,15 @@ public class ArtworkServiceTests
     [Fact]
     public void ShapeAdjust_PortraitScalesTheText()
     {
-        var design = new PosterSettings { TitleFontSize = 10f, EpisodeFontSize = 7f };
+        var design = new PosterSettings { PrimaryFontSize = 10f, SecondaryFontSize = 7f };
 
         var portrait = ArtworkService.ShapeAdjust(design, ArtworkShape.Portrait);
         var landscape = ArtworkService.ShapeAdjust(design, ArtworkShape.Landscape);
 
-        Assert.Equal(12.247, portrait.TitleFontSize, 3);
-        Assert.Equal(8.573, portrait.EpisodeFontSize, 3);
-        Assert.Equal(10.0, landscape.TitleFontSize, 3);
-        Assert.Equal(10.0, design.TitleFontSize, 3);
+        Assert.Equal(12.247, portrait.PrimaryFontSize, 3);
+        Assert.Equal(8.573, portrait.SecondaryFontSize, 3);
+        Assert.Equal(10.0, landscape.PrimaryFontSize, 3);
+        Assert.Equal(10.0, design.PrimaryFontSize, 3);
     }
 
     [Theory]

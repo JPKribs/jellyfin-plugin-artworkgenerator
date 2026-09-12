@@ -3,7 +3,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
     /// <summary>
     /// How a framed poster fills its two edges with the title and the subtitle.
     /// </summary>
-    public enum TitleEdge
+    public enum TextEdge
     {
         /// <summary>The top edge fills first: the title takes it, and a lone subtitle takes it instead.</summary>
         TopFirst,

@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // The bar and its labels are the style, so the code line is always drawn.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
-            (PosterSettingRules.ShowEpisode, PosterSettingState.Required));
+            (PosterSettingRules.ShowSecondary, PosterSettingState.Required));
 
         private const string LabelsBlock = "labels";
         private const string BarBlock = "bar";
@@ -45,8 +45,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
-            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
 
             // A series has no position to mark, so it gets the title alone rather than a bar that
             // would mean nothing.
@@ -57,9 +57,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             var column = new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
                 .Add(PrimaryBlock, ShowsPrimary(settings, subject)
-                    ? titleStyle.BlockHeight(2)
+                    ? primaryStyle.BlockHeight(2)
                     : 0f)
-                .Add(LabelsBlock, settings.ShowEpisode && hasProgress ? episodeStyle.LineBox : 0f)
+                .Add(LabelsBlock, settings.ShowSecondary && hasProgress ? secondaryStyle.LineBox : 0f)
                 .Add(BarBlock, hasProgress ? MeasureProgressBar(unit) : 0f);
 
             if (column.TryGetSlot(BarBlock, out var barSlot))
@@ -69,12 +69,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (column.TryGetSlot(LabelsBlock, out var labelsSlot))
             {
-                DrawLabels(skCanvas, subject, episodeStyle, settings, unit, labelsSlot);
+                DrawLabels(skCanvas, subject, secondaryStyle, settings, unit, labelsSlot);
             }
 
-            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Primary!, titleStyle, titleSlot, titleSlot.Left, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, primarySlot.Left, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 
@@ -102,7 +102,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 ? Math.Clamp((float)position / total, 0f, 1f)
                 : 1f;
 
-            var barColor = ColorUtils.ParseHexColor(config.EpisodeFontColor);
+            var barColor = ColorUtils.ParseHexColor(config.SecondaryFontColor);
             float fillEndX = slot.Left + (slot.Width * progress);
             float dotX = Math.Clamp(fillEndX, slot.Left + dotRadius, slot.Right - dotRadius);
 

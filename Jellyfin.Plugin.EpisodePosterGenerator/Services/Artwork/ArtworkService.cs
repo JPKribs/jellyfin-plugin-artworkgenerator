@@ -118,8 +118,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 // the average of the two sides instead gives the text the same weight in both
                 // shapes: a 2:3 poster takes about a quarter more than its width alone would give.
                 var textScale = Math.Clamp(MathF.Sqrt(1f / portrait), 1f, MaxPortraitTextScale);
-                settings.TitleFontSize *= textScale;
-                settings.EpisodeFontSize *= textScale;
+                settings.PrimaryFontSize *= textScale;
+                settings.SecondaryFontSize *= textScale;
                 settings.PosterFill = PosterFill.Fit;
             }
             else if (ratio < 1f)
@@ -142,7 +142,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            subject.PrimaryShown = settings.ShowTitle;
+            subject.PrimaryShown = settings.ShowPrimary;
         }
 
         /// <summary>

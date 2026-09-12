@@ -23,9 +23,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.CutoutType, PosterSettingState.Optional),
             (PosterSettingRules.CutoutBorder, PosterSettingState.Optional),
-            (PosterSettingRules.ShowEpisode, PosterSettingState.Required),
-            (PosterSettingRules.EpisodeFontSize, PosterSettingState.Hidden),
-            (PosterSettingRules.EpisodeFontColor, PosterSettingState.Hidden));
+            (PosterSettingRules.ShowSecondary, PosterSettingState.Required),
+            (PosterSettingRules.SecondaryFontSize, PosterSettingState.Hidden),
+            (PosterSettingRules.SecondaryFontColor, PosterSettingState.Hidden));
 
         // Baseline-to-baseline spacing between stacked cutout words, relative to the font size.
         private const float WordLineSpacing = 1.1f;
@@ -87,19 +87,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(settings);
 
             // A series' name is the cutout itself, so it is not drawn again beneath it.
-            if (!settings.ShowTitle || subject.CutoutIsPrimary || string.IsNullOrEmpty(subject.Primary))
+            if (!settings.ShowPrimary || subject.CutoutIsPrimary || string.IsNullOrEmpty(subject.Primary))
             {
                 return;
             }
 
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
-            using var titleStyle = CreatePrimaryStyle(settings, unit);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit);
 
-            var column = BuildColumn(safeArea, settings, unit, titleStyle, true);
-            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
+            var column = BuildColumn(safeArea, settings, unit, primaryStyle, true);
+            if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Primary, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary, primaryStyle, primarySlot, primarySlot.MidX, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 
@@ -114,23 +114,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // The one description of the vertical layout: a fixed two line title zone against the
         // bottom of the safe area. The cutout takes whatever the column leaves, so the title and
         // the letters are measured from the same numbers and cannot collide.
-        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle titleStyle, bool reserveTitle)
+        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle primaryStyle, bool reserveTitle)
         {
             return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(PrimaryBlock, settings.ShowTitle && reserveTitle ? titleStyle.BlockHeight(2) : 0f);
+                .Add(PrimaryBlock, settings.ShowPrimary && reserveTitle ? primaryStyle.BlockHeight(2) : 0f);
         }
 
         // CalculateCutoutArea
         // The area left for the cutout text once the title zone is reserved.
         private static SKRect CalculateCutoutArea(SKRect safeArea, PosterSettings config, int unit, bool reserveTitle)
         {
-            if (!config.ShowTitle || !reserveTitle)
+            if (!config.ShowPrimary || !reserveTitle)
             {
                 return safeArea;
             }
 
-            using var titleStyle = CreatePrimaryStyle(config, unit);
-            var remaining = BuildColumn(safeArea, config, unit, titleStyle, reserveTitle).Remaining;
+            using var primaryStyle = CreatePrimaryStyle(config, unit);
+            var remaining = BuildColumn(safeArea, config, unit, primaryStyle, reserveTitle).Remaining;
 
             var minHeight = safeArea.Height * MinimumCutoutAreaRatio;
             return remaining.Height >= minHeight
@@ -154,7 +154,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             // nothing but its number.
             var reserveTitle = !subject.CutoutIsPrimary && !string.IsNullOrWhiteSpace(subject.Primary);
             var cutoutArea = CalculateCutoutArea(safeArea, config, SizeUnit(canvasWidth, canvasHeight), reserveTitle);
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
             float fontSize = CalculateOptimalCutoutFontSize(words, typeface, cutoutArea);
 
             using var font = PaintFactory.CreateFont(typeface, fontSize);

@@ -114,8 +114,8 @@
 
                             <div class="cutout-logo-group" id="frameOptions">
                                 <div class="inputContainer">
-                                    <label for="selectTitleEdge">Text Edges:</label>
-                                    <select is="emby-select" id="selectTitleEdge" data-setting="TitleEdge" data-default="TopFirst">
+                                    <label for="selectTextEdge">Text Edges:</label>
+                                    <select is="emby-select" id="selectTextEdge" data-setting="TextEdge" data-default="TopFirst">
                                         <option value="TopFirst">Top edge first</option>
                                         <option value="BottomFirst">Bottom edge first</option>
                                         <option value="AlwaysTop">Title always top</option>
@@ -365,30 +365,30 @@
 
                             <div class="checkboxContainer" id="showEpisodeRow">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkShowEpisode" data-setting="ShowEpisode" />
+                                    <input is="emby-checkbox" type="checkbox" id="chkShowSecondary" data-setting="ShowSecondary" />
                                     <span class="checkboxLabel">Show Subtitle</span>
                                 </label>
                                 <div class="fieldDescription">Display the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none.</div>
                             </div>
 
-                            <div class="checkboxContainer" data-depends-on="chkShowEpisode">
+                            <div class="checkboxContainer" data-depends-on="chkShowSecondary">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkEpisodeUseCustomFont" data-setting="EpisodeUseCustomFont" />
+                                    <input is="emby-checkbox" type="checkbox" id="chkSecondaryUseCustomFont" data-setting="SecondaryUseCustomFont" />
                                     <span class="checkboxLabel">Use Custom Font</span>
                                 </label>
                                 <div class="fieldDescription">Use a font file instead of a built in font.</div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowEpisode,chkEpisodeUseCustomFont">
-                                <label for="txtEpisodeFontPath">Font Path:</label>
-                                <input is="emby-input" type="text" id="txtEpisodeFontPath" placeholder="/path/to/font.ttf" data-setting="EpisodeFontPath" />
+                            <div class="inputContainer" data-depends-on="chkShowSecondary,chkSecondaryUseCustomFont">
+                                <label for="txtSecondaryFontPath">Font Path:</label>
+                                <input is="emby-input" type="text" id="txtSecondaryFontPath" placeholder="/path/to/font.ttf" data-setting="SecondaryFontPath" />
                                 <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
                             </div>
 
-                            <div data-hide-when-checked="chkEpisodeUseCustomFont" data-depends-on="chkShowEpisode">
+                            <div data-hide-when-checked="chkSecondaryUseCustomFont" data-depends-on="chkShowSecondary">
                                 <div class="inputContainer">
-                                    <label for="selectEpisodeFontFamily">Font:</label>
-                                    <select is="emby-select" id="selectEpisodeFontFamily" data-setting="EpisodeFontFamily" data-default="Arial">
+                                    <label for="selectSecondaryFontFamily">Font:</label>
+                                    <select is="emby-select" id="selectSecondaryFontFamily" data-setting="SecondaryFontFamily" data-default="Arial">
                                         <option value="Arial">Arial</option>
                                         <option value="Arial Black">Arial Black</option>
                                         <option value="Book Antiqua">Book Antiqua</option>
@@ -422,8 +422,8 @@
                                     <div class="fieldDescription">Font family for the subtitle.</div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectEpisodeFontStyle">Font Style:</label>
-                                    <select is="emby-select" id="selectEpisodeFontStyle" data-setting="EpisodeFontStyle" data-default="Bold">
+                                    <label for="selectSecondaryFontStyle">Font Style:</label>
+                                    <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold">
                                         <option value="Normal">Normal</option>
                                         <option value="Bold">Bold</option>
                                         <option value="Italic">Italic</option>
@@ -433,21 +433,21 @@
                                 </div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowEpisode">
-                                <label for="txtEpisodeFontSize">Font Size:</label>
-                                <input is="emby-input" type="number" id="txtEpisodeFontSize" min="1.0" max="100.0" data-setting="EpisodeFontSize" data-type="number" />
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="txtSecondaryFontSize">Font Size:</label>
+                                <input is="emby-input" type="number" id="txtSecondaryFontSize" min="1.0" max="100.0" data-setting="SecondaryFontSize" data-type="number" />
                                 <div class="fieldDescription">Text size as a percent of the poster's short side, 1 to 100.</div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowEpisode">
-                                <label for="txtEpisodeFontColor">Font Color:</label>
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="txtSecondaryFontColor">Font Color:</label>
                                 <div class="color-control-group">
-                                    <input type="color" id="colorEpisodeFontColor" class="color-picker" />
-                                    <input type="range" id="alphaEpisodeFontColor" class="alpha-slider" min="0" max="255" value="255" />
+                                    <input type="color" id="colorSecondaryFontColor" class="color-picker" />
+                                    <input type="range" id="alphaSecondaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
                                     <span class="alpha-label">255</span>
-                                    <input is="emby-input" type="text" id="txtEpisodeFontColor" placeholder="#FFFFFFFF" data-setting="EpisodeFontColor" class="hex-input" aria-describedby="descEpisodeFontColor" />
+                                    <input is="emby-input" type="text" id="txtSecondaryFontColor" placeholder="#FFFFFFFF" data-setting="SecondaryFontColor" class="hex-input" aria-describedby="descSecondaryFontColor" />
                                 </div>
-                                <div id="descEpisodeFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
+                                <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
                             </div>
 
                         </div>
@@ -463,15 +463,15 @@
 
                             <div class="checkboxContainer" id="showTitleRow">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkShowTitle" data-setting="ShowTitle" />
+                                    <input is="emby-checkbox" type="checkbox" id="chkShowPrimary" data-setting="ShowPrimary" />
                                     <span class="checkboxLabel">Show Title</span>
                                 </label>
                                 <div class="fieldDescription">Display the title, the larger line. An episode shows its own name; a season or series shows the show name.</div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowTitle">
-                                <label for="selectLongTitleHandling">Long Titles:</label>
-                                <select is="emby-select" id="selectLongTitleHandling" data-setting="LongTitleHandling" data-default="Ellipsis">
+                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                                <label for="selectLongTextHandling">Long Titles:</label>
+                                <select is="emby-select" id="selectLongTextHandling" data-setting="LongTextHandling" data-default="Ellipsis">
                                     <option value="Ellipsis">Ellipsis</option>
                                     <option value="Abbreviate">Abbreviate</option>
                                     <option value="DropName">Drop Name</option>
@@ -479,24 +479,24 @@
                                 <div class="fieldDescription">What to do when a title does not fit. Ellipsis trims it. Abbreviate tries the first part of the title, then initials with periods. Drop Name hides it.</div>
                             </div>
 
-                            <div class="checkboxContainer" data-depends-on="chkShowTitle">
+                            <div class="checkboxContainer" data-depends-on="chkShowPrimary">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkTitleUseCustomFont" data-setting="TitleUseCustomFont" />
+                                    <input is="emby-checkbox" type="checkbox" id="chkPrimaryUseCustomFont" data-setting="PrimaryUseCustomFont" />
                                     <span class="checkboxLabel">Use Custom Font</span>
                                 </label>
                                 <div class="fieldDescription">Use a font file instead of a built in font.</div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowTitle,chkTitleUseCustomFont">
-                                <label for="txtTitleFontPath">Font Path:</label>
-                                <input is="emby-input" type="text" id="txtTitleFontPath" placeholder="/path/to/font.ttf" data-setting="TitleFontPath" />
+                            <div class="inputContainer" data-depends-on="chkShowPrimary,chkPrimaryUseCustomFont">
+                                <label for="txtPrimaryFontPath">Font Path:</label>
+                                <input is="emby-input" type="text" id="txtPrimaryFontPath" placeholder="/path/to/font.ttf" data-setting="PrimaryFontPath" />
                                 <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
                             </div>
 
-                            <div data-hide-when-checked="chkTitleUseCustomFont" data-depends-on="chkShowTitle">
+                            <div data-hide-when-checked="chkPrimaryUseCustomFont" data-depends-on="chkShowPrimary">
                                 <div class="inputContainer">
-                                    <label for="selectTitleFontFamily">Font:</label>
-                                    <select is="emby-select" id="selectTitleFontFamily" data-setting="TitleFontFamily" data-default="Arial">
+                                    <label for="selectPrimaryFontFamily">Font:</label>
+                                    <select is="emby-select" id="selectPrimaryFontFamily" data-setting="PrimaryFontFamily" data-default="Arial">
                                         <option value="Arial">Arial</option>
                                         <option value="Arial Black">Arial Black</option>
                                         <option value="Book Antiqua">Book Antiqua</option>
@@ -530,8 +530,8 @@
                                     <div class="fieldDescription">Font family for the title text.</div>
                                 </div>
                                 <div class="inputContainer">
-                                    <label for="selectTitleFontStyle">Font Style:</label>
-                                    <select is="emby-select" id="selectTitleFontStyle" data-setting="TitleFontStyle" data-default="Bold">
+                                    <label for="selectPrimaryFontStyle">Font Style:</label>
+                                    <select is="emby-select" id="selectPrimaryFontStyle" data-setting="PrimaryFontStyle" data-default="Bold">
                                         <option value="Normal">Normal</option>
                                         <option value="Bold">Bold</option>
                                         <option value="Italic">Italic</option>
@@ -541,21 +541,21 @@
                                 </div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowTitle">
-                                <label for="txtTitleFontSize">Font Size:</label>
-                                <input is="emby-input" type="number" id="txtTitleFontSize" min="1.0" max="100.0" data-setting="TitleFontSize" data-type="number" />
+                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                                <label for="txtPrimaryFontSize">Font Size:</label>
+                                <input is="emby-input" type="number" id="txtPrimaryFontSize" min="1.0" max="100.0" data-setting="PrimaryFontSize" data-type="number" />
                                 <div class="fieldDescription">Title size as a percent of the poster's short side, 1 to 100.</div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowTitle">
-                                <label for="txtTitleFontColor">Font Color:</label>
+                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                                <label for="txtPrimaryFontColor">Font Color:</label>
                                 <div class="color-control-group">
-                                    <input type="color" id="colorTitleFontColor" class="color-picker" />
-                                    <input type="range" id="alphaTitleFontColor" class="alpha-slider" min="0" max="255" value="255" />
+                                    <input type="color" id="colorPrimaryFontColor" class="color-picker" />
+                                    <input type="range" id="alphaPrimaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
                                     <span class="alpha-label">255</span>
-                                    <input is="emby-input" type="text" id="txtTitleFontColor" placeholder="#FFFFFFFF" data-setting="TitleFontColor" class="hex-input" aria-describedby="descTitleFontColor" />
+                                    <input is="emby-input" type="text" id="txtPrimaryFontColor" placeholder="#FFFFFFFF" data-setting="PrimaryFontColor" class="hex-input" aria-describedby="descPrimaryFontColor" />
                                 </div>
-                                <div id="descTitleFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
+                                <div id="descPrimaryFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
                             </div>
 
                         </div>

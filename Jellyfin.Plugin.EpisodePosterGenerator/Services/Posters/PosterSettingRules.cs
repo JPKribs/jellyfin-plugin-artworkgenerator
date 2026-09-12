@@ -25,19 +25,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
     public static class PosterSettingRules
     {
         /// <summary>Setting names shared by the rules below.</summary>
-        public const string ShowTitle = "ShowTitle";
+        public const string ShowPrimary = "ShowPrimary";
 
         /// <summary>The number and code toggle.</summary>
-        public const string ShowEpisode = "ShowEpisode";
+        public const string ShowSecondary = "ShowSecondary";
 
         /// <summary>The number and code size.</summary>
-        public const string EpisodeFontSize = "EpisodeFontSize";
+        public const string SecondaryFontSize = "SecondaryFontSize";
 
         /// <summary>The number and code colour.</summary>
-        public const string EpisodeFontColor = "EpisodeFontColor";
+        public const string SecondaryFontColor = "SecondaryFontColor";
 
         /// <summary>Which edge of a framed poster the title sits in.</summary>
-        public const string TitleEdge = "TitleEdge";
+        public const string TextEdge = "TextEdge";
 
         /// <summary>The cutout's text choice.</summary>
         public const string CutoutType = "CutoutType";
@@ -70,7 +70,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         {
             var rules = new Dictionary<string, PosterSettingState>(System.StringComparer.Ordinal)
             {
-                [TitleEdge] = PosterSettingState.Hidden,
+                [TextEdge] = PosterSettingState.Hidden,
                 [CutoutType] = PosterSettingState.Hidden,
                 [CutoutBorder] = PosterSettingState.Hidden,
                 [LogoPosition] = PosterSettingState.Hidden,

@@ -55,19 +55,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var (headline, code) = GetText(subject);
 
-            using var titleStyle = CreatePrimaryStyle(settings, unit);
-            using var episodeStyle = CreateSecondaryStyle(settings, unit);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit);
 
-            var column = BuildColumn(subject, settings, width, height, titleStyle, episodeStyle);
+            var column = BuildColumn(subject, settings, width, height, primaryStyle, secondaryStyle);
 
             if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
-                episodeStyle.Draw(skCanvas, code, codeSlot.MidX, episodeStyle.BaselineAtBottom(codeSlot));
+                secondaryStyle.Draw(skCanvas, code, codeSlot.MidX, secondaryStyle.BaselineAtBottom(codeSlot));
             }
 
-            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawTitleInSlot(skCanvas, headline, titleStyle, titleSlot, titleSlot.MidX, titleSlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTitleHandling);
+                DrawPrimaryInSlot(skCanvas, headline, primaryStyle, primarySlot, primarySlot.MidX, primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 
@@ -110,18 +110,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // headline zone, packed against the bottom of the safe area. Both the typography layer and
         // the logo layer read this same column, so the logo can never be placed from a separately
         // maintained copy of the text's height.
-        private static LayoutColumn BuildColumn(ArtworkSubject subject, PosterSettings config, int width, int height, TextStyle titleStyle, TextStyle episodeStyle)
+        private static LayoutColumn BuildColumn(ArtworkSubject subject, PosterSettings config, int width, int height, TextStyle primaryStyle, TextStyle secondaryStyle)
         {
             var safeArea = GetSafeAreaBounds(width, height, config);
             var (headline, code) = GetText(subject);
 
-            var titleHeight = config.ShowTitle && !string.IsNullOrEmpty(headline)
-                ? titleStyle.BlockHeight(2)
+            var primaryHeight = config.ShowPrimary && !string.IsNullOrEmpty(headline)
+                ? primaryStyle.BlockHeight(2)
                 : 0f;
 
             return new LayoutColumn(safeArea, GetElementSpacing(config, SizeUnit(width, height)), LayoutAnchor.Bottom)
-                .Add(SecondaryBlock, config.ShowEpisode && code.Length > 0 ? episodeStyle.LineBox : 0f)
-                .Add(PrimaryBlock, titleHeight);
+                .Add(SecondaryBlock, config.ShowSecondary && code.Length > 0 ? secondaryStyle.LineBox : 0f)
+                .Add(PrimaryBlock, primaryHeight);
         }
 
         // GetLogoArea
@@ -130,10 +130,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static SKRect GetLogoArea(ArtworkSubject subject, PosterSettings config, int width, int height)
         {
             var unit = SizeUnit(width, height);
-            using var titleStyle = CreatePrimaryStyle(config, unit);
-            using var episodeStyle = CreateSecondaryStyle(config, unit);
+            using var primaryStyle = CreatePrimaryStyle(config, unit);
+            using var secondaryStyle = CreateSecondaryStyle(config, unit);
 
-            var remaining = BuildColumn(subject, config, width, height, titleStyle, episodeStyle).Remaining;
+            var remaining = BuildColumn(subject, config, width, height, primaryStyle, secondaryStyle).Remaining;
             var safeArea = GetSafeAreaBounds(width, height, config);
 
             var minHeight = safeArea.Height * MinimumLogoAreaRatio;
@@ -212,11 +212,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // Draws the series name as text when no logo image is available.
         private static void DrawSeriesLogoText(SKCanvas canvas, string seriesName, Position position, Alignment alignment, PosterSettings config, SKRect logoArea, int unit)
         {
-            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.EpisodeFontSize * RenderConstants.LineHeightMultiplier, unit);
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var fontSize = FontUtils.CalculateFontSizeFromPercentage(config.SecondaryFontSize * RenderConstants.LineHeightMultiplier, unit);
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
             var textAlign = GetSKTextAlign(alignment);
 
-            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, unit, textAlign);
+            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.SecondaryFontColor), fontSize, typeface, unit, textAlign);
 
             var availableWidth = logoArea.Width * RenderConstants.TextWidthMultiplier;
             var lines = TextUtils.FitTextToWidth(seriesName, style.Font, availableWidth);

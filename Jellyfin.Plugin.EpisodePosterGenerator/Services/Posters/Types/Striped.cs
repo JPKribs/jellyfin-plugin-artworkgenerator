@@ -97,13 +97,13 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
             var code = subject.SecondaryShort;
-            var showCode = settings.ShowEpisode && code.Length > 0;
+            var showCode = settings.ShowSecondary && code.Length > 0;
 
             bool titleOnBand = false;
             if (ShowsPrimary(settings, subject))
             {
-                using var titleStyle = CreateBandStyle(settings, unit, true);
-                titleOnBand = DrawBandText(skCanvas, subject.Primary!, titleStyle, settings, width, height, safeArea);
+                using var primaryStyle = CreateBandStyle(settings, unit, true);
+                titleOnBand = DrawBandText(skCanvas, subject.Primary!, primaryStyle, settings, width, height, safeArea);
             }
 
             // When there is no title on the band (disabled, or dropped by the long
@@ -133,14 +133,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
             if (title)
             {
-                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.TitleFontSize, unit);
-                var typeface = FontUtils.ResolveTypeface(settings.EffectiveTitleFontPath, settings.TitleFontFamily, FontUtils.GetFontStyle(settings.TitleFontStyle));
-                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.TitleFontColor), Math.Min(configured, bandCap), typeface, unit);
+                float configured = FontUtils.CalculateFontSizeFromPercentage(settings.PrimaryFontSize, unit);
+                var typeface = FontUtils.ResolveTypeface(settings.EffectivePrimaryFontPath, settings.PrimaryFontFamily, FontUtils.GetFontStyle(settings.PrimaryFontStyle));
+                return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.PrimaryFontColor), Math.Min(configured, bandCap), typeface, unit);
             }
 
-            float configuredCode = FontUtils.CalculateFontSizeFromPercentage(settings.EpisodeFontSize, unit);
-            var codeTypeface = ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.EpisodeFontStyle));
-            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.EpisodeFontColor), Math.Min(configuredCode, bandCap), codeTypeface, unit);
+            float configuredCode = FontUtils.CalculateFontSizeFromPercentage(settings.SecondaryFontSize, unit);
+            var codeTypeface = ResolveSecondaryTypeface(settings, FontUtils.GetFontStyle(settings.SecondaryFontStyle));
+            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(settings.SecondaryFontColor), Math.Min(configuredCode, bandCap), codeTypeface, unit);
         }
 
         // DrawBandText
@@ -151,7 +151,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             float bandCenterY = height * BandCenterYRatio;
             float maxTextWidth = safeArea.Width * RenderConstants.TextWidthMultiplier;
 
-            var line = TextUtils.FitTitleLine(text, style.Font, maxTextWidth, settings.LongTitleHandling);
+            var line = TextUtils.FitTitleLine(text, style.Font, maxTextWidth, settings.LongTextHandling);
             if (line == null)
             {
                 return false;

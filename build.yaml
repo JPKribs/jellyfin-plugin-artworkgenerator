@@ -14,10 +14,12 @@ artifacts:
 - "Jellyfin.Plugin.EpisodePosterGenerator.dll"
 changelog:
   features:
+  - Design settings are named for the primary and secondary lines every style draws, rather than for a title and an episode, and an existing design carries its fonts, colours, and text edge over automatically
+  - Eleven more example designs, covering every framed text edge and the palette and gradient variants of the striped, split, numeral, timeline, fade, glass, and cutout styles
   - Generates series and season posters, thumbs, backdrops, and text logos alongside episode posters
   - Every design draws both portrait and landscape, with its own portrait aspect ratio and text size, and the Designs page previews both at once
-  - Series posters show only the show's name: Cutout punches that name out of the overlay, Numeral draws it in place of the numeral, and Timeline drops its bar
-  - Logos can draw a name like "Star Wars: Andor" with either part large and the other small
+  - "Series posters show only the show's name: Cutout punches that name out of the overlay, Numeral draws it in place of the numeral, and Timeline drops its bar"
+  - "Logos can draw a name like \"Star Wars: Andor\" with either part large and the other small"
   - Logo letters can be filled with a frame from the show instead of a colour
   - Logo designs live in their own logos.json beside the plugin configuration, and existing designs move there on load
   - Profiles decide which images each series gets and which design draws each one, replacing per-design series assignment
@@ -28,15 +30,15 @@ changelog:
   - Long titles that do not fit two lines fill the first line with whole words and trim only the second, at a word boundary, instead of cutting both lines mid-word
   - Each poster style declares which settings it uses, so the Designs page offers only the settings that do something
   - Episodes can have a generated thumb, alongside series and seasons
-  - The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning
+  - "The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning"
   - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   - Four bundled designs set a caption-sized title, which left a series poster's name looking like an afterthought; they now use the same title size as the rest
   - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
   - The Frame style chooses which edge of its border holds the title, the subtitle taking the other; Automatic keeps the title at the top while there is a subtitle to hold the bottom
-  - Every bundled template is brought up to the current settings: it gains the portrait aspect ratio and the Frame title edge, and its two per-axis graphic sizes become the single size
+  - "Every bundled template is brought up to the current settings: it gains the portrait aspect ratio and the Frame title edge, and its two per-axis graphic sizes become the single size"
   - Every bundled design ships a season poster example beside its series poster and its episodes
-  - Three clean designs added to the examples: Minimal, Editorial and Bordered
-  - The Frame style chooses how its two edges fill: top or bottom edge first, where a lone line takes that edge whether it is the title or the subtitle, or the title pinned always top or always bottom
+  - "Three clean designs added to the examples: Minimal, Editorial and Bordered"
+  - "The Frame style chooses how its two edges fill: top or bottom edge first, where a lone line takes that edge whether it is the title or the subtitle, or the title pinned always top or always bottom"
   fixes:
   - An item with no name of its own, such as a season named after nothing but its number, now says that one line in the larger primary type rather than in the small subtitle, and it reads the same way in every style
   - A design drawing a single line of text now always puts it in the same place, so a series and its seasons match; Frame's lone line takes the edge the design chose
@@ -64,6 +66,7 @@ changelog:
   - Timeline keeps the marker dot inside the safe area on the first and last episode
   - Text blocks are reserved from the font's real ascent and descent, so descenders no longer hang past the safe area
   developer:
+  - The example templates are checked by the test suite — every style and text edge must have one, and every key a template sets must name a real setting, so a renamed setting cannot silently fall back to its default
   - Every style now reads one primary and one secondary line from the item, rather than a title, a label and a code, so a style no longer needs to know what kind of item it is drawing
   - The repeated "is this line drawn and does the item have one" check is asked once, in the base class, instead of in each style
   - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 packages Jellyfin 12.0 ships, since the plugin binds to the server's copies at runtime

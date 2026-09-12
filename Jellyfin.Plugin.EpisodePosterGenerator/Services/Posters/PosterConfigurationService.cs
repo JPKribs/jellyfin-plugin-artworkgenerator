@@ -154,6 +154,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             foreach (var posterConfig in config.PosterConfigurations)
             {
                 var settings = posterConfig.Settings;
+                migrated |= MigrateTextVocabulary(settings);
                 if (settings.ExtractPoster.HasValue)
                 {
                     settings.CanvasSource = settings.ExtractPoster.Value ? CanvasSource.Extract : CanvasSource.None;
@@ -179,8 +180,165 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
 
             if (migrated)
             {
-                _logger.LogInformation("Migrated legacy ExtractPoster setting to CanvasSource");
+                _logger.LogInformation("Brought legacy design settings forward to the current names");
             }
+        }
+
+
+        // MigrateTextVocabulary
+        // These settings were once named for a title and an episode; they are now named for the
+        // primary and secondary lines every style draws. A value saved under an old name is copied
+        // onto its replacement and cleared, so an existing design keeps the fonts and colours the
+        // user chose rather than quietly reverting to the defaults.
+        private static bool MigrateTextVocabulary(PosterSettings settings)
+        {
+            var migrated = false;
+
+            if (settings.ShowTitle is { } showPrimary)
+            {
+                settings.ShowPrimary = showPrimary;
+                settings.ShowTitle = null;
+                migrated = true;
+            }
+
+            if (settings.ShowEpisode is { } showSecondary)
+            {
+                settings.ShowSecondary = showSecondary;
+                settings.ShowEpisode = null;
+                migrated = true;
+            }
+
+            if (settings.TitleUseCustomFont is { } primaryUseCustomFont)
+            {
+                settings.PrimaryUseCustomFont = primaryUseCustomFont;
+                settings.TitleUseCustomFont = null;
+                migrated = true;
+            }
+
+            if (settings.EpisodeUseCustomFont is { } secondaryUseCustomFont)
+            {
+                settings.SecondaryUseCustomFont = secondaryUseCustomFont;
+                settings.EpisodeUseCustomFont = null;
+                migrated = true;
+            }
+
+            if (settings.TitleFontSize is { } primaryFontSize)
+            {
+                settings.PrimaryFontSize = primaryFontSize;
+                settings.TitleFontSize = null;
+                migrated = true;
+            }
+
+            if (settings.EpisodeFontSize is { } secondaryFontSize)
+            {
+                settings.SecondaryFontSize = secondaryFontSize;
+                settings.EpisodeFontSize = null;
+                migrated = true;
+            }
+
+            if (settings.TitleEdge is { } textEdge)
+            {
+                settings.TextEdge = textEdge;
+                settings.TitleEdge = null;
+                migrated = true;
+            }
+
+            if (settings.LongTitleHandling is { } longTextHandling)
+            {
+                settings.LongTextHandling = longTextHandling;
+                settings.LongTitleHandling = null;
+                migrated = true;
+            }
+
+            if (settings.TitleFontFamily != null)
+            {
+                if (settings.TitleFontFamily.Length > 0)
+                {
+                    settings.PrimaryFontFamily = settings.TitleFontFamily;
+                }
+
+                settings.TitleFontFamily = null;
+                migrated = true;
+            }
+
+            if (settings.TitleFontPath != null)
+            {
+                if (settings.TitleFontPath.Length > 0)
+                {
+                    settings.PrimaryFontPath = settings.TitleFontPath;
+                }
+
+                settings.TitleFontPath = null;
+                migrated = true;
+            }
+
+            if (settings.TitleFontStyle != null)
+            {
+                if (settings.TitleFontStyle.Length > 0)
+                {
+                    settings.PrimaryFontStyle = settings.TitleFontStyle;
+                }
+
+                settings.TitleFontStyle = null;
+                migrated = true;
+            }
+
+            if (settings.TitleFontColor != null)
+            {
+                if (settings.TitleFontColor.Length > 0)
+                {
+                    settings.PrimaryFontColor = settings.TitleFontColor;
+                }
+
+                settings.TitleFontColor = null;
+                migrated = true;
+            }
+
+            if (settings.EpisodeFontFamily != null)
+            {
+                if (settings.EpisodeFontFamily.Length > 0)
+                {
+                    settings.SecondaryFontFamily = settings.EpisodeFontFamily;
+                }
+
+                settings.EpisodeFontFamily = null;
+                migrated = true;
+            }
+
+            if (settings.EpisodeFontPath != null)
+            {
+                if (settings.EpisodeFontPath.Length > 0)
+                {
+                    settings.SecondaryFontPath = settings.EpisodeFontPath;
+                }
+
+                settings.EpisodeFontPath = null;
+                migrated = true;
+            }
+
+            if (settings.EpisodeFontStyle != null)
+            {
+                if (settings.EpisodeFontStyle.Length > 0)
+                {
+                    settings.SecondaryFontStyle = settings.EpisodeFontStyle;
+                }
+
+                settings.EpisodeFontStyle = null;
+                migrated = true;
+            }
+
+            if (settings.EpisodeFontColor != null)
+            {
+                if (settings.EpisodeFontColor.Length > 0)
+                {
+                    settings.SecondaryFontColor = settings.EpisodeFontColor;
+                }
+
+                settings.EpisodeFontColor = null;
+                migrated = true;
+            }
+
+            return migrated;
         }
 
         // EnsureDefaultDesign

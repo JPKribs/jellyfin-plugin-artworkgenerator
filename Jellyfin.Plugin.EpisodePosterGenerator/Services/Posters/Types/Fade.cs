@@ -102,7 +102,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float numberTop = safeArea.Bottom;
 
-            if (settings.ShowEpisode && subject.FeaturedNumber.HasValue)
+            if (settings.ShowSecondary && subject.FeaturedNumber.HasValue)
             {
                 var widthRatio = height > width ? PortraitNumberZoneWidthRatio : NumberZoneWidthRatio;
                 DrawEpisodeNumber(skCanvas, subject.FeaturedNumber.Value, settings, safeArea, unit, widthRatio);
@@ -124,7 +124,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         private static void DrawEpisodeNumber(SKCanvas canvas, int number, PosterSettings config, SKRect safeArea, int unit, float widthRatio)
         {
             var numberText = number.ToString("D2", CultureInfo.InvariantCulture);
-            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.EpisodeFontStyle));
+            var typeface = ResolveSecondaryTypeface(config, FontUtils.GetFontStyle(config.SecondaryFontStyle));
 
             float maxWidth = safeArea.Width * widthRatio;
             float maxHeight = safeArea.Height * NumberZoneHeightRatio;
@@ -136,7 +136,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 fontSize *= maxWidth / bounds.Width;
             }
 
-            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.EpisodeFontColor), fontSize, typeface, unit, SKTextAlign.Left);
+            using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.SecondaryFontColor), fontSize, typeface, unit, SKTextAlign.Left);
             style.Draw(canvas, numberText, safeArea.Left, safeArea.Bottom);
         }
 
@@ -170,7 +170,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             // stack rows across the poster instead of along it, which is how it ran off the edge.
             var lines = focal
                 ? (IReadOnlyList<string>)new[] { text }
-                : TextUtils.FitTitleLines(text, style.Font, availableRun, config.LongTitleHandling);
+                : TextUtils.FitTextLines(text, style.Font, availableRun, config.LongTextHandling);
             if (lines.Count == 0)
             {
                 return;
@@ -196,7 +196,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // and its letters are as tall across the width as the thickness budget allows.
         private static TextStyle CreateFocalTitleStyle(PosterSettings config, int unit, string text, float run, float thickness)
         {
-            var typeface = FontUtils.ResolveTypeface(config.EffectiveTitleFontPath, config.TitleFontFamily, FontUtils.GetFontStyle(config.TitleFontStyle));
+            var typeface = FontUtils.ResolveTypeface(config.EffectivePrimaryFontPath, config.PrimaryFontFamily, FontUtils.GetFontStyle(config.PrimaryFontStyle));
 
             // Sized from what the canvas actually draws: the advance width along the run, and the
             // line box across it. Sizing from the glyphs' ink instead let the name run past the
@@ -210,7 +210,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             float byThickness = lineBox > 0f ? thickness / lineBox * FocalProbeSize : thickness;
             float fontSize = Math.Max(8f, Math.Min(byRun, byThickness));
 
-            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.TitleFontColor), fontSize, typeface, unit, SKTextAlign.Left);
+            return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.PrimaryFontColor), fontSize, typeface, unit, SKTextAlign.Left);
         }
 
         // LogError

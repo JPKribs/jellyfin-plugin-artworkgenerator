@@ -54,7 +54,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            if (!settings.ShowTitle && !settings.ShowEpisode)
+            if (!settings.ShowPrimary && !settings.ShowSecondary)
             {
                 return;
             }
@@ -62,22 +62,22 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Center, withShadow: false);
-            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Center, withShadow: false);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Center, withShadow: false);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Center, withShadow: false);
 
             float padX = unit * PaddingXRatio;
             float padY = unit * PaddingYRatio;
             float maxTextWidth = safeArea.Width - (2 * padX);
 
-            var titleLines = new List<string>();
+            var primaryLines = new List<string>();
             if (ShowsPrimary(settings, subject))
             {
-                titleLines.AddRange(TextUtils.FitTitleLines(subject.Primary!, titleStyle.Font, maxTextWidth, settings.LongTitleHandling));
+                primaryLines.AddRange(TextUtils.FitTextLines(subject.Primary!, primaryStyle.Font, maxTextWidth, settings.LongTextHandling));
             }
 
             string? episodeText = ShowsSecondary(settings, subject) ? subject.SecondaryShort : null;
 
-            if (titleLines.Count == 0 && episodeText == null)
+            if (primaryLines.Count == 0 && episodeText == null)
             {
                 return;
             }
@@ -87,20 +87,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             // The panel is sized from the same column that positions its contents, so the box can
             // never be measured from one set of numbers and filled from another.
             var content = new LayoutColumn(SKRect.Create(safeArea.Left, 0, safeArea.Width, 0), spacing, LayoutAnchor.Top)
-                .Add(SecondaryBlock, episodeText != null ? episodeStyle.LineBox : 0f)
-                .Add(PrimaryBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
+                .Add(SecondaryBlock, episodeText != null ? secondaryStyle.LineBox : 0f)
+                .Add(PrimaryBlock, primaryLines.Count > 0 ? primaryStyle.BlockHeight(primaryLines.Count) : 0f);
 
             float contentHeight = content.Consumed;
 
             float contentWidth = 0;
             if (episodeText != null)
             {
-                contentWidth = Math.Max(contentWidth, episodeStyle.MeasureWidth(episodeText));
+                contentWidth = Math.Max(contentWidth, secondaryStyle.MeasureWidth(episodeText));
             }
 
-            foreach (var line in titleLines)
+            foreach (var line in primaryLines)
             {
-                contentWidth = Math.Max(contentWidth, titleStyle.MeasureWidth(line));
+                contentWidth = Math.Max(contentWidth, primaryStyle.MeasureWidth(line));
             }
 
             float panelWidth = Math.Min(safeArea.Width, contentWidth + (2 * padX));
@@ -116,17 +116,17 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 SKRect.Create(panelRect.Left, panelTop + padY, panelRect.Width, contentHeight),
                 spacing,
                 LayoutAnchor.Top)
-                .Add(SecondaryBlock, episodeText != null ? episodeStyle.LineBox : 0f)
-                .Add(PrimaryBlock, titleLines.Count > 0 ? titleStyle.BlockHeight(titleLines.Count) : 0f);
+                .Add(SecondaryBlock, episodeText != null ? secondaryStyle.LineBox : 0f)
+                .Add(PrimaryBlock, primaryLines.Count > 0 ? primaryStyle.BlockHeight(primaryLines.Count) : 0f);
 
-            if (episodeText != null && placed.TryGetSlot(SecondaryBlock, out var episodeSlot))
+            if (episodeText != null && placed.TryGetSlot(SecondaryBlock, out var secondarySlot))
             {
-                episodeStyle.Draw(skCanvas, episodeText, panelRect.MidX, episodeStyle.BaselineAtTop(episodeSlot));
+                secondaryStyle.Draw(skCanvas, episodeText, panelRect.MidX, secondaryStyle.BaselineAtTop(secondarySlot));
             }
 
-            if (placed.TryGetSlot(PrimaryBlock, out var titleSlot))
+            if (placed.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                titleStyle.DrawLines(skCanvas, titleLines, panelRect.MidX, titleStyle.BaselineAtTop(titleSlot));
+                primaryStyle.DrawLines(skCanvas, primaryLines, panelRect.MidX, primaryStyle.BaselineAtTop(primarySlot));
             }
         }
 

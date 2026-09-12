@@ -444,21 +444,21 @@ export default function (view) {
                     PosterDimensionRatio: '16:9',
                     PosterSafeArea: 5.0,
                     ElementSpacing: 2.0,
-                    ShowEpisode: true,
-                    EpisodeFontFamily: 'Arial',
-                    EpisodeUseCustomFont: false,
-                    EpisodeFontPath: '',
-                    EpisodeFontStyle: 'Bold',
-                    EpisodeFontSize: 7.0,
-                    EpisodeFontColor: '#FFFFFFFF',
-                    ShowTitle: true,
-                    TitleFontFamily: 'Arial',
-                    TitleUseCustomFont: false,
-                    TitleFontPath: '',
-                    TitleFontStyle: 'Bold',
-                    TitleFontSize: 10.0,
-                    TitleFontColor: '#FFFFFFFF',
-                    LongTitleHandling: 'Ellipsis',
+                    ShowSecondary: true,
+                    SecondaryFontFamily: 'Arial',
+                    SecondaryUseCustomFont: false,
+                    SecondaryFontPath: '',
+                    SecondaryFontStyle: 'Bold',
+                    SecondaryFontSize: 7.0,
+                    SecondaryFontColor: '#FFFFFFFF',
+                    ShowPrimary: true,
+                    PrimaryFontFamily: 'Arial',
+                    PrimaryUseCustomFont: false,
+                    PrimaryFontPath: '',
+                    PrimaryFontStyle: 'Bold',
+                    PrimaryFontSize: 10.0,
+                    PrimaryFontColor: '#FFFFFFFF',
+                    LongTextHandling: 'Ellipsis',
                     OverlayColor: '#66000000',
                     OverlayGradient: 'None',
                     OverlaySecondaryColor: '#66000000',
@@ -754,7 +754,7 @@ export default function (view) {
         }).then(function (families) {
             if (!families || !families.length) return;
 
-            view.querySelectorAll('#selectEpisodeFontFamily, #selectTitleFontFamily').forEach(function (select) {
+            view.querySelectorAll('#selectSecondaryFontFamily, #selectPrimaryFontFamily').forEach(function (select) {
                 select.innerHTML = '';
                 families.forEach(function (family) {
                     var option = document.createElement('option');
@@ -1128,9 +1128,9 @@ export default function (view) {
 
         // Controls that affect visibility
         var visibilityControls = [
-            '#selectPosterStyle', '#chkShowTitle', '#chkShowEpisode', '#selectCanvasSource',
+            '#selectPosterStyle', '#chkShowPrimary', '#chkShowSecondary', '#selectCanvasSource',
             '#chkEnableLetterboxDetection', '#selectPosterFill', '#selectOverlayGradient',
-            '#chkEpisodeUseCustomFont', '#chkTitleUseCustomFont', '#chkPaletteDerivedColors'
+            '#chkSecondaryUseCustomFont', '#chkPrimaryUseCustomFont', '#chkPaletteDerivedColors'
         ];
         visibilityControls.forEach(function (selector) {
             var el = view.querySelector(selector);

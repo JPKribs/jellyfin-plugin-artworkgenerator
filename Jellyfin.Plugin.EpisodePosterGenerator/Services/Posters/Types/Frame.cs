@@ -21,8 +21,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // The frame is drawn around the title, so the title is always there, and this style is the
         // one that decides which edge holds it.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
-            (PosterSettingRules.ShowTitle, PosterSettingState.Required),
-            (PosterSettingRules.TitleEdge, PosterSettingState.Optional));
+            (PosterSettingRules.ShowPrimary, PosterSettingState.Required),
+            (PosterSettingRules.TextEdge, PosterSettingState.Optional));
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.
         private const float BorderStrokeReference = 4f;
@@ -54,18 +54,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float spacing = GetElementSpacing(settings, unit);
 
-            var showTitle = ShowsPrimary(settings, subject);
-            var showSubtitle = ShowsSecondary(settings, subject);
+            var showPrimary = ShowsPrimary(settings, subject);
+            var showSecondary = ShowsSecondary(settings, subject);
 
-            var (titleAtBottom, subtitleAtBottom) = ResolveEdges(settings.TitleEdge, showTitle);
+            var (primaryAtBottom, secondaryAtBottom) = ResolveEdges(settings.TextEdge, showPrimary);
 
             TextInfo? topInfo = null;
             TextInfo? bottomInfo = null;
 
-            if (showTitle)
+            if (showPrimary)
             {
-                var info = DrawEpisodeTitle(skCanvas, subject.Primary!, settings, unit, safeArea, titleAtBottom);
-                if (titleAtBottom)
+                var info = DrawPrimaryLine(skCanvas, subject.Primary!, settings, unit, safeArea, primaryAtBottom);
+                if (primaryAtBottom)
                 {
                     bottomInfo = info;
                 }
@@ -75,10 +75,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
                 }
             }
 
-            if (showSubtitle)
+            if (showSecondary)
             {
-                var info = DrawEpisodeInfo(skCanvas, subject.Secondary, settings, unit, safeArea, subtitleAtBottom);
-                if (subtitleAtBottom)
+                var info = DrawSecondaryLine(skCanvas, subject.Secondary, settings, unit, safeArea, secondaryAtBottom);
+                if (secondaryAtBottom)
                 {
                     bottomInfo = info;
                 }
@@ -103,23 +103,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // the item has, so a poster carrying a single line always looks the same whether that line
         // is a title or a subtitle. The pinned choices keep the title on its edge and leave the
         // other one empty when its line is missing.
-        internal static (bool TitleAtBottom, bool SubtitleAtBottom) ResolveEdges(TitleEdge edge, bool showTitle)
+        internal static (bool PrimaryAtBottom, bool SecondaryAtBottom) ResolveEdges(TextEdge edge, bool showPrimary)
         {
-            var fillsBottom = edge is TitleEdge.BottomFirst or TitleEdge.AlwaysBottom;
-            var pinned = edge is TitleEdge.AlwaysTop or TitleEdge.AlwaysBottom;
+            var fillsBottom = edge is TextEdge.BottomFirst or TextEdge.AlwaysBottom;
+            var pinned = edge is TextEdge.AlwaysTop or TextEdge.AlwaysBottom;
 
-            return (fillsBottom, pinned || showTitle ? !fillsBottom : fillsBottom);
+            return (fillsBottom, pinned || showPrimary ? !fillsBottom : fillsBottom);
         }
 
-        // DrawEpisodeTitle
+        // DrawPrimaryLine
         // Draws the uppercase title into the top edge of the safe area, or into the bottom edge
         // when nothing else claims it, and returns its extent. Null when the long title handling
         // drops a title that does not fit.
-        private static TextInfo? DrawEpisodeTitle(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
+        private static TextInfo? DrawPrimaryLine(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
             using var style = CreatePrimaryStyle(config, unit);
 
-            var lines = TextUtils.FitTitleLines(title.ToUpperInvariant(), style.Font, safeArea.Width * RenderConstants.TextWidthMultiplier, config.LongTitleHandling);
+            var lines = TextUtils.FitTextLines(title.ToUpperInvariant(), style.Font, safeArea.Width * RenderConstants.TextWidthMultiplier, config.LongTextHandling);
             if (lines.Count == 0)
             {
                 return null;
@@ -142,9 +142,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             };
         }
 
-        // DrawEpisodeInfo
+        // DrawSecondaryLine
         // Draws the subtitle into whichever edge the title did not take, and returns its extent.
-        private static TextInfo DrawEpisodeInfo(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
+        private static TextInfo DrawSecondaryLine(SKCanvas canvas, string label, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
             using var style = CreateSecondaryStyle(config, unit);
             var padding = unit * TextPaddingRatio;
@@ -178,7 +178,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // DrawFrameBorder
         // Draws the rounded border with the top and bottom edges opened around whatever text sits
         // in them. The stroke, its shadow, and the corner radius all scale with the poster.
-        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? titleInfo, TextInfo? episodeInfo, float spacing, int unit)
+        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? primaryInfo, TextInfo? secondaryInfo, float spacing, int unit)
         {
             var radius = RenderConstants.Scaled(CornerRadiusReference, unit);
 
@@ -188,7 +188,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             using var shadowPaint = PaintFactory.CreateLinePaint(SKColors.Black.WithAlpha(200), RenderConstants.Scaled(BorderShadowStrokeReference, unit), SKStrokeCap.Round);
             shadowPaint.StrokeJoin = SKStrokeJoin.Round;
 
-            using var path = BuildFramePath(safeArea, radius, GapFor(titleInfo, spacing), GapFor(episodeInfo, spacing));
+            using var path = BuildFramePath(safeArea, radius, GapFor(primaryInfo, spacing), GapFor(secondaryInfo, spacing));
 
             canvas.DrawPath(path, shadowPaint);
             canvas.DrawPath(path, borderPaint);

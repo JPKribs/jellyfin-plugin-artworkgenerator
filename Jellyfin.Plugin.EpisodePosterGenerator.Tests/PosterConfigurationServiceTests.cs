@@ -253,4 +253,58 @@ public class PosterConfigurationServiceTests
         Assert.Null(design.Settings.GraphicWidth);
         Assert.Null(design.Settings.GraphicHeight);
     }
+
+    /// <summary>
+    /// A design saved under the old title/episode setting names keeps its fonts and colours: the
+    /// values move onto the primary/secondary names and the old ones are cleared.
+    /// </summary>
+    [Fact]
+    public void Initialize_MigratesLegacyTextSettings()
+    {
+        var config = new PluginConfiguration();
+        var design = new PosterConfiguration { Name = "Default", IsDefault = true };
+        design.Settings.ShowTitle = false;
+        design.Settings.TitleFontSize = 12f;
+        design.Settings.TitleFontFamily = "Georgia";
+        design.Settings.EpisodeFontColor = "#FF00FF00";
+        design.Settings.TitleEdge = TextEdge.AlwaysBottom;
+        design.Settings.LongTitleHandling = LongTextHandling.Abbreviate;
+        config.PosterConfigurations.Add(design);
+
+        Service().Initialize(config);
+
+        Assert.False(design.Settings.ShowPrimary);
+        Assert.Equal(12f, design.Settings.PrimaryFontSize);
+        Assert.Equal("Georgia", design.Settings.PrimaryFontFamily);
+        Assert.Equal("#FF00FF00", design.Settings.SecondaryFontColor);
+        Assert.Equal(TextEdge.AlwaysBottom, design.Settings.TextEdge);
+        Assert.Equal(LongTextHandling.Abbreviate, design.Settings.LongTextHandling);
+
+        Assert.Null(design.Settings.ShowTitle);
+        Assert.Null(design.Settings.TitleFontSize);
+        Assert.Null(design.Settings.TitleFontFamily);
+        Assert.Null(design.Settings.EpisodeFontColor);
+        Assert.Null(design.Settings.TitleEdge);
+        Assert.Null(design.Settings.LongTitleHandling);
+    }
+
+    /// <summary>
+    /// A design already saved under the current names is left alone, so migration cannot overwrite
+    /// a current setting with a stale one.
+    /// </summary>
+    [Fact]
+    public void Initialize_LeavesCurrentTextSettingsAlone()
+    {
+        var config = new PluginConfiguration();
+        var design = new PosterConfiguration { Name = "Default", IsDefault = true };
+        design.Settings.PrimaryFontFamily = "Verdana";
+        design.Settings.PrimaryFontSize = 9f;
+        config.PosterConfigurations.Add(design);
+
+        Service().Initialize(config);
+
+        Assert.Equal("Verdana", design.Settings.PrimaryFontFamily);
+        Assert.Equal(9f, design.Settings.PrimaryFontSize);
+        Assert.True(design.Settings.ShowPrimary);
+    }
 }

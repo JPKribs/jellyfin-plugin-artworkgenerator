@@ -43,19 +43,19 @@ public class PosterSettingRulesTests
     }
 
     [Theory]
-    [InlineData(PosterStyle.Cutout, PosterSettingRules.ShowEpisode)]
-    [InlineData(PosterStyle.Numeral, PosterSettingRules.ShowEpisode)]
-    [InlineData(PosterStyle.Timeline, PosterSettingRules.ShowEpisode)]
-    [InlineData(PosterStyle.Brush, PosterSettingRules.ShowTitle)]
-    [InlineData(PosterStyle.Frame, PosterSettingRules.ShowTitle)]
+    [InlineData(PosterStyle.Cutout, PosterSettingRules.ShowSecondary)]
+    [InlineData(PosterStyle.Numeral, PosterSettingRules.ShowSecondary)]
+    [InlineData(PosterStyle.Timeline, PosterSettingRules.ShowSecondary)]
+    [InlineData(PosterStyle.Brush, PosterSettingRules.ShowPrimary)]
+    [InlineData(PosterStyle.Frame, PosterSettingRules.ShowPrimary)]
     public void AStyleBuiltOnAnElementRequiresIt(PosterStyle style, string setting)
     {
         Assert.Equal(PosterSettingState.Required, Generator(style).SettingRules[setting]);
     }
 
     [Theory]
-    [InlineData(PosterStyle.Standard, PosterSettingRules.ShowTitle)]
-    [InlineData(PosterStyle.Standard, PosterSettingRules.ShowEpisode)]
+    [InlineData(PosterStyle.Standard, PosterSettingRules.ShowPrimary)]
+    [InlineData(PosterStyle.Standard, PosterSettingRules.ShowSecondary)]
     [InlineData(PosterStyle.Logo, PosterSettingRules.LogoHeight)]
     [InlineData(PosterStyle.Cutout, PosterSettingRules.CutoutType)]
     [InlineData(PosterStyle.Brush, PosterSettingRules.CutoutBorder)]
@@ -75,18 +75,18 @@ public class PosterSettingRulesTests
     {
         var rules = Generator(PosterStyle.Cutout).SettingRules;
 
-        Assert.Equal(PosterSettingState.Hidden, rules[PosterSettingRules.EpisodeFontSize]);
-        Assert.Equal(PosterSettingState.Hidden, rules[PosterSettingRules.EpisodeFontColor]);
+        Assert.Equal(PosterSettingState.Hidden, rules[PosterSettingRules.SecondaryFontSize]);
+        Assert.Equal(PosterSettingState.Hidden, rules[PosterSettingRules.SecondaryFontColor]);
     }
 
     /// <summary>
     /// Only the style that draws a border decides which edge holds the title.
     /// </summary>
     [Fact]
-    public void OnlyFrameOffersTheTitleEdge()
+    public void OnlyFrameOffersTheTextEdge()
     {
-        Assert.Equal(PosterSettingState.Optional, Generator(PosterStyle.Frame).SettingRules[PosterSettingRules.TitleEdge]);
-        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Standard).SettingRules[PosterSettingRules.TitleEdge]);
-        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Cutout).SettingRules[PosterSettingRules.TitleEdge]);
+        Assert.Equal(PosterSettingState.Optional, Generator(PosterStyle.Frame).SettingRules[PosterSettingRules.TextEdge]);
+        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Standard).SettingRules[PosterSettingRules.TextEdge]);
+        Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Cutout).SettingRules[PosterSettingRules.TextEdge]);
     }
 }

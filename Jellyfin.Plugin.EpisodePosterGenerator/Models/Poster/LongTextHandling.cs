@@ -3,7 +3,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
     /// <summary>
     /// How a poster handles an episode title that does not fit its text area.
     /// </summary>
-    public enum LongTitleHandling
+    public enum LongTextHandling
     {
         /// <summary>Trim the title with an ellipsis.</summary>
         Ellipsis,

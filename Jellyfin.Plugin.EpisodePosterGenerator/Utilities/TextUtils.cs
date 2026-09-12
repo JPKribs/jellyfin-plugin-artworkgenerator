@@ -44,17 +44,17 @@ public static class TextUtils
     // width; below that the cut would leave a stub that reads worse than a mid-word trim.
     private const float MinimumWordCutShare = 0.5f;
 
-    // FitTitleLines
+    // FitTextLines
     // Applies the configured long title handling and returns the lines to draw.
     // Returns an empty list when the handling drops a title that does not fit.
-    public static IReadOnlyList<string> FitTitleLines(string title, SKFont font, float maxWidth, LongTitleHandling handling)
+    public static IReadOnlyList<string> FitTextLines(string title, SKFont font, float maxWidth, LongTextHandling handling)
     {
         ArgumentNullException.ThrowIfNull(font);
 
         if (string.IsNullOrWhiteSpace(title))
             return Array.Empty<string>();
 
-        if (handling == LongTitleHandling.Ellipsis)
+        if (handling == LongTextHandling.Ellipsis)
             return FitTextToWidth(title, font, maxWidth);
 
         // Abbreviate and DropName only engage when the title would otherwise be cut:
@@ -62,7 +62,7 @@ public static class TextUtils
         if (TryFitWhole(title, font, maxWidth, out var lines))
             return lines;
 
-        if (handling == LongTitleHandling.DropName)
+        if (handling == LongTextHandling.DropName)
             return Array.Empty<string>();
 
         foreach (var candidate in ShorterCandidates(title))
@@ -75,24 +75,24 @@ public static class TextUtils
         return abbreviation != null ? new[] { abbreviation } : Array.Empty<string>();
     }
 
-    // FitTitleLines
+    // FitTextLines
     // Height-aware variant: fits the title to the width, then checks the resulting block against
     // the vertical space it has been given and re-fits if it would overflow.
     //
     // A run of n lines occupies one line box (ascent plus descent) plus (n-1) line heights, which
     // is how the styles draw them; measuring that way rather than n * lineHeight is what lets the
     // last line that genuinely fits be kept.
-    public static IReadOnlyList<string> FitTitleLines(
+    public static IReadOnlyList<string> FitTextLines(
         string title,
         SKFont font,
         float maxWidth,
         float maxHeight,
         float lineHeight,
-        LongTitleHandling handling)
+        LongTextHandling handling)
     {
         ArgumentNullException.ThrowIfNull(font);
 
-        var lines = FitTitleLines(title, font, maxWidth, handling);
+        var lines = FitTextLines(title, font, maxWidth, handling);
         if (lines.Count == 0 || lineHeight <= 0f || maxHeight <= 0f)
         {
             return lines;
@@ -113,7 +113,7 @@ public static class TextUtils
         // Too tall. Ellipsis keeps as many lines as fit and trims whatever is left into the
         // last one; the other modes are asking for a shorter title, so re-run them against
         // the width a single line really has.
-        if (handling == LongTitleHandling.Ellipsis)
+        if (handling == LongTextHandling.Ellipsis)
         {
             var kept = lines.Take(maxLines - 1).ToList();
             var rest = string.Join(" ", lines.Skip(maxLines - 1));
@@ -127,14 +127,14 @@ public static class TextUtils
             return Array.Empty<string>();
         }
 
-        var refit = FitTitleLines(single, font, maxWidth, handling);
+        var refit = FitTextLines(single, font, maxWidth, handling);
         return refit.Count <= maxLines ? refit : refit.Take(maxLines).ToList();
     }
 
     // FitTitleLine
-    // Single line variant of FitTitleLines for styles that cannot wrap.
+    // Single line variant of FitTextLines for styles that cannot wrap.
     // Returns null when the handling drops a title that does not fit.
-    public static string? FitTitleLine(string title, SKFont font, float maxWidth, LongTitleHandling handling)
+    public static string? FitTitleLine(string title, SKFont font, float maxWidth, LongTextHandling handling)
     {
         ArgumentNullException.ThrowIfNull(font);
 
@@ -144,10 +144,10 @@ public static class TextUtils
         if (font.MeasureText(title) <= maxWidth)
             return title;
 
-        if (handling == LongTitleHandling.DropName)
+        if (handling == LongTextHandling.DropName)
             return null;
 
-        if (handling == LongTitleHandling.Abbreviate)
+        if (handling == LongTextHandling.Abbreviate)
         {
             foreach (var candidate in ShorterCandidates(title))
             {

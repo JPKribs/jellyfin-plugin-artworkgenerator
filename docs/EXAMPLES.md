@@ -289,3 +289,135 @@ Just the title on a lightly tinted frame. Nothing else competes with the image.
 | ![](examples/Minimal/Series.png) | ![](examples/Minimal/Season.png) | ![](examples/Minimal/Example1.png) | ![](examples/Minimal/Example2.png) | ![](examples/Minimal/Example3.png) | ![](examples/Minimal/Example4.png) |
 | | | ![](examples/Minimal/Example5.png) | ![](examples/Minimal/Example6.png) | ![](examples/Minimal/Example7.png) | ![](examples/Minimal/Example8.png) |
 | | | ![](examples/Minimal/Example9.png) | ![](examples/Minimal/Example10.png) | | |
+
+## Framed Header
+
+Both lines pinned into the top edge of the frame, so the border always opens in the same place.
+
+[Download config](examples/FrameHeader/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/FrameHeader/Series.png) | ![](examples/FrameHeader/Season.png) | ![](examples/FrameHeader/Example1.png) | ![](examples/FrameHeader/Example2.png) | ![](examples/FrameHeader/Example3.png) | ![](examples/FrameHeader/Example4.png) |
+| | | ![](examples/FrameHeader/Example5.png) | ![](examples/FrameHeader/Example6.png) | ![](examples/FrameHeader/Example7.png) | ![](examples/FrameHeader/Example8.png) |
+| | | ![](examples/FrameHeader/Example9.png) | ![](examples/FrameHeader/Example10.png) | | |
+
+## Framed Footer
+
+Framed poster that sets both lines into the bottom edge, leaving the top border unbroken.
+
+[Download config](examples/FrameFooter/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/FrameFooter/Series.png) | ![](examples/FrameFooter/Season.png) | ![](examples/FrameFooter/Example1.png) | ![](examples/FrameFooter/Example2.png) | ![](examples/FrameFooter/Example3.png) | ![](examples/FrameFooter/Example4.png) |
+| | | ![](examples/FrameFooter/Example5.png) | ![](examples/FrameFooter/Example6.png) | ![](examples/FrameFooter/Example7.png) | ![](examples/FrameFooter/Example8.png) |
+| | | ![](examples/FrameFooter/Example9.png) | ![](examples/FrameFooter/Example10.png) | | |
+
+## Framed Caption
+
+Framed poster that fills the top edge first, so an item carrying a single line always reads the same.
+
+[Download config](examples/FrameCaption/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/FrameCaption/Series.png) | ![](examples/FrameCaption/Season.png) | ![](examples/FrameCaption/Example1.png) | ![](examples/FrameCaption/Example2.png) | ![](examples/FrameCaption/Example3.png) | ![](examples/FrameCaption/Example4.png) |
+| | | ![](examples/FrameCaption/Example5.png) | ![](examples/FrameCaption/Example6.png) | ![](examples/FrameCaption/Example7.png) | ![](examples/FrameCaption/Example8.png) |
+| | | ![](examples/FrameCaption/Example9.png) | ![](examples/FrameCaption/Example10.png) | | |
+
+## Gradient Glass
+
+Frosted panel over a soft left-to-right wash.
+
+[Download config](examples/GlassGradient/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/GlassGradient/Series.png) | ![](examples/GlassGradient/Season.png) | ![](examples/GlassGradient/Example1.png) | ![](examples/GlassGradient/Example2.png) | ![](examples/GlassGradient/Example3.png) | ![](examples/GlassGradient/Example4.png) |
+| | | ![](examples/GlassGradient/Example5.png) | ![](examples/GlassGradient/Example6.png) | ![](examples/GlassGradient/Example7.png) | ![](examples/GlassGradient/Example8.png) |
+| | | ![](examples/GlassGradient/Example9.png) | ![](examples/GlassGradient/Example10.png) | | |
+
+## Striped Palette
+
+Banded type in colours sampled from the frame itself.
+
+[Download config](examples/StripedPalette/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/StripedPalette/Series.png) | ![](examples/StripedPalette/Season.png) | ![](examples/StripedPalette/Example1.png) | ![](examples/StripedPalette/Example2.png) | ![](examples/StripedPalette/Example3.png) | ![](examples/StripedPalette/Example4.png) |
+| | | ![](examples/StripedPalette/Example5.png) | ![](examples/StripedPalette/Example6.png) | ![](examples/StripedPalette/Example7.png) | ![](examples/StripedPalette/Example8.png) |
+| | | ![](examples/StripedPalette/Example9.png) | ![](examples/StripedPalette/Example10.png) | | |
+
+## Gradient Split
+
+Split panel with a diagonal gradient drawn from the frame's own colour.
+
+[Download config](examples/SplitGradient/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/SplitGradient/Series.png) | ![](examples/SplitGradient/Season.png) | ![](examples/SplitGradient/Example1.png) | ![](examples/SplitGradient/Example2.png) | ![](examples/SplitGradient/Example3.png) | ![](examples/SplitGradient/Example4.png) |
+| | | ![](examples/SplitGradient/Example5.png) | ![](examples/SplitGradient/Example6.png) | ![](examples/SplitGradient/Example7.png) | ![](examples/SplitGradient/Example8.png) |
+| | | ![](examples/SplitGradient/Example9.png) | ![](examples/SplitGradient/Example10.png) | | |
+
+## Numeral Palette
+
+Oversized number lifted off a gradient sampled from the image.
+
+[Download config](examples/NumeralPalette/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/NumeralPalette/Series.png) | ![](examples/NumeralPalette/Season.png) | ![](examples/NumeralPalette/Example1.png) | ![](examples/NumeralPalette/Example2.png) | ![](examples/NumeralPalette/Example3.png) | ![](examples/NumeralPalette/Example4.png) |
+| | | ![](examples/NumeralPalette/Example5.png) | ![](examples/NumeralPalette/Example6.png) | ![](examples/NumeralPalette/Example7.png) | ![](examples/NumeralPalette/Example8.png) |
+| | | ![](examples/NumeralPalette/Example9.png) | ![](examples/NumeralPalette/Example10.png) | | |
+
+## Timeline Palette
+
+Progress bar and labels tinted from the frame.
+
+[Download config](examples/TimelinePalette/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/TimelinePalette/Series.png) | ![](examples/TimelinePalette/Season.png) | ![](examples/TimelinePalette/Example1.png) | ![](examples/TimelinePalette/Example2.png) | ![](examples/TimelinePalette/Example3.png) | ![](examples/TimelinePalette/Example4.png) |
+| | | ![](examples/TimelinePalette/Example5.png) | ![](examples/TimelinePalette/Example6.png) | ![](examples/TimelinePalette/Example7.png) | ![](examples/TimelinePalette/Example8.png) |
+| | | ![](examples/TimelinePalette/Example9.png) | ![](examples/TimelinePalette/Example10.png) | | |
+
+## Gradient Fade
+
+Fade with a corner-to-corner wash instead of a flat tint.
+
+[Download config](examples/FadeGradient/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/FadeGradient/Series.png) | ![](examples/FadeGradient/Season.png) | ![](examples/FadeGradient/Example1.png) | ![](examples/FadeGradient/Example2.png) | ![](examples/FadeGradient/Example3.png) | ![](examples/FadeGradient/Example4.png) |
+| | | ![](examples/FadeGradient/Example5.png) | ![](examples/FadeGradient/Example6.png) | ![](examples/FadeGradient/Example7.png) | ![](examples/FadeGradient/Example8.png) |
+| | | ![](examples/FadeGradient/Example9.png) | ![](examples/FadeGradient/Example10.png) | | |
+
+## Clean Cutout
+
+Text knocked out of a flat overlay with no outline around it.
+
+[Download config](examples/CutoutClean/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/CutoutClean/Series.png) | ![](examples/CutoutClean/Season.png) | ![](examples/CutoutClean/Example1.png) | ![](examples/CutoutClean/Example2.png) | ![](examples/CutoutClean/Example3.png) | ![](examples/CutoutClean/Example4.png) |
+| | | ![](examples/CutoutClean/Example5.png) | ![](examples/CutoutClean/Example6.png) | ![](examples/CutoutClean/Example7.png) | ![](examples/CutoutClean/Example8.png) |
+| | | ![](examples/CutoutClean/Example9.png) | ![](examples/CutoutClean/Example10.png) | | |
+
+## Watermark
+
+Standard layout with a small mark set into the bottom corner.
+
+[Download config](examples/Watermark/Template.json)
+
+| Series | Season | Episodes | | | |
+|---|---|---|---|---|---|
+| ![](examples/Watermark/Series.png) | ![](examples/Watermark/Season.png) | ![](examples/Watermark/Example1.png) | ![](examples/Watermark/Example2.png) | ![](examples/Watermark/Example3.png) | ![](examples/Watermark/Example4.png) |
+| | | ![](examples/Watermark/Example5.png) | ![](examples/Watermark/Example6.png) | ![](examples/Watermark/Example7.png) | ![](examples/Watermark/Example8.png) |
+| | | ![](examples/Watermark/Example9.png) | ![](examples/Watermark/Example10.png) | | |

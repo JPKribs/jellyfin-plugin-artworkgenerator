@@ -63,44 +63,44 @@ public class TextUtilsTests
     /// them reserve what is actually drawn.
     /// </summary>
     [Fact]
-    public void FitTitleLines_RespectsTheHeightItIsGiven()
+    public void FitTextLines_RespectsTheHeightItIsGiven()
     {
         using var font = new SKFont(SKTypeface.Default, 20f);
         const string longTitle = "A Fairly Long Episode Title That Wraps";
 
-        var twoLines = TextUtils.FitTitleLines(longTitle, font, 150f, LongTitleHandling.Ellipsis);
+        var twoLines = TextUtils.FitTextLines(longTitle, font, 150f, LongTextHandling.Ellipsis);
         Assert.True(twoLines.Count > 1, "precondition: this title should wrap at that width");
 
         // Room for one line only.
-        var oneLine = TextUtils.FitTitleLines(longTitle, font, 150f, 24f, 24f, LongTitleHandling.Ellipsis);
+        var oneLine = TextUtils.FitTextLines(longTitle, font, 150f, 24f, 24f, LongTextHandling.Ellipsis);
         Assert.Single(oneLine);
 
         // Room for two.
-        var fits = TextUtils.FitTitleLines(longTitle, font, 150f, 60f, 24f, LongTitleHandling.Ellipsis);
+        var fits = TextUtils.FitTextLines(longTitle, font, 150f, 60f, 24f, LongTextHandling.Ellipsis);
         Assert.Equal(twoLines.Count, fits.Count);
     }
 
     [Fact]
-    public void FitTitleLines_HeightAware_NeverExceedsTheAllowedLineCount()
+    public void FitTextLines_HeightAware_NeverExceedsTheAllowedLineCount()
     {
         using var font = new SKFont(SKTypeface.Default, 20f);
         const string longTitle = "An Extremely Long Episode Title That Will Wrap Several Times Over";
 
-        foreach (var handling in new[] { LongTitleHandling.Ellipsis, LongTitleHandling.Abbreviate, LongTitleHandling.DropName })
+        foreach (var handling in new[] { LongTextHandling.Ellipsis, LongTextHandling.Abbreviate, LongTextHandling.DropName })
         {
-            var lines = TextUtils.FitTitleLines(longTitle, font, 120f, 24f, 24f, handling);
+            var lines = TextUtils.FitTextLines(longTitle, font, 120f, 24f, 24f, handling);
             Assert.True(lines.Count <= 1, $"{handling} returned {lines.Count} lines for a one line slot");
         }
     }
 
     [Fact]
-    public void FitTitleLines_HeightAware_IsAPassThroughWhenHeightIsUnconstrained()
+    public void FitTextLines_HeightAware_IsAPassThroughWhenHeightIsUnconstrained()
     {
         using var font = new SKFont(SKTypeface.Default, 20f);
         const string title = "Short Title";
 
-        var plain = TextUtils.FitTitleLines(title, font, 500f, LongTitleHandling.Ellipsis);
-        var sized = TextUtils.FitTitleLines(title, font, 500f, 0f, 0f, LongTitleHandling.Ellipsis);
+        var plain = TextUtils.FitTextLines(title, font, 500f, LongTextHandling.Ellipsis);
+        var sized = TextUtils.FitTextLines(title, font, 500f, 0f, 0f, LongTextHandling.Ellipsis);
 
         Assert.Equal(plain, sized);
     }
@@ -114,18 +114,18 @@ public class TextUtilsTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public void FitTitleLines_CountsLinesTheWayTheStylesDrawThem(int lineCount)
+    public void FitTextLines_CountsLinesTheWayTheStylesDrawThem(int lineCount)
     {
         using var style = PaintFactory.CreateTextStyle(SKColors.White, 20f, SKTypeface.Default, 1080f);
         const string longTitle = "One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve";
 
         var zone = style.BlockHeight(lineCount);
-        var lines = TextUtils.FitTitleLines(longTitle, style.Font, 90f, zone, style.LineHeight, LongTitleHandling.Ellipsis);
+        var lines = TextUtils.FitTextLines(longTitle, style.Font, 90f, zone, style.LineHeight, LongTextHandling.Ellipsis);
         Assert.True(lines.Count <= lineCount, $"a {lineCount} line zone produced {lines.Count} lines");
 
         if (lineCount > 1)
         {
-            var smaller = TextUtils.FitTitleLines(longTitle, style.Font, 90f, zone - style.LineHeight, style.LineHeight, LongTitleHandling.Ellipsis);
+            var smaller = TextUtils.FitTextLines(longTitle, style.Font, 90f, zone - style.LineHeight, style.LineHeight, LongTextHandling.Ellipsis);
             Assert.True(smaller.Count <= lineCount - 1, $"a {lineCount - 1} line zone produced {smaller.Count} lines");
         }
     }

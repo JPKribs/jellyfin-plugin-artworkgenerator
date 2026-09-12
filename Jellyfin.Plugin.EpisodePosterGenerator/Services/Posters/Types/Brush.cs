@@ -21,8 +21,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // take the same outline the cutout uses.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
             (PosterSettingRules.CutoutBorder, PosterSettingState.Optional),
-            (PosterSettingRules.ShowTitle, PosterSettingState.Required),
-            (PosterSettingRules.ShowEpisode, PosterSettingState.Required));
+            (PosterSettingRules.ShowPrimary, PosterSettingState.Required),
+            (PosterSettingRules.ShowSecondary, PosterSettingState.Required));
 
         // Share of the safe width the text may use. The stroke keep-clear zone is measured from
         // the same figure, so a wrapped title can never run under a stroke edge.
@@ -171,15 +171,15 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // BuildTextColumn
         // The one description of the text layout: the code above a fixed two line title zone,
         // packed against the bottom left of the safe area.
-        private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject, TextStyle episodeStyle, TextStyle titleStyle)
+        private static LayoutColumn BuildTextColumn(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject, TextStyle secondaryStyle, TextStyle primaryStyle)
         {
-            var titleHeight = ShowsPrimary(settings, subject)
-                ? titleStyle.BlockHeight(2)
+            var primaryHeight = ShowsPrimary(settings, subject)
+                ? primaryStyle.BlockHeight(2)
                 : 0f;
 
             return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(SecondaryBlock, ShowsSecondary(settings, subject) ? episodeStyle.LineBox : 0f)
-                .Add(PrimaryBlock, titleHeight);
+                .Add(SecondaryBlock, ShowsSecondary(settings, subject) ? secondaryStyle.LineBox : 0f)
+                .Add(PrimaryBlock, primaryHeight);
         }
 
         // CalculateTextKeepClearArea
@@ -187,10 +187,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // measured from the same styles that draw it.
         private static SKRect CalculateTextKeepClearArea(SKRect safeArea, PosterSettings settings, int unit, ArtworkSubject subject)
         {
-            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
-            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
 
-            var consumed = BuildTextColumn(safeArea, settings, unit, subject, episodeStyle, titleStyle).Consumed;
+            var consumed = BuildTextColumn(safeArea, settings, unit, subject, secondaryStyle, primaryStyle).Consumed;
 
             return new SKRect(
                 safeArea.Left,
@@ -209,19 +209,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
 
-            using var episodeStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
-            using var titleStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
+            using var secondaryStyle = CreateSecondaryStyle(settings, unit, SKTextAlign.Left);
+            using var primaryStyle = CreatePrimaryStyle(settings, unit, SKTextAlign.Left);
 
-            var column = BuildTextColumn(safeArea, settings, unit, subject, episodeStyle, titleStyle);
+            var column = BuildTextColumn(safeArea, settings, unit, subject, secondaryStyle, primaryStyle);
 
             if (column.TryGetSlot(SecondaryBlock, out var codeSlot))
             {
-                episodeStyle.Draw(skCanvas, subject.SecondaryShort, safeArea.Left, episodeStyle.BaselineAtBottom(codeSlot));
+                secondaryStyle.Draw(skCanvas, subject.SecondaryShort, safeArea.Left, secondaryStyle.BaselineAtBottom(codeSlot));
             }
 
-            if (column.TryGetSlot(PrimaryBlock, out var titleSlot))
+            if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
-                DrawTitleInSlot(skCanvas, subject.Primary!, titleStyle, titleSlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTitleHandling);
+                DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, safeArea.Left, safeArea.Width * TextWidthRatio, settings.LongTextHandling);
             }
         }
 

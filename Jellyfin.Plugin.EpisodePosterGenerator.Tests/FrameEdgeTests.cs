@@ -13,16 +13,16 @@ public class FrameEdgeTests
     /// With both lines, the chosen edge takes the title and the other takes the subtitle.
     /// </summary>
     [Theory]
-    [InlineData(TitleEdge.TopFirst, false, true)]
-    [InlineData(TitleEdge.BottomFirst, true, false)]
-    [InlineData(TitleEdge.AlwaysTop, false, true)]
-    [InlineData(TitleEdge.AlwaysBottom, true, false)]
-    public void BothLines_PutTheTitleOnTheChosenEdge(TitleEdge edge, bool titleAtBottom, bool subtitleAtBottom)
+    [InlineData(TextEdge.TopFirst, false, true)]
+    [InlineData(TextEdge.BottomFirst, true, false)]
+    [InlineData(TextEdge.AlwaysTop, false, true)]
+    [InlineData(TextEdge.AlwaysBottom, true, false)]
+    public void BothLines_PutTheTitleOnTheChosenEdge(TextEdge edge, bool primaryAtBottom, bool secondaryAtBottom)
     {
-        var edges = FramePosterGenerator.ResolveEdges(edge, showTitle: true);
+        var edges = FramePosterGenerator.ResolveEdges(edge, showPrimary: true);
 
-        Assert.Equal(titleAtBottom, edges.TitleAtBottom);
-        Assert.Equal(subtitleAtBottom, edges.SubtitleAtBottom);
+        Assert.Equal(primaryAtBottom, edges.PrimaryAtBottom);
+        Assert.Equal(secondaryAtBottom, edges.SecondaryAtBottom);
     }
 
     /// <summary>
@@ -30,27 +30,27 @@ public class FrameEdgeTests
     /// fills first, so it lands where a lone title would. The pinned choices leave it where it is.
     /// </summary>
     [Theory]
-    [InlineData(TitleEdge.TopFirst, false)]
-    [InlineData(TitleEdge.BottomFirst, true)]
-    [InlineData(TitleEdge.AlwaysTop, true)]
-    [InlineData(TitleEdge.AlwaysBottom, false)]
-    public void WithNoTitle_TheSubtitleTakesTheFillingEdge(TitleEdge edge, bool subtitleAtBottom)
+    [InlineData(TextEdge.TopFirst, false)]
+    [InlineData(TextEdge.BottomFirst, true)]
+    [InlineData(TextEdge.AlwaysTop, true)]
+    [InlineData(TextEdge.AlwaysBottom, false)]
+    public void WithNoTitle_TheSubtitleTakesTheFillingEdge(TextEdge edge, bool secondaryAtBottom)
     {
-        var edges = FramePosterGenerator.ResolveEdges(edge, showTitle: false);
+        var edges = FramePosterGenerator.ResolveEdges(edge, showPrimary: false);
 
-        Assert.Equal(subtitleAtBottom, edges.SubtitleAtBottom);
+        Assert.Equal(secondaryAtBottom, edges.SecondaryAtBottom);
     }
 
     /// <summary>
     /// A lone line lands in the same place whichever line it is, so a series and its seasons match.
     /// </summary>
     [Theory]
-    [InlineData(TitleEdge.TopFirst)]
-    [InlineData(TitleEdge.BottomFirst)]
-    public void ALoneLineLandsInTheSamePlaceEitherWay(TitleEdge edge)
+    [InlineData(TextEdge.TopFirst)]
+    [InlineData(TextEdge.BottomFirst)]
+    public void ALoneLineLandsInTheSamePlaceEitherWay(TextEdge edge)
     {
-        var loneTitle = FramePosterGenerator.ResolveEdges(edge, showTitle: true).TitleAtBottom;
-        var loneSubtitle = FramePosterGenerator.ResolveEdges(edge, showTitle: false).SubtitleAtBottom;
+        var loneTitle = FramePosterGenerator.ResolveEdges(edge, showPrimary: true).PrimaryAtBottom;
+        var loneSubtitle = FramePosterGenerator.ResolveEdges(edge, showPrimary: false).SecondaryAtBottom;
 
         Assert.Equal(loneTitle, loneSubtitle);
     }

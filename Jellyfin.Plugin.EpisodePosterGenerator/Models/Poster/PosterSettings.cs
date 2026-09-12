@@ -3,19 +3,19 @@ using System.Xml.Serialization;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 {
-    public class PosterSettings
+    public partial class PosterSettings
     {
         /// <summary>
         /// Gets the effective episode font path (null when custom font is disabled).
         /// </summary>
         [JsonIgnore]
-        public string? EffectiveEpisodeFontPath => EpisodeUseCustomFont ? EpisodeFontPath : null;
+        public string? EffectiveSecondaryFontPath => SecondaryUseCustomFont ? SecondaryFontPath : null;
 
         /// <summary>
         /// Gets the effective title font path (null when custom font is disabled).
         /// </summary>
         [JsonIgnore]
-        public string? EffectiveTitleFontPath => TitleUseCustomFont ? TitleFontPath : null;
+        public string? EffectivePrimaryFontPath => PrimaryUseCustomFont ? PrimaryFontPath : null;
 
         /// <summary>
         /// Legacy flag retained only for migration of pre-10.11.23 configurations.
@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// with whichever line the item has, so a poster carrying one line always looks the same;
         /// the "always" choices pin the title to an edge and leave it empty when there is no title.
         /// </summary>
-        public TitleEdge TitleEdge { get; set; } = TitleEdge.TopFirst;
+        public TextEdge TextEdge { get; set; } = TextEdge.TopFirst;
 
         public bool CutoutBorder { get; set; } = true;
 
@@ -89,38 +89,38 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// </summary>
         public float ElementSpacing { get; set; } = 2.0f;
 
-        public bool ShowEpisode { get; set; } = true;
+        public bool ShowSecondary { get; set; } = true;
 
-        public string EpisodeFontFamily { get; set; } = "Arial";
+        public string SecondaryFontFamily { get; set; } = "Arial";
 
-        public bool EpisodeUseCustomFont { get; set; } = false;
+        public bool SecondaryUseCustomFont { get; set; } = false;
 
-        public string EpisodeFontPath { get; set; } = string.Empty;
+        public string SecondaryFontPath { get; set; } = string.Empty;
 
-        public string EpisodeFontStyle { get; set; } = "Bold";
+        public string SecondaryFontStyle { get; set; } = "Bold";
 
-        public float EpisodeFontSize { get; set; } = 7.0F;
+        public float SecondaryFontSize { get; set; } = 7.0F;
 
-        public string EpisodeFontColor { get; set; } = "#FFFFFFFF";
+        public string SecondaryFontColor { get; set; } = "#FFFFFFFF";
 
-        public bool ShowTitle { get; set; } = true;
+        public bool ShowPrimary { get; set; } = true;
 
-        public string TitleFontFamily { get; set; } = "Arial";
+        public string PrimaryFontFamily { get; set; } = "Arial";
 
-        public bool TitleUseCustomFont { get; set; } = false;
+        public bool PrimaryUseCustomFont { get; set; } = false;
 
-        public string TitleFontPath { get; set; } = string.Empty;
+        public string PrimaryFontPath { get; set; } = string.Empty;
 
-        public string TitleFontStyle { get; set; } = "Bold";
+        public string PrimaryFontStyle { get; set; } = "Bold";
 
-        public float TitleFontSize { get; set; } = 10.0F;
+        public float PrimaryFontSize { get; set; } = 10.0F;
 
-        public string TitleFontColor { get; set; } = "#FFFFFFFF";
+        public string PrimaryFontColor { get; set; } = "#FFFFFFFF";
 
         /// <summary>
         /// How to handle episode titles that do not fit the poster's text area.
         /// </summary>
-        public LongTitleHandling LongTitleHandling { get; set; } = LongTitleHandling.Ellipsis;
+        public LongTextHandling LongTextHandling { get; set; } = LongTextHandling.Ellipsis;
 
         public string OverlayColor { get; set; } = "#66000000";
 
