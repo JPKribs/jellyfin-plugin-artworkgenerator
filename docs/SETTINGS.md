@@ -68,7 +68,9 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Frame (Style is Frame)
 
-* **Title Edge**: which edge of the border holds the title, the subtitle taking the other. Automatic keeps the title at the top while there is a subtitle to hold the bottom, and moves it down when there is none, such as on a series poster. Default Automatic.
+* **Text Edges**: how the border's two edges are filled.
+  * **Top edge first** and **Bottom edge first** put whichever line the item has into that edge, the other line taking the opposite one. A series with only a title and a season with only a subtitle therefore look the same. Default is top edge first.
+  * **Title always top** and **Title always bottom** pin the title to one edge and the subtitle to the other, so an item missing one of them leaves that edge empty.
 
 ## Logo (Style is Logo)
 

@@ -54,10 +54,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         public CutoutType CutoutType { get; set; } = CutoutType.Code;
 
         /// <summary>
-        /// Gets or sets which edge of a framed poster the title sits in, the subtitle taking the
-        /// other. Automatic keeps the title at the top while there is a subtitle to hold the bottom.
+        /// Gets or sets how a framed poster fills its two edges. The "first" choices fill that edge
+        /// with whichever line the item has, so a poster carrying one line always looks the same;
+        /// the "always" choices pin the title to an edge and leave it empty when there is no title.
         /// </summary>
-        public TitleEdge TitleEdge { get; set; } = TitleEdge.Automatic;
+        public TitleEdge TitleEdge { get; set; } = TitleEdge.TopFirst;
 
         public bool CutoutBorder { get; set; } = true;
 

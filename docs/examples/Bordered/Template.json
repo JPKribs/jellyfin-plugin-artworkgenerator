@@ -14,7 +14,7 @@
     "ExtractWindowEnd": 80,
     "PosterStyle": "Frame",
     "CutoutType": "Code",
-    "TitleEdge": "Bottom",
+    "TitleEdge": "BottomFirst",
     "CutoutBorder": true,
     "LogoPosition": "Center",
     "LogoAlignment": "Center",

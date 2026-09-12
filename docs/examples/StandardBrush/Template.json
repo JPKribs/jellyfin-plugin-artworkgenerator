@@ -14,7 +14,7 @@
     "ExtractWindowEnd": 80,
     "PosterStyle": "Brush",
     "CutoutType": "Code",
-    "TitleEdge": "Automatic",
+    "TitleEdge": "TopFirst",
     "CutoutBorder": false,
     "LogoPosition": "Top",
     "LogoAlignment": "Left",

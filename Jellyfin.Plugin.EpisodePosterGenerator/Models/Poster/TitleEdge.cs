@@ -1,17 +1,20 @@
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 {
     /// <summary>
-    /// Which edge of a framed poster the title sits in. The subtitle takes the other one.
+    /// How a framed poster fills its two edges with the title and the subtitle.
     /// </summary>
     public enum TitleEdge
     {
-        /// <summary>The title stays at the top while a subtitle holds the bottom, and moves down when there is none.</summary>
-        Automatic,
+        /// <summary>The top edge fills first: the title takes it, and a lone subtitle takes it instead.</summary>
+        TopFirst,
 
-        /// <summary>The title always sits in the top edge.</summary>
-        Top,
+        /// <summary>The bottom edge fills first: the title takes it, and a lone subtitle takes it instead.</summary>
+        BottomFirst,
 
-        /// <summary>The title always sits in the bottom edge.</summary>
-        Bottom
+        /// <summary>The title is pinned to the top and the subtitle to the bottom, each edge left empty when its line is missing.</summary>
+        AlwaysTop,
+
+        /// <summary>The title is pinned to the bottom and the subtitle to the top, each edge left empty when its line is missing.</summary>
+        AlwaysBottom
     }
 }

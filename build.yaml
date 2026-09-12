@@ -36,6 +36,7 @@ changelog:
   - Every bundled template is brought up to the current settings: it gains the portrait aspect ratio and the Frame title edge, and its two per-axis graphic sizes become the single size
   - Every bundled design ships a season poster example beside its series poster and its episodes
   - Three clean designs added to the examples: Minimal, Editorial and Bordered
+  - The Frame style chooses how its two edges fill: top or bottom edge first, where a lone line takes that edge whether it is the title or the subtitle, or the title pinned always top or always bottom
   fixes:
   - A design drawing a single line of text now always puts it in the same place, so a series and its seasons match; Frame's lone line takes the edge the design chose
   - A poster for an item with no title of its own drew a placeholder dash and held space for it, and Cutout shrank its letters to make room for a title that was not there

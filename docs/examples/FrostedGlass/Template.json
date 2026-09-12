@@ -14,7 +14,7 @@
     "ExtractWindowEnd": 80,
     "PosterStyle": "FrostedGlass",
     "CutoutType": "Code",
-    "TitleEdge": "Automatic",
+    "TitleEdge": "TopFirst",
     "CutoutBorder": true,
     "LogoPosition": "Center",
     "LogoAlignment": "Center",

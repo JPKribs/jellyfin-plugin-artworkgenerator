@@ -57,18 +57,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var showTitle = settings.ShowTitle && !string.IsNullOrEmpty(subject.Title);
             var showSubtitle = settings.ShowEpisode && !string.IsNullOrEmpty(subject.Label);
 
-            // Automatic pairs them as title over subtitle, and drops a lone line to the bottom.
-            var bothDrawn = showTitle && showSubtitle;
-            var titleAtBottom = settings.TitleEdge switch
-            {
-                TitleEdge.Top => false,
-                TitleEdge.Bottom => true,
-                _ => !bothDrawn
-            };
-
-            // Whichever line is on its own takes the title's edge, so a poster carrying one line
-            // always puts it in the same place, whether that line is a title or a subtitle.
-            var subtitleAtBottom = bothDrawn ? !titleAtBottom : titleAtBottom;
+            var (titleAtBottom, subtitleAtBottom) = ResolveEdges(settings.TitleEdge, showTitle);
 
             TextInfo? topInfo = null;
             TextInfo? bottomInfo = null;
@@ -107,6 +96,19 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         protected override void LogError(Exception ex, string? episodeName)
         {
             _logger.LogError(ex, "Failed to generate frame poster for {EpisodeName}", episodeName);
+        }
+
+        // ResolveEdges
+        // Which edge each line takes. The "first" choices fill the chosen edge with whichever line
+        // the item has, so a poster carrying a single line always looks the same whether that line
+        // is a title or a subtitle. The pinned choices keep the title on its edge and leave the
+        // other one empty when its line is missing.
+        internal static (bool TitleAtBottom, bool SubtitleAtBottom) ResolveEdges(TitleEdge edge, bool showTitle)
+        {
+            var fillsBottom = edge is TitleEdge.BottomFirst or TitleEdge.AlwaysBottom;
+            var pinned = edge is TitleEdge.AlwaysTop or TitleEdge.AlwaysBottom;
+
+            return (fillsBottom, pinned || showTitle ? !fillsBottom : fillsBottom);
         }
 
         // DrawEpisodeTitle

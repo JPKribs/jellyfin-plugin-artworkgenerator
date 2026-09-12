@@ -114,13 +114,14 @@
 
                             <div class="cutout-logo-group" id="frameOptions">
                                 <div class="inputContainer">
-                                    <label for="selectTitleEdge">Title Edge:</label>
-                                    <select is="emby-select" id="selectTitleEdge" data-setting="TitleEdge" data-default="Automatic">
-                                        <option value="Automatic">Automatic</option>
-                                        <option value="Top">Top</option>
-                                        <option value="Bottom">Bottom</option>
+                                    <label for="selectTitleEdge">Text Edges:</label>
+                                    <select is="emby-select" id="selectTitleEdge" data-setting="TitleEdge" data-default="TopFirst">
+                                        <option value="TopFirst">Top edge first</option>
+                                        <option value="BottomFirst">Bottom edge first</option>
+                                        <option value="AlwaysTop">Title always top</option>
+                                        <option value="AlwaysBottom">Title always bottom</option>
                                     </select>
-                                    <div class="fieldDescription">Which edge of the border holds the title, the subtitle taking the other. Automatic keeps the title at the top while there is a subtitle to hold the bottom, and moves it down when there is none, such as on a series poster.</div>
+                                    <div class="fieldDescription">How the border's two edges are filled. The first two fill that edge with whichever line the item has: the title normally, or the subtitle when there is no title, such as on a numbered season. The last two pin the title to one edge and the subtitle to the other, leaving an edge empty when its line is missing.</div>
                                 </div>
                             </div>
 
