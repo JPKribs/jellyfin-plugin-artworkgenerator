@@ -16,7 +16,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Large code cut out of the image. Bold and minimal.";
+        public override string Description => "Large text cut out of the image. Bold and minimal.";
 
         // The cutout letters are the poster, so the code or number is always drawn, and its size and
         // colour come from the cutout itself rather than the text settings.

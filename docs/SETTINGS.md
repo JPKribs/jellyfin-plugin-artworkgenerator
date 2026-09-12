@@ -56,11 +56,11 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Landscape Aspect Ratio**: output aspect ratio for landscape images. Default 16:9.
 * **Portrait Aspect Ratio**: output aspect ratio for portrait images. Default 2:3.
 * **Safe Area**: margin kept clear around all edges. The percent applies to the poster's short side and the same pixel amount is used on all four sides. Default 5.
-* **Element Spacing**: gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short side. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
+* **Element Spacing**: gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Every style resolves its spacing through this one value, so raising it pushes elements further apart everywhere. Default 2.
 
 ## Outline (Style is Cutout or Brush)
 
-* **Enable Outline**: draw a contrasting outline around the cut-out shape — the episode code for Cutout, the brush stroke for Brush. Default on.
+* **Enable Outline**: draw a contrasting outline around the cut-out shape — the subtitle for Cutout, the brush stroke for Brush. Default on.
 
 ## Cutout (Style is Cutout)
 
@@ -72,14 +72,14 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Logo Alignment**: horizontal placement. Left, Center, or Right. Default Center.
 * **Logo Height**: logo height as a percent of the poster's short side. Default 30.
 
-## Number & Code
+## Subtitle
 
-* **Show Number & Code**: draw the code or number line. Default on.
-* **Font**: font family for the number and code. Default Arial.
+* **Show Subtitle**: draw the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none. Default on.
+* **Font**: font family for the subtitle. Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
-* **Font Size**: text size as a percent of the poster's short side. Default 7.
+* **Font Size**: subtitle size as a percent of the poster's short side. Default 7.
 * **Font Color**: text color as ARGB hex. Default #FFFFFFFF.
 
 ## Title Text

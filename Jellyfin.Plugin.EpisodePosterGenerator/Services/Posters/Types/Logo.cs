@@ -79,14 +79,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         }
 
         // GetText
-        // The logo already names the series, so repeating the series name beneath it would say the
-        // same thing twice. An episode shows its code and title; a season or series shows only its
-        // label, such as SEASON 2, on the smaller code line where a short label belongs.
+        // The headline and the code line, the same way for every item: its title above its code. A
+        // series has no code, so its name sits alone beneath the logo.
         private static (string Headline, string Code) GetText(ArtworkSubject subject)
         {
-            return subject.Kind == ArtworkItemKind.Episode
-                ? (subject.Title ?? string.Empty, subject.Code)
-                : (string.Empty, subject.Label);
+            return (subject.Title ?? string.Empty, subject.Code);
         }
 
         // RenderSeriesLogo

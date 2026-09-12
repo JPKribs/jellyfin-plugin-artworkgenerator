@@ -27,7 +27,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Tilted pinstriped sash carrying the title. Sporty and graphic.";
+        public override string Description => "Tilted pinstriped sash carrying the title, with the subtitle in the corner. Sporty and graphic.";
 
         private readonly ILogger<StripedPosterGenerator> _logger;
 

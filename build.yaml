@@ -31,7 +31,10 @@ changelog:
   - The Designs page sheds four settings: both letterbox thresholds, the portrait text size, and the graphic's second dimension, each replaced by behaviour that needs no tuning
   - Both aspect ratios now sit together, with a note saying which one the chosen fill strategy uses
   - Four bundled designs set a caption-sized title, which left a series poster's name looking like an afterthought; they now use the same title size as the rest
+  - A design's two text lines are now called the title and the subtitle, rather than the episode name and the season and episode information, since they carry whatever the item is
   fixes:
+  - Fade sized a short series name until it filled the whole poster; its focal name is now bounded in thickness and length
+  - The Logo style drew nothing but the logo for a series; it shows the name beneath the logo, the same way it shows an episode's name
   - Brush strokes were thin on a tall poster, since the cap that stops them becoming blobs was tuned for wide frames; they are thicker there now, and wide posters are unchanged
   - Portrait text looked small against a tall frame, because every size was a percent of the short side, which in portrait is the width; portrait now measures sizes against the average of the two sides, roughly a quarter larger, and landscape is unchanged
   - Brush piled its strokes into a cross on a tall poster, because a stroke's height came from the short side while its length always came from the width; a stroke is now capped against its own length, which leaves wide posters untouched

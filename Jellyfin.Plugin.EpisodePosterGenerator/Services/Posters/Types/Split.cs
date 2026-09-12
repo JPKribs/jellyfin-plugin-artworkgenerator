@@ -15,7 +15,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Series poster beside the episode image with text. Magazine layout.";
+        public override string Description => "Series poster beside the frame with text. Magazine layout.";
 
         // SupportedShapes
         // The layout puts a portrait series poster beside a frame, which needs a wide canvas.

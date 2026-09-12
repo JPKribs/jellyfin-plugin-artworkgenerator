@@ -118,7 +118,7 @@
                                         <input is="emby-checkbox" type="checkbox" id="chkCutoutBorder" data-setting="CutoutBorder" />
                                         <span class="checkboxLabel">Enable Outline</span>
                                     </label>
-                                    <div class="fieldDescription">Draw a contrasting outline around the cut-out shape: the episode code for Cutout, the brush stroke for Brush.</div>
+                                    <div class="fieldDescription">Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.</div>
                                 </div>
                             </div>
 
@@ -238,7 +238,7 @@
                             <div class="inputContainer">
                                 <label for="txtElementSpacing">Element Spacing:</label>
                                 <input is="emby-input" type="number" id="txtElementSpacing" min="0" max="20" step="0.5" data-setting="ElementSpacing" data-type="number" />
-                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, episode code, and title, as a percent of the poster's short side. Raise it if elements sit too close together. Default is 2.</div>
+                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Raise it if elements sit too close together. Default is 2.</div>
                             </div>
 
                         </div>
@@ -345,7 +345,7 @@
                     <!-- Episode Information -->
                     <div class="jpk-collapsible-section">
                         <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
-                            <span class="jpk-collapsible-title">Number &amp; Code</span>
+                            <span class="jpk-collapsible-title">Subtitle</span>
                             <span class="jpk-collapsible-icon">&#9660;</span>
                         </button>
                         <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
@@ -353,9 +353,9 @@
                             <div class="checkboxContainer" id="showEpisodeRow">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkShowEpisode" data-setting="ShowEpisode" />
-                                    <span class="checkboxLabel">Show Number &amp; Code</span>
+                                    <span class="checkboxLabel">Show Subtitle</span>
                                 </label>
-                                <div class="fieldDescription">Display the code or number: the season and episode for an episode, the season for a season, and the year or season count for a series.</div>
+                                <div class="fieldDescription">Display the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none.</div>
                             </div>
 
                             <div class="checkboxContainer" data-depends-on="chkShowEpisode">
@@ -406,7 +406,7 @@
                                         <option value="Trebuchet MS">Trebuchet MS</option>
                                         <option value="Verdana">Verdana</option>
                                     </select>
-                                    <div class="fieldDescription">Font family for the number and code.</div>
+                                    <div class="fieldDescription">Font family for the subtitle.</div>
                                 </div>
                                 <div class="inputContainer">
                                     <label for="selectEpisodeFontStyle">Font Style:</label>
@@ -416,7 +416,7 @@
                                         <option value="Italic">Italic</option>
                                         <option value="Bold Italic">Bold Italic</option>
                                     </select>
-                                    <div class="fieldDescription">Font style for the number and code.</div>
+                                    <div class="fieldDescription">Font style for the subtitle.</div>
                                 </div>
                             </div>
 
@@ -434,7 +434,7 @@
                                     <span class="alpha-label">255</span>
                                     <input is="emby-input" type="text" id="txtEpisodeFontColor" placeholder="#FFFFFFFF" data-setting="EpisodeFontColor" class="hex-input" aria-describedby="descEpisodeFontColor" />
                                 </div>
-                                <div id="descEpisodeFontColor" class="fieldDescription">ARGB hex color for the number and code.</div>
+                                <div id="descEpisodeFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
                             </div>
 
                         </div>
@@ -453,7 +453,7 @@
                                     <input is="emby-checkbox" type="checkbox" id="chkShowTitle" data-setting="ShowTitle" />
                                     <span class="checkboxLabel">Show Title</span>
                                 </label>
-                                <div class="fieldDescription">Display the title: the episode name for an episode, and the series name for a season or series.</div>
+                                <div class="fieldDescription">Display the title, the larger line. An episode shows its own name; a season or series shows the show name.</div>
                             </div>
 
                             <div class="inputContainer" data-depends-on="chkShowTitle">

@@ -42,7 +42,7 @@ Flat color with a transparent brush cutout revealing the screenshot beneath, wit
 | ![Brush Example 1](docs/examples/StandardBrush/Example1.png) | ![Brush Example 2](docs/examples/StandardBrush/Example2.png) | ![Brush Example 3](docs/examples/StandardBrush/Example3.png) |
 
 ### Cutout Style  
-Large episode numbers displayed as transparent cutouts revealing the screenshot beneath, with optional episode title.
+Large numbers displayed as transparent cutouts revealing the frame beneath, with an optional title.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
@@ -53,7 +53,7 @@ Large episode numbers displayed as transparent cutouts revealing the screenshot 
 - **Text**: Displays episode number as words (e.g., "THREE")
 
 ### Frame Style
-Decorative frame borders with episode title and optional season/episode information.
+Decorative frame borders with the title and an optional subtitle.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
@@ -88,21 +88,21 @@ Episode information on a frosted glass panel that blurs the screenshot behind it
 | ![Frosted Glass Example 1](docs/examples/FrostedGlass/Example1.png) | ![Frosted Glass Example 2](docs/examples/FrostedGlass/Example2.png) | ![Frosted Glass Example 3](docs/examples/FrostedGlass/Example3.png) |
 
 ### Fade Style
-One sided color fade with a large episode number and a vertical episode title.
+One sided color fade with a large number and a vertical title.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
 | ![Fade Example 1](docs/examples/Fade/Example1.png) | ![Fade Example 2](docs/examples/Fade/Example2.png) | ![Fade Example 3](docs/examples/Fade/Example3.png) |
 
 ### Striped Style
-Tilted color sash with pinstripes carrying the episode title, with season/episode information in the corner.
+Tilted color sash with pinstripes carrying the title, with the subtitle in the corner.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
 | ![Striped Example 1](docs/examples/Striped/Example1.png) | ![Striped Example 2](docs/examples/Striped/Example2.png) | ![Striped Example 3](docs/examples/Striped/Example3.png) |
 
 ### Timeline Style
-Season progress bar filled to the episode's position, with optional episode title and season/episode information.
+Progress bar filled to the item's position, with an optional title and subtitle.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
@@ -163,7 +163,7 @@ The top layer containing all text elements, episode information, and series logo
 ### Rendering Pipeline
 Each poster style follows this exact four layer sequence. The modular approach allows for easy customization and additional poster styles.
 
-Elements that stack vertically — logo, episode code, title — are measured before any of them are placed, so they keep a consistent gap and cannot overlap. That gap is the **Element Spacing** setting, applied the same way by every style.
+Elements that stack vertically — logo, title, subtitle — are measured before any of them are placed, so they keep a consistent gap and cannot overlap. That gap is the **Element Spacing** setting, applied the same way by every style.
 
 ## Usage & Documentation
 

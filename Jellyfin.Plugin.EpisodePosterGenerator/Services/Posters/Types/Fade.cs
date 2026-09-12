@@ -23,9 +23,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
         // A portrait poster is narrow, so the number may use more of the width.
         private const float PortraitNumberZoneWidthRatio = 0.7f;
 
-        // A series has no number, so its name runs the full height instead. This is how much of
-        // the width the rotated letters may be tall.
-        private const float FocalTitleThicknessRatio = 0.35f;
+        // A series has no number, so its name runs up the poster instead. These bound it: how much
+        // of the width the rotated letters may be tall, and how much of the run they may take. A
+        // short name would otherwise be sized until it filled the height, which turns two words
+        // into a slab.
+        private const float FocalTitleThicknessRatio = 0.26f;
+        private const float FocalTitleRunRatio = 0.8f;
 
         // Probe size for measuring a focal title. Text metrics scale linearly, so one measurement
         // sizes it.
@@ -155,7 +158,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
             var text = title.ToUpperInvariant();
 
             using var style = focal
-                ? CreateFocalTitleStyle(config, unit, text, availableRun, safeArea.Width * FocalTitleThicknessRatio)
+                ? CreateFocalTitleStyle(config, unit, text, availableRun * FocalTitleRunRatio, safeArea.Width * FocalTitleThicknessRatio)
                 : CreateTitleStyle(config, unit, SKTextAlign.Left);
 
             if (availableRun <= style.Size)

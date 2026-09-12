@@ -15,7 +15,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters
 
         // Description
         // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Progress bar with the code, position, and optional title. Clean and data driven.";
+        public override string Description => "Progress bar with the subtitle, the position, and an optional title. Clean and data driven.";
 
         // The bar and its labels are the style, so the code line is always drawn.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(
