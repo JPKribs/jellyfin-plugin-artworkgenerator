@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
@@ -78,12 +79,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         Title,
 
         /// <summary>The series' original-language title.</summary>
+        [Description("Original Title")]
         OriginalTitle,
 
         /// <summary>The series sort title.</summary>
+        [Description("Sort Title")]
         SortTitle,
 
         /// <summary>The name of the series folder on disk.</summary>
+        [Description("Folder Name")]
         FolderName
     }
 
@@ -93,12 +97,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoColorSource
     {
         /// <summary>The configured colour.</summary>
+        [Description("Chosen Color")]
         Fixed,
 
         /// <summary>The dominant colour of the series poster.</summary>
+        [Description("Series Poster")]
         SeriesPoster,
 
         /// <summary>The dominant colour of the series backdrop.</summary>
+        [Description("Series Backdrop")]
         SeriesBackdrop
     }
 
@@ -108,18 +115,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoSubtitleMode
     {
         /// <summary>The whole name, as written.</summary>
+        [Description("Draw the whole name")]
         Keep,
 
         /// <summary>Only the part before the colon or dash.</summary>
+        [Description("Title only")]
         TitleOnly,
 
         /// <summary>Only the part after the colon or dash.</summary>
+        [Description("Subtitle only")]
         SubtitleOnly,
 
         /// <summary>The title large, with the subtitle small beneath it.</summary>
+        [Description("Title large, subtitle small below")]
         TitleLarge,
 
         /// <summary>The subtitle large, with the title small above it.</summary>
+        [Description("Subtitle large, title small above")]
         SubtitleLarge
     }
 
@@ -129,9 +141,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoFill
     {
         /// <summary>A solid colour.</summary>
+        [Description("A color")]
         Color,
 
         /// <summary>A frame from the series, as if the letters were cut out of a photo.</summary>
+        [Description("A frame from the show")]
         Photo
     }
 }

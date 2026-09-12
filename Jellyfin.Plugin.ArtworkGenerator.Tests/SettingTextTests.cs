@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using Xunit;
@@ -57,20 +58,57 @@ public class SettingTextTests
     }
 
     /// <summary>
-    /// The two settings models are served in one map, so a name used by both would have to mean the
-    /// same thing. This fails the moment that stops being true.
+    /// Options, defaults, and text for both settings models are served in one map keyed by property
+    /// name, which only works while the two models share no name. If they ever do, one silently
+    /// wins and a page shows the wrong choices; this fails first.
     /// </summary>
     [Fact]
-    public void TheTwoModelsDoNotDisagreeOverASharedName()
+    public void TheTwoSettingsModelsShareNoPropertyName()
     {
-        var poster = typeof(Models.PosterSettings).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
-        var logo = typeof(Models.LogoSettings).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
+        var poster = typeof(Models.PosterSettings)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite && Nullable.GetUnderlyingType(p.PropertyType) == null)
+            .Select(p => p.Name);
+
+        var logo = typeof(Models.LogoSettings)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite)
+            .Select(p => p.Name);
 
         var shared = poster.Intersect(logo, StringComparer.Ordinal).ToList();
 
-        // Not a prohibition: a shared name is fine, it just has to carry one meaning.
-        Assert.All(shared, name => Assert.True(SettingOptions.Text().ContainsKey(name) || true));
-        Assert.True(shared.Count < 10, $"The models now share {shared.Count} names; serving them in one map is getting risky.");
+        Assert.True(shared.Count == 0, $"The models now share {string.Join(", ", shared)}.");
+    }
+
+    /// <summary>A logo design's settings are served too, not just a poster design's.</summary>
+    [Fact]
+    public void LogoSettingsAreServedAlongsidePosterSettings()
+    {
+        var options = SettingOptions.All();
+        var defaults = SettingOptions.Defaults();
+
+        foreach (var setting in new[] { "TitleSource", "SubtitleMode", "ColorSource", "Fill", "MaxLines", "FontStyle" })
+        {
+            Assert.True(options.ContainsKey(setting), $"{setting} offers no choices.");
+        }
+
+        Assert.Equal(new Models.LogoSettings().Color, defaults["Color"]);
+        Assert.Equal(new Models.LogoSettings().Width, defaults["Width"]);
+        Assert.Equal(new Models.PosterSettings().PrimaryFontSize, defaults["PrimaryFontSize"]);
+    }
+
+    /// <summary>The wording the page used for these choices is kept, not derived from the names.</summary>
+    [Theory]
+    [InlineData("SubtitleMode", "Keep", "Draw the whole name")]
+    [InlineData("SubtitleMode", "SubtitleLarge", "Subtitle large, title small above")]
+    [InlineData("ColorSource", "Fixed", "Chosen Color")]
+    [InlineData("Fill", "Photo", "A frame from the show")]
+    [InlineData("TitleSource", "OriginalTitle", "Original Title")]
+    [InlineData("MaxLines", "2", "Up to two lines")]
+    public void LogoChoicesKeepTheirWording(string setting, string value, string expected)
+    {
+        var option = Assert.Single(SettingOptions.All()[setting], o => o.Value == value);
+        Assert.Equal(expected, option.Label);
     }
 
     /// <summary>A description, when present, is a sentence rather than a fragment.</summary>

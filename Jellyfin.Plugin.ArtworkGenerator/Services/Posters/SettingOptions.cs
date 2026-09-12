@@ -30,12 +30,24 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
     /// </summary>
     public static class SettingOptions
     {
-        // Settings whose values are strings rather than an enum, and the C# that owns the list.
-        private static readonly Dictionary<string, IReadOnlyList<string>> StringValued = new(StringComparer.Ordinal)
+        // Settings whose choices are not an enum: a font style is a string, and a line count is a
+        // number with only two sensible values.
+        private static readonly Dictionary<string, IReadOnlyList<SettingOption>> Explicit = new(StringComparer.Ordinal)
         {
-            ["PrimaryFontStyle"] = FontUtils.FontStyles,
-            ["SecondaryFontStyle"] = FontUtils.FontStyles
+            ["PrimaryFontStyle"] = FontStyleOptions(),
+            ["SecondaryFontStyle"] = FontStyleOptions(),
+            ["FontStyle"] = FontStyleOptions(),
+            ["MaxLines"] = new[]
+            {
+                new SettingOption("1", "One line"),
+                new SettingOption("2", "Up to two lines")
+            }
         };
+
+        private static List<SettingOption> FontStyleOptions()
+        {
+            return FontUtils.FontStyles.Select(style => new SettingOption(style, style)).ToList();
+        }
 
         // Settable
         // The settings a design actually stores: writable, not computed, and not one of the legacy
@@ -56,7 +68,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         {
             var options = new Dictionary<string, IReadOnlyList<SettingOption>>(StringComparer.Ordinal);
 
-            foreach (var property in Settable())
+            foreach (var property in Settable().Concat(SettableLogoProperties()))
             {
                 if (property.PropertyType.IsEnum)
                 {
@@ -65,9 +77,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                         .Select(field => new SettingOption(field.Name, LabelFor(field)))
                         .ToList();
                 }
-                else if (StringValued.TryGetValue(property.Name, out var values))
+                else if (Explicit.TryGetValue(property.Name, out var values))
                 {
-                    options[property.Name] = values.Select(v => new SettingOption(v, v)).ToList();
+                    options[property.Name] = values;
                 }
             }
 
@@ -122,8 +134,30 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public static IReadOnlyDictionary<string, object?> Defaults()
         {
             var defaults = new PosterSettings();
+            var logoDefaults = new LogoSettings();
 
-            return Settable().ToDictionary(
+            return Settable().Select(p => (Property: p, Source: (object)defaults))
+                .Concat(SettableLogoProperties().Select(p => (Property: p, Source: (object)logoDefaults)))
+                .ToDictionary(
+                entry => entry.Property.Name,
+                entry =>
+                {
+                    var value = entry.Property.GetValue(entry.Source);
+                    return entry.Property.PropertyType.IsEnum ? value?.ToString() : value;
+                },
+                StringComparer.Ordinal);
+        }
+
+        /// <summary>
+        /// Gets the defaults for a logo design alone. The merged map above answers "what is this one
+        /// setting's default"; this answers "what does a brand new logo design look like", which must
+        /// not carry a poster design's settings with it.
+        /// </summary>
+        public static IReadOnlyDictionary<string, object?> LogoDefaults()
+        {
+            var defaults = new LogoSettings();
+
+            return SettableLogoProperties().ToDictionary(
                 property => property.Name,
                 property =>
                 {

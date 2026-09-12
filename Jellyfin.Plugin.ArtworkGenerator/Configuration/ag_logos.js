@@ -16,29 +16,8 @@ export default function (view) {
     var _previewSeq = 0;
     var _fontsPromise = null;
     var logoSettingText = {};
-
-    var LOGO_DEFAULTS = {
-        TitleSource: 'Title',
-        StripYear: true,
-        SubtitleMode: 'Keep',
-        SecondarySize: 45,
-        Fill: 'Color',
-        CustomRegex: '',
-        Uppercase: false,
-        FontFamily: 'Arial',
-        FontStyle: 'Bold',
-        UseCustomFont: false,
-        FontPath: '',
-        ColorSource: 'Fixed',
-        Color: '#FFFFFFFF',
-        OutlineEnabled: false,
-        OutlineColor: '#FF000000',
-        OutlineWidth: 4,
-        ShadowEnabled: false,
-        MaxLines: 2,
-        Width: 800,
-        Height: 310
-    };
+    var logoSettingOptions = {};
+    var logoSettingDefaults = {};
 
     function getTabs() {
         return [
@@ -228,18 +207,45 @@ export default function (view) {
 
     // ── Loading ─────────────────────────────────────────────
 
-    // A logo setting's label and help text come from LogoSettings in C#, the same way the Designs
-    // page reads them off PosterSettings, so the wording lives beside the setting.
-    function loadSettingText() {
+    // A logo setting's choices, default, label, and help text all come from LogoSettings in C#, the
+    // same way the Designs page reads them off PosterSettings.
+    function loadSettingMetadata() {
         return ApiClient.ajax({
             type: 'GET',
             url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
             dataType: 'json'
         }).then(function (payload) {
             logoSettingText = (payload && (payload.text || payload.Text)) || {};
+            logoSettingOptions = (payload && (payload.options || payload.Options)) || {};
+            logoSettingDefaults = (payload && (payload.logoDefaults || payload.LogoDefaults)) || {};
+            populateSettingOptions();
             applySettingText();
         }).catch(function (error) {
             console.error('Failed to load setting text:', error);
+        });
+    }
+
+    // Choices come from the settings model too, so a value added to a logo enum in C# appears here.
+    // Font families are left alone: they are filled from the fonts installed on the server.
+    function populateSettingOptions() {
+        view.querySelectorAll('select[data-setting]').forEach(function (select) {
+            var key = select.getAttribute('data-setting');
+            if (key === 'FontFamily') return;
+
+            var options = logoSettingOptions[key];
+            if (!options || !options.length) return;
+
+            var previous = select.value;
+            select.innerHTML = '';
+
+            options.forEach(function (option) {
+                var el = document.createElement('option');
+                el.value = option.value !== undefined ? option.value : option.Value;
+                el.textContent = option.label !== undefined ? option.label : option.Label;
+                select.appendChild(el);
+            });
+
+            if (previous) select.value = previous;
         });
     }
 
@@ -308,14 +314,14 @@ export default function (view) {
 
     function loadConfig() {
         Dashboard.showLoadingMsg();
-        Promise.all([loadFonts(), fetchLogos(), shared.getConfig(), loadSettingText()]).then(function (results) {
+        Promise.all([loadFonts(), fetchLogos(), shared.getConfig(), loadSettingMetadata()]).then(function (results) {
             logoDesigns = results[1] || [];
             fullConfig = results[2] || {};
             fullConfig.Profiles = fullConfig.Profiles || [];
 
             // The server always supplies one; this only guards a malformed payload.
             if (logoDesigns.length === 0) {
-                logoDesigns.push({ Id: generateGuid(), Name: 'Default', Settings: Object.assign({}, LOGO_DEFAULTS) });
+                logoDesigns.push({ Id: generateGuid(), Name: 'Default', Settings: Object.assign({}, logoSettingDefaults) });
             }
 
             populateDropdown();
@@ -381,7 +387,7 @@ export default function (view) {
         view.querySelectorAll('[data-setting]').forEach(function (el) {
             var key = el.getAttribute('data-setting');
             var value = logo.Settings[key];
-            if (value === undefined || value === null) value = LOGO_DEFAULTS[key];
+            if (value === undefined || value === null) value = logoSettingDefaults[key];
 
             if (el.type === 'checkbox') {
                 el.checked = value === true;
@@ -408,7 +414,7 @@ export default function (view) {
                 logo.Settings[key] = el.checked;
             } else if (el.getAttribute('data-type') === 'number') {
                 var number = parseFloat(el.value);
-                logo.Settings[key] = isNaN(number) ? LOGO_DEFAULTS[key] : number;
+                logo.Settings[key] = isNaN(number) ? logoSettingDefaults[key] : number;
             } else {
                 logo.Settings[key] = el.value;
             }
@@ -580,7 +586,7 @@ export default function (view) {
             var created = {
                 Id: generateGuid(),
                 Name: name,
-                Settings: Object.assign({}, LOGO_DEFAULTS, source ? source.Settings : {})
+                Settings: Object.assign({}, logoSettingDefaults, source ? source.Settings : {})
             };
 
             logoDesigns.push(created);
