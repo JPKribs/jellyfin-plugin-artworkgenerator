@@ -1,0 +1,560 @@
+<div id="EpgPostersPage" data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-require="emby-input,emby-button,emby-select,emby-checkbox"
+     data-controller="__plugin/ag_posters.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="EpgPostersForm">
+                <div class="verticalSection verticalSection-extrabottompadding">
+
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h1 class="sectionTitle">Poster Designs</h1>
+                    </div>
+
+                    <!-- Config Selector -->
+                    <div class="jpk-selector">
+                        <select is="emby-select" id="selectPosterConfig" class="jpk-selector-dropdown"></select>
+                        <div class="jpk-selector-actions">
+                            <button is="emby-button" type="button" id="btnRenameConfig" class="raised jpk-icon-btn" title="Rename">
+                                <span class="material-icons" aria-hidden="true">edit</span>
+                                <span class="jpk-icon-btn-label">Rename</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnExportConfig" class="raised jpk-icon-btn" title="Export">
+                                <span class="material-icons" aria-hidden="true">file_upload</span>
+                                <span class="jpk-icon-btn-label">Export</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnImportConfig" class="raised jpk-icon-btn" title="Import">
+                                <span class="material-icons" aria-hidden="true">file_download</span>
+                                <span class="jpk-icon-btn-label">Import</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnNewConfig" class="raised jpk-icon-btn button-submit" title="New">
+                                <span class="material-icons" aria-hidden="true">add</span>
+                                <span class="jpk-icon-btn-label">New</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnDeleteConfig" class="raised jpk-icon-btn button-delete" title="Delete">
+                                <span class="material-icons" aria-hidden="true">delete</span>
+                                <span class="jpk-icon-btn-label">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="jpk-section poster-preview-section">
+                        <div class="jpk-section-title">Live Preview</div>
+                        <div class="jpk-section-content">
+                            <div class="poster-preview-layout">
+                                <div class="poster-preview-main">
+                                    <div class="poster-preview-pair">
+                                        <div class="poster-preview-shape">
+                                            <div id="posterPreviewFrameLandscape" class="poster-preview-frame" data-shape="Landscape" title="Click to enlarge">
+                                                <img id="posterPreviewImageLandscape" class="poster-preview-image" alt="Landscape preview" />
+                                                <div id="posterPreviewStatusLandscape" class="poster-preview-status">Loading preview…</div>
+                                            </div>
+                                            <div class="poster-preview-shape-label">Landscape</div>
+                                        </div>
+                                        <div class="poster-preview-shape">
+                                            <div id="posterPreviewFramePortrait" class="poster-preview-frame portrait" data-shape="Portrait" title="Click to enlarge">
+                                                <img id="posterPreviewImagePortrait" class="poster-preview-image" alt="Portrait preview" />
+                                                <div id="posterPreviewStatusPortrait" class="poster-preview-status">Loading preview…</div>
+                                            </div>
+                                            <div class="poster-preview-shape-label">Portrait</div>
+                                        </div>
+                                    </div>
+                                    <div class="poster-preview-caption">Rendered from sample artwork. Every design draws both shapes, and a profile picks the one each image needs.</div>
+                                    <div id="posterShapeNote" class="poster-preview-note"></div>
+                                    <div class="inputContainer poster-preview-kind">
+                                        <label for="selectPreviewKind">Preview As:</label>
+                                        <select is="emby-select" id="selectPreviewKind">
+                                            <option value="Series">Series</option>
+                                            <option value="Season">Season</option>
+                                            <option value="Episode">Episode</option>
+                                        </select>
+                                        <div class="fieldDescription">Which kind of item the previews show.</div>
+                                    </div>
+                                </div>
+                                <div class="poster-preview-components">
+                                    <div class="poster-component" data-component="canvas" title="Click to expand">
+                                        <img class="poster-component-img" src="" alt="Canvas image" data-component="canvas" />
+                                        <span class="poster-component-label">Canvas Image</span>
+                                    </div>
+                                    <div class="poster-component" data-component="poster" title="Click to expand">
+                                        <img class="poster-component-img" src="" alt="Series poster" data-component="poster" />
+                                        <span class="poster-component-label">Series Poster</span>
+                                    </div>
+                                    <div class="poster-component" data-component="logo" title="Click to expand">
+                                        <img class="poster-component-img" src="" alt="Series logo" data-component="logo" />
+                                        <span class="poster-component-label">Series Logo</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Poster: always open, since the style picker drives everything below it -->
+                    <div class="jpk-section">
+                        <div class="jpk-section-title">Poster</div>
+                        <div id="posterContent" class="jpk-section-content">
+
+                            <div class="inputContainer">
+                                <label for="selectPosterStyle">Style:</label>
+                                <select is="emby-select" id="selectPosterStyle" data-setting="PosterStyle" data-default="Standard"></select>
+                                <div id="posterStyleDescription" class="fieldDescription"></div>
+                            </div>
+
+                            <div class="cutout-logo-group" id="frameOptions">
+                                <div class="inputContainer">
+                                    <label for="selectTextEdge">Text Edges:</label>
+                                    <select is="emby-select" id="selectTextEdge" data-setting="TextEdge" data-default="TopFirst"></select>
+                                    <div class="fieldDescription">How the border's two edges are filled. The first two fill that edge with whichever line the item has: the title normally, or the subtitle when there is no title, such as on a numbered season. The last two pin the title to one edge and the subtitle to the other, leaving an edge empty when its line is missing.</div>
+                                </div>
+                            </div>
+
+                            <div class="cutout-logo-group" id="outlineOptions">
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="chkCutoutBorder" data-setting="CutoutBorder" />
+                                        <span class="checkboxLabel">Enable Outline</span>
+                                    </label>
+                                    <div class="fieldDescription">Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.</div>
+                                </div>
+                            </div>
+
+                            <div class="cutout-logo-group" id="cutoutOptions">
+                                <div class="inputContainer">
+                                    <label for="selectCutoutType">Type:</label>
+                                    <select is="emby-select" id="selectCutoutType" data-setting="CutoutType" data-default="Code"></select>
+                                    <div class="fieldDescription">Show the episode as a code like S01E01 or as a word like ONE.</div>
+                                </div>
+                            </div>
+
+                            <div class="cutout-logo-group" id="logoOptions">
+                                <div class="inputContainer">
+                                    <label for="selectLogoAlignment">Logo Alignment:</label>
+                                    <select is="emby-select" id="selectLogoAlignment" data-setting="LogoAlignment" data-default="Center"></select>
+                                    <div class="fieldDescription">Horizontal alignment of the series logo on the poster.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="selectLogoPosition">Logo Position:</label>
+                                    <select is="emby-select" id="selectLogoPosition" data-setting="LogoPosition" data-default="Center"></select>
+                                    <div class="fieldDescription">Vertical position of the series logo on the poster.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="txtLogoHeight">Logo Height:</label>
+                                    <input is="emby-input" type="number" id="txtLogoHeight" min="1.0" max="100.0" data-setting="LogoHeight" data-type="number" />
+                                    <div class="fieldDescription">Logo height as a percent of the poster's short side, 1 to 100.</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Canvas -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="canvasContent" data-target="canvasContent">
+                            <span class="jpk-collapsible-title">Canvas</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="canvasContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="inputContainer">
+                                <label for="selectCanvasSource">Canvas Background:</label>
+                                <select is="emby-select" id="selectCanvasSource" data-setting="CanvasSource" data-default="Extract"></select>
+                                <div class="fieldDescription">Determine where the poster background should come from.</div>
+                            </div>
+
+                            <div class="nested-settings" data-depends-on-canvas="Extract">
+                                <div class="jpk-field-row">
+                                    <div class="jpk-field">
+                                        <label for="txtExtractWindowStart">Extraction Start (%):</label>
+                                        <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-setting="ExtractWindowStart" data-type="number" />
+                                    </div>
+                                    <div class="jpk-field">
+                                        <label for="txtExtractWindowEnd">Extraction End (%):</label>
+                                        <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-setting="ExtractWindowEnd" data-type="number" />
+                                    </div>
+                                </div>
+                                <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
+                                <div class="inputContainer">
+                                    <label for="txtBrightenHDR">Brighten HDR (%):</label>
+                                    <input is="emby-input" type="number" id="txtBrightenHDR" min="0" max="100" data-setting="BrightenHDR" data-type="number" />
+                                    <div class="fieldDescription">Brighten frames from HDR sources by this percent.</div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer" data-depends-on-canvas="Extract">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkEnableLetterboxDetection" data-setting="EnableLetterboxDetection" />
+                                    <span class="checkboxLabel">Enable Letterbox Detection</span>
+                                </label>
+                                <div class="fieldDescription">Detect and crop black bars from extracted frames.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="selectPosterFill">Fill Strategy:</label>
+                                <select is="emby-select" id="selectPosterFill" data-setting="PosterFill" data-default="Original"></select>
+                                <div class="fieldDescription">How the source image should be resized to fit the poster dimensions. Portrait images always crop to fit, since a tall cut of a widescreen frame cannot keep its original shape.</div>
+                            </div>
+
+                            <div class="jpk-field-row">
+                                <div class="jpk-field">
+                                    <label for="txtPosterDimensionRatio">Landscape Aspect Ratio:</label>
+                                    <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
+                                </div>
+                                <div class="jpk-field">
+                                    <label for="txtPortraitDimensionRatio">Portrait Aspect Ratio:</label>
+                                    <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
+                                </div>
+                            </div>
+                            <div id="ratioNote" class="fieldDescription">The shape each image is cropped to, such as 16:9 and 2:3.</div>
+
+                            <div class="inputContainer">
+                                <label for="txtPosterSafeArea">Safe Area:</label>
+                                <input is="emby-input" type="number" id="txtPosterSafeArea" min="1.0" max="100.0" data-setting="PosterSafeArea" data-type="number" />
+                                <div class="fieldDescription">Margin kept clear around all edges, as a percent of the poster's short side. The same pixel amount is used on every side.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtElementSpacing">Element Spacing:</label>
+                                <input is="emby-input" type="number" id="txtElementSpacing" min="0" max="20" step="0.5" data-setting="ElementSpacing" data-type="number" />
+                                <div class="fieldDescription">Gap kept between stacked elements such as the logo, title, and subtitle, as a percent of the poster's short side. Raise it if elements sit too close together. Default is 2.</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Overlay -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="overlayContent" data-target="overlayContent">
+                            <span class="jpk-collapsible-title">Overlay</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="overlayContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="checkboxContainer">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkPaletteDerivedColors" data-setting="PaletteDerivedColors" data-default-unchecked />
+                                    <span class="checkboxLabel">Palette-Derived Colors</span>
+                                </label>
+                                <div class="fieldDescription">Use the dominant color from each episode's image as the overlay color. The alpha values below still apply.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtOverlayColor" class="color-control-label" data-color-label="Overlay Color:" data-opacity-label="Overlay Opacity:">Overlay Color:</label>
+                                <div class="color-control-group" data-palette-aware>
+                                    <input type="color" id="colorOverlayColor" class="color-picker" />
+                                    <input type="range" id="alphaOverlayColor" class="alpha-slider" min="0" max="255" value="102" />
+                                    <span class="alpha-label">102</span>
+                                    <input is="emby-input" type="text" id="txtOverlayColor" placeholder="#66000000" data-setting="OverlayColor" class="hex-input" aria-describedby="descOverlayColor" />
+                                </div>
+                                <div id="descOverlayColor" class="fieldDescription" data-color-desc="ARGB hex color for the overlay." data-opacity-desc="How strongly the episode's dominant color tints the poster. The color itself comes from the image.">ARGB hex color for the overlay.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="selectOverlayGradient">Overlay Gradient:</label>
+                                <select is="emby-select" id="selectOverlayGradient" data-setting="OverlayGradient" data-default="None"></select>
+                                <div class="fieldDescription">Gradient direction from the overlay color to the secondary color.</div>
+                            </div>
+
+                            <div class="nested-settings" data-depends-on-gradient="selectOverlayGradient">
+                                <div class="inputContainer">
+                                    <label for="txtOverlaySecondaryColor" class="color-control-label" data-color-label="Secondary Overlay Color:" data-opacity-label="Secondary Overlay Opacity:">Secondary Overlay Color:</label>
+                                    <div class="color-control-group" data-palette-aware>
+                                        <input type="color" id="colorOverlaySecondaryColor" class="color-picker" />
+                                        <input type="range" id="alphaOverlaySecondaryColor" class="alpha-slider" min="0" max="255" value="102" />
+                                        <span class="alpha-label">102</span>
+                                        <input is="emby-input" type="text" id="txtOverlaySecondaryColor" placeholder="#66000000" data-setting="OverlaySecondaryColor" class="hex-input" aria-describedby="descOverlaySecondaryColor" />
+                                    </div>
+                                    <div id="descOverlaySecondaryColor" class="fieldDescription" data-color-desc="ARGB hex color for the gradient end." data-opacity-desc="Opacity of the gradient end, drawn as a darker shade of the same dominant color.">ARGB hex color for the gradient end.</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Static Graphic -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="graphicContent" data-target="graphicContent">
+                            <span class="jpk-collapsible-title">Static Graphic</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="graphicContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="inputContainer">
+                                <label for="txtGraphicPath">Graphic File Path:</label>
+                                <input is="emby-input" type="text" id="txtGraphicPath" placeholder="/path/to/graphic.png" data-setting="GraphicPath" />
+                                <div class="fieldDescription">Optional path to a graphic drawn above the image and below text. PNG, JPG, or WEBP. Leave empty to disable.</div>
+                            </div>
+
+                            <div class="cutout-logo-group" data-depends-on-value="txtGraphicPath">
+                                <div class="inputContainer">
+                                    <label for="selectGraphicPosition">Graphic Position:</label>
+                                    <select is="emby-select" id="selectGraphicPosition" data-setting="GraphicPosition" data-default="Center"></select>
+                                    <div class="fieldDescription">Vertical position of the static graphic on the poster.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="selectGraphicAlignment">Graphic Alignment:</label>
+                                    <select is="emby-select" id="selectGraphicAlignment" data-setting="GraphicAlignment" data-default="Center"></select>
+                                    <div class="fieldDescription">Horizontal alignment of the static graphic on the poster.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="txtGraphicSize">Graphic Size (%):</label>
+                                    <input is="emby-input" type="number" id="txtGraphicSize" min="1.0" max="100.0" data-setting="GraphicSize" data-type="number" />
+                                    <div class="fieldDescription">Size of the graphic as a percent of the poster's short side, 1 to 100. It keeps its own proportions inside that size.</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Episode Information -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
+                            <span class="jpk-collapsible-title">Subtitle</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="checkboxContainer" id="showEpisodeRow">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkShowSecondary" data-setting="ShowSecondary" />
+                                    <span class="checkboxLabel">Show Subtitle</span>
+                                </label>
+                                <div class="fieldDescription">Display the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none.</div>
+                            </div>
+
+                            <div class="checkboxContainer" data-depends-on="chkShowSecondary">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkSecondaryUseCustomFont" data-setting="SecondaryUseCustomFont" />
+                                    <span class="checkboxLabel">Use Custom Font</span>
+                                </label>
+                                <div class="fieldDescription">Use a font file instead of a built in font.</div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary,chkSecondaryUseCustomFont">
+                                <label for="txtSecondaryFontPath">Font Path:</label>
+                                <input is="emby-input" type="text" id="txtSecondaryFontPath" placeholder="/path/to/font.ttf" data-setting="SecondaryFontPath" />
+                                <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
+                            </div>
+
+                            <div data-hide-when-checked="chkSecondaryUseCustomFont" data-depends-on="chkShowSecondary">
+                                <div class="inputContainer">
+                                    <label for="selectSecondaryFontFamily">Font:</label>
+                                    <select is="emby-select" id="selectSecondaryFontFamily" data-setting="SecondaryFontFamily" data-default="Arial">
+                                        <option value="Arial">Arial</option>
+                                        <option value="Arial Black">Arial Black</option>
+                                        <option value="Book Antiqua">Book Antiqua</option>
+                                        <option value="Calibri">Calibri</option>
+                                        <option value="Cambria">Cambria</option>
+                                        <option value="Candara">Candara</option>
+                                        <option value="Century Gothic">Century Gothic</option>
+                                        <option value="Comic Sans MS">Comic Sans MS</option>
+                                        <option value="Consolas">Consolas</option>
+                                        <option value="Courier New">Courier New</option>
+                                        <option value="Didot">Didot</option>
+                                        <option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+                                        <option value="Futura">Futura</option>
+                                        <option value="Garamond">Garamond</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Gill Sans">Gill Sans</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                        <option value="Impact">Impact</option>
+                                        <option value="Lucida Console">Lucida Console</option>
+                                        <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                                        <option value="Monaco">Monaco</option>
+                                        <option value="Optima">Optima</option>
+                                        <option value="Palatino Linotype">Palatino Linotype</option>
+                                        <option value="Rockwell">Rockwell</option>
+                                        <option value="Segoe UI">Segoe UI</option>
+                                        <option value="Tahoma">Tahoma</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Trebuchet MS">Trebuchet MS</option>
+                                        <option value="Verdana">Verdana</option>
+                                    </select>
+                                    <div class="fieldDescription">Font family for the subtitle.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="selectSecondaryFontStyle">Font Style:</label>
+                                    <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold"></select>
+                                    <div class="fieldDescription">Font style for the subtitle.</div>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="txtSecondaryFontSize">Font Size:</label>
+                                <input is="emby-input" type="number" id="txtSecondaryFontSize" min="1.0" max="100.0" data-setting="SecondaryFontSize" data-type="number" />
+                                <div class="fieldDescription">Text size as a percent of the poster's short side, 1 to 100.</div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="txtSecondaryFontColor">Font Color:</label>
+                                <div class="color-control-group">
+                                    <input type="color" id="colorSecondaryFontColor" class="color-picker" />
+                                    <input type="range" id="alphaSecondaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
+                                    <span class="alpha-label">255</span>
+                                    <input is="emby-input" type="text" id="txtSecondaryFontColor" placeholder="#FFFFFFFF" data-setting="SecondaryFontColor" class="hex-input" aria-describedby="descSecondaryFontColor" />
+                                </div>
+                                <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Episode Title -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeTitleContent" data-target="episodeTitleContent">
+                            <span class="jpk-collapsible-title">Title</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="episodeTitleContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="checkboxContainer" id="showTitleRow">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkShowPrimary" data-setting="ShowPrimary" />
+                                    <span class="checkboxLabel">Show Title</span>
+                                </label>
+                                <div class="fieldDescription">Display the title, the larger line. An episode shows its own name; a season or series shows the show name.</div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                                <label for="selectLongTextHandling">Long Titles:</label>
+                                <select is="emby-select" id="selectLongTextHandling" data-setting="LongTextHandling" data-default="Ellipsis"></select>
+                                <div class="fieldDescription">What to do when a title does not fit. Ellipsis trims it. Abbreviate tries the first part of the title, then initials with periods. Drop Name hides it.</div>
+                            </div>
+
+                            <div class="checkboxContainer" data-depends-on="chkShowPrimary">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkPrimaryUseCustomFont" data-setting="PrimaryUseCustomFont" />
+                                    <span class="checkboxLabel">Use Custom Font</span>
+                                </label>
+                                <div class="fieldDescription">Use a font file instead of a built in font.</div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowPrimary,chkPrimaryUseCustomFont">
+                                <label for="txtPrimaryFontPath">Font Path:</label>
+                                <input is="emby-input" type="text" id="txtPrimaryFontPath" placeholder="/path/to/font.ttf" data-setting="PrimaryFontPath" />
+                                <div class="fieldDescription">Path to a TTF, OTF, or TTC font file readable by the server.</div>
+                            </div>
+
+                            <div data-hide-when-checked="chkPrimaryUseCustomFont" data-depends-on="chkShowPrimary">
+                                <div class="inputContainer">
+                                    <label for="selectPrimaryFontFamily">Font:</label>
+                                    <select is="emby-select" id="selectPrimaryFontFamily" data-setting="PrimaryFontFamily" data-default="Arial">
+                                        <option value="Arial">Arial</option>
+                                        <option value="Arial Black">Arial Black</option>
+                                        <option value="Book Antiqua">Book Antiqua</option>
+                                        <option value="Calibri">Calibri</option>
+                                        <option value="Cambria">Cambria</option>
+                                        <option value="Candara">Candara</option>
+                                        <option value="Century Gothic">Century Gothic</option>
+                                        <option value="Comic Sans MS">Comic Sans MS</option>
+                                        <option value="Consolas">Consolas</option>
+                                        <option value="Courier New">Courier New</option>
+                                        <option value="Didot">Didot</option>
+                                        <option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+                                        <option value="Futura">Futura</option>
+                                        <option value="Garamond">Garamond</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Gill Sans">Gill Sans</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                        <option value="Impact">Impact</option>
+                                        <option value="Lucida Console">Lucida Console</option>
+                                        <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                                        <option value="Monaco">Monaco</option>
+                                        <option value="Optima">Optima</option>
+                                        <option value="Palatino Linotype">Palatino Linotype</option>
+                                        <option value="Rockwell">Rockwell</option>
+                                        <option value="Segoe UI">Segoe UI</option>
+                                        <option value="Tahoma">Tahoma</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Trebuchet MS">Trebuchet MS</option>
+                                        <option value="Verdana">Verdana</option>
+                                    </select>
+                                    <div class="fieldDescription">Font family for the title text.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="selectPrimaryFontStyle">Font Style:</label>
+                                    <select is="emby-select" id="selectPrimaryFontStyle" data-setting="PrimaryFontStyle" data-default="Bold"></select>
+                                    <div class="fieldDescription">Font style for the title text.</div>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                                <label for="txtPrimaryFontSize">Font Size:</label>
+                                <input is="emby-input" type="number" id="txtPrimaryFontSize" min="1.0" max="100.0" data-setting="PrimaryFontSize" data-type="number" />
+                                <div class="fieldDescription">Title size as a percent of the poster's short side, 1 to 100.</div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                                <label for="txtPrimaryFontColor">Font Color:</label>
+                                <div class="color-control-group">
+                                    <input type="color" id="colorPrimaryFontColor" class="color-picker" />
+                                    <input type="range" id="alphaPrimaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
+                                    <span class="alpha-label">255</span>
+                                    <input is="emby-input" type="text" id="txtPrimaryFontColor" placeholder="#FFFFFFFF" data-setting="PrimaryFontColor" class="hex-input" aria-describedby="descPrimaryFontColor" />
+                                </div>
+                                <div id="descPrimaryFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Save -->
+                    <div class="inputContainer">
+                        <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                        <span id="unsavedIndicator" class="jpk-unsaved">
+                            <span class="jpk-unsaved-dot"></span>
+                            Unsaved changes
+                        </span>
+                    </div>
+
+                </div>
+                <input type="file" id="templateFileInput" accept=".json" style="display: none;" />
+            </form>
+        </div>
+    </div>
+
+    <!-- Enlarged Preview Modal -->
+    <div id="previewModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle">
+        <div class="jpk-dialog-content">
+            <button type="button" id="btnClosePreviewModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="previewModalTitle" class="jpk-modal-title">Poster Preview</h2>
+            <div class="jpk-modal-body">
+                <img id="posterPreviewModalImage" class="poster-preview-modal-image" src="" alt="Poster preview enlarged" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Component Modal -->
+    <div id="componentModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="componentModalTitle">
+        <div class="jpk-dialog-content">
+            <button type="button" id="btnCloseComponentModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="componentModalTitle" class="jpk-modal-title">Component</h2>
+            <div class="jpk-modal-body">
+                <img id="componentModalImage" class="poster-preview-modal-image" src="" alt="Preview component" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Modal -->
+    <div id="inputModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="inputModalTitle">
+        <div class="jpk-dialog-content jpk-dialog-content-narrow">
+            <button type="button" id="btnCloseInputModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="inputModalTitle" class="jpk-modal-title"></h2>
+            <div class="jpk-modal-body">
+                <div id="inputModalFields"></div>
+            </div>
+            <div class="jpk-modal-button-row">
+                <button is="emby-button" type="button" id="btnCancelInputModal" class="raised jpk-modal-button">
+                    <span>Cancel</span>
+                </button>
+                <button is="emby-button" type="button" id="btnConfirmInputModal" class="raised button-submit jpk-modal-button">
+                    <span>OK</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="configurationpage?name=ag_jpkribs_shared.css">
+    <link rel="stylesheet" href="configurationpage?name=ag_shared.css">
+</div>

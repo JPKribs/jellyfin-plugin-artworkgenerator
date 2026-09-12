@@ -1,0 +1,51 @@
+<div id="EpgSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-require="emby-input,emby-button,emby-select,emby-checkbox"
+     data-controller="__plugin/ag_settings.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="EpgSettingsForm">
+                <div class="verticalSection verticalSection-extrabottompadding">
+
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h1 class="sectionTitle">Settings</h1>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label class="emby-checkbox-label">
+                            <input is="emby-checkbox" type="checkbox" id="chkEnableProvider" />
+                            <span class="checkboxLabel">Enable Artwork Generation</span>
+                        </label>
+                        <div class="fieldDescription">Generate the images your profiles turn on: automatically during a metadata refresh when an item is missing one, and on demand from an item's Edit Images dialog. Turning this off disables both. For series and seasons, also tick Artwork Generator under Image Fetchers for those item types in each library's settings.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label for="txtImageChoiceCount">Choices In Edit Images:</label>
+                        <input is="emby-input" type="number" id="txtImageChoiceCount" min="1" max="10" step="1" />
+                        <div class="fieldDescription">How many alternates to offer per image type in an item's Edit Images dialog, 1 to 10. Each one is rendered from a different frame, so higher values make the dialog slower to open. Default is 3.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label for="txtFixedSeed">Fixed Frame Seed:</label>
+                        <input is="emby-input" type="number" id="txtFixedSeed" step="1" placeholder="Random" />
+                        <div class="fieldDescription">Leave empty to pick new frames on every refresh. Enter any whole number to make frame choice repeatable: the same item then always gets the same frames, which helps when comparing designs or reporting a problem.</div>
+                    </div>
+
+                    <!-- Save -->
+                    <div class="inputContainer">
+                        <button is="emby-button" type="button" id="btnSavePlugin" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                        <span id="unsavedIndicator" class="jpk-unsaved">
+                            <span class="jpk-unsaved-dot"></span>
+                            Unsaved changes
+                        </span>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="configurationpage?name=ag_jpkribs_shared.css">
+    <link rel="stylesheet" href="configurationpage?name=ag_shared.css">
+</div>

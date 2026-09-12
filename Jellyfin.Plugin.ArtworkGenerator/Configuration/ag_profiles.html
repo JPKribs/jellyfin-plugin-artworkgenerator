@@ -1,0 +1,180 @@
+<div id="EpgProfilesPage" data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-require="emby-input,emby-button,emby-select,emby-checkbox"
+     data-controller="__plugin/ag_profiles.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="EpgProfilesForm">
+                <div class="verticalSection verticalSection-extrabottompadding">
+
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h1 class="sectionTitle">Profiles</h1>
+                    </div>
+
+                    <div class="ag-note">
+                        A profile decides which images the plugin makes for a series, its seasons, and its episodes, and which design draws each one.
+                        Series use the default profile unless assigned to another. Jellyfin only asks the plugin for series and season images in
+                        libraries where <strong>Artwork Generator</strong> is ticked under Image Fetchers for those item types.
+                    </div>
+
+                    <!-- Profile Selector -->
+                    <div class="jpk-selector">
+                        <select is="emby-select" id="selectProfile" class="jpk-selector-dropdown" aria-label="Profile"></select>
+                        <div class="jpk-selector-actions">
+                            <button is="emby-button" type="button" id="btnRenameProfile" class="raised jpk-icon-btn" title="Rename">
+                                <span class="material-icons" aria-hidden="true">edit</span>
+                                <span class="jpk-icon-btn-label">Rename</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnNewProfile" class="raised jpk-icon-btn button-submit" title="New">
+                                <span class="material-icons" aria-hidden="true">add</span>
+                                <span class="jpk-icon-btn-label">New</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnDeleteProfile" class="raised jpk-icon-btn button-delete" title="Delete">
+                                <span class="material-icons" aria-hidden="true">delete</span>
+                                <span class="jpk-icon-btn-label">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="inputContainer" id="profileScopeSection">
+                        <label for="selectProfileScope">Used For:</label>
+                        <select is="emby-select" id="selectProfileScope" data-default="Tv"></select>
+                        <div class="fieldDescription">Which kind of library this profile draws.</div>
+                    </div>
+
+                    <!-- Series Assignment -->
+                    <div id="seriesAssignmentSection" class="inputContainer" style="display: none; margin-bottom: 1.5em;">
+                        <label>Assigned Series:</label>
+                        <div id="assignedSeriesList" class="assigned-series-container"></div>
+                        <button is="emby-button" type="button" id="btnAddSeries" class="raised" style="margin-top: 8px;">
+                            <span>Edit Series</span>
+                        </button>
+                        <div class="fieldDescription">Select which series use this profile. Every other series uses the default profile.</div>
+                    </div>
+
+                    <!-- Images -->
+                    <div class="jpk-section">
+                        <div class="jpk-section-title">Images</div>
+                        <div class="jpk-section-content">
+                            <div class="fieldDescription" style="margin-bottom: 1em;">
+                                Tick an image to generate it whenever an item is missing one. Primary images can be portrait or landscape; thumbs are always landscape.
+                                Backdrops are a frame from the video with no design. Images Jellyfin clients never show for an item type are not offered.
+                            </div>
+                            <div id="slotMatrix" class="slot-matrix"></div>
+                        </div>
+                    </div>
+
+                    <!-- Backdrops -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="backdropContent" data-target="backdropContent">
+                            <span class="jpk-collapsible-title">Backdrops</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="backdropContent" class="jpk-collapsible-content collapsed">
+
+                            <div class="inputContainer">
+                                <label for="txtBackdropRatio">Aspect Ratio:</label>
+                                <input is="emby-input" type="text" id="txtBackdropRatio" placeholder="16:9" data-backdrop-setting="AspectRatio" />
+                                <div class="fieldDescription">The frame is cropped to this ratio, such as 16:9.</div>
+                            </div>
+
+                            <div class="checkboxContainer">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkBackdropLetterbox" data-backdrop-setting="EnableLetterboxDetection" />
+                                    <span class="checkboxLabel">Enable Letterbox Detection</span>
+                                </label>
+                                <div class="fieldDescription">Detect and crop black bars from the frame first.</div>
+                            </div>
+
+                            <div class="nested-settings" id="backdropLetterboxOptions">
+                                <div class="inputContainer">
+                                    <label for="txtBackdropBlack">Black Threshold:</label>
+                                    <input is="emby-input" type="number" id="txtBackdropBlack" min="0" max="255" data-backdrop-setting="LetterboxBlackThreshold" data-type="number" />
+                                    <div class="fieldDescription">Brightness below which a pixel counts as black, 0 to 255.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="txtBackdropConfidence">Detection Confidence (%):</label>
+                                    <input is="emby-input" type="number" id="txtBackdropConfidence" min="50" max="100" step="1" data-backdrop-setting="LetterboxConfidence" data-type="number" />
+                                    <div class="fieldDescription">Percent of pixels that must be black to count as letterboxing, 50 to 100.</div>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtBackdropBrighten">Brighten HDR (%):</label>
+                                <input is="emby-input" type="number" id="txtBackdropBrighten" min="0" max="100" data-backdrop-setting="BrightenHDR" data-type="number" />
+                                <div class="fieldDescription">Brighten frames from HDR sources by this percent.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtBackdropStart">Extraction Start (%):</label>
+                                <input is="emby-input" type="number" id="txtBackdropStart" min="0" max="100" step="1" data-backdrop-setting="ExtractWindowStart" data-type="number" />
+                                <div class="fieldDescription">Skip this percent of each episode before extracting, avoiding intros.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtBackdropEnd">Extraction End (%):</label>
+                                <input is="emby-input" type="number" id="txtBackdropEnd" min="0" max="100" step="1" data-backdrop-setting="ExtractWindowEnd" data-type="number" />
+                                <div class="fieldDescription">Stop extracting at this percent of each episode, avoiding credits.</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Save -->
+                    <div class="inputContainer">
+                        <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                        <span id="unsavedIndicator" class="jpk-unsaved">
+                            <span class="jpk-unsaved-dot"></span>
+                            Unsaved changes
+                        </span>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Series Selection Modal -->
+    <div id="seriesSelectionModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="seriesModalTitle">
+        <div class="jpk-dialog-content series-modal-content">
+            <button type="button" id="btnCloseSeriesModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="seriesModalTitle" class="jpk-modal-title">Select Series</h2>
+            <div class="series-modal-search">
+                <input is="emby-input" type="text" id="seriesSearchInput" placeholder="Search series..." />
+            </div>
+            <div class="series-modal-summary" id="seriesSelectionSummary"></div>
+            <div id="seriesCheckboxList" class="series-modal-list"></div>
+            <div class="jpk-modal-button-row">
+                <button is="emby-button" type="button" id="btnCancelSeriesSelection" class="raised jpk-modal-button">
+                    <span>Cancel</span>
+                </button>
+                <button is="emby-button" type="button" id="btnConfirmSeriesSelection" class="raised button-submit jpk-modal-button">
+                    <span>Save Selection</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Modal -->
+    <div id="inputModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="inputModalTitle">
+        <div class="jpk-dialog-content jpk-dialog-content-narrow">
+            <button type="button" id="btnCloseInputModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="inputModalTitle" class="jpk-modal-title"></h2>
+            <div class="jpk-modal-body">
+                <div id="inputModalFields"></div>
+            </div>
+            <div class="jpk-modal-button-row">
+                <button is="emby-button" type="button" id="btnCancelInputModal" class="raised jpk-modal-button">
+                    <span>Cancel</span>
+                </button>
+                <button is="emby-button" type="button" id="btnConfirmInputModal" class="raised button-submit jpk-modal-button">
+                    <span>OK</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="configurationpage?name=ag_jpkribs_shared.css">
+    <link rel="stylesheet" href="configurationpage?name=ag_shared.css">
+</div>

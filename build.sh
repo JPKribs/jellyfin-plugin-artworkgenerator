@@ -5,8 +5,8 @@ set -e
 # Configuration
 CONFIGURATION="${1:-Release}"
 OUTPUT_DIR="dist"
-PROJECT_DIR="Jellyfin.Plugin.EpisodePosterGenerator"
-PROJECT_FILE="$PROJECT_DIR/Jellyfin.Plugin.EpisodePosterGenerator.csproj"
+PROJECT_DIR="Jellyfin.Plugin.ArtworkGenerator"
+PROJECT_FILE="$PROJECT_DIR/Jellyfin.Plugin.ArtworkGenerator.csproj"
 
 # Colors
 RED='\033[0;31m'
@@ -49,7 +49,7 @@ get_plugin_version() {
 # MARK: Get plugin info from build.yaml
 get_plugin_info() {
     local build_file="build.yaml"
-    local name="Episode Poster Generator"
+    local name="Artwork Generator"
     local guid="b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e"
 
     if [[ -f "$build_file" ]]; then
@@ -70,15 +70,15 @@ validate_resources() {
     
     local missing_files=()
     local config_files=(
-        "$PROJECT_DIR/Configuration/epg_posters.html"
-        "$PROJECT_DIR/Configuration/epg_posters.js"
-        "$PROJECT_DIR/Configuration/epg_settings.html"
-        "$PROJECT_DIR/Configuration/epg_settings.js"
-        "$PROJECT_DIR/Configuration/epg_logos.html"
-        "$PROJECT_DIR/Configuration/epg_logos.js"
-        "$PROJECT_DIR/Configuration/epg_profiles.html"
-        "$PROJECT_DIR/Configuration/epg_profiles.js"
-        "$PROJECT_DIR/Configuration/epg_shared.css"
+        "$PROJECT_DIR/Configuration/ag_posters.html"
+        "$PROJECT_DIR/Configuration/ag_posters.js"
+        "$PROJECT_DIR/Configuration/ag_settings.html"
+        "$PROJECT_DIR/Configuration/ag_settings.js"
+        "$PROJECT_DIR/Configuration/ag_logos.html"
+        "$PROJECT_DIR/Configuration/ag_logos.js"
+        "$PROJECT_DIR/Configuration/ag_profiles.html"
+        "$PROJECT_DIR/Configuration/ag_profiles.js"
+        "$PROJECT_DIR/Configuration/ag_shared.css"
     )
     
     for file in "${config_files[@]}"; do
@@ -104,7 +104,7 @@ validate_resources() {
 
 # MARK: Main build process
 main() {
-    log "INFO" "Starting Episode Poster Generator Plugin build"
+    log "INFO" "Starting Artwork Generator Plugin build"
     
     # Get version and plugin info once at the start
     log "INFO" "Reading version from build.yaml"
@@ -160,7 +160,7 @@ main() {
     fi
     
     # Find the built DLL
-    local dll_path="$PROJECT_DIR/bin/$CONFIGURATION/net10.0/Jellyfin.Plugin.EpisodePosterGenerator.dll"
+    local dll_path="$PROJECT_DIR/bin/$CONFIGURATION/net10.0/Jellyfin.Plugin.ArtworkGenerator.dll"
     if [[ ! -f "$dll_path" ]]; then
         log "ERROR" "Could not find built DLL at: $dll_path"
         exit 1
@@ -216,7 +216,7 @@ main() {
     "autoUpdate": true,
     "imagePath": "Logo.png",
     "assemblies": [
-        "Jellyfin.Plugin.EpisodePosterGenerator.dll"
+        "Jellyfin.Plugin.ArtworkGenerator.dll"
     ]
 }
 EOF

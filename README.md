@@ -1,10 +1,10 @@
-# ![Episode Poster Generator](Jellyfin.Plugin.EpisodePosterGenerator/Assets/Logo.png)
+# ![Artwork Generator](Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png)
 
 A Jellyfin plugin that generates artwork for TV shows using smart frame analysis, black frame detection, letterbox detection, and configurable styling. It makes episode posters, portrait series and season posters, thumbs, backdrops, and text logos, filling in missing or generic artwork with clean, consistent visuals.
 
 ## How It Works
 
-Episode Poster Generator scans episode files, evaluates multiple frames, and selects strong candidates while avoiding fades, black screens, and letterboxed shots. The selected frame is turned into an image and optionally styled with configurable text such as a title or numbering. Seasons and series use frames from their own episodes.
+Artwork Generator scans episode files, evaluates multiple frames, and selects strong candidates while avoiding fades, black screens, and letterboxed shots. The selected frame is turned into an image and optionally styled with configurable text such as a title or numbering. Seasons and series use frames from their own episodes.
 
 Configuration is split into three parts:
 
@@ -21,7 +21,7 @@ The plugin runs entirely as a Jellyfin metadata provider. There are two ways to 
 * **Automatically** — a metadata refresh generates any image the item's profile turns on that the item is missing. This is the default; it can be turned off in Settings.
 * **By hand** — open an item, choose **Edit Images**, and press the search button on an image type. Generated images appear alongside the usual providers, each rendered from a different frame, so you can pick the one you like instead of refreshing until a good frame comes up.
 
-For series and season images, tick **Episode Poster Generator** under Image Fetchers for Series and Season in each library's settings. Jellyfin only asks enabled fetchers for images.
+For series and season images, tick **Artwork Generator** under Image Fetchers for Series and Season in each library's settings. Jellyfin only asks enabled fetchers for images.
 
 There is no scheduled task. Use Jellyfin's own metadata refresh, on a library or a single item, to generate in bulk.
 
@@ -117,7 +117,7 @@ Overlay colors sampled from the dominant color of each episode's frame instead o
 
 ## Poster Architecture
 
-The Episode Poster Generator uses a four layer rendering pipeline to create consistent posters across all styles:
+The Artwork Generator uses a four layer rendering pipeline to create consistent posters across all styles:
 
 ### Layer 1: Canvas (Base Layer)
 The foundation layer that provides the visual background for the poster.
@@ -175,7 +175,7 @@ For additional template examples and downloadable configurations, visit [EXAMPLE
 
 ### Preview your poster
 A live preview at the top of the Designs page renders your current settings against sample artwork in both shapes at once, and updates as you change them. Choose whether it shows a series, a season, or an episode. The Logos page previews logos the same way, against a sample name you type. Click the preview to enlarge it, or click a component thumbnail to see the artwork feeding it.
-![Preview Modal](Jellyfin.Plugin.EpisodePosterGenerator/Assets/Preview-Modal.png)
+![Preview Modal](Jellyfin.Plugin.ArtworkGenerator/Assets/Preview-Modal.png)
 
 ---
 
@@ -204,7 +204,7 @@ Releases use a four part version, `JJ.JJ.F.B`, that matches the supported Jellyf
 ### Step 2: Install Plugin
 
 * Go to the Catalog tab in the Plugins section
-* Find Episode Poster Generator in the catalog
+* Find Artwork Generator in the catalog
 * Click Install
 * Wait for installation to complete
 
@@ -215,7 +215,7 @@ Releases use a four part version, `JJ.JJ.F.B`, that matches the supported Jellyf
 
 ### Verification Check
 
-* After restart, navigate to Dashboard → Plugins → Episode Poster Generator to confirm the plugin configuration page loads properly.
+* After restart, navigate to Dashboard → Plugins → Artwork Generator to confirm the plugin configuration page loads properly.
 
 ---
 

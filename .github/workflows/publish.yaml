@@ -27,7 +27,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${{ github.event.release.tag_name }}" \
-            "Jellyfin.Plugin.EpisodePosterGenerator/Assets/Logo.png" \
+            "Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png" \
             --clobber
 
       - name: Setup .NET
@@ -97,7 +97,7 @@ jobs:
       - name: Regenerate Demo Images
         run: |
           echo "Regenerating demo images..."
-          cd Jellyfin.Plugin.EpisodePosterGenerator.Demo
+          cd Jellyfin.Plugin.ArtworkGenerator.Demo
           dotnet run
           cd ..
           echo "Demo images regenerated successfully"

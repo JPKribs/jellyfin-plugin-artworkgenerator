@@ -1,4 +1,4 @@
-# Episode Poster Generator Settings
+# Artwork Generator Settings
 
 The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Labels below match the configuration pages.
 
@@ -19,7 +19,7 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
 * **Backdrops**: aspect ratio, letterbox detection, HDR brightening, and extraction window for backdrop frames.
 
-Jellyfin only asks the plugin for series and season images in libraries where **Episode Poster Generator** is ticked under Image Fetchers for those item types in the library's settings. Episodes work as before.
+Jellyfin only asks the plugin for series and season images in libraries where **Artwork Generator** is ticked under Image Fetchers for those item types in the library's settings. Episodes work as before.
 
 ## Designs
 

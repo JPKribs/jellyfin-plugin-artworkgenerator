@@ -1,10 +1,10 @@
 [
   {
     "guid": "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e",
-    "name": "Episode Poster Generator",
-    "description": "Episode Poster Generator is a Jellyfin plugin that automatically creates custom episode posters using smart frame analysis, black frame detection, and configurable text styling. Perfect for filling in missing or generic episode artwork with clean, consistent visuals.",
+    "name": "Artwork Generator",
+    "description": "Artwork Generator is a Jellyfin plugin that automatically creates custom episode posters using smart frame analysis, black frame detection, and configurable text styling. Perfect for filling in missing or generic episode artwork with clean, consistent visuals.",
     "overview": "Generate Custom Episode Posters",
-    "imageUrl": "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-episodepostergenerator/refs/heads/master/Jellyfin.Plugin.EpisodePosterGenerator/Assets/Logo.png",
+    "imageUrl": "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-episodepostergenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png",
     "owner": "JPKribs",
     "category": "MoviesAndShows",
     "versions": [
