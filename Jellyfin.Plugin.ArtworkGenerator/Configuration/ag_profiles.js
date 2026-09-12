@@ -519,13 +519,7 @@ export default function (view) {
     // ── Backdrop Settings ───────────────────────────────────
 
     var BACKDROP_DEFAULTS = {
-        AspectRatio: '16:9',
-        EnableLetterboxDetection: true,
-        LetterboxBlackThreshold: 25,
-        LetterboxConfidence: 85,
-        BrightenHDR: 0,
-        ExtractWindowStart: 20,
-        ExtractWindowEnd: 80
+        AspectRatio: '16:9'
     };
 
     function loadBackdropSettings() {
@@ -541,7 +535,6 @@ export default function (view) {
                 el.value = value;
             }
         });
-        updateBackdropVisibility();
     }
 
     function readBackdropSetting(el) {
@@ -557,11 +550,6 @@ export default function (view) {
         } else {
             profile.Backdrop[key] = el.value.trim() || BACKDROP_DEFAULTS[key];
         }
-    }
-
-    function updateBackdropVisibility() {
-        var letterbox = view.querySelector('#chkBackdropLetterbox');
-        view.querySelector('#backdropLetterboxOptions').style.display = letterbox && letterbox.checked ? 'block' : 'none';
     }
 
     // ── Assignment ──────────────────────────────────────────
@@ -977,7 +965,6 @@ export default function (view) {
             var evt = el.type === 'checkbox' ? 'change' : 'input';
             el.addEventListener(evt, function () {
                 readBackdropSetting(el);
-                updateBackdropVisibility();
                 checkDirty();
             });
         });
