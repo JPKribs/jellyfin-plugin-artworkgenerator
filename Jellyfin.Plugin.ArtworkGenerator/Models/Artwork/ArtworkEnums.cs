@@ -4,7 +4,7 @@ using System;
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
     /// <summary>
-    /// The kinds of library item the plugin can generate artwork for.
+    /// The kinds of library item the plugin can generate artwork.
     /// </summary>
     public enum ArtworkItemKind
     {
