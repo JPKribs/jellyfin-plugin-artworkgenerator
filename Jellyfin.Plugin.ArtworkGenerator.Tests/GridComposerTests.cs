@@ -34,7 +34,7 @@ public class GridComposerTests
         {
             using var grid = GridComposer.Compose(frames, 400, 400, 4f);
 
-            // Each frame is a distinct colour, so finding all of them proves none was left out.
+            // Each frame is a distinct color, so finding all of them proves none was left out.
             var pixels = grid.Pixels;
             foreach (var frame in frames)
             {
@@ -82,7 +82,7 @@ public class GridComposerTests
         {
             using var grid = GridComposer.Compose(frames, 400, 400, 20f);
 
-            // Dead centre falls in the gap where the four cells meet.
+            // Dead center falls in the gap where the four cells meet.
             Assert.Equal(SKColors.Black, grid.GetPixel(200, 200));
         }
         finally
