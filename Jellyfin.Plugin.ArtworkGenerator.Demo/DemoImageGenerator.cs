@@ -23,6 +23,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
         private const string EpisodeName = "Episode Name";
         private const int SeasonNumber = 12;
 
+        private const string MovieName = "Feature Film";
+        private const int MovieYear = 2024;
+
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<DemoImageGenerator> _logger;
         private readonly PreviewService _previewService;
@@ -81,6 +84,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
 
                     await GenerateDemoForTemplateAsync(templateFile, templateDir!, ArtworkItemKind.Series, null);
                     _logger.LogInformation("  ✓ Generated Series.png");
+
+                    await GenerateDemoForTemplateAsync(templateFile, templateDir!, ArtworkItemKind.Movie, null);
+                    _logger.LogInformation("  ✓ Generated Movie.png");
 
                     _logger.LogInformation($"✓ Generated all demos for: {exampleName}");
                 }
@@ -177,6 +183,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
                     VideoMetadata = videoMetadata
                 },
 
+                // A film's title is its primary line and its year the secondary one; SeriesName is
+                // the field every style reads as "the name of the work".
+                ArtworkItemKind.Movie => new ArtworkSubject
+                {
+                    Kind = ArtworkItemKind.Movie,
+                    SeriesName = MovieName,
+                    ProductionYear = MovieYear,
+                    VideoMetadata = videoMetadata
+                },
+
                 _ => new ArtworkSubject
                 {
                     Kind = ArtworkItemKind.Series,
@@ -202,6 +218,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
             {
                 ArtworkItemKind.Episode => $"Example{episodeNumber ?? 1}.png",
                 ArtworkItemKind.Season => "Season.png",
+                ArtworkItemKind.Movie => "Movie.png",
                 _ => "Series.png"
             });
             await File.WriteAllBytesAsync(outputPath, imageBytes).ConfigureAwait(false);

@@ -1,6 +1,6 @@
 # Artwork Generator Settings
 
-The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Labels below match the configuration pages.
+The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Artwork is made for series, seasons, episodes, and films. Labels below match the configuration pages.
 
 ## Settings
 
@@ -10,12 +10,12 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 
 ## Profiles
 
-* **Profile**: the profile being viewed and edited. The default profile applies to every series not assigned to another one. It cannot be renamed or deleted.
-* **Assigned Series**: the series that use the active profile. A series belongs to one profile at a time.
-* **Images**: one row each for series, seasons, and episodes. Tick an image to generate it whenever an item is missing one.
-  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series and seasons default to portrait and episodes to landscape. Any design can draw either shape.
-  * **Thumb**: a landscape image, offered for series, seasons, and episodes. An episode thumb is what many clients show in the next-up and resume rows.
-  * **Logo**: a transparent text logo for series, drawn with a logo design.
+* **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.
+* **Assigned Series** and **Assigned Movies**: the series and films that use the active profile. An item belongs to one profile at a time. A profile can carry both.
+* **Images**: one row each for series, seasons, episodes, and movies. Tick an image to generate it whenever an item is missing one.
+  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series, seasons, and movies default to portrait and episodes to landscape. Any design can draw either shape.
+  * **Thumb**: a landscape image, offered for every kind. An episode thumb is what many clients show in the next-up and resume rows.
+  * **Logo**: a transparent text logo for a series or a film, drawn with a logo design.
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
 * **Backdrops**: aspect ratio, letterbox detection, HDR brightening, and extraction window for backdrop frames.
 

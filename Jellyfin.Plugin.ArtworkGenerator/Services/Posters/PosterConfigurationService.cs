@@ -122,17 +122,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         /// <summary>
-        /// Returns the profile a series is assigned to, or the default profile.
-        /// </summary>
-        public ArtworkProfile GetProfileForSeries(Guid seriesId)
-        {
-            var snapshot = _snapshot;
-            return seriesId != Guid.Empty && snapshot.BySeries.TryGetValue(seriesId, out var profile)
-                ? profile
-                : snapshot.DefaultProfile;
-        }
-
-        /// <summary>
         /// Returns the profile for an item: the one it is assigned to, or the default. Every profile
         /// covers every kind, so an item always has a profile.
         /// </summary>

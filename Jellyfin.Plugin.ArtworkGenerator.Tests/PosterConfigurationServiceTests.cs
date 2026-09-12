@@ -54,8 +54,8 @@ public class PosterConfigurationServiceTests
         Assert.Equal(new[] { seriesId }, migrated.SeriesIds);
         Assert.Empty(custom.SeriesIds);
 
-        Assert.Same(migrated, service.GetProfileForSeries(seriesId));
-        Assert.Same(defaultProfile, service.GetProfileForSeries(Guid.NewGuid()));
+        Assert.Same(migrated, service.GetProfileFor(ArtworkItemKind.Series, seriesId));
+        Assert.Same(defaultProfile, service.GetProfileFor(ArtworkItemKind.Series, Guid.NewGuid()));
     }
 
     [Fact]
