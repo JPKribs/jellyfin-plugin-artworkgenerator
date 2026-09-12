@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
@@ -12,17 +13,18 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
     /// </summary>
     public static class ArtworkSources
     {
-        // GetPlayableEpisodes
+        // GetPlayableSources
         // The episodes with a readable media file that belong to an item, in broadcast order: the
         // episode itself, a season's episodes, or a series' episodes. Specials are left out of a
         // series' pool whenever regular episodes exist, since they are often recaps or extras.
-        public static IReadOnlyList<Episode> GetPlayableEpisodes(BaseItem item)
+        public static IReadOnlyList<Video> GetPlayableSources(BaseItem item)
         {
             ArgumentNullException.ThrowIfNull(item);
 
-            IEnumerable<Episode> episodes = item switch
+            IEnumerable<Video> episodes = item switch
             {
-                Episode episode => new[] { episode },
+                Movie movie => new[] { (Video)movie },
+                Episode episode => new[] { (Video)episode },
                 Season season => SafeChildren(season),
                 Series series => SafeRecursiveChildren(series),
                 _ => Array.Empty<Episode>()
@@ -42,23 +44,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             return playable;
         }
 
-        private static IEnumerable<Episode> SafeChildren(Folder folder)
+        private static IEnumerable<Video> SafeChildren(Folder folder)
         {
             try
             {
-                return folder.Children?.OfType<Episode>().ToList() ?? new List<Episode>();
+                return folder.Children?.OfType<Video>().ToList() ?? new List<Video>();
             }
             catch (InvalidOperationException)
             {
-                return Array.Empty<Episode>();
+                return Array.Empty<Video>();
             }
         }
 
-        private static IEnumerable<Episode> SafeRecursiveChildren(Folder folder)
+        private static IEnumerable<Video> SafeRecursiveChildren(Folder folder)
         {
             try
             {
-                return folder.GetRecursiveChildren()?.OfType<Episode>().ToList() ?? new List<Episode>();
+                return folder.GetRecursiveChildren()?.OfType<Video>().ToList() ?? new List<Video>();
             }
             catch (InvalidOperationException)
             {

@@ -14,7 +14,26 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         Season,
 
         /// <summary>A single episode.</summary>
-        Episode
+        Episode,
+
+        /// <summary>A film.</summary>
+        Movie
+    }
+
+    /// <summary>
+    /// What a profile applies to. Tv is first so a profile saved before movies existed loads as a
+    /// TV profile rather than silently taking over a library's films.
+    /// </summary>
+    public enum ProfileScope
+    {
+        /// <summary>Series, seasons, and episodes.</summary>
+        Tv,
+
+        /// <summary>Films only.</summary>
+        Movies,
+
+        /// <summary>Both.</summary>
+        Both
     }
 
     /// <summary>

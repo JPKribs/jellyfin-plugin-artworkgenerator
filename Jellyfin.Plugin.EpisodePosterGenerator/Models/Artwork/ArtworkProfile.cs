@@ -26,7 +26,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             (ArtworkItemKind.Season, ArtworkSlot.Backdrop),
             (ArtworkItemKind.Episode, ArtworkSlot.Primary),
             (ArtworkItemKind.Episode, ArtworkSlot.Thumb),
-            (ArtworkItemKind.Episode, ArtworkSlot.Backdrop)
+            (ArtworkItemKind.Episode, ArtworkSlot.Backdrop),
+            (ArtworkItemKind.Movie, ArtworkSlot.Primary),
+            (ArtworkItemKind.Movie, ArtworkSlot.Thumb),
+            (ArtworkItemKind.Movie, ArtworkSlot.Logo),
+            (ArtworkItemKind.Movie, ArtworkSlot.Backdrop)
         };
 
         public ArtworkProfile()
@@ -34,6 +38,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             Id = Guid.NewGuid();
             Name = "Profile";
             SeriesIds = new List<Guid>();
+            MovieIds = new List<Guid>();
             Slots = new List<SlotAssignment>();
             Backdrop = new BackdropSettings();
         }
@@ -54,6 +59,20 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
         public List<Guid> SeriesIds { get; set; }
 
+        /// <summary>
+        /// Gets or sets the films assigned to this profile. Only consulted when the scope includes
+        /// movies.
+        /// </summary>
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
+        public List<Guid> MovieIds { get; set; }
+
+        /// <summary>
+        /// Gets or sets what this profile applies to. Defaults to TV, so a profile written before
+        /// movies were supported keeps doing exactly what it did.
+        /// </summary>
+        public ProfileScope Scope { get; set; } = ProfileScope.Tv;
+
         /// <summary>Gets or sets the shape of series primary images.</summary>
         public ArtworkShape SeriesPrimaryShape { get; set; } = ArtworkShape.Portrait;
 
@@ -62,6 +81,9 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
 
         /// <summary>Gets or sets the shape of episode primary images.</summary>
         public ArtworkShape EpisodePrimaryShape { get; set; } = ArtworkShape.Landscape;
+
+        /// <summary>Gets or sets the shape of movie primary images.</summary>
+        public ArtworkShape MoviePrimaryShape { get; set; } = ArtworkShape.Portrait;
 
         [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
@@ -92,8 +114,23 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         {
             ArtworkItemKind.Series => SeriesPrimaryShape,
             ArtworkItemKind.Season => SeasonPrimaryShape,
+            ArtworkItemKind.Movie => MoviePrimaryShape,
             _ => EpisodePrimaryShape
         };
+
+        /// <summary>
+        /// Returns true when this profile covers the given kind of item. A profile scoped to TV
+        /// never claims a film, and one scoped to movies never claims a series.
+        /// </summary>
+        public bool AppliesTo(ArtworkItemKind kind)
+        {
+            return Scope switch
+            {
+                ProfileScope.Both => true,
+                ProfileScope.Movies => kind == ArtworkItemKind.Movie,
+                _ => kind != ArtworkItemKind.Movie
+            };
+        }
 
         /// <summary>
         /// Returns the shape an image slot renders at. Thumbs and backdrops are always landscape.

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Model.Entities;
@@ -53,7 +54,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
         /// returned files and is responsible for deleting them.
         /// </summary>
         public async Task<IReadOnlyList<ExtractedFrame>> ExtractFrameCandidatesAsync(
-            Episode episode,
+            Video episode,
             float windowStartPercent,
             float windowEndPercent,
             int count,

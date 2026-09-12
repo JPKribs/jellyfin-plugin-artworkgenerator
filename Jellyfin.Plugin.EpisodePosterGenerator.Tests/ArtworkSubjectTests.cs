@@ -141,4 +141,57 @@ public class ArtworkSubjectTests
         Assert.Equal("TWO", Subject(ArtworkItemKind.Season).CutoutText(CutoutType.Text));
         Assert.Equal("S02E05", Subject(ArtworkItemKind.Episode).CutoutText(CutoutType.Code));
     }
+
+
+    /// <summary>
+    /// A film's title is its primary line and its year the secondary one, so a style draws it the
+    /// same way it draws anything else without knowing it is a film.
+    /// </summary>
+    [Fact]
+    public void Movie_DrawsItsTitleOverItsYear()
+    {
+        var subject = new ArtworkSubject
+        {
+            Kind = ArtworkItemKind.Movie,
+            SeriesName = "Blade Runner",
+            ProductionYear = 1982
+        };
+
+        Assert.Equal("Blade Runner", subject.Primary);
+        Assert.Equal("1982", subject.Secondary);
+        Assert.Equal("1982", subject.SecondaryShort);
+    }
+
+    /// <summary>A film has no number, so numeric styles have nothing to feature.</summary>
+    [Fact]
+    public void Movie_HasNoFeaturedNumber()
+    {
+        var subject = new ArtworkSubject { Kind = ArtworkItemKind.Movie, SeriesName = "Alien" };
+
+        Assert.Null(subject.FeaturedNumber);
+        Assert.Empty(subject.SecondaryParts);
+    }
+
+    /// <summary>
+    /// Like a series, a film's name is its whole identity, so a cutout punches the name rather than
+    /// a code, and does not then draw it again.
+    /// </summary>
+    [Fact]
+    public void Movie_PunchesItsNameOutOfACutout()
+    {
+        var subject = new ArtworkSubject { Kind = ArtworkItemKind.Movie, SeriesName = "Arrival", ProductionYear = 2016 };
+
+        Assert.True(subject.CutoutIsPrimary);
+        Assert.Equal("ARRIVAL", subject.CutoutText(CutoutType.Code));
+    }
+
+    /// <summary>A film with no year recorded simply has no secondary line.</summary>
+    [Fact]
+    public void Movie_WithoutAYearHasNoSecondaryLine()
+    {
+        var subject = new ArtworkSubject { Kind = ArtworkItemKind.Movie, SeriesName = "Untitled" };
+
+        Assert.Equal("Untitled", subject.Primary);
+        Assert.Empty(subject.Secondary);
+    }
 }

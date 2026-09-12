@@ -8,6 +8,7 @@ using Jellyfin.Plugin.EpisodePosterGenerator.Models;
 using Jellyfin.Plugin.EpisodePosterGenerator.Services.Posters;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
@@ -60,6 +61,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             Episode => ArtworkItemKind.Episode,
             Season => ArtworkItemKind.Season,
             Series => ArtworkItemKind.Series,
+            Movie => ArtworkItemKind.Movie,
             _ => null
         };
 
@@ -158,7 +160,11 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 return Array.Empty<ImageType>();
             }
 
-            var profile = _configService.GetProfileForSeries(GetSeriesId(item));
+            var profile = _configService.GetProfileFor(kind.Value, ProfileKey(item, kind.Value));
+            if (profile == null)
+            {
+                return Array.Empty<ImageType>();
+            }
 
             return ArtworkProfile.SupportedSlots
                 .Where(s => s.Kind == kind.Value)
@@ -187,7 +193,12 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
                 return Array.Empty<GeneratedArtwork>();
             }
 
-            var profile = _configService.GetProfileForSeries(GetSeriesId(item));
+            var profile = _configService.GetProfileFor(kind.Value, ProfileKey(item, kind.Value));
+            if (profile == null)
+            {
+                return Array.Empty<GeneratedArtwork>();
+            }
+
             var assignment = profile.GetSlot(kind.Value, slot.Value);
             if (assignment is not { Enabled: true })
             {
@@ -394,6 +405,14 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
             ArtworkSlot.Logo => 3,
             _ => 0
         };
+
+        // ProfileKey
+        // What a profile assignment is keyed on: a film is assigned by its own id, everything else
+        // by the series it belongs to.
+        private static Guid ProfileKey(BaseItem item, ArtworkItemKind kind)
+        {
+            return kind == ArtworkItemKind.Movie ? item.Id : GetSeriesId(item);
+        }
 
         private static Guid GetSeriesId(BaseItem item) => item switch
         {

@@ -147,7 +147,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             int count,
             CancellationToken cancellationToken)
         {
-            var sources = ArtworkSources.GetPlayableEpisodes(item);
+            var sources = ArtworkSources.GetPlayableSources(item);
             if (sources.Count == 0)
             {
                 return Array.Empty<SKBitmap>();

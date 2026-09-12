@@ -20,8 +20,22 @@ export default function (view) {
     var KINDS = [
         { kind: 'Series', label: 'Series', shapeKey: 'SeriesPrimaryShape', defaultShape: 'Portrait' },
         { kind: 'Season', label: 'Seasons', shapeKey: 'SeasonPrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Episode', label: 'Episodes', shapeKey: 'EpisodePrimaryShape', defaultShape: 'Landscape' }
+        { kind: 'Episode', label: 'Episodes', shapeKey: 'EpisodePrimaryShape', defaultShape: 'Landscape' },
+        { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' }
     ];
+
+    var SCOPES = [
+        { value: 'Tv', label: 'TV' },
+        { value: 'Movies', label: 'Movies' },
+        { value: 'Both', label: 'TV and Movies' }
+    ];
+
+    // Which kinds each scope draws, mirroring ArtworkProfile.AppliesTo on the server.
+    var SCOPE_KINDS = {
+        Tv: ['Series', 'Season', 'Episode'],
+        Movies: ['Movie'],
+        Both: ['Series', 'Season', 'Episode', 'Movie']
+    };
 
     var SLOTS = ['Primary', 'Thumb', 'Logo', 'Backdrop'];
 
@@ -30,7 +44,8 @@ export default function (view) {
     var SUPPORTED = {
         Series: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
         Season: ['Primary', 'Thumb', 'Backdrop'],
-        Episode: ['Primary', 'Thumb', 'Backdrop']
+        Episode: ['Primary', 'Thumb', 'Backdrop'],
+        Movie: ['Primary', 'Thumb', 'Logo', 'Backdrop']
     };
 
     function getTabs() {
@@ -265,6 +280,18 @@ export default function (view) {
         loadCurrentProfile();
     }
 
+    function populateScopeOptions() {
+        var select = view.querySelector('#selectProfileScope');
+        if (!select || select.options.length) return;
+
+        SCOPES.forEach(function (scope) {
+            var option = document.createElement('option');
+            option.value = scope.value;
+            option.textContent = scope.label;
+            select.appendChild(option);
+        });
+    }
+
     function getCurrentProfile() {
         return fullConfig.Profiles.find(function (p) { return p.Id === currentProfileId; });
     }
@@ -275,14 +302,22 @@ export default function (view) {
 
         profile.Slots = profile.Slots || [];
         profile.SeriesIds = profile.SeriesIds || [];
+        profile.MovieIds = profile.MovieIds || [];
         profile.Backdrop = profile.Backdrop || {};
+
+        // A profile saved before films existed carries no scope, and was a TV profile.
+        profile.Scope = profile.Scope || 'Tv';
+        populateScopeOptions();
+        view.querySelector('#selectProfileScope').value = profile.Scope;
 
         var isDefault = !!profile.IsDefault;
         view.querySelector('#btnDeleteProfile').classList.toggle('hidden', isDefault);
         view.querySelector('#btnRenameProfile').classList.toggle('hidden', isDefault);
-        view.querySelector('#seriesAssignmentSection').style.display = isDefault ? 'none' : 'block';
+        // Series are picked here; a films profile is assigned by film, which this list cannot do.
+        var picksSeries = profile.Scope !== 'Movies';
+        view.querySelector('#seriesAssignmentSection').style.display = (isDefault || !picksSeries) ? 'none' : 'block';
 
-        if (!isDefault) renderAssignedSeries();
+        if (!isDefault && picksSeries) renderAssignedSeries();
         renderMatrix();
         loadBackdropSettings();
     }
@@ -372,7 +407,8 @@ export default function (view) {
         table.appendChild(thead);
 
         var tbody = document.createElement('tbody');
-        KINDS.forEach(function (k) {
+        var covered = SCOPE_KINDS[profile.Scope] || SCOPE_KINDS.Tv;
+        KINDS.filter(function (k) { return covered.indexOf(k.kind) !== -1; }).forEach(function (k) {
             var row = document.createElement('tr');
             var th = document.createElement('th');
             th.scope = 'row';
@@ -791,7 +827,7 @@ export default function (view) {
 
     function saveConfig() {
         var empty = fullConfig.Profiles.filter(function (p) {
-            return !p.IsDefault && (!p.SeriesIds || p.SeriesIds.length === 0);
+            return !p.IsDefault && p.Scope !== 'Movies' && (!p.SeriesIds || p.SeriesIds.length === 0);
         });
 
         if (empty.length > 0) {
@@ -826,6 +862,15 @@ export default function (view) {
     // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
+        view.querySelector('#selectProfileScope').addEventListener('change', function () {
+            var profile = getCurrentProfile();
+            if (!profile) return;
+
+            profile.Scope = this.value;
+            loadCurrentProfile();
+            checkDirty();
+        });
+
         view.querySelector('#EpgProfilesForm').addEventListener('submit', function (e) {
             e.preventDefault();
             saveConfig();

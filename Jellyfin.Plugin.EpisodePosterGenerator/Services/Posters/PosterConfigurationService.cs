@@ -78,15 +78,33 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             }
 
             var bySeries = new Dictionary<Guid, ArtworkProfile>();
+            var byMovie = new Dictionary<Guid, ArtworkProfile>();
             var duplicates = 0;
             foreach (var profile in config.Profiles.Where(p => !p.IsDefault))
             {
-                foreach (var seriesId in profile.SeriesIds)
+                // A profile only claims the kinds its scope covers, so a TV profile's series list
+                // is honoured while its movie list, if it ever had one, is not.
+                if (profile.AppliesTo(ArtworkItemKind.Series))
                 {
-                    if (!bySeries.TryAdd(seriesId, profile))
+                    foreach (var seriesId in profile.SeriesIds)
                     {
-                        duplicates++;
-                        _logger.LogWarning("Series {SeriesId} is assigned to more than one profile; using the first", seriesId);
+                        if (!bySeries.TryAdd(seriesId, profile))
+                        {
+                            duplicates++;
+                            _logger.LogWarning("Series {SeriesId} is assigned to more than one profile; using the first", seriesId);
+                        }
+                    }
+                }
+
+                if (profile.AppliesTo(ArtworkItemKind.Movie))
+                {
+                    foreach (var movieId in profile.MovieIds ?? new List<Guid>())
+                    {
+                        if (!byMovie.TryAdd(movieId, profile))
+                        {
+                            duplicates++;
+                            _logger.LogWarning("Film {MovieId} is assigned to more than one profile; using the first", movieId);
+                        }
                     }
                 }
             }
@@ -99,7 +117,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 logoDesigns,
                 logo.Settings,
                 config.Profiles.First(p => p.IsDefault),
-                bySeries);
+                bySeries,
+                byMovie);
 
             _logger.LogInformation(
                 "Artwork configuration loaded: {Designs} design(s), {Logos} logo design(s), {Profiles} profile(s), {Assigned} assigned series, {Duplicates} duplicate assignment(s) ignored",
@@ -119,6 +138,26 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             return seriesId != Guid.Empty && snapshot.BySeries.TryGetValue(seriesId, out var profile)
                 ? profile
                 : snapshot.DefaultProfile;
+        }
+
+        /// <summary>
+        /// Returns the profile that covers this kind of item, or null when none does. A profile only
+        /// claims the kinds its scope covers, so films get no artwork until a profile is scoped to
+        /// them rather than being swept up by whatever the TV default happens to be.
+        /// </summary>
+        /// <param name="kind">The kind of item being drawn.</param>
+        /// <param name="id">The series id for a TV item, or the film's own id.</param>
+        public ArtworkProfile? GetProfileFor(ArtworkItemKind kind, Guid id)
+        {
+            var snapshot = _snapshot;
+            var index = kind == ArtworkItemKind.Movie ? snapshot.ByMovie : snapshot.BySeries;
+
+            if (id != Guid.Empty && index.TryGetValue(id, out var assigned) && assigned.AppliesTo(kind))
+            {
+                return assigned;
+            }
+
+            return snapshot.DefaultProfile.AppliesTo(kind) ? snapshot.DefaultProfile : null;
         }
 
         /// <summary>
@@ -577,7 +616,8 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
             IReadOnlyList<LogoConfiguration> LogoDesigns,
             LogoSettings DefaultLogo,
             ArtworkProfile DefaultProfile,
-            IReadOnlyDictionary<Guid, ArtworkProfile> BySeries)
+            IReadOnlyDictionary<Guid, ArtworkProfile> BySeries,
+            IReadOnlyDictionary<Guid, ArtworkProfile> ByMovie)
         {
             public static Snapshot Empty { get; } = new(
                 new Dictionary<Guid, PosterSettings>(),
@@ -586,6 +626,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services
                 Array.Empty<LogoConfiguration>(),
                 new LogoSettings(),
                 new ArtworkProfile { IsDefault = true },
+                new Dictionary<Guid, ArtworkProfile>(),
                 new Dictionary<Guid, ArtworkProfile>());
         }
     }

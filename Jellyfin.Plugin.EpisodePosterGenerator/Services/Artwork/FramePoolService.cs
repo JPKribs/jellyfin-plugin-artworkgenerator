@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using Microsoft.Extensions.Logging;
 
@@ -74,7 +75,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         /// </summary>
         public async Task<FrameLease> AcquireAsync(
             string key,
-            IReadOnlyList<Episode> sources,
+            IReadOnlyList<Video> sources,
             float windowStart,
             float windowEnd,
             int needed,
@@ -195,7 +196,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
         // themselves by score and appended after the frames already held.
         private async Task GrowAsync(
             FramePool pool,
-            IReadOnlyList<Episode> sources,
+            IReadOnlyList<Video> sources,
             float windowStart,
             float windowEnd,
             int needed,
@@ -322,7 +323,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Services.Artwork
 
         // OrderSources
         // Shuffles the sources deterministically for a seed.
-        internal static IEnumerable<Episode> OrderSources(IReadOnlyList<Episode> sources, int seed)
+        internal static IEnumerable<Video> OrderSources(IReadOnlyList<Video> sources, int seed)
         {
             var random = new Random(seed);
             return sources

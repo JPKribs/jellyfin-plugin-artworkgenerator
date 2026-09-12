@@ -34,7 +34,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         // Create
         // Builds the metadata for an item: series artwork paths, and the geometry of the episode
         // that will supply frames, when there is one.
-        public static VideoMetadata Create(BaseItem item, Series? series, Episode? source)
+        public static VideoMetadata Create(BaseItem item, Series? series, Video? source)
         {
             var metadata = new VideoMetadata
             {

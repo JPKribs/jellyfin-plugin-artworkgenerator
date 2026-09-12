@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.EpisodePosterGenerator.Utilities;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 
 namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
@@ -15,10 +16,10 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
     /// Everything a poster style needs to know about the item it is drawing, whatever kind of item it is.
     /// </summary>
     /// <remarks>
-    /// Styles never ask whether they are drawing an episode. They draw a <see cref="Title"/>, a short
-    /// <see cref="Code"/>, a <see cref="Number"/>, and a <see cref="Label"/>, and this class decides what
-    /// those mean for an episode, a season, or a series. Supporting a new item kind means teaching this
-    /// class, not every style.
+    /// Styles never ask whether they are drawing an episode. They draw a <see cref="Primary"/> line, a
+    /// <see cref="Secondary"/> one, a <see cref="SecondaryShort"/> code, and a <see cref="FeaturedNumber"/>,
+    /// and this class decides what those mean for an episode, a season, a series, or a film.
+    /// Supporting a new item kind means teaching this class, not every style.
     /// </remarks>
     public class ArtworkSubject
     {
@@ -104,6 +105,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatFullText(SeasonNumber ?? 0, EpisodeNumberStart ?? 0, true, true),
             ArtworkItemKind.Season => SeasonLabel,
+            ArtworkItemKind.Movie => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             _ => string.Empty
         };
 
@@ -148,6 +150,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         {
             ArtworkItemKind.Episode => EpisodeCodeUtils.FormatEpisodeCode(SeasonNumber ?? 0, EpisodeNumberStart ?? 0),
             ArtworkItemKind.Season => SeasonNumber.HasValue ? EpisodeCodeUtils.FormatSeasonCode(SeasonNumber.Value) : string.Empty,
+            ArtworkItemKind.Movie => ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             _ => string.Empty
         };
 
@@ -211,7 +214,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         /// Gets a value indicating whether a cutout style punches out the title itself. A series has
         /// no code or number, so its name becomes the cutout and is not drawn a second time.
         /// </summary>
-        public bool CutoutIsPrimary => Kind == ArtworkItemKind.Series || Promoted;
+        public bool CutoutIsPrimary => Kind is ArtworkItemKind.Series or ArtworkItemKind.Movie || Promoted;
 
         /// <summary>
         /// Returns the text a cutout style punches out: the featured number spelled out when the
@@ -241,8 +244,44 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             Episode episode => FromEpisode(episode),
             Season season => FromSeason(season),
             Series series => FromSeries(series),
-            _ => throw new ArgumentException("Artwork can only be generated for series, seasons, and episodes.", nameof(item))
+            Movie movie => FromMovie(movie),
+            _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, and films.", nameof(item))
         };
+
+        // FolderNameOf
+        // The name of the folder a file sits in, which a logo can use as its text source.
+        private static string? FolderNameOf(string? path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return null;
+            }
+
+            var directory = Path.GetDirectoryName(path);
+            return string.IsNullOrEmpty(directory)
+                ? null
+                : Path.GetFileName(directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        }
+
+        // FromMovie
+        // Builds the subject for a film. Its own file is the video source, and its title is carried
+        // in SeriesName: that is the field every style and every logo already reads as "the name of
+        // the work", so a film needs no parallel one.
+        public static ArtworkSubject FromMovie(Movie movie)
+        {
+            ArgumentNullException.ThrowIfNull(movie);
+
+            return new ArtworkSubject(VideoMetadata.Create(movie, null, movie))
+            {
+                Kind = ArtworkItemKind.Movie,
+                ItemId = movie.Id,
+                SeriesName = movie.Name,
+                OriginalTitle = movie.OriginalTitle,
+                SortTitle = movie.SortName,
+                FolderName = FolderNameOf(movie.Path),
+                ProductionYear = movie.ProductionYear
+            };
+        }
 
         // FromEpisode
         // Builds the subject for an episode.
@@ -276,7 +315,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
             ArgumentNullException.ThrowIfNull(season);
 
             var series = season.Series;
-            var sources = ArtworkSources.GetPlayableEpisodes(season);
+            var sources = ArtworkSources.GetPlayableSources(season);
             var source = sources.Count > 0 ? sources[0] : null;
 
             var subject = new ArtworkSubject(VideoMetadata.Create(season, series, source))
@@ -298,7 +337,7 @@ namespace Jellyfin.Plugin.EpisodePosterGenerator.Models
         {
             ArgumentNullException.ThrowIfNull(series);
 
-            var sources = ArtworkSources.GetPlayableEpisodes(series);
+            var sources = ArtworkSources.GetPlayableSources(series);
             var source = sources.Count > 0 ? sources[0] : null;
 
             var subject = new ArtworkSubject(VideoMetadata.Create(series, series, source))
