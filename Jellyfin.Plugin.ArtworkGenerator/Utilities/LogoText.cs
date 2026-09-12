@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 
@@ -118,7 +119,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
                 text = original;
             }
 
-            return settings.Uppercase ? text.ToUpperInvariant() : text;
+            return settings.LetterCase switch
+            {
+                LogoCase.Uppercase => text.ToUpperInvariant(),
+                LogoCase.Lowercase => text.ToLowerInvariant(),
+                LogoCase.TitleCase => ToTitleCase(text),
+                _ => text
+            };
+        }
+
+        // ToTitleCase
+        // Capitalises the first letter of each word and lowercases the rest, so a name shouted in
+        // capitals comes back readable rather than staying shouted.
+        private static string ToTitleCase(string text)
+        {
+            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(text.ToLowerInvariant());
         }
     }
 

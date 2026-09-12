@@ -333,6 +333,69 @@ public static class TextUtils
         return reduced.Length > 0 && font.MeasureText(reduced) <= maxWidth ? reduced : null;
     }
 
+    // SplitIntoLines
+    // Splits text across up to <paramref name="lines"/> lines, choosing the break points that make
+    // the widest line as narrow as possible. Fewer lines come back when there are not enough words.
+    public static IReadOnlyList<string> SplitIntoLines(string text, SKFont font, int lines)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(font);
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (lines <= 1 || words.Length < 2)
+        {
+            return new[] { text.Trim() };
+        }
+
+        var count = Math.Min(lines, words.Length);
+
+        // Walk every way of cutting the words into `count` runs and keep the one whose widest run
+        // is narrowest. The name is a handful of words, so the search is small.
+        var best = double.MaxValue;
+        int[]? bestCuts = null;
+
+        void Search(int start, int remaining, List<int> cuts)
+        {
+            if (remaining == 1)
+            {
+                var widest = 0f;
+                var from = 0;
+                foreach (var cut in cuts.Append(words.Length))
+                {
+                    widest = Math.Max(widest, font.MeasureText(string.Join(" ", words[from..cut])));
+                    from = cut;
+                }
+
+                if (widest < best)
+                {
+                    best = widest;
+                    bestCuts = cuts.ToArray();
+                }
+
+                return;
+            }
+
+            for (var i = start + 1; i <= words.Length - remaining + 1; i++)
+            {
+                cuts.Add(i);
+                Search(i, remaining - 1, cuts);
+                cuts.RemoveAt(cuts.Count - 1);
+            }
+        }
+
+        Search(0, count, new List<int>());
+
+        var result = new List<string>(count);
+        var previous = 0;
+        foreach (var cut in (bestCuts ?? Array.Empty<int>()).Append(words.Length))
+        {
+            result.Add(string.Join(" ", words[previous..cut]));
+            previous = cut;
+        }
+
+        return result;
+    }
+
     // SplitBalanced
     // Splits text at the word boundary that makes the wider of the two lines as narrow as
     // possible. Returns the text and an empty second line when it is a single word.

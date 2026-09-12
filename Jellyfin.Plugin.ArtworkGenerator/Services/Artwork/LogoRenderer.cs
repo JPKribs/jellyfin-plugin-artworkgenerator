@@ -223,33 +223,37 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         // clear margin. extraHeight is room reserved for the small line, at the probe size.
         private static string[] ChooseMainLines(string text, SKFont probe, float maxWidth, float maxHeight, int maxLines, float extraHeight, out float fontSize)
         {
-            var single = new[] { text };
-            float singleSize = FitSize(single, probe, maxWidth, maxHeight, extraHeight);
+            var best = new[] { text };
+            float bestSize = FitSize(best, probe, maxWidth, maxHeight, extraHeight);
+            fontSize = bestSize;
 
             if (maxLines < 2 || !text.Contains(' ', StringComparison.Ordinal))
             {
-                fontSize = singleSize;
-                return single;
+                return best;
             }
 
-            var (first, second) = TextUtils.SplitBalanced(text, probe);
-            if (string.IsNullOrEmpty(second))
+            // Each extra line only earns its place when it lets the lettering grow noticeably, so a
+            // name is not broken up for the sake of using the allowance.
+            for (var lines = 2; lines <= maxLines; lines++)
             {
-                fontSize = singleSize;
-                return single;
+                var candidate = TextUtils.SplitIntoLines(text, probe, lines).ToArray();
+                if (candidate.Length < lines)
+                {
+                    break;
+                }
+
+                var size = FitSize(candidate, probe, maxWidth, maxHeight, extraHeight);
+                if (size <= bestSize * TwoLinePreference)
+                {
+                    continue;
+                }
+
+                best = candidate;
+                bestSize = size;
+                fontSize = size;
             }
 
-            var split = new[] { first, second };
-            float splitSize = FitSize(split, probe, maxWidth, maxHeight, extraHeight);
-
-            if (splitSize > singleSize * TwoLinePreference)
-            {
-                fontSize = splitSize;
-                return split;
-            }
-
-            fontSize = singleSize;
-            return single;
+            return best;
         }
 
         // FitSize

@@ -79,9 +79,9 @@ public class LogoTextTests
     }
 
     [Fact]
-    public void Clean_UppercasesWhenAsked()
+    public void Clean_CasesTheLettersAsAsked()
     {
-        var settings = new LogoSettings { Uppercase = true };
+        var settings = new LogoSettings { LetterCase = LogoCase.Uppercase };
         Assert.Equal("ANDOR", LogoText.Clean("Andor", settings, isFolderName: false));
     }
 

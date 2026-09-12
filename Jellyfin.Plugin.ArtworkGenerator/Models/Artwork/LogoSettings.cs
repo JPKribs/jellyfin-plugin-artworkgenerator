@@ -28,12 +28,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public float SecondarySize { get; set; } = 45.0f;
 
         /// <summary>Gets or sets an optional regular expression whose matches are removed from the text.</summary>
-        [Display(Name = "Remove Pattern", Description = "Optional regular expression; anything it matches is removed.")]
+        [Display(Name = "Remove Pattern", Description = "Anything matching this regular expression is removed.")]
         public string CustomRegex { get; set; } = string.Empty;
 
-        /// <summary>Gets or sets a value indicating whether the text is drawn in capitals.</summary>
-        [Display(Name = "All Capitals")]
-        public bool Uppercase { get; set; }
+        /// <summary>Gets or sets how the letters are cased, whatever case the name arrives in.</summary>
+        [Display(Name = "Letter Case", Description = "How the letters are cased.")]
+        public LogoCase LetterCase { get; set; }
 
         [Display(Name = "Font")]
         public string FontFamily { get; set; } = "Arial";
@@ -48,11 +48,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public string FontPath { get; set; } = string.Empty;
 
         /// <summary>Gets or sets what fills the letters: a color, or a frame from the series.</summary>
-        [Display(Name = "Letters Filled With", Description = "A color, or a frame from the show cut into the letters.")]
+        [Display(Name = "Letters Filled With", Description = "What the letters are filled with.")]
         public LogoFill Fill { get; set; } = LogoFill.Color;
 
         /// <summary>Gets or sets where the text color comes from, when the fill is a color.</summary>
-        [Display(Name = "Color From", Description = "Sample the main color of the item's own artwork, lifted to stay legible, or use a color you pick.")]
+        [Display(Name = "Color From", Description = "Where the letter color comes from.")]
         public LogoColorSource ColorSource { get; set; } = LogoColorSource.Fixed;
 
         /// <summary>Gets or sets the ARGB text color, and the fallback when sampling fails.</summary>
@@ -72,16 +72,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Drop Shadow")]
         public bool ShadowEnabled { get; set; }
 
-        /// <summary>Gets or sets the most lines the name may wrap onto, 1 or 2.</summary>
-        [Display(Name = "Lines", Description = "A long name splits onto two lines only when that lets the text grow noticeably.")]
+        /// <summary>Gets or sets the most lines the name may wrap onto.</summary>
+        [Display(Name = "Line Limit", Description = "The most lines a name may wrap onto.")]
         public int MaxLines { get; set; } = 2;
 
         /// <summary>Gets or sets the width of the space the lettering is laid out in.</summary>
-        [Display(Name = "Width")]
+        [Display(Name = "Width", Description = "The width of the space the lettering is laid out in.")]
         public int Width { get; set; } = 800;
 
         /// <summary>Gets or sets the height of the space the lettering is laid out in.</summary>
-        [Display(Name = "Height", Description = "The room the lettering gets; the finished logo is trimmed to its artwork.")]
+        [Display(Name = "Height", Description = "The room the lettering gets. The finished logo is trimmed to its artwork.")]
         public int Height { get; set; } = 310;
 
         /// <summary>Gets the font file to use, or null when the custom font is off.</summary>

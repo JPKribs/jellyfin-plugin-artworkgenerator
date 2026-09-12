@@ -40,10 +40,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         public float LetterboxConfidence { get; set; } = 85.0f;
 
-        [Display(Name = "Extraction Start (%)")]
+        [Display(Name = "Extraction Start (%)", Description = "How far into each episode extraction begins.")]
         public float ExtractWindowStart { get; set; } = 20.0f;
 
-        [Display(Name = "Extraction End (%)", Description = "Stop extracting at this percent of each episode.")]
+        [Display(Name = "Extraction End (%)", Description = "How far into each episode extraction stops.")]
         public float ExtractWindowEnd { get; set; } = 80.0f;
 
         [Display(Name = "Style")]
@@ -80,10 +80,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// it where the title goes. Off, the title's place is left empty and the lone subtitle stays
         /// in its own.
         /// </summary>
-        [Display(Name = "Lone Subtitle Uses the Title's Edge", Description = "An item with no title of its own puts its subtitle where the title would go.")]
+        [Display(Name = "Lone Subtitle Takes the Title Edge", Description = "An item with no title puts its subtitle on the title edge.")]
         public bool LoneLineFollowsTitle { get; set; } = true;
 
-        [Display(Name = "Enable Outline", Description = "Draw a contrasting outline around the cut-out shape: the text for Cutout, the brush stroke for Brush.")]
+        [Display(Name = "Outline", Description = "Draw a contrasting outline around the cut-out shape.")]
         public bool CutoutBorder { get; set; } = true;
 
         [Display(Name = "Logo Position", Description = "Vertical position of the series logo on the poster.")]
@@ -95,7 +95,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Logo Height", Description = "Logo height as a percent of the poster's short side, 1 to 100.")]
         public float LogoHeight { get; set; } = 30.0f;
 
-        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent.")]
+        [Display(Name = "Brighten Frame (%)", Description = "How much every extracted frame is brightened.")]
         public float BrightenHDR { get; set; }
 
         [Display(Name = "Fill Strategy", Description = "How the image is resized to fit the poster.")]
@@ -110,7 +110,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Portrait Aspect Ratio")]
         public string PortraitDimensionRatio { get; set; } = "2:3";
 
-        [Display(Name = "Safe Area", Description = "Margin kept clear around all edges, as a percent of the poster's short side.")]
+        [Display(Name = "Safe Area", Description = "Margin kept clear around all edges, as a percent of the short side.")]
         public float PosterSafeArea { get; set; } = 5.0f;
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>
         /// How to handle episode titles that do not fit the poster's text area.
         /// </summary>
-        [Display(Name = "Long Titles", Description = "What to do when a title does not fit.")]
+        [Display(Name = "Long Titles", Description = "What to do when the title does not fit.")]
         public LongTextHandling LongTextHandling { get; set; } = LongTextHandling.Ellipsis;
 
         /// <summary>
@@ -189,10 +189,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// When enabled, the overlay color channels are replaced per episode by the dominant
         /// color sampled from the canvas image. The configured alpha values are preserved.
         /// </summary>
-        [Display(Name = "Palette-Derived Colors", Description = "Take the overlay colors from each image.")]
+        [Display(Name = "Palette Colors", Description = "Take the overlay colors from each image.")]
         public bool PaletteDerivedColors { get; set; }
 
-        [Display(Name = "Graphic File Path", Description = "Optional graphic drawn above the image and below the text.")]
+        [Display(Name = "Graphic File Path", Description = "A graphic drawn above the image and below the text.")]
         public string GraphicPath { get; set; } = string.Empty;
 
         /// <summary>

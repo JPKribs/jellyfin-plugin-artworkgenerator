@@ -61,7 +61,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Outline (Style is Cutout or Brush)
 
-* **Enable Outline**: draw a contrasting outline around the cut-out shape — the subtitle for Cutout, the brush stroke for Brush. Default on.
+* **Outline**: draw a contrasting outline around the cut-out shape — the subtitle for Cutout, the brush stroke for Brush. Default on.
 
 ## Cutout (Style is Cutout)
 
@@ -72,7 +72,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 On this design the shared **Text Position** is shown as **Title Edge**, since the two lines take opposite edges rather than sitting together.
 
 * **Title Edge**: which edge of the border the title takes. The subtitle takes the other one. Default top.
-* **Lone Subtitle Uses the Title's Edge**: an item with no title of its own, such as a season named after nothing but its number, puts its subtitle where the title would go, so an item with one line looks the same whichever line it has. Off, the subtitle keeps its own edge and the title's is left empty. Default on.
+* **Lone Subtitle Takes the Title Edge**: an item with no title of its own, such as a season named after nothing but its number, puts its subtitle where the title would go, so an item with one line looks the same whichever line it has. Off, the subtitle keeps its own edge and the title's is left empty. Default on.
 
 ## Logo (Style is Logo)
 
@@ -104,7 +104,7 @@ On this design the shared **Text Position** is shown as **Title Edge**, since th
 
 ## Overlay
 
-* **Palette-Derived Colors**: replace the overlay color channels with the dominant color sampled from each episode's image. The secondary color becomes a darker shade of it and the alpha values below still apply. Default off.
+* **Palette Colors**: replace the overlay color channels with the dominant color sampled from each episode's image. The secondary color becomes a darker shade of it and the alpha values below still apply. Default off.
 * **Overlay Color**: color drawn over the canvas as ARGB hex. Default #66000000.
 * **Overlay Gradient**: gradient direction. None, Left To Right, Bottom To Top, or a diagonal corner. Default None.
 * **Secondary Overlay Color**: the gradient's second color as ARGB hex. Default #66000000.
@@ -127,8 +127,8 @@ Logo designs are stored in their own file, `logos.json`, in the plugin's data di
 * **Names With a Subtitle**: how to treat a name split by a colon or spaced dash. Draw the whole name, keep only the title, keep only the subtitle, or draw both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
 * **Small Line Size (%)**: the small line's size as a percent of the large one, in the two-size layouts. Default 45.
 * **Remove Pattern**: an optional regular expression whose matches are removed. An invalid pattern is ignored.
-* **All Capitals**: draw the name in capitals. Default off.
-* **Lines**: one line, or up to two. A name splits onto two lines only when that lets the text grow noticeably. Default up to two.
+* **Letter Case**: how the letters are cased, whatever case the name arrives in. As written, UPPERCASE, lowercase, or Title Case. Default as written.
+* **Line Limit**: the most lines a name may wrap onto, 1 to 4. An extra line is only used when it lets the lettering grow noticeably, so a short name stays on one line. Default 2.
 * **Font, Font Style, Use Custom Font, Font Path**: the typeface. Default Arial Bold.
 * **Letters Filled With**: a color, or a frame from the show. A frame fill cuts the letters out of a picture, taken from the same shared set of frames the show's other images come from, and brightened so it still reads on a dark background. A heavy font shows more of the picture and an outline helps it stand out. With a frame fill, the Edit Images dialog offers several logos, each cut from a different frame. Default a color.
 * **Color From**: Chosen Color, or the main color of the item's own Top Level Poster or Top Level Backdrop, lifted to stay legible. Default Chosen Color.

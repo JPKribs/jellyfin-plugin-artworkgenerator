@@ -8,7 +8,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public class BackdropSettings
     {
         /// <summary>Gets or sets the backdrop aspect ratio, such as 16:9.</summary>
-        [Display(Name = "Aspect Ratio", Description = "The frame is cropped to this ratio, such as 16:9.")]
+        [Display(Name = "Aspect Ratio", Description = "The ratio the frame is cropped to, such as 16:9.")]
         public string AspectRatio { get; set; } = "16:9";
 
         /// <summary>Gets or sets a value indicating whether black bars are cropped away first.</summary>
@@ -24,15 +24,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public float LetterboxConfidence { get; set; } = 85.0f;
 
         /// <summary>Gets or sets the percent every extracted frame is brightened by.</summary>
-        [Display(Name = "Brighten Frame (%)", Description = "Brightens every extracted frame by this percent.")]
+        [Display(Name = "Brighten Frame (%)", Description = "How much every extracted frame is brightened.")]
         public float BrightenHDR { get; set; }
 
         /// <summary>Gets or sets the percent of each episode skipped before frames are considered.</summary>
-        [Display(Name = "Extraction Start (%)", Description = "Skip this percent of each episode before extracting.")]
+        [Display(Name = "Extraction Start (%)", Description = "How far into each episode extraction begins.")]
         public float ExtractWindowStart { get; set; } = 20.0f;
 
         /// <summary>Gets or sets the percent of each episode after which frames are no longer considered.</summary>
-        [Display(Name = "Extraction End (%)", Description = "Stop extracting at this percent of each episode.")]
+        [Display(Name = "Extraction End (%)", Description = "How far into each episode extraction stops.")]
         public float ExtractWindowEnd { get; set; } = 80.0f;
     }
 }

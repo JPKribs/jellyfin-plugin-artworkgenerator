@@ -94,16 +94,15 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkUppercase" data-setting="Uppercase" data-default-unchecked />
-                                    <span class="checkboxLabel"></span>
-                                </label>
+                            <div class="inputContainer">
+                                <label for="selectLetterCase"></label>
+                                <select is="emby-select" id="selectLetterCase" data-setting="LetterCase" data-default="AsWritten"></select>
+                                <div class="fieldDescription"></div>
                             </div>
 
                             <div class="inputContainer">
-                                <label for="selectMaxLines"></label>
-                                <select is="emby-select" id="selectMaxLines" data-setting="MaxLines" data-default="2" data-type="number"></select>
+                                <label for="txtMaxLines"></label>
+                                <input is="emby-input" type="number" id="txtMaxLines" min="1" max="4" step="1" data-setting="MaxLines" data-default="2" data-type="number" />
                                 <div class="fieldDescription"></div>
                             </div>
                         </div>
@@ -177,6 +176,13 @@
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkLogoShadow" data-setting="ShadowEnabled" data-default-unchecked />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                            </div>
+
+                            <div class="checkboxContainer">
+                                <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkLogoOutline" data-setting="OutlineEnabled" data-default-unchecked />
                                     <span class="checkboxLabel"></span>
                                 </label>
@@ -197,13 +203,6 @@
                                     <input is="emby-input" type="number" id="txtLogoOutlineWidth" min="0" max="20" step="0.5" data-setting="OutlineWidth" data-type="number" />
                                     <div class="fieldDescription"></div>
                                 </div>
-                            </div>
-
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkLogoShadow" data-setting="ShadowEnabled" data-default-unchecked />
-                                    <span class="checkboxLabel"></span>
-                                </label>
                             </div>
                         </div>
                     </div>

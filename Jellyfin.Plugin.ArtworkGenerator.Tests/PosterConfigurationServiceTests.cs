@@ -177,7 +177,7 @@ public class PosterConfigurationServiceTests
     public void Initialize_MovesLogoDesignsOutOfTheConfiguration()
     {
         var config = LegacyConfig(Guid.NewGuid(), out _);
-        config.LogoConfigurations.Add(new LogoConfiguration { Name = "Mine", Settings = new LogoSettings { Uppercase = true } });
+        config.LogoConfigurations.Add(new LogoConfiguration { Name = "Mine", Settings = new LogoSettings { LetterCase = LogoCase.Uppercase } });
 
         var store = new LogoDesignStore();
         var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance, store);
@@ -186,7 +186,7 @@ public class PosterConfigurationServiceTests
         Assert.Empty(config.LogoConfigurations);
         var moved = Assert.Single(store.Load());
         Assert.Equal("Mine", moved.Name);
-        Assert.True(moved.Settings.Uppercase);
+        Assert.Equal(LogoCase.Uppercase, moved.Settings.LetterCase);
         Assert.Same(moved.Settings, service.GetLogoForSlot(new SlotAssignment { DesignId = moved.Id }));
     }
 

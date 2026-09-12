@@ -102,7 +102,7 @@ public class SettingTextTests
     [InlineData("SubtitleMode", "Keep", "Draw the whole name")]
     [InlineData("SubtitleMode", "SubtitleLarge", "Subtitle large, title small above")]
     [InlineData("ColorSource", "Fixed", "Chosen Color")]
-    [InlineData("Fill", "Photo", "A frame from the show")]
+    [InlineData("Fill", "Photo", "Frame")]
     [InlineData("TitleSource", "OriginalTitle", "Original Title")]
     [InlineData("MaxLines", "2", "Up to two lines")]
     public void LogoChoicesKeepTheirWording(string setting, string value, string expected)

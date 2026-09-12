@@ -141,11 +141,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoFill
     {
         /// <summary>A solid color.</summary>
-        [Description("A color")]
+        [Description("Color")]
         Color,
 
         /// <summary>A frame from the series, as if the letters were cut out of a photo.</summary>
-        [Description("A frame from the show")]
+        [Description("Frame")]
         Photo
     }
 }
