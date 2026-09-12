@@ -123,7 +123,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 : 0f;
 
             return new LayoutColumn(safeArea, GetElementSpacing(config, SizeUnit(width, height)), ResolveTextAnchor(config))
-                .Add(SecondaryBlock, config.ShowSecondary && code.Length > 0 ? secondaryStyle.LineBox : 0f)
+                .Add(SecondaryBlock, ShowsSecondary(config, subject) && code.Length > 0 ? secondaryStyle.LineBox : 0f)
                 .Add(PrimaryBlock, primaryHeight);
         }
 

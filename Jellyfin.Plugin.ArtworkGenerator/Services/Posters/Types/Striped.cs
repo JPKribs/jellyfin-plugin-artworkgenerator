@@ -122,7 +122,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var unit = SizeUnit(width, height);
             var safeArea = GetSafeAreaBounds(width, height, settings);
             var code = subject.SecondaryShort;
-            var showCode = settings.ShowSecondary && code.Length > 0;
+            var showCode = ShowsSecondary(settings, subject) && code.Length > 0;
 
             bool titleOnBand = false;
             if (ShowsPrimary(settings, subject))

@@ -84,6 +84,7 @@ On this design the shared **Text Position** is shown as **Title Edge**, since th
 
 * **Show Subtitle**: draw the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none. Default on.
 * **Long Subtitles**: what to do when the subtitle does not fit the width it has, which happens on a narrow portrait poster. Short code says the same thing as S12E07, Shrink to fit keeps the words and sets them smaller, and Ellipsis trims them. Whatever is chosen, the line is squeezed as a last resort rather than allowed over the edge. Default Short code.
+* **Hide a Repeated Subtitle**: drop the subtitle when it adds nothing the title has not already said. A season named "Staffel 12" or "Series 12" sits beside a "SEASON 12" label, which is one piece of information written twice. A season with a name of its own, such as "The Glump Saga", keeps both lines, and so does one named "12 Monkeys". A season named plainly "Season 12" never had a second line to drop, since its label is promoted into the title already. Default off.
 * **Font**: font family for the subtitle. Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.

@@ -176,6 +176,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Long Subtitles", Description = "What to do when the subtitle does not fit.")]
         public LongSubtitleHandling LongSubtitleHandling { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the subtitle is dropped when it says the same
+        /// thing as the title, such as a season named "Season 12" whose label is also "Season 12".
+        /// </summary>
+        [Display(Name = "Hide a Repeated Subtitle", Description = "Drop the subtitle when it says the same thing as the title.")]
+        public bool HideRepeatedSubtitle { get; set; }
+
         [Display(Name = "Overlay Color")]
         public string OverlayColor { get; set; } = "#66000000";
 

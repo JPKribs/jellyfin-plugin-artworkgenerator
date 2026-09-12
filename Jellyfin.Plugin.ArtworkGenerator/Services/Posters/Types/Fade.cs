@@ -123,6 +123,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             float numberTop = safeArea.Bottom;
 
+            // ShowSecondary, not ShowsSecondary: the big number is this design's focal element,
+            // drawn from the item's number rather than from the subtitle text.
             if (settings.ShowSecondary && subject.FeaturedNumber.HasValue)
             {
                 var widthRatio = height > width ? PortraitNumberZoneWidthRatio : NumberZoneWidthRatio;

@@ -22,6 +22,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         {
         }
 
+        // DrawsSecondary
+        // Exposes the shared rule for the tests, so what they check is what the designs call.
+        internal static bool DrawsSecondary(PosterSettings settings, ArtworkSubject subject)
+            => ShowsSecondary(settings, subject);
+
         // RenderTypography
         // Renders the identity line, a rule, and the title at the bottom of the poster.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)

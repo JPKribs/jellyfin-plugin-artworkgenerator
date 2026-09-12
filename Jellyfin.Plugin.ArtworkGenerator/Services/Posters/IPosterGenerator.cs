@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -202,7 +203,47 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Whether the design draws the secondary line and this item has one. Its long and short
         // renderings are present or absent together, so one question answers for either.
         protected static bool ShowsSecondary(PosterSettings settings, ArtworkSubject subject)
-            => settings != null && settings.ShowSecondary && subject?.Secondary.Length > 0;
+        {
+            if (settings == null || !settings.ShowSecondary || !(subject?.Secondary.Length > 0))
+            {
+                return false;
+            }
+
+            return !settings.HideRepeatedSubtitle || !RepeatsTheTitle(subject!);
+        }
+
+        // A title that is one word and the item's own number, such as "Staffel 12" or "Series 12".
+        // Letters must come first, so "12 Monkeys" is a name rather than a numbering.
+        private static readonly Regex NumberedName =
+            new(@"^\p{L}+\s*0*(\d+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        // RepeatsTheTitle
+        // Whether the subtitle adds nothing the title has not already said. An exact repeat is the
+        // plain case. The useful one is a season whose name is its number worded differently, such
+        // as "Staffel 12" beside a "SEASON 12" label: different strings, one piece of information.
+        private static bool RepeatsTheTitle(ArtworkSubject subject)
+        {
+            var primary = subject.Primary?.Trim();
+            if (string.IsNullOrEmpty(primary))
+            {
+                return false;
+            }
+
+            if (string.Equals(primary, subject.Secondary.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!subject.FeaturedNumber.HasValue)
+            {
+                return false;
+            }
+
+            var match = NumberedName.Match(primary);
+            return match.Success
+                && int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture, out var numbered)
+                && numbered == subject.FeaturedNumber.Value;
+        }
 
         // SizeUnit
         // The length every size setting is a percentage of: the poster's short side. A landscape
@@ -306,7 +347,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             var parts = subject.SecondaryParts;
             var label = subject.Secondary;
-            var showSecondary = settings.ShowSecondary && (parts.Count > 1 || label.Length > 0);
+            var showSecondary = ShowsSecondary(settings, subject) && (parts.Count > 1 || label.Length > 0);
 
             // An item can have no title of its own, such as a season named after nothing but its
             // number. Its zone is not reserved, so nothing is left holding empty space.

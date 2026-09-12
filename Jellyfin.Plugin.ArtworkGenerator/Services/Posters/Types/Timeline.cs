@@ -72,6 +72,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 .Add(PrimaryBlock, ShowsPrimary(settings, subject)
                     ? primaryStyle.BlockHeight(2)
                     : 0f)
+                // ShowSecondary, not ShowsSecondary: these are the bar's own position labels
+                // rather than the subtitle line, so they stand even when there is no subtitle text.
                 .Add(LabelsBlock, settings.ShowSecondary && hasProgress ? secondaryStyle.LineBox : 0f)
                 .Add(BarBlock, hasProgress ? MeasureProgressBar(unit) : 0f);
 

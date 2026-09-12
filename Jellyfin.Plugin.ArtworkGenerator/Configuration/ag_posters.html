@@ -313,107 +313,6 @@
                         </div>
                     </div>
 
-                    <!-- Episode Information -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
-                            <span class="jpk-collapsible-title">Subtitle</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
-                        </button>
-                        <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
-
-                            <div id="secondaryStyleNote" class="fieldDescription ag-section-note"></div>
-
-                            <div class="checkboxContainer" id="showEpisodeRow">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkShowSecondary" data-setting="ShowSecondary" />
-                                    <span class="checkboxLabel"></span>
-                                </label>
-                                <div class="fieldDescription"></div>
-                            </div>
-
-                            <div class="inputContainer" data-depends-on="chkShowSecondary">
-                                <label for="selectLongSubtitleHandling"></label>
-                                <select is="emby-select" id="selectLongSubtitleHandling" data-setting="LongSubtitleHandling" data-default="ShortCode"></select>
-                                <div class="fieldDescription"></div>
-                            </div>
-
-                            <div class="checkboxContainer" data-depends-on="chkShowSecondary">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="chkSecondaryUseCustomFont" data-setting="SecondaryUseCustomFont" />
-                                    <span class="checkboxLabel"></span>
-                                </label>
-                                <div class="fieldDescription"></div>
-                            </div>
-
-                            <div class="inputContainer" data-depends-on="chkShowSecondary,chkSecondaryUseCustomFont">
-                                <label for="txtSecondaryFontPath"></label>
-                                <input is="emby-input" type="text" id="txtSecondaryFontPath" placeholder="/path/to/font.ttf" data-setting="SecondaryFontPath" />
-                                <div class="fieldDescription"></div>
-                            </div>
-
-                            <div data-hide-when-checked="chkSecondaryUseCustomFont" data-depends-on="chkShowSecondary">
-                                <div class="inputContainer">
-                                    <label for="selectSecondaryFontFamily"></label>
-                                    <select is="emby-select" id="selectSecondaryFontFamily" data-setting="SecondaryFontFamily" data-default="Arial">
-                                        <option value="Arial">Arial</option>
-                                        <option value="Arial Black">Arial Black</option>
-                                        <option value="Book Antiqua">Book Antiqua</option>
-                                        <option value="Calibri">Calibri</option>
-                                        <option value="Cambria">Cambria</option>
-                                        <option value="Candara">Candara</option>
-                                        <option value="Century Gothic">Century Gothic</option>
-                                        <option value="Comic Sans MS">Comic Sans MS</option>
-                                        <option value="Consolas">Consolas</option>
-                                        <option value="Courier New">Courier New</option>
-                                        <option value="Didot">Didot</option>
-                                        <option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
-                                        <option value="Futura">Futura</option>
-                                        <option value="Garamond">Garamond</option>
-                                        <option value="Georgia">Georgia</option>
-                                        <option value="Gill Sans">Gill Sans</option>
-                                        <option value="Helvetica">Helvetica</option>
-                                        <option value="Impact">Impact</option>
-                                        <option value="Lucida Console">Lucida Console</option>
-                                        <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
-                                        <option value="Monaco">Monaco</option>
-                                        <option value="Optima">Optima</option>
-                                        <option value="Palatino Linotype">Palatino Linotype</option>
-                                        <option value="Rockwell">Rockwell</option>
-                                        <option value="Segoe UI">Segoe UI</option>
-                                        <option value="Tahoma">Tahoma</option>
-                                        <option value="Times New Roman">Times New Roman</option>
-                                        <option value="Trebuchet MS">Trebuchet MS</option>
-                                        <option value="Verdana">Verdana</option>
-                                    </select>
-                                    <div class="fieldDescription"></div>
-                                </div>
-                                <div class="inputContainer">
-                                    <label for="selectSecondaryFontStyle"></label>
-                                    <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold"></select>
-                                    <div class="fieldDescription"></div>
-                                </div>
-                            </div>
-
-                            <div class="inputContainer" data-depends-on="chkShowSecondary">
-                                <label for="txtSecondaryFontSize"></label>
-                                <input is="emby-input" type="number" id="txtSecondaryFontSize" min="1.0" max="100.0" data-setting="SecondaryFontSize" data-type="number" />
-                                <div class="fieldDescription"></div>
-                            </div>
-
-                            <div class="inputContainer" data-depends-on="chkShowSecondary">
-                                <label for="txtSecondaryFontColor"></label>
-                                <div class="color-control-group">
-                                    <input type="color" id="colorSecondaryFontColor" class="color-picker" />
-                                    <input type="range" id="alphaSecondaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
-                                    <span class="alpha-label">255</span>
-                                    <input is="emby-input" type="text" id="txtSecondaryFontColor" placeholder="#FFFFFFFF" data-setting="SecondaryFontColor" class="hex-input" aria-describedby="descSecondaryFontColor" />
-                                </div>
-                                <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
-                            </div>
-
-                        </div>
-                    </div>
-
                     <!-- Episode Title -->
                     <div class="jpk-collapsible-section">
                         <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeTitleContent" data-target="episodeTitleContent">
@@ -510,6 +409,115 @@
                                     <input is="emby-input" type="text" id="txtPrimaryFontColor" placeholder="#FFFFFFFF" data-setting="PrimaryFontColor" class="hex-input" aria-describedby="descPrimaryFontColor" />
                                 </div>
                                 <div id="descPrimaryFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Episode Information -->
+                    <div class="jpk-collapsible-section">
+                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
+                            <span class="jpk-collapsible-title">Subtitle</span>
+                            <span class="jpk-collapsible-icon">&#9660;</span>
+                        </button>
+                        <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
+
+                            <div id="secondaryStyleNote" class="fieldDescription ag-section-note"></div>
+
+                            <div class="checkboxContainer" id="showEpisodeRow">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkShowSecondary" data-setting="ShowSecondary" />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="selectLongSubtitleHandling"></label>
+                                <select is="emby-select" id="selectLongSubtitleHandling" data-setting="LongSubtitleHandling" data-default="ShortCode"></select>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="checkboxContainer" data-depends-on="chkShowSecondary">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkHideRepeatedSubtitle" data-setting="HideRepeatedSubtitle" data-default-unchecked />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="checkboxContainer" data-depends-on="chkShowSecondary">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkSecondaryUseCustomFont" data-setting="SecondaryUseCustomFont" />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary,chkSecondaryUseCustomFont">
+                                <label for="txtSecondaryFontPath"></label>
+                                <input is="emby-input" type="text" id="txtSecondaryFontPath" placeholder="/path/to/font.ttf" data-setting="SecondaryFontPath" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div data-hide-when-checked="chkSecondaryUseCustomFont" data-depends-on="chkShowSecondary">
+                                <div class="inputContainer">
+                                    <label for="selectSecondaryFontFamily"></label>
+                                    <select is="emby-select" id="selectSecondaryFontFamily" data-setting="SecondaryFontFamily" data-default="Arial">
+                                        <option value="Arial">Arial</option>
+                                        <option value="Arial Black">Arial Black</option>
+                                        <option value="Book Antiqua">Book Antiqua</option>
+                                        <option value="Calibri">Calibri</option>
+                                        <option value="Cambria">Cambria</option>
+                                        <option value="Candara">Candara</option>
+                                        <option value="Century Gothic">Century Gothic</option>
+                                        <option value="Comic Sans MS">Comic Sans MS</option>
+                                        <option value="Consolas">Consolas</option>
+                                        <option value="Courier New">Courier New</option>
+                                        <option value="Didot">Didot</option>
+                                        <option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+                                        <option value="Futura">Futura</option>
+                                        <option value="Garamond">Garamond</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Gill Sans">Gill Sans</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                        <option value="Impact">Impact</option>
+                                        <option value="Lucida Console">Lucida Console</option>
+                                        <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                                        <option value="Monaco">Monaco</option>
+                                        <option value="Optima">Optima</option>
+                                        <option value="Palatino Linotype">Palatino Linotype</option>
+                                        <option value="Rockwell">Rockwell</option>
+                                        <option value="Segoe UI">Segoe UI</option>
+                                        <option value="Tahoma">Tahoma</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Trebuchet MS">Trebuchet MS</option>
+                                        <option value="Verdana">Verdana</option>
+                                    </select>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label for="selectSecondaryFontStyle"></label>
+                                    <select is="emby-select" id="selectSecondaryFontStyle" data-setting="SecondaryFontStyle" data-default="Bold"></select>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="txtSecondaryFontSize"></label>
+                                <input is="emby-input" type="number" id="txtSecondaryFontSize" min="1.0" max="100.0" data-setting="SecondaryFontSize" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                                <label for="txtSecondaryFontColor"></label>
+                                <div class="color-control-group">
+                                    <input type="color" id="colorSecondaryFontColor" class="color-picker" />
+                                    <input type="range" id="alphaSecondaryFontColor" class="alpha-slider" min="0" max="255" value="255" />
+                                    <span class="alpha-label">255</span>
+                                    <input is="emby-input" type="text" id="txtSecondaryFontColor" placeholder="#FFFFFFFF" data-setting="SecondaryFontColor" class="hex-input" aria-describedby="descSecondaryFontColor" />
+                                </div>
+                                <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
                             </div>
 
                         </div>
