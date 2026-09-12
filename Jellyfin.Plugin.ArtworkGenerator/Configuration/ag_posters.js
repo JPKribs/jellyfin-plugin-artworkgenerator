@@ -681,6 +681,7 @@ export default function (view) {
     var posterStyleTextNotes = {};
     var posterStyleShapes = {};
     var posterStyleSettings = {};
+    var posterStyleText = {};
 
     // Pull each style's description from the generators (Plugins/ArtworkGenerator/PosterStyles)
     function loadPosterStyles() {
@@ -697,6 +698,7 @@ export default function (view) {
                 };
                 posterStyleShapes[s.value] = { Portrait: s.portrait !== false, Landscape: s.landscape !== false };
                 posterStyleSettings[s.value] = s.settings || {};
+                posterStyleText[s.value] = s.text || {};
             });
             updateStyleAvailability();
             updateStyleDescription();
@@ -715,7 +717,12 @@ export default function (view) {
     }
 
     function optionsFor(setting) { return lookup(posterSettingOptions, setting); }
-    function textFor(setting) { return lookup(posterSettingText, setting); }
+    // A design may word a shared setting in its own terms, so its wording wins where it has one.
+    function textFor(setting) {
+        var styleEl = view.querySelector('#selectPosterStyle');
+        var own = styleEl ? lookup(posterStyleText[styleEl.value] || {}, setting) : null;
+        return own || lookup(posterSettingText, setting);
+    }
     function defaultFor(setting) { return lookup(posterSettingDefaults, setting); }
 
     // Pull every setting's choices and starting value from the settings model itself
@@ -836,6 +843,8 @@ export default function (view) {
 
         // Each style says in its own words what its title and subtitle are, because where the
         // text lands is the one thing that changes between them.
+        applySettingText();
+
         var notes = posterStyleTextNotes[style] || {};
         var primaryNote = view.querySelector('#primaryStyleNote');
         if (primaryNote) primaryNote.textContent = notes.primary || '';

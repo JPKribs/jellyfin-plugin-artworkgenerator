@@ -89,4 +89,40 @@ public class PosterSettingRulesTests
         Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Standard).SettingRules[PosterSettingRules.LoneLineFollowsTitle]);
         Assert.Equal(PosterSettingState.Hidden, Generator(PosterStyle.Cutout).SettingRules[PosterSettingRules.LoneLineFollowsTitle]);
     }
+
+    /// <summary>
+    /// A design may word a shared setting in its own terms, and only for a setting it actually
+    /// offers — wording a hidden setting would put labels on a control nobody can see.
+    /// </summary>
+    [Fact]
+    public void ADesignOnlyWordsSettingsItOffers()
+    {
+        foreach (var generator in PreviewService.GetStyleCatalog())
+        {
+            foreach (var (setting, text) in generator.SettingText)
+            {
+                Assert.False(string.IsNullOrWhiteSpace(text.Label));
+                Assert.False(string.IsNullOrWhiteSpace(text.Description));
+
+                var offered = !generator.SettingRules.TryGetValue(setting, out var state)
+                    || state != PosterSettingState.Hidden;
+
+                Assert.True(offered, $"{generator.Style} words {setting}, which it hides.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// The framed design is the one that needed this: its two lines take opposite edges, so the
+    /// shared wording would describe something it does not do.
+    /// </summary>
+    [Fact]
+    public void TheFramedDesignWordsItsPlacementControls()
+    {
+        var frame = Generator(PosterStyle.Frame);
+
+        Assert.True(frame.SettingText.ContainsKey(PosterSettingRules.TextPosition));
+        Assert.True(frame.SettingText.ContainsKey(PosterSettingRules.LoneLineFollowsTitle));
+        Assert.DoesNotContain("subtitle sit", frame.SettingText[PosterSettingRules.TextPosition].Description, System.StringComparison.OrdinalIgnoreCase);
+    }
 }

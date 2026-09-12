@@ -69,9 +69,10 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 
 ## Frame (Style is Frame)
 
-The title takes the top or bottom edge of the border, whichever **Text Position** names, and the subtitle takes the other.
+On this design the shared **Text Position** is shown as **Title Edge**, since the two lines take opposite edges rather than sitting together.
 
-* **Lone Line Follows Title**: an item carrying only one of the two lines, such as a season named after nothing but its number, puts it where the title goes, so an item with one line looks the same whichever line it has. Off, the subtitle keeps its own edge and the title's is left empty. Default on.
+* **Title Edge**: which edge of the border the title takes. The subtitle takes the other one. Default top.
+* **Lone Subtitle Uses the Title's Edge**: an item with no title of its own, such as a season named after nothing but its number, puts its subtitle where the title would go, so an item with one line looks the same whichever line it has. Off, the subtitle keeps its own edge and the title's is left empty. Default on.
 
 ## Logo (Style is Logo)
 

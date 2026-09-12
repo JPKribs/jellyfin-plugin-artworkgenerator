@@ -51,6 +51,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Which settings this style uses, and which it always draws, so the configuration page can
         // offer exactly the settings that do something.
         IReadOnlyDictionary<string, PosterSettingState> SettingRules { get; }
+
+        // SettingText
+        // A style's own wording for a shared setting. Text position means "where the text sits" on
+        // most designs and "which border edge the title takes" on a framed one; rather than word it
+        // vaguely enough to cover both, a style that reads differently says so here.
+        IReadOnlyDictionary<string, SettingText> SettingText { get; }
     }
 
     public abstract class BasePosterGenerator : IPosterGenerator
@@ -96,6 +102,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // otherwise. Overriding this is how a style adds its own settings, or insists on an element
         // it always draws.
         public virtual IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.None;
+
+        // SettingText
+        // A style uses the settings' own wording unless it says otherwise.
+        public virtual IReadOnlyDictionary<string, SettingText> SettingText { get; }
+            = new Dictionary<string, SettingText>(StringComparer.Ordinal);
 
         // NaturalTextPosition
         // Where this style puts its text when the setting is left on its default. Almost every
