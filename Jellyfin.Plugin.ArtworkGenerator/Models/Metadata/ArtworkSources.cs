@@ -25,7 +25,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             {
                 Movie movie => new[] { (Video)movie },
                 Episode episode => new[] { (Video)episode },
-                Season season => SafeChildren(season),
+                Season season => SeasonEpisodes(season),
                 Series series => SafeRecursiveChildren(series),
                 _ => Array.Empty<Episode>()
             };
@@ -42,6 +42,46 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             }
 
             return playable;
+        }
+
+        // SeasonEpisodes
+        // A season's own children come back empty in some libraries even when its episodes are on
+        // disk and extract perfectly well on their own, which left every season poster falling back
+        // to the series backdrop. So the season asks its series for the episodes and keeps the ones
+        // that are its own, and only uses its own children when they are actually there.
+        private static IEnumerable<Video> SeasonEpisodes(Season season)
+        {
+            var own = SafeChildren(season).ToList();
+            if (own.Count > 0)
+            {
+                return own;
+            }
+
+            var series = season.Series;
+            if (series == null)
+            {
+                return Array.Empty<Video>();
+            }
+
+            return SafeRecursiveChildren(series).Where(video => BelongsTo(video, season));
+        }
+
+        // BelongsTo
+        // Matches on the season's identity where the episode carries it, and on the season number
+        // otherwise, so an episode that was never linked to a season row is still placed.
+        internal static bool BelongsTo(Video video, Season season)
+        {
+            if (video is not Episode episode)
+            {
+                return false;
+            }
+
+            if (episode.SeasonId != Guid.Empty)
+            {
+                return episode.SeasonId == season.Id;
+            }
+
+            return season.IndexNumber.HasValue && episode.ParentIndexNumber == season.IndexNumber;
         }
 
         private static IEnumerable<Video> SafeChildren(Folder folder)
