@@ -465,11 +465,6 @@ export default function (view) {
 
             cell.appendChild(logoSelect);
             controls.push(logoSelect);
-        } else if (slot === 'Backdrop') {
-            var note = document.createElement('div');
-            note.className = 'fieldDescription';
-            note.textContent = 'A frame from the video, no design.';
-            cell.appendChild(note);
         }
 
         function updateState() {

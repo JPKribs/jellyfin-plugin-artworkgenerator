@@ -9,7 +9,7 @@ Artwork Generator scans video files, evaluates multiple frames, and selects stro
 Configuration is split into three parts:
 
 * **Designs** set how a poster looks. Each design draws both portrait and landscape, so one design covers a tall series poster and a wide thumb, and the page previews both at once.
-* **Logos** set how a text logo looks: which name it uses, how that name is cleaned up, and its font and fill. A name like "Star Wars: Andor" can be drawn with either part large and the other small, and the letters can be filled with a frame from the show instead of a color.
+* **Logos** set how a text logo looks: which name it uses, how that name is cleaned up, and its font and fill. A name split by a colon or dash can be drawn with either part large and the other small, and the letters can be filled with a frame from the show instead of a color.
 * **Profiles** choose which images are made for series, seasons, episodes, and films, and which design draws each. Anything not assigned to a profile uses the default.
 
 Every image of one item draws from a shared set of frames, so a series' poster, thumb, backdrop, and photo logo show different shots from the same pool. A fixed seed in Settings makes frame choice repeatable.

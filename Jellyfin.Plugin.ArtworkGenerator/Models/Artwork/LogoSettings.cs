@@ -17,7 +17,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public bool StripYear { get; set; } = true;
 
         /// <summary>Gets or sets how a name with a subtitle, such as "Star Wars: Andor", is laid out.</summary>
-        [Display(Name = "Names With a Subtitle", Description = "How to treat a name split by a colon or spaced dash, such as \"Star Wars: Andor\". The last two draw both parts at two sizes, the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole.")]
+        [Display(Name = "Names With a Subtitle", Description = "How to treat a name split by a colon or spaced dash. The last two draw both parts at two sizes, the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole.")]
         public LogoSubtitleMode SubtitleMode { get; set; } = LogoSubtitleMode.Keep;
 
         /// <summary>

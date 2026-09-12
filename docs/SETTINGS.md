@@ -121,7 +121,7 @@ Logo designs are stored in their own file, `logos.json`, in the plugin's data di
 * **Sample Name**: a name to preview with. It is not saved, so try the names your own shows have.
 * **Name From**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
 * **Remove Year**: remove a year in brackets such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345]. Default on.
-* **Names With a Subtitle**: how to treat a name split by a colon or spaced dash, such as "Star Wars: Andor". Draw the whole name, keep only the title, keep only the subtitle, or draw both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
+* **Names With a Subtitle**: how to treat a name split by a colon or spaced dash. Draw the whole name, keep only the title, keep only the subtitle, or draw both at two sizes with either part large. The two-size layouts read the way a spin-off's own logo usually looks. A name with no colon or dash is always drawn whole. Default draws the whole name.
 * **Small Line Size (%)**: the small line's size as a percent of the large one, in the two-size layouts. Default 45.
 * **Remove Pattern**: an optional regular expression whose matches are removed. An invalid pattern is ignored.
 * **All Capitals**: draw the name in capitals. Default off.
