@@ -14,18 +14,20 @@ artifacts:
 - "Jellyfin.Plugin.ArtworkGenerator.dll"
 changelog:
   features:
-  - The repository has moved; re-add it in Jellyfin as jellyfin-plugin-artworkgenerator to keep getting updates
-  - Draws posters, thumbs, backdrops, and text logos, not just episode posters
+  - Artwork Generator is Episode Poster Generator rebuilt, with the same settings and a much wider job
+  - The repository moved with the name; re-add it as jellyfin-plugin-artworkgenerator to keep getting updates
+  - Draws posters, thumbs, backdrops, and text logos, where before there were only episode posters
   - Covers series, seasons, films, music videos, home videos, and anything else with a video
+  - Configuration is rebuilt in three parts: designs, logos, and profiles
   - Profiles decide which items get which images and which design draws each one
-  - Every design renders portrait and landscape
+  - Every design renders portrait and landscape, so one design covers a tall poster and a wide thumb
+  - A design's two lines are now simply the title and the subtitle, whatever the item is
+  - Text position and alignment work on every design, not just the few that had them
   - New Bloom design, pooling color from the frame behind the text
   - New Grid canvas, tiling several extracted frames into one picture
-  - Text position and alignment work on every design
   - Logo designs build a text logo from any name field, with letter case, a line limit, and frame-filled letters
-  - Frames are ranked on tone, detail, contrast, and color rather than just clearing a threshold
   - Frame extraction is one set of server settings instead of a copy on every design
-  - A design's two lines are simply the title and the subtitle, whatever the item is
+  - Frames are ranked on tone, detail, contrast, and color rather than just clearing a threshold
   - Optional setting drops a subtitle that only repeats the title
   - A subtitle too long to fit can shorten to its code, shrink, or trim
   - Two example designs per style, each showing a genuinely different look
@@ -42,6 +44,7 @@ changelog:
   - An item with no name of its own says its one line in the larger type
   - Generated images carry the item's metadata language
   developer:
+  - The generator, the settings model, and the configuration page are rebuilt around item kinds rather than episodes
   - Built against the SkiaSharp 3.119.4 and Microsoft.Extensions 10.0.11 that Jellyfin 12.0 ships
   - Designs are found by reflection, so adding one needs a class and an enum value
   - Every label, option, and default is read from the settings models
