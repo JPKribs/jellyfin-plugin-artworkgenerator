@@ -23,9 +23,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Detection Confidence (%)", Description = "Percent of pixels that must be black to count as letterboxing, 50 to 100.")]
         public float LetterboxConfidence { get; set; } = 85.0f;
 
-        /// <summary>Gets or sets the percent HDR frames are brightened by.</summary>
-        [Display(Name = "Brighten HDR (%)", Description = "Brighten frames from HDR sources by this percent.")]
-        public float BrightenHDR { get; set; } = 25.0f;
+        /// <summary>Gets or sets the percent every extracted frame is brightened by.</summary>
+        [Display(Name = "Brighten HDR (%)", Description = "Brightens every extracted frame by this percent. It is meant for HDR sources that come out dim after tone mapping, but nothing detects HDR, so it lifts all frames alike. Default 0.")]
+        public float BrightenHDR { get; set; }
 
         /// <summary>Gets or sets the percent of each episode skipped before frames are considered.</summary>
         [Display(Name = "Extraction Start (%)", Description = "Skip this percent of each episode before extracting, avoiding intros.")]

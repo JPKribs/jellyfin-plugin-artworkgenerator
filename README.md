@@ -143,7 +143,7 @@ The foundation layer that provides the visual background for the poster.
 - **Transparent Background**: Creates a solid color or transparent canvas.
 
 **Processing:**
-- HDR brightening for HDR content
+- Optional brightening of the extracted frame, off by default
 - Letterbox/pillarbox detection and cropping
 - Aspect ratio adjustments and fill strategies
 

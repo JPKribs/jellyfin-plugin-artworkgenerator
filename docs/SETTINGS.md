@@ -40,7 +40,7 @@ Split lays out landscape only, so its portrait images are drawn with Standard in
 * **Canvas Background**: the poster's base image. Extract Frame from Video, Use Series Backdrop, or No Background. Seasons and series extract from their own episodes. Default Extract Frame.
 * **Extraction Start (%)**: earliest point to pull a frame from, as a percent of runtime. Default 20.
 * **Extraction End (%)**: latest point to pull a frame from, as a percent of runtime. Default 80.
-* **Brighten HDR (%)**: percent to brighten frames pulled from HDR sources. Default 25.
+* **Brighten HDR (%)**: percent every extracted frame is brightened by. It is meant for HDR sources that come out dim after tone mapping, but nothing detects HDR, so it lifts all frames alike. Default 0, which leaves the frame as it was extracted.
 
 ## Letterbox
 

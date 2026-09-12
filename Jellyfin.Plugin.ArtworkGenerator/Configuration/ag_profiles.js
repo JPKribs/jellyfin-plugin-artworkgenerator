@@ -521,7 +521,7 @@ export default function (view) {
         EnableLetterboxDetection: true,
         LetterboxBlackThreshold: 25,
         LetterboxConfidence: 85,
-        BrightenHDR: 25,
+        BrightenHDR: 0,
         ExtractWindowStart: 20,
         ExtractWindowEnd: 80
     };
