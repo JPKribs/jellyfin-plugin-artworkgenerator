@@ -18,6 +18,10 @@ How frames are taken from a video and cleaned up, for every poster and every bac
 * **Black Threshold**: brightness below which a pixel counts as black. Default 25.
 * **Detection Confidence (%)**: percent of pixels that must be black to count as letterboxing. Default 85.
 
+## Scheduled Tasks
+
+* **Cleanup Backdrops**: under Library in Dashboard, Scheduled Tasks. Brings every item on the server down to a single backdrop, keeping the first, which is the one clients show, and deleting the rest along with their files. Jellyfin adds a backdrop picked in Edit Images after the ones an item already has instead of replacing them, so repeated picks pile up. It has no schedule by default; run it by hand or add a trigger.
+
 ## Profiles
 
 * **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.

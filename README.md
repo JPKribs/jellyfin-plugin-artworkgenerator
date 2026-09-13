@@ -23,7 +23,7 @@ The plugin runs entirely as a Jellyfin metadata provider. There are two ways to 
 
 For series, season, and movie images, tick **Artwork Generator** under Image Fetchers for those item types in each library's settings. Jellyfin only asks enabled fetchers for images.
 
-There is no scheduled task. Use Jellyfin's own metadata refresh, on a library or a single item, to generate in bulk.
+Use Jellyfin's own metadata refresh, on a library or a single item, to generate in bulk. The plugin's one scheduled task, **Cleanup Backdrops** under Library, brings every item down to a single backdrop; it has no schedule until you give it one.
 
 ## Poster Styles
 
