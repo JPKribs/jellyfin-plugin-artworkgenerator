@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.0.4.0",
+        "changelog": "## Features\r\n- Frames are no longer taken from inside media segments, so intros, credits, recaps, previews, and commercials stay out of generated artwork\r\n- New Avoid Media Segments setting under Frame Extraction, with a checkbox for each kind of segment to avoid, all on by default\r\n- Segments come from a media segment provider turned on for the library, so items without any extract as before\r\n\r\n## Developer\r\n- Changing which segments are avoided discards the idle frame pools, so the next refresh extracts under the new choice",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.0.4.0/jellyfin-plugin-artworkgenerator-12.0.4.0.zip",
+        "checksum": "ac7ce6a4d82c1ff24dbeffa5bcdd8f81",
+        "timestamp": "2026-09-28T17:26:25Z"
+      },
+      {
         "version": "12.0.3.1",
         "changelog": "## Features\r\n- New Cleanup Backdrops scheduled task under Library that reduces every item on the server to a single backdrop, keeping the first and deleting the rest along with their files\r\n- The task has no default schedule, so it only runs when started by hand or on a trigger you add",
         "targetAbi": "12.0.0.0",
