@@ -13,6 +13,8 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 How frames are taken from a video and cleaned up, for every poster and every backdrop. These used to be a copy on each design and each profile, which let the same decision disagree with itself; they are set once here.
 
 * **Extraction Start (%)** and **Extraction End (%)**: the stretch of each episode frames are taken from, skipping intros and credits. Default 20 and 80.
+* **Avoid Media Segments**: take no frame from inside an item's media segments, with two seconds to spare on either side of each. Segments come from a media segment provider plugin that is turned on for the library, so an item without any is unaffected and only the window above applies. When the segments cover the whole window they are ignored. Default on.
+  * **Intros**, **Outros**, **Recaps**, **Previews**, and **Commercials**: the kinds of segment to avoid. Untick one to let frames come from it. Default all on.
 * **Brighten Frame (%)**: how much every extracted frame is brightened. Default 0.
 * **Detect Letterboxing**: crop black bars off an extracted frame. Default on.
 * **Black Threshold**: brightness below which a pixel counts as black. Default 25.

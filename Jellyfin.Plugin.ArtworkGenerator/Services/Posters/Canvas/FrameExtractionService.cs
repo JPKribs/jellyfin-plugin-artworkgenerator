@@ -4,11 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
+using MediaBrowser.Controller.MediaSegments;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
@@ -66,15 +69,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // dark. Analysis only: the rendered image is cropped separately by the cropping service.
         private const int BarLuma = 18;
 
+        // Segment boundaries are detected, not authored, and are often a second or two out. The
+        // margin keeps a seek from landing on the last title card of an intro marked slightly short.
+        private const double SegmentMarginSeconds = 2.0;
+
         private readonly ILogger<FrameExtractionService> _logger;
         private readonly IMediaEncoder _mediaEncoder;
+        private readonly IMediaSegmentManager _mediaSegmentManager;
+        private readonly ILibraryManager _libraryManager;
+        private readonly Func<FrameExtractionSettings?> _settings;
 
         public FrameExtractionService(
             ILogger<FrameExtractionService> logger,
-            IMediaEncoder mediaEncoder)
+            IMediaEncoder mediaEncoder,
+            IMediaSegmentManager mediaSegmentManager,
+            ILibraryManager libraryManager,
+            Func<FrameExtractionSettings?> settings)
         {
             _logger = logger;
             _mediaEncoder = mediaEncoder;
+            _mediaSegmentManager = mediaSegmentManager;
+            _libraryManager = libraryManager;
+            _settings = settings ?? (() => null);
         }
 
         /// <summary>
@@ -125,6 +141,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             _logger.LogInformation("Extracting {Count} frame(s) from {Path} (duration: {Duration}s, container: {Container})",
                 count, episode.Path, (int)videoDurationSeconds, container);
 
+            var seekRanges = await GetSeekRangesAsync(episode, videoDurationSeconds, windowStartPercent, windowEndPercent).ConfigureAwait(false);
+
             // Candidates kept so far, worst-scoring first so eviction is cheap.
             var candidates = new List<FrameCandidate>(count);
 
@@ -144,7 +162,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
                     try
                     {
-                        var seekSeconds = GenerateSeekTime(videoDurationSeconds, attemptOffset + attempt, seekPhase, windowStartPercent, windowEndPercent);
+                        var seekSeconds = GenerateSeekTime(seekRanges, attemptOffset + attempt, seekPhase);
                         var offset = TimeSpan.FromSeconds(seekSeconds);
 
                         extractedPath = await _mediaEncoder.ExtractVideoImage(
@@ -275,7 +293,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             return true;
         }
 
-        private int GenerateSeekTime(double videoDurationSeconds, int attempt, double seekPhase, float windowStart, float windowEnd)
+        // GetSeekRangesAsync
+        // The stretches of the video a frame may be taken from: the extraction window with any
+        // media segments being avoided cut out of it. Intros and credits are mostly text, and recaps
+        // and previews show some other episode, so none of them is a picture of this one. Segments
+        // only exist when a segment provider has analyzed the item; without them this is the plain
+        // window.
+        private async Task<IReadOnlyList<SeekRange>> GetSeekRangesAsync(
+            Video episode,
+            double videoDurationSeconds,
+            float windowStart,
+            float windowEnd)
         {
             var startPercent = windowStart / 100.0;
             var endPercent = windowEnd / 100.0;
@@ -288,15 +316,133 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 endPercent = DefaultSeekEndPercent;
             }
 
-            var startTime = videoDurationSeconds * startPercent;
-            var endTime = videoDurationSeconds * endPercent;
+            var window = new SeekRange(videoDurationSeconds * startPercent, videoDurationSeconds * endPercent);
+            var skipped = await GetSegmentRangesAsync(episode).ConfigureAwait(false);
+            if (skipped.Count == 0)
+            {
+                return new[] { window };
+            }
 
+            var open = OpenRanges(window, skipped);
+            if (open.Count == 0)
+            {
+                _logger.LogWarning("Media segments cover the whole extraction window of {Path}, so they are being ignored", episode.Path);
+                return new[] { window };
+            }
+
+            _logger.LogDebug(
+                "Skipping {Segments} media segment(s) in {Path}, leaving {Seconds}s of the extraction window",
+                skipped.Count,
+                episode.Path,
+                (int)open.Sum(r => r.End - r.Start));
+
+            return open;
+        }
+
+        // GetSegmentRangesAsync
+        // The item's media segments in seconds. A failure here must not cost the item its artwork,
+        // so it is logged and extraction carries on as if there were none.
+        private async Task<IReadOnlyList<SeekRange>> GetSegmentRangesAsync(Video episode)
+        {
+            var avoided = AvoidedSegmentTypes(_settings());
+            if (avoided.Count == 0)
+            {
+                return Array.Empty<SeekRange>();
+            }
+
+            try
+            {
+                var segments = await _mediaSegmentManager
+                    .GetSegmentsAsync(episode, avoided, _libraryManager.GetLibraryOptions(episode), true)
+                    .ConfigureAwait(false);
+
+                return segments
+                    .Where(s => s.EndTicks > s.StartTicks)
+                    .Select(s => new SeekRange(
+                        (s.StartTicks / (double)TimeSpan.TicksPerSecond) - SegmentMarginSeconds,
+                        (s.EndTicks / (double)TimeSpan.TicksPerSecond) + SegmentMarginSeconds))
+                    .ToArray();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(ex, "Could not read media segments for {Path}", episode.Path);
+                return Array.Empty<SeekRange>();
+            }
+        }
+
+        // AvoidedSegmentTypes
+        // The segment types the settings ask to keep frames out of, none when avoiding is off.
+        // Settings that cannot be read fall back to their defaults.
+        internal static IReadOnlyList<MediaSegmentType> AvoidedSegmentTypes(FrameExtractionSettings? settings)
+        {
+            settings ??= new FrameExtractionSettings();
+            if (!settings.AvoidMediaSegments)
+            {
+                return Array.Empty<MediaSegmentType>();
+            }
+
+            var types = new List<MediaSegmentType>();
+            if (settings.AvoidIntros) types.Add(MediaSegmentType.Intro);
+            if (settings.AvoidOutros) types.Add(MediaSegmentType.Outro);
+            if (settings.AvoidRecaps) types.Add(MediaSegmentType.Recap);
+            if (settings.AvoidPreviews) types.Add(MediaSegmentType.Preview);
+            if (settings.AvoidCommercials) types.Add(MediaSegmentType.Commercial);
+            return types;
+        }
+
+        // OpenRanges
+        // What is left of the window once the skipped ranges are cut out of it, in order. Skipped
+        // ranges may overlap each other or reach outside the window.
+        internal static IReadOnlyList<SeekRange> OpenRanges(SeekRange window, IEnumerable<SeekRange> skipped)
+        {
+            var open = new List<SeekRange>();
+            var cursor = window.Start;
+
+            foreach (var skip in skipped.OrderBy(s => s.Start))
+            {
+                if (skip.End <= cursor) continue;
+                if (skip.Start >= window.End) break;
+
+                if (skip.Start > cursor)
+                {
+                    open.Add(new SeekRange(cursor, skip.Start));
+                }
+
+                cursor = skip.End;
+            }
+
+            if (cursor < window.End)
+            {
+                open.Add(new SeekRange(cursor, window.End));
+            }
+
+            return open;
+        }
+
+        // GenerateSeekTime
+        // The ranges are walked as if laid end to end, so the sequence stays evenly spread over the
+        // footage that can be used rather than over the gaps between it.
+        internal static int GenerateSeekTime(IReadOnlyList<SeekRange> ranges, int attempt, double seekPhase)
+        {
             // Low-discrepancy (golden ratio) sequence: successive attempts land far apart and
             // never resample the same region, unlike random seeks which can cluster or repeat.
             // The phase comes from the frame pool's seed, so a new pool probes new frames while the
             // same seed revisits the same ones.
             var fraction = (seekPhase + attempt * 0.6180339887498949) % 1.0;
-            return (int)(startTime + fraction * (endTime - startTime));
+            var remaining = fraction * ranges.Sum(r => r.End - r.Start);
+
+            foreach (var range in ranges)
+            {
+                var length = range.End - range.Start;
+                if (remaining < length)
+                {
+                    return (int)(range.Start + remaining);
+                }
+
+                remaining -= length;
+            }
+
+            return (int)ranges[^1].End;
         }
 
         // CreateAnalysisBitmap
@@ -546,6 +692,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         private readonly record struct FrameCandidate(string Path, double Score);
+
+        // SeekRange
+        // A stretch of the video in seconds.
+        internal readonly record struct SeekRange(double Start, double End);
 
         // FrameQuality
         // What one frame measures, before any of it is weighed into a score.

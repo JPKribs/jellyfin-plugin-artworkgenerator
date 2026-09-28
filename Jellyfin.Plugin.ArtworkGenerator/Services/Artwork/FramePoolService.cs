@@ -108,6 +108,29 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             }
         }
 
+        /// <summary>
+        /// Discards every pool nobody holds, so the next request extracts afresh. Used when a
+        /// setting that decides which frames are taken has changed.
+        /// </summary>
+        public void DiscardIdle()
+        {
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                foreach (var pool in _pools.Values.Where(p => p.References == 0).ToList())
+                {
+                    _pools.Remove(pool.Key);
+                    pool.Dispose();
+                    TryDeleteDirectory(pool.Directory);
+                    _logger.LogDebug("Discarded frame pool {Key}", pool.Key);
+                }
+            }
+        }
+
         public void Dispose()
         {
             lock (_sync)

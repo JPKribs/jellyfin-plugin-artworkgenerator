@@ -145,6 +145,7 @@ The foundation layer that provides the visual background for the poster.
 
 **Processing:**
 - Optional brightening of the extracted frame, off by default
+- Frames keep out of intros, credits, recaps, previews, and commercials where the server holds media segments for the item, with each kind optional
 - Letterbox/pillarbox detection and cropping
 - Aspect ratio adjustments and fill strategies
 

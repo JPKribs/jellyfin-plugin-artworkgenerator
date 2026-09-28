@@ -8,7 +8,9 @@ using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using JPKribs.Jellyfin.Base;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
+using MediaBrowser.Controller.MediaSegments;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
@@ -44,7 +46,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             IXmlSerializer xmlSerializer,
             ILogger<Plugin> logger,
             ILoggerFactory loggerFactory,
-            IMediaEncoder mediaEncoder)
+            IMediaEncoder mediaEncoder,
+            IMediaSegmentManager mediaSegmentManager,
+            ILibraryManager libraryManager)
             : base(applicationPaths, xmlSerializer)
         {
             _logger = logger;
@@ -59,7 +63,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 loggerFactory.CreateLogger<BrightnessService>());
             var frameExtractionService = new FrameExtractionService(
                 loggerFactory.CreateLogger<FrameExtractionService>(),
-                mediaEncoder);
+                mediaEncoder,
+                mediaSegmentManager,
+                libraryManager,
+                () => Configuration?.FrameExtraction);
             var croppingService = new CroppingService(
                 loggerFactory.CreateLogger<CroppingService>());
 
@@ -150,8 +157,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         // Updates the configuration and reinitializes the configuration lookups.
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
+            var avoidedBefore = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
+
             base.UpdateConfiguration(configuration);
             _posterConfigService?.Initialize(Configuration);
+
+            // A pool holds frames chosen under the old segment choices and would go on handing them
+            // out until it went idle, so the change would seem to have done nothing.
+            var avoidedAfter = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
+            if (!System.Linq.Enumerable.SequenceEqual(avoidedBefore, avoidedAfter))
+            {
+                _framePool?.DiscardIdle();
+            }
         }
     }
 }

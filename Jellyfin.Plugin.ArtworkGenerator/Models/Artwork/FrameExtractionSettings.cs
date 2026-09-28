@@ -20,6 +20,30 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [Display(Name = "Extraction End (%)", Description = "How far into each episode extraction stops.")]
         public float ExtractWindowEnd { get; set; } = 80.0f;
 
+        /// <summary>Gets or sets a value indicating whether frames are kept out of the item's media segments.</summary>
+        [Display(Name = "Avoid Media Segments", Description = "Take no frame from inside the media segments ticked below. Segments come from a media segment provider, so an item without any is unaffected.")]
+        public bool AvoidMediaSegments { get; set; } = true;
+
+        /// <summary>Gets or sets a value indicating whether intro segments are avoided.</summary>
+        [Display(Name = "Intros", Description = "Opening titles.")]
+        public bool AvoidIntros { get; set; } = true;
+
+        /// <summary>Gets or sets a value indicating whether outro segments are avoided.</summary>
+        [Display(Name = "Outros", Description = "Closing credits.")]
+        public bool AvoidOutros { get; set; } = true;
+
+        /// <summary>Gets or sets a value indicating whether recap segments are avoided.</summary>
+        [Display(Name = "Recaps", Description = "Footage from earlier episodes.")]
+        public bool AvoidRecaps { get; set; } = true;
+
+        /// <summary>Gets or sets a value indicating whether preview segments are avoided.</summary>
+        [Display(Name = "Previews", Description = "Footage from the next episode.")]
+        public bool AvoidPreviews { get; set; } = true;
+
+        /// <summary>Gets or sets a value indicating whether commercial segments are avoided.</summary>
+        [Display(Name = "Commercials", Description = "Advertising breaks.")]
+        public bool AvoidCommercials { get; set; } = true;
+
         /// <summary>Gets or sets the percent every extracted frame is brightened by.</summary>
         [Display(Name = "Brighten Frame (%)", Description = "How much every extracted frame is brightened.")]
         public float BrightenFrame { get; set; }

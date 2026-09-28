@@ -123,10 +123,10 @@ export default function (view) {
         });
     }
 
-    // The letterbox thresholds only matter while detection is on.
+    // The letterbox thresholds and the segment types only matter while their checkbox is on.
     function updateFrameVisibility() {
-        var on = view.querySelector('#chkLetterboxDetection');
-        view.querySelectorAll('[data-depends-on="chkLetterboxDetection"]').forEach(function (el) {
+        view.querySelectorAll('[data-depends-on]').forEach(function (el) {
+            var on = view.querySelector('#' + el.getAttribute('data-depends-on'));
             el.hidden = !(on && on.checked);
         });
     }

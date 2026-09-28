@@ -52,6 +52,52 @@
                             </div>
                             <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
 
+                            <div class="checkboxContainer">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkAvoidMediaSegments" data-frame-setting="AvoidMediaSegments" />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="nested-settings" data-depends-on="chkAvoidMediaSegments">
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="chkAvoidIntros" data-frame-setting="AvoidIntros" />
+                                        <span class="checkboxLabel"></span>
+                                    </label>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="chkAvoidOutros" data-frame-setting="AvoidOutros" />
+                                        <span class="checkboxLabel"></span>
+                                    </label>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="chkAvoidRecaps" data-frame-setting="AvoidRecaps" />
+                                        <span class="checkboxLabel"></span>
+                                    </label>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="chkAvoidPreviews" data-frame-setting="AvoidPreviews" />
+                                        <span class="checkboxLabel"></span>
+                                    </label>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="chkAvoidCommercials" data-frame-setting="AvoidCommercials" />
+                                        <span class="checkboxLabel"></span>
+                                    </label>
+                                    <div class="fieldDescription"></div>
+                                </div>
+                            </div>
+
                             <div class="inputContainer">
                                 <label for="txtBrightenFrame"></label>
                                 <input is="emby-input" type="number" id="txtBrightenFrame" min="0" max="100" data-frame-setting="BrightenFrame" data-type="number" />
