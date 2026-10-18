@@ -1,0 +1,56 @@
+site_name: Artwork Generator
+site_description: A Jellyfin plugin that generates artwork for TV shows, films, and standalone videos.
+site_url: https://jpkribs.github.io/jellyfin-plugin-artworkgenerator/
+repo_url: https://github.com/JPKribs/jellyfin-plugin-artworkgenerator
+repo_name: JPKribs/jellyfin-plugin-artworkgenerator
+edit_uri: edit/master/docs/
+docs_dir: docs
+exclude_docs: |
+  plans/
+
+theme:
+  name: material
+  logo: assets/icon.png
+  favicon: assets/icon.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Overview: index.md
+  - Getting Started:
+      - Installation: Installation.md
+  - Designs:
+      - Poster Styles: Styles.md
+      - Design Examples: EXAMPLES.md
+      - Live Preview: Preview.md
+  - Reference:
+      - Settings: SETTINGS.md
+      - Poster Architecture: Architecture.md
+      - Versioning: Versioning.md
