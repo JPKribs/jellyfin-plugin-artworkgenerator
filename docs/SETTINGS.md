@@ -4,6 +4,10 @@ The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how 
 
 ## Settings
 
+The Settings tab, with Frame Extraction opened.
+
+![Settings](screenshots/Settings.png)
+
 * **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An item with no image of that type is only offered one, because that request comes from an automatic refresh that keeps a single image. A primary image or thumb with a second and third design draws each choice once per design. Default 3.
 * **Edit Images Cache (Minutes)**: how long the choices rendered for the Edit Images dialog stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones, unless the settings or the item's images have changed. The dialog loads each choice by address, so one picked after this has passed cannot be downloaded and the dialog has to be reopened. They are held in memory, up to 256 MB at once, oldest dropped first, and released as soon as they expire. Default 30.
 * **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
@@ -26,6 +30,10 @@ How frames are taken from a video and cleaned up, for every poster and every bac
 
 ## Profiles
 
+The Profiles tab, with a design picked for each kind of item.
+
+![Profiles](screenshots/Profiles.png)
+
 * **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.
 * **Assigned Series**, **Assigned Movies**, and **Assigned Videos**: the series, films, and standalone videos that use the active profile. An item belongs to one profile at a time. A profile can carry both.
 * **Images**: one row each for series, seasons, episodes, movies, and videos. Tick an image to generate it whenever an item is missing one.
@@ -39,6 +47,10 @@ How frames are taken from a video and cleaned up, for every poster and every bac
 Jellyfin only asks the plugin for series and season images in libraries where **Artwork Generator** is ticked under Image Fetchers for those item types in the library's settings. Episodes work as before.
 
 ## Designs
+
+The Designs tab, showing a Brush design previewed as an episode.
+
+![Designs](screenshots/Designs.png)
 
 Every design draws both shapes. The profile decides which one each image uses, so a single design covers a portrait series poster and a landscape thumb without being set up twice. The live preview shows both side by side.
 
@@ -135,6 +147,10 @@ Most designs wash the overlay across the whole frame, so the gradient and its se
 * **Graphic Alignment**: horizontal placement. Left, Center, or Right. Default Center.
 
 ## Logos
+
+The Logos tab, previewing a sample name.
+
+![Logos](screenshots/Logos.png)
 
 Logo designs are stored in their own file, `logos.json`, in the plugin's data directory, rather than inside the plugin configuration. Editing a logo therefore never rewrites the rest of your settings. Designs saved by an earlier version move into that file automatically the first time the plugin loads.
 

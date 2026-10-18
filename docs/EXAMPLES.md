@@ -722,7 +722,7 @@ Season progress bar with episode info and title over a bottom gradient.
 
 ### Timeline Palette
 
-Progress bar and labels tinted from the frame, with the whole group moved to the top.
+Progress bar and labels tinted from the frame, along the bottom.
 
 [Download this template](examples/TimelinePalette/Template.json)
 
