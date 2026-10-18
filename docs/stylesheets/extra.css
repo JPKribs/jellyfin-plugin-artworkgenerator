@@ -1,0 +1,42 @@
+.ag-posters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  max-width: 24rem;
+  margin: 1rem 0;
+}
+
+.ag-posters figure {
+  margin: 0;
+}
+
+.ag-posters img,
+.ag-episodes img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.3rem;
+}
+
+.ag-posters figcaption {
+  margin: 0.4rem 0 0;
+  font-size: 0.7rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.ag-episodes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0 0 2rem;
+}
+
+.ag-episodes p {
+  display: contents;
+}
+
+@media screen and (max-width: 44em) {
+  .ag-episodes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
