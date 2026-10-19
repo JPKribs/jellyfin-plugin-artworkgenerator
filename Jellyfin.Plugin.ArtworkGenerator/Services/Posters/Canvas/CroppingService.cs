@@ -55,7 +55,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 var cropped = RemoveLetterboxAndPillarbox(result, settings);
                 if (cropped != result)
                 {
-                    _logger.LogInformation("Letterbox/pillarbox removed: {Original} -> {New}",
+                    _logger.LogDebug("Letterbox/pillarbox removed: {Original} -> {New}",
                         originalSize, $"{cropped.Width}x{cropped.Height}");
 
                     var oldResult = result;
@@ -72,7 +72,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
                 if (filled != result)
                 {
-                    _logger.LogInformation("Poster fill applied: {Fill} ratio {Ratio}",
+                    _logger.LogDebug("Poster fill applied: {Fill} ratio {Ratio}",
                         settings.PosterFill, settings.PosterDimensionRatio);
 
                     if (result != source)
@@ -94,7 +94,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 var (targetWidth, targetHeight) = NormalizedSize(result.Width, result.Height);
                 if (targetWidth != result.Width || targetHeight != result.Height)
                 {
-                    _logger.LogInformation("Poster scaled up: {Original} -> {New}",
+                    _logger.LogDebug("Poster scaled up: {Original} -> {New}",
                         $"{result.Width}x{result.Height}", $"{targetWidth}x{targetHeight}");
 
                     var scaled = ScaleTo(result, targetWidth, targetHeight);

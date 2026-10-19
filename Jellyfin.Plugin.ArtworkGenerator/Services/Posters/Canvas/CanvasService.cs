@@ -107,22 +107,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
         /// <summary>
         /// Takes a hold on the item's frame pool without growing it, so the pool is not discarded
-        /// while several renders draw from it in turn. Returns null when the item has no video to
-        /// extract from. Dispose the hold once the renders are done.
+        /// while several renders draw from it in turn. Dispose the hold once the renders are done.
         /// </summary>
-        public async Task<IDisposable?> HoldFramePoolAsync(BaseItem item, PosterSettings settings, CancellationToken cancellationToken = default)
+        public async Task<IDisposable?> HoldFramePoolAsync(BaseItem item, ArtworkSubject subject, PosterSettings settings, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(item);
+            ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(settings);
 
-            var sources = ArtworkSources.GetPlayableSources(item);
-            if (sources.Count == 0)
-            {
-                return null;
-            }
-
             var key = FramePoolService.KeyFor(item.Id, settings.ExtractWindowStart, settings.ExtractWindowEnd);
-            return await _framePool.AcquireAsync(key, sources, settings.ExtractWindowStart, settings.ExtractWindowEnd, 0, cancellationToken).ConfigureAwait(false);
+            return await _framePool.AcquireAsync(key, () => subject.GetPlayableSources(item), settings.ExtractWindowStart, settings.ExtractWindowEnd, 0, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -178,17 +172,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             int count,
             CancellationToken cancellationToken)
         {
-            var sources = ArtworkSources.GetPlayableSources(item);
-            if (sources.Count == 0)
-            {
-                return Array.Empty<SKBitmap>();
-            }
-
             var key = FramePoolService.KeyFor(item.Id, settings.ExtractWindowStart, settings.ExtractWindowEnd);
 
             using var lease = await _framePool.AcquireAsync(
                 key,
-                sources,
+                () => subject.GetPlayableSources(item),
                 settings.ExtractWindowStart,
                 settings.ExtractWindowEnd,
                 rankOffset + count,
@@ -256,18 +244,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             int count,
             CancellationToken cancellationToken)
         {
-            var sources = ArtworkSources.GetPlayableSources(item);
-            if (sources.Count == 0)
-            {
-                return Array.Empty<SKBitmap>();
-            }
-
             var cells = GridComposer.Clamp(settings.GridFrames);
             var key = FramePoolService.KeyFor(item.Id, settings.ExtractWindowStart, settings.ExtractWindowEnd);
 
             using var lease = await _framePool.AcquireAsync(
                 key,
-                sources,
+                () => subject.GetPlayableSources(item),
                 settings.ExtractWindowStart,
                 settings.ExtractWindowEnd,
                 (rankOffset + count) * cells,

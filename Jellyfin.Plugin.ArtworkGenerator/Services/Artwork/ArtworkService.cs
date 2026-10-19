@@ -216,7 +216,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             count = Math.Clamp(count, 1, MaxCandidates);
             var subject = ArtworkSubject.FromItem(item);
 
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "Generating {Count} {Slot} image(s) for {Kind} {Name} using profile {Profile}",
                 count,
                 slot.Value,
@@ -258,7 +258,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             // it, which would hand the later designs a new pool with different frames and extract
             // them all over again.
             using var hold = designs.Count > 1
-                ? await _canvasService.HoldFramePoolAsync(item, ShapeAdjust(designs[0], shape), cancellationToken).ConfigureAwait(false)
+                ? await _canvasService.HoldFramePoolAsync(item, subject, ShapeAdjust(designs[0], shape), cancellationToken).ConfigureAwait(false)
                 : null;
 
             var perDesign = new List<IReadOnlyList<GeneratedArtwork?>>(designs.Count);
@@ -344,6 +344,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
         // RenderBackdropsAsync
         // Backdrop: a frame from the item's pool cropped to the backdrop ratio, with no design.
+        // Each is tagged as the plugin's own, so Cleanup Backdrops can tell it from the user's.
         private async Task<IReadOnlyList<GeneratedArtwork>> RenderBackdropsAsync(
             BaseItem item,
             ArtworkSubject subject,
@@ -364,7 +365,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                     using var data = image.Encode(SKEncodedImageFormat.Jpeg, RenderConstants.JpegQuality);
                     if (data != null)
                     {
-                        results.Add(new GeneratedArtwork(data.ToArray(), "image/jpeg", ImageFormat.Jpg, canvas.Width, canvas.Height));
+                        results.Add(new GeneratedArtwork(GeneratedImageMarker.Tag(data.ToArray()), "image/jpeg", ImageFormat.Jpg, canvas.Width, canvas.Height));
                     }
                 }
             }

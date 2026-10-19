@@ -138,7 +138,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             var videoDurationSeconds = (episode.RunTimeTicks ?? 0) / (double)TimeSpan.TicksPerSecond;
             if (videoDurationSeconds <= 0) videoDurationSeconds = DefaultDurationSeconds;
 
-            _logger.LogInformation("Extracting {Count} frame(s) from {Path} (duration: {Duration}s, container: {Container})",
+            _logger.LogDebug("Extracting {Count} frame(s) from {Path} (duration: {Duration}s, container: {Container})",
                 count, episode.Path, (int)videoDurationSeconds, container);
 
             var seekRanges = await GetSeekRangesAsync(episode, videoDurationSeconds, windowStartPercent, windowEndPercent).ConfigureAwait(false);
@@ -253,7 +253,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 .Select(c => new ExtractedFrame(c.Path, c.Score))
                 .ToArray();
 
-            _logger.LogInformation("Using {Count} of {Sampled} sampled frame(s) (best score: {Score:F3}, worst kept: {Worst:F3})",
+            _logger.LogDebug("Using {Count} of {Sampled} sampled frame(s) (best score: {Score:F3}, worst kept: {Worst:F3})",
                 ordered.Length, maxAttempts, ordered[0].Score, ordered[^1].Score);
 
             return ordered;

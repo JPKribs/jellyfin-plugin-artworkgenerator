@@ -26,6 +26,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
         private readonly ILogger<PosterConfigurationService> _logger;
         private readonly LogoDesignStore _logoStore;
+
+        // Initialize fills defaults into the configuration it is given and reads the logo file, so
+        // two runs at once, a configuration save racing a logo save, must not interleave.
+        private readonly object _initializeLock = new();
         private volatile Snapshot _snapshot = Snapshot.Empty;
         private int _version;
 
@@ -56,6 +60,50 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         public void Initialize(PluginConfiguration config)
         {
             ArgumentNullException.ThrowIfNull(config);
+
+            lock (_initializeLock)
+            {
+                InitializeLocked(config);
+            }
+        }
+
+        /// <summary>
+        /// Replaces anything missing from a configuration with an empty value: a list, a design's
+        /// settings, a profile's lists. A configuration posted by hand, or read from a file edited
+        /// by hand, can leave any of them out, and every lookup assumes they are there.
+        /// </summary>
+        public static void Normalize(PluginConfiguration config)
+        {
+            ArgumentNullException.ThrowIfNull(config);
+
+            config.FrameExtraction ??= new FrameExtractionSettings();
+            config.PosterConfigurations ??= new List<PosterConfiguration>();
+            config.PosterConfigurations.RemoveAll(poster => poster == null);
+            foreach (var poster in config.PosterConfigurations)
+            {
+                poster.Settings ??= new PosterSettings();
+                poster.Name ??= DefaultName;
+            }
+
+            config.Profiles ??= new List<ArtworkProfile>();
+            config.Profiles.RemoveAll(profile => profile == null);
+            foreach (var profile in config.Profiles)
+            {
+                profile.Name ??= DefaultName;
+                profile.SeriesIds ??= new List<Guid>();
+                profile.MovieIds ??= new List<Guid>();
+                profile.VideoIds ??= new List<Guid>();
+                profile.Slots ??= new List<SlotAssignment>();
+                profile.Slots.RemoveAll(slot => slot == null);
+                profile.Backdrop ??= new BackdropSettings();
+            }
+        }
+
+        // InitializeLocked
+        // Initialize, with the lock held.
+        private void InitializeLocked(PluginConfiguration config)
+        {
+            Normalize(config);
 
             var design = EnsureDefaultDesign(config);
 
@@ -221,16 +269,33 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
         // LoadLogoDesigns
         // Logo designs live in their own file beside the configuration, so a logo edit never
-        // rewrites the whole configuration. A first run has no file and gets one design.
+        // rewrites the whole configuration. A first run has no file and gets one design, saved so
+        // it keeps its id. A file that exists but cannot be read is never overwritten here: the
+        // default stands in, in memory only, and the file is copied aside, so the user's designs
+        // can still be recovered by hand.
         private List<LogoConfiguration> LoadLogoDesigns()
         {
-            var logos = _logoStore.Load().ToList();
-            var changed = false;
+            var readable = _logoStore.TryLoad(out var stored);
+            var logos = stored.ToList();
 
+            if (!readable)
+            {
+                var backup = _logoStore.PreserveUnreadable();
+                if (backup != null)
+                {
+                    _logger.LogError("The logo design file could not be read and has not been overwritten; a copy was kept at {Backup}. The default logo design is used until it is fixed", backup);
+                }
+                else
+                {
+                    _logger.LogError("The logo design file could not be read and has not been overwritten. The default logo design is used until it is fixed");
+                }
+            }
+
+            var seeded = false;
             if (logos.Count == 0)
             {
                 logos.Add(new LogoConfiguration { Id = DefaultLogoDesignId, Name = DefaultName });
-                changed = true;
+                seeded = readable;
             }
 
             foreach (var logo in logos)
@@ -238,7 +303,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 logo.Settings ??= new LogoSettings();
             }
 
-            if (changed)
+            if (seeded)
             {
                 _logoStore.Save(logos);
             }
@@ -273,10 +338,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 stored.Add(logo);
             }
 
-            _logoStore.Save(stored);
-            _logger.LogInformation("Saved {Count} logo design(s)", stored.Count);
+            lock (_initializeLock)
+            {
+                _logoStore.Save(stored);
+                _logger.LogInformation("Saved {Count} logo design(s)", stored.Count);
 
-            Initialize(config);
+                InitializeLocked(config);
+            }
         }
 
         // EnsureProfiles

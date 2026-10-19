@@ -73,7 +73,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
                 }
 
-                plugin.PosterConfigService.SaveLogoDesigns(plugin.Configuration, logos);
+                plugin.SaveLogoDesigns(logos);
                 return Ok(new { success = true });
             }
             catch (Exception ex)

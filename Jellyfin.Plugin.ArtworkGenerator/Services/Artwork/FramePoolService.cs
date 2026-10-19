@@ -73,9 +73,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         /// so rank 0 is the same frame for every caller of the same pool. Dispose the lease once the
         /// frames have been decoded.
         /// </summary>
+        /// <param name="sources">
+        /// Finds the videos to extract from. Only called when the pool has to grow, since finding a
+        /// series' episodes walks the whole series and checks each file on disk.
+        /// </param>
         public async Task<FrameLease> AcquireAsync(
             string key,
-            IReadOnlyList<Video> sources,
+            Func<IReadOnlyList<Video>> sources,
             float windowStart,
             float windowEnd,
             int needed,
@@ -89,9 +93,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 await pool.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
                 try
                 {
-                    if (pool.Frames.Count < needed && !pool.Exhausted && sources.Count > 0)
+                    if (pool.Frames.Count < needed && !pool.Exhausted)
                     {
-                        await GrowAsync(pool, sources, windowStart, windowEnd, needed, cancellationToken).ConfigureAwait(false);
+                        var videos = sources();
+                        if (videos.Count > 0)
+                        {
+                            await GrowAsync(pool, videos, windowStart, windowEnd, needed, cancellationToken).ConfigureAwait(false);
+                        }
                     }
 
                     return new FrameLease(this, pool, pool.Frames.Select(f => f.Path).ToArray());
@@ -153,12 +161,27 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
         // Release
         // Returns a pool reference taken by Retain. Idle pools are only discarded at zero references.
+        // A pool that never tried to extract, because nobody needed frames or the item has no
+        // video, holds nothing worth keeping and would only crowd out pools that do, so it goes as
+        // soon as nobody holds it.
         internal void Release(FramePool pool)
         {
             lock (_sync)
             {
                 pool.References = Math.Max(0, pool.References - 1);
                 pool.LastUsed = DateTime.UtcNow;
+
+                if (!_disposed
+                    && pool.References == 0
+                    && pool.Rounds == 0
+                    && pool.Frames.Count == 0
+                    && _pools.TryGetValue(pool.Key, out var current)
+                    && ReferenceEquals(current, pool))
+                {
+                    _pools.Remove(pool.Key);
+                    pool.Dispose();
+                    TryDeleteDirectory(pool.Directory);
+                }
             }
         }
 
@@ -180,7 +203,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
                     pool = new FramePool(key, seed, directory);
                     _pools[key] = pool;
-                    _logger.LogInformation("Created frame pool {Key} with seed {Seed}", key, seed);
+                    _logger.LogDebug("Created frame pool {Key} with seed {Seed}", key, seed);
                 }
 
                 pool.References++;
@@ -288,7 +311,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 }
             }
 
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "Frame pool {Key} (seed {Seed}) now holds {Count} frame(s) from {Sources} source(s)",
                 pool.Key,
                 pool.Seed,

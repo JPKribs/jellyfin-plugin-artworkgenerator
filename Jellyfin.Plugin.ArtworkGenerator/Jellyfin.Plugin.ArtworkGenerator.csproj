@@ -19,7 +19,7 @@
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="JPKribs.Jellyfin.Base" Version="2026.10.16" />
+    <PackageReference Include="JPKribs.Jellyfin.Base" Version="2026.10.19" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
     
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.11" />

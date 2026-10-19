@@ -2,8 +2,8 @@
   {
     "guid": "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e",
     "name": "Artwork Generator",
-    "description": "Artwork Generator is a Jellyfin plugin that automatically creates custom episode posters using smart frame analysis, black frame detection, and configurable text styling. Perfect for filling in missing or generic episode artwork with clean, consistent visuals.",
-    "overview": "Generate Custom Episode Posters",
+    "description": "Artwork Generator draws posters, thumbs, backdrops, and text logos for series, seasons, episodes, films, and any other video, extracting frames from the item itself and rendering them through designs you control.",
+    "overview": "Generate artwork from your own video",
     "imageUrl": "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png",
     "owner": "JPKribs",
     "category": "MoviesAndShows",

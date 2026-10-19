@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Jellyfin.Plugin.ArtworkGenerator.Configuration;
+using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
@@ -153,14 +154,40 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             }
         }
 
+        /// <summary>
+        /// Saves the logo designs and rebuilds the lookups against the configuration in effect. It
+        /// takes the same lock as a configuration save, so the lookups are never rebuilt from a
+        /// configuration that a save running at the same moment has just replaced.
+        /// </summary>
+        /// <param name="logos">The designs to store. At least one is required.</param>
+        public void SaveLogoDesigns(IReadOnlyList<LogoConfiguration> logos)
+        {
+            MutateConfiguration(config =>
+            {
+                _posterConfigService.SaveLogoDesigns(config, logos);
+                return false;
+            });
+        }
+
         // UpdateConfiguration
-        // Updates the configuration and reinitializes the configuration lookups.
+        // Updates the configuration. The lookups are rebuilt from it before it is written, in
+        // OnConfigurationSaving.
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
             var avoidedBefore = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
 
-            base.UpdateConfiguration(configuration);
-            _posterConfigService?.Initialize(Configuration);
+            try
+            {
+                base.UpdateConfiguration(configuration);
+            }
+            catch
+            {
+                // The lookups were built from the incoming configuration before it was written.
+                // When the save fails they are rebuilt from whichever configuration is in effect,
+                // so they never describe one that did not take.
+                _posterConfigService?.Initialize(Configuration);
+                throw;
+            }
 
             // A pool holds frames chosen under the old segment choices and would go on handing them
             // out until it went idle, so the change would seem to have done nothing.
@@ -169,6 +196,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             {
                 _framePool?.DiscardIdle();
             }
+        }
+
+        // OnConfigurationSaving
+        // Fills in anything the incoming configuration lacks and builds the lookups from it before
+        // it is written. A configuration that cannot be loaded is rejected here, leaving the one in
+        // effect and the file on disk untouched, instead of being saved and failing on every start.
+        protected override void OnConfigurationSaving(PluginConfiguration incoming, PluginConfiguration stored)
+        {
+            ArgumentNullException.ThrowIfNull(incoming);
+
+            _posterConfigService?.Initialize(incoming);
         }
     }
 }

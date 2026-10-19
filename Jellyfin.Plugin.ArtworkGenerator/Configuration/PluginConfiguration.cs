@@ -24,8 +24,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Configuration
 
         /// <summary>
         /// Gets or sets the number of alternates offered when replacing an image from the Edit Images
-        /// dialog (1-10). Items with no image of that type are only ever offered one, since that
-        /// request comes from an automatic refresh that keeps a single image.
+        /// dialog (1-10). An automatic refresh, which keeps a single image of each type, renders
+        /// only one, and only as many backdrops as the library keeps.
         /// </summary>
         public int ImageChoiceCount { get; set; } = 3;
 

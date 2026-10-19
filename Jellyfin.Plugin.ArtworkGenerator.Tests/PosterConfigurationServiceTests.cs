@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Jellyfin.Plugin.ArtworkGenerator.Configuration;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services;
@@ -140,6 +142,140 @@ public class PosterConfigurationServiceTests
         service.Initialize(config);
 
         Assert.Throws<ArgumentException>(() => service.SaveLogoDesigns(config, Array.Empty<LogoConfiguration>()));
+    }
+
+    /// <summary>
+    /// A logo design file that exists but cannot be read is the user's designs, damaged. It must
+    /// never be replaced with a lone default, which would turn a repairable file into lost work.
+    /// </summary>
+    [Fact]
+    public void Initialize_LeavesACorruptLogoFileAloneAndUsesTheDefaultInMemory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "ag-logos-" + Guid.NewGuid().ToString("N") + ".json");
+        const string Damaged = "{ \"Logos\": [ { \"Name\": \"Mine\", ";
+        File.WriteAllText(path, Damaged);
+
+        try
+        {
+            var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance, new LogoDesignStore(path));
+            service.Initialize(Config());
+
+            var logo = Assert.Single(service.GetLogoDesigns());
+            Assert.Equal(PosterConfigurationService.DefaultLogoDesignId, logo.Id);
+            Assert.Equal(Damaged, File.ReadAllText(path));
+            Assert.Equal(Damaged, File.ReadAllText(path + ".bak"));
+        }
+        finally
+        {
+            File.Delete(path);
+            File.Delete(path + ".bak");
+        }
+    }
+
+    /// <summary>A first run, with no logo design file yet, is given one with the default design.</summary>
+    [Fact]
+    public void Initialize_SeedsAMissingLogoFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "ag-logos-" + Guid.NewGuid().ToString("N") + ".json");
+
+        try
+        {
+            var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance, new LogoDesignStore(path));
+            service.Initialize(Config());
+
+            Assert.True(File.Exists(path));
+            var stored = Assert.Single(new LogoDesignStore(path).Load());
+            Assert.Equal(PosterConfigurationService.DefaultLogoDesignId, stored.Id);
+            Assert.False(File.Exists(path + ".bak"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// A configuration posted without its lists, or with gaps in them, is filled in rather than
+    /// failing every lookup and every start after it is saved.
+    /// </summary>
+    [Fact]
+    public void Initialize_FillsInMissingListsAndSettings()
+    {
+        var config = new PluginConfiguration
+        {
+            PosterConfigurations = null!,
+            Profiles = null!,
+            FrameExtraction = null!
+        };
+
+        Service().Initialize(config);
+
+        Assert.NotNull(config.FrameExtraction);
+        Assert.Single(config.PosterConfigurations, c => c.IsDefault);
+        var profile = Assert.Single(config.Profiles);
+        Assert.True(profile.IsDefault);
+    }
+
+    [Fact]
+    public void Initialize_FillsInAProfileOrDesignMissingItsParts()
+    {
+        var config = Config();
+        config.PosterConfigurations.Add(null!);
+        config.PosterConfigurations.Add(new PosterConfiguration { Name = "Bare", Settings = null! });
+        config.Profiles.Add(null!);
+        config.Profiles.Add(new ArtworkProfile
+        {
+            Name = "Partial",
+            IsDefault = true,
+            SeriesIds = null!,
+            MovieIds = null!,
+            VideoIds = null!,
+            Slots = null!,
+            Backdrop = null!
+        });
+
+        var service = Service();
+        service.Initialize(config);
+
+        Assert.DoesNotContain(null, config.PosterConfigurations);
+        Assert.All(config.PosterConfigurations, c => Assert.NotNull(c.Settings));
+        var profile = Assert.Single(config.Profiles);
+        Assert.NotNull(profile.SeriesIds);
+        Assert.NotNull(profile.Backdrop);
+        Assert.Equal(ArtworkProfile.SupportedSlots.Count, profile.Slots.Count);
+        Assert.Same(profile, service.GetProfileFor(ArtworkItemKind.Series, Guid.NewGuid()));
+    }
+
+    /// <summary>
+    /// A logo save rebuilds the lookups while a configuration save may be doing the same. Run side
+    /// by side, neither may fail or leave the configuration with repeated defaults or slots.
+    /// </summary>
+    [Fact]
+    public void Initialize_AndSaveLogoDesigns_CanRunAtTheSameTime()
+    {
+        var service = Service();
+        var logos = new[] { new LogoConfiguration { Name = "Default" } };
+
+        // A fresh configuration each round, so every round races to fill in the same defaults.
+        for (var round = 0; round < 200; round++)
+        {
+            var config = new PluginConfiguration();
+            Parallel.For(0, 16, i =>
+            {
+                if (i % 2 == 0)
+                {
+                    service.Initialize(config);
+                }
+                else
+                {
+                    service.SaveLogoDesigns(config, logos);
+                }
+            });
+
+            Assert.Single(config.PosterConfigurations, c => c.IsDefault);
+            var profile = Assert.Single(config.Profiles);
+            Assert.Equal(ArtworkProfile.SupportedSlots.Count, profile.Slots.Count);
+        }
     }
 
 }

@@ -26,6 +26,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         // "Season 2", "season 02", or a bare number: a name that only repeats the season number.
         private static readonly Regex GenericSeasonName = new(@"^(season\s*)?0*\d+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
+        private readonly object _sourcesLock = new();
+
+        // The videos frames can be taken from, found at most once per subject. A season or series
+        // finds them while it is built, for its first episode; anything else only when a render
+        // first has to extract.
+        private IReadOnlyList<Video>? _playableSources;
 
         public ArtworkSubject()
         {
@@ -70,6 +76,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public int? SeasonEpisodeCount { get; set; }
 
         public VideoMetadata VideoMetadata { get; set; }
+
+        /// <summary>
+        /// Returns the videos the item's frames can be taken from, finding them the first time they
+        /// are asked for and reusing them for the rest of the render.
+        /// </summary>
+        /// <param name="item">The item this subject was built from.</param>
+        public IReadOnlyList<Video> GetPlayableSources(BaseItem item)
+        {
+            ArgumentNullException.ThrowIfNull(item);
+
+            lock (_sourcesLock)
+            {
+                return _playableSources ??= ArtworkSources.GetPlayableSources(item);
+            }
+        }
 
         /// <summary>
         /// Gets the primary line: an episode's name, a series' name, and a season's own name when
@@ -333,7 +354,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 ItemId = season.Id,
                 SeasonNumber = season.IndexNumber,
                 SeasonName = season.Name,
-                SeasonEpisodeCount = CountEpisodes(season)
+                SeasonEpisodeCount = CountEpisodes(season),
+                _playableSources = sources
             };
 
             ApplySeries(subject, series, season.SeriesName, season.SeriesId);
@@ -352,7 +374,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             var subject = new ArtworkSubject(VideoMetadata.Create(series, series, source))
             {
                 Kind = ArtworkItemKind.Series,
-                ItemId = series.Id
+                ItemId = series.Id,
+                _playableSources = sources
             };
 
             ApplySeries(subject, series, series.Name, series.Id);
