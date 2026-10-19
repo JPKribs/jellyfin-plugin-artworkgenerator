@@ -11,8 +11,8 @@
   <!-- The plugin keeps the Jellyfin packages private to its own build, so the demo, which runs the
        renderers outside a server, references them itself, plus the console logger it writes to. -->
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="12.0.0" />
-    <PackageReference Include="Jellyfin.Model" Version="12.0.0" />
+    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" />
+    <PackageReference Include="Jellyfin.Model" Version="12.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.11" />
   </ItemGroup>
 
