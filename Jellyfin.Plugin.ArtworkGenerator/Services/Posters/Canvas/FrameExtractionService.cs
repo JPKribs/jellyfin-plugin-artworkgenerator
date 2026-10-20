@@ -122,7 +122,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             var mediaSource = mediaSources?.Count > 0 ? mediaSources[0] : null;
             if (mediaSource == null)
             {
-                _logger.LogError("No media source found for episode: {Path}", episode.Path);
+                _logger.LogDebug("No media source found for episode: {Path}", episode.Path);
                 return Array.Empty<ExtractedFrame>();
             }
 
@@ -130,7 +130,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 .FirstOrDefault(s => s.Type == MediaStreamType.Video);
             if (videoStream == null)
             {
-                _logger.LogError("No video stream found for episode: {Path}", episode.Path);
+                // Expected on a first scan, before Jellyfin has probed the file; the next refresh has the stream.
+                _logger.LogDebug("No video stream found for episode: {Path}", episode.Path);
                 return Array.Empty<ExtractedFrame>();
             }
 
