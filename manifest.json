@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.2.2.1",
+        "changelog": "\n## Fixed\n- Remove unnecessary logging. Episodes Jellyfin has not finished reading yet no longer log an error during the first library scan",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.2.2.1/jellyfin-plugin-artworkgenerator-12.2.2.1.zip",
+        "checksum": "ce6e1ce5b14ce084736675082aeace6e",
+        "timestamp": "2026-10-20T14:55:09Z"
+      },
+      {
         "version": "12.2.2.0",
         "changelog": "\n## Developer\n- Built for Jellyfin 12.2 (target ABI 12.2.0.0). Servers on Jellyfin 12.0 or 12.1 keep the previous release.\n- Updated test dependencies (Microsoft.NET.Test.Sdk 18.11, NSubstitute 6.2, xunit 2.9.3, xunit.runner.visualstudio 4.0.1).",
         "targetAbi": "12.2.0.0",
