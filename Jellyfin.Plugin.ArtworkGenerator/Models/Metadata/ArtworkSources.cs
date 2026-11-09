@@ -15,8 +15,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     /// </summary>
     public static class ArtworkSources
     {
-        /// <summary>The default for <see cref="FrameExtractionSettings.VideosPerParent"/>.</summary>
-        public const int DefaultVideosPerParent = 200;
+        /// <summary>The default for <see cref="FrameExtractionSettings.VideosPerParent"/>: 0, every video.</summary>
+        public const int DefaultVideosPerParent = 0;
 
         /// <summary>The highest <see cref="FrameExtractionSettings.VideosPerParent"/> accepted.</summary>
         public const int MaxVideosPerParent = 2000;
@@ -31,14 +31,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         // The videos with a readable media file that belong to an item: the video itself, a
         // season's episodes, a series' episodes, or the videos a collection, folder, or library
         // holds. Specials are left out of a series' or group's pool whenever regular episodes exist,
-        // since they are often recaps or extras. A parent keeps at most the configured Videos Per
-        // Parent, spread across all of it, and checks at most ChecksPerVideo files on disk for each
-        // one kept. A season or series keeps its sample in broadcast order.
+        // since they are often recaps or extras. With Videos Per Parent above 0, a parent keeps at most
+        // that many, spread across all of it, and checks at most ChecksPerVideo files on disk for
+        // each one kept. A season or series keeps its sample in broadcast order. At 0 every video is used.
         public static IReadOnlyList<Video> GetPlayableSources(BaseItem item)
             => GetPlayableSources(item, Plugin.Instance?.Configuration?.FrameExtraction?.VideosPerParent ?? DefaultVideosPerParent);
 
         // GetPlayableSources
-        // The same, keeping at most videosPerParent videos for a parent.
+        // The same, keeping at most videosPerParent videos for a parent, or all of them at 0.
         public static IReadOnlyList<Video> GetPlayableSources(BaseItem item, int videosPerParent)
         {
             ArgumentNullException.ThrowIfNull(item);
@@ -67,20 +67,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 .ThenBy(v => v.IndexNumber ?? 0)
                 .ToList();
 
-            var limit = Math.Clamp(videosPerParent, 1, MaxVideosPerParent);
+            var limit = Math.Min(videosPerParent, MaxVideosPerParent);
             List<Video> playable;
-            if (kind?.IsGroup() == true)
+            if (limit <= 0 || (kind?.IsGroup() != true && kind is not (ArtworkItemKind.Season or ArtworkItemKind.Series)))
+            {
+                playable = candidates.Where(v => File.Exists(v.Path)).ToList();
+            }
+            else if (kind?.IsGroup() == true)
             {
                 playable = Sample(candidates, limit).ToList();
             }
-            else if (kind is ArtworkItemKind.Season or ArtworkItemKind.Series)
+            else
             {
                 var kept = new HashSet<Video>(Sample(candidates, limit), ReferenceEqualityComparer.Instance);
                 playable = candidates.Where(kept.Contains).ToList();
-            }
-            else
-            {
-                playable = candidates.Where(v => File.Exists(v.Path)).ToList();
             }
 
             if ((kind is ArtworkItemKind.Series || kind?.IsGroup() == true)

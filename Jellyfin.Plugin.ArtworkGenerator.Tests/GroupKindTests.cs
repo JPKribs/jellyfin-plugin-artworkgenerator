@@ -317,10 +317,12 @@ public class GroupKindTests
     }
 
     [Theory]
-    [InlineData(0, 1)]
-    [InlineData(-5, 1)]
-    [InlineData(5000, 1000)]
-    public void VideosPerParentIsClampedToItsRange(int asked, int expected)
+    [InlineData(ArtworkItemKind.Series, 0, 1000)]
+    [InlineData(ArtworkItemKind.Season, -5, 1000)]
+    [InlineData(ArtworkItemKind.Library, 0, 1000)]
+    [InlineData(ArtworkItemKind.Series, 5000, 1000)]
+    [InlineData(ArtworkItemKind.Library, 1, 1)]
+    public void VideosPerParentAtZeroKeepsEveryVideo(ArtworkItemKind kind, int asked, int expected)
     {
         var path = System.IO.Path.GetTempFileName();
         try
@@ -329,7 +331,7 @@ public class GroupKindTests
                 .Select(i => new MediaBrowser.Controller.Entities.TV.Episode { Path = path, ParentIndexNumber = 1, IndexNumber = i })
                 .ToList();
 
-            Assert.Equal(expected, ArtworkSources.Choose(ArtworkItemKind.Series, episodes, asked).Count);
+            Assert.Equal(expected, ArtworkSources.Choose(kind, episodes, asked).Count);
         }
         finally
         {
@@ -338,9 +340,8 @@ public class GroupKindTests
     }
 
     [Fact]
-    public void VideosPerParentDefaultsTo200()
+    public void VideosPerParentDefaultsToEveryVideo()
     {
-        Assert.Equal(200, new FrameExtractionSettings().VideosPerParent);
-        Assert.Equal(200, ArtworkSources.DefaultVideosPerParent);
+        Assert.Equal(0, new FrameExtractionSettings().VideosPerParent);
     }
 }
