@@ -8,21 +8,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
     /// <summary>
     /// Chooses and cleans the text a generated logo shows.
     /// </summary>
-    public static class LogoText
+    public static partial class LogoText
     {
-        private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
-
-        // [tvdbid-12345], {imdb-tt1234567}: tags media managers put in folder names.
-        private static readonly Regex BracketTags = new(@"\s*(\[[^\]]*\]|\{[^}]*\})", RegexOptions.Compiled, RegexTimeout);
-
-        // (2019), anywhere in the name.
-        private static readonly Regex ParenthesizedYear = new(@"\s*\((?:19|20)\d{2}\)", RegexOptions.Compiled, RegexTimeout);
-
-        // A bare trailing year. Only applied to folder names: a title such as "Blade Runner 2049"
-        // ends in a number that is part of the name.
-        private static readonly Regex TrailingYear = new(@"\s+(?:19|20)\d{2}\s*$", RegexOptions.Compiled, RegexTimeout);
-
-        private static readonly Regex RepeatedWhitespace = new(@"\s{2,}", RegexOptions.Compiled, RegexTimeout);
+        // Only the user's custom pattern needs a timeout. The fixed patterns below are linear, and a
+        // timeout on them can fire spuriously when the thread is starved under load.
+        private static readonly TimeSpan CustomRegexTimeout = TimeSpan.FromMilliseconds(250);
 
         // Resolve
         // Picks the configured source text for a subject and cleans it. Falls back to the series
@@ -85,15 +75,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
 
             if (isFolderName)
             {
-                text = BracketTags.Replace(text, string.Empty);
+                text = BracketTags().Replace(text, string.Empty);
             }
 
             if (settings.StripYear)
             {
-                text = ParenthesizedYear.Replace(text, string.Empty);
+                text = ParenthesizedYear().Replace(text, string.Empty);
                 if (isFolderName)
                 {
-                    text = TrailingYear.Replace(text, string.Empty);
+                    text = TrailingYear().Replace(text, string.Empty);
                 }
             }
 
@@ -101,7 +91,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
             {
                 try
                 {
-                    text = Regex.Replace(text, settings.CustomRegex, string.Empty, RegexOptions.None, RegexTimeout);
+                    text = Regex.Replace(text, settings.CustomRegex, string.Empty, RegexOptions.None, CustomRegexTimeout);
                 }
                 catch (ArgumentException)
                 {
@@ -113,7 +103,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
                 }
             }
 
-            text = RepeatedWhitespace.Replace(text, " ").Trim();
+            text = RepeatedWhitespace().Replace(text, " ").Trim();
             if (text.Length == 0)
             {
                 text = original;
@@ -127,6 +117,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
                 _ => text
             };
         }
+
+        // [tvdbid-12345], {imdb-tt1234567}: tags media managers put in folder names.
+        [GeneratedRegex(@"\s*(\[[^\]]*\]|\{[^}]*\})")]
+        private static partial Regex BracketTags();
+
+        // (2019), anywhere in the name.
+        [GeneratedRegex(@"\s*\((?:19|20)\d{2}\)")]
+        private static partial Regex ParenthesizedYear();
+
+        // A bare trailing year. Only applied to folder names: a title such as "Blade Runner 2049"
+        // ends in a number that is part of the name.
+        [GeneratedRegex(@"\s+(?:19|20)\d{2}\s*$")]
+        private static partial Regex TrailingYear();
+
+        [GeneratedRegex(@"\s{2,}")]
+        private static partial Regex RepeatedWhitespace();
 
         // ToTitleCase
         // Capitalises the first letter of each word and lowercases the rest, so a name shouted in

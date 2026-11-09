@@ -15,21 +15,31 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     /// </summary>
     public static class ArtworkSources
     {
-        internal const int MaxGroupSources = 200;
-        internal const int MaxGroupChecks = 2000;
+        /// <summary>The default for <see cref="FrameExtractionSettings.VideosPerParent"/>.</summary>
+        public const int DefaultVideosPerParent = 200;
+
+        /// <summary>The highest <see cref="FrameExtractionSettings.VideosPerParent"/> accepted.</summary>
+        public const int MaxVideosPerParent = 2000;
+
+        // Files checked on disk for each video kept, so a partly offline parent still fills its sample.
+        internal const int ChecksPerVideo = 10;
         private const int MaxCachedContentTypes = 5000;
 
         private static readonly ConcurrentDictionary<Guid, CollectionType?> ContentTypes = new();
 
         // GetPlayableSources
-        // The videos with a readable media file that belong to an item, in broadcast order: the
-        // video itself, a season's episodes, a series' episodes, or the videos a collection, folder,
-        // or library holds. Specials are left out of a series' or group's pool whenever regular
-        // episodes exist, since they are often recaps or extras. A group keeps at most
-        // MaxGroupSources readable videos, spread across all of it, and stops checking files on
-        // disk after MaxGroupChecks, so a large library on network storage, or one partly offline,
-        // is neither checked in full on every request nor left with an empty sample.
+        // The videos with a readable media file that belong to an item: the video itself, a
+        // season's episodes, a series' episodes, or the videos a collection, folder, or library
+        // holds. Specials are left out of a series' or group's pool whenever regular episodes exist,
+        // since they are often recaps or extras. A parent keeps at most the configured Videos Per
+        // Parent, spread across all of it, and checks at most ChecksPerVideo files on disk for each
+        // one kept. A season or series keeps its sample in broadcast order.
         public static IReadOnlyList<Video> GetPlayableSources(BaseItem item)
+            => GetPlayableSources(item, Plugin.Instance?.Configuration?.FrameExtraction?.VideosPerParent ?? DefaultVideosPerParent);
+
+        // GetPlayableSources
+        // The same, keeping at most videosPerParent videos for a parent.
+        public static IReadOnlyList<Video> GetPlayableSources(BaseItem item, int videosPerParent)
         {
             ArgumentNullException.ThrowIfNull(item);
 
@@ -44,15 +54,34 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 _ => new[] { (Video)item }
             };
 
+            return Choose(kind, videos, videosPerParent);
+        }
+
+        // Choose
+        // Picks the readable videos an item of this kind keeps from its candidates.
+        internal static IReadOnlyList<Video> Choose(ArtworkItemKind? kind, IEnumerable<Video> videos, int videosPerParent)
+        {
             var candidates = videos
                 .Where(v => !v.IsVirtualItem && !string.IsNullOrEmpty(v.Path))
                 .OrderBy(v => v.ParentIndexNumber ?? 0)
                 .ThenBy(v => v.IndexNumber ?? 0)
                 .ToList();
 
-            var playable = kind?.IsGroup() == true
-                ? SpreadOrder(candidates, MaxGroupSources).Take(MaxGroupChecks).Where(v => File.Exists(v.Path)).Take(MaxGroupSources).ToList()
-                : candidates.Where(v => File.Exists(v.Path)).ToList();
+            var limit = Math.Clamp(videosPerParent, 1, MaxVideosPerParent);
+            List<Video> playable;
+            if (kind?.IsGroup() == true)
+            {
+                playable = Sample(candidates, limit).ToList();
+            }
+            else if (kind is ArtworkItemKind.Season or ArtworkItemKind.Series)
+            {
+                var kept = new HashSet<Video>(Sample(candidates, limit), ReferenceEqualityComparer.Instance);
+                playable = candidates.Where(kept.Contains).ToList();
+            }
+            else
+            {
+                playable = candidates.Where(v => File.Exists(v.Path)).ToList();
+            }
 
             if ((kind is ArtworkItemKind.Series || kind?.IsGroup() == true)
                 && playable.Any(v => (v.ParentIndexNumber ?? 1) > 0))
@@ -62,6 +91,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
             return playable;
         }
+
+        // Sample
+        // Up to limit readable videos, spread evenly across the candidates.
+        private static IEnumerable<Video> Sample(IReadOnlyList<Video> candidates, int limit)
+            => SpreadOrder(candidates, limit).Take(limit * ChecksPerVideo).Where(v => File.Exists(v.Path)).Take(limit);
 
         // MARK: KindOf
         public static ArtworkItemKind? KindOf(BaseItem item) => item switch

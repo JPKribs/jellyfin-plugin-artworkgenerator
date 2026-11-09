@@ -176,6 +176,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         {
             var avoidedBefore = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
             var samplingBefore = Configuration.FrameExtraction?.SamplingRate;
+            var videosBefore = Configuration.FrameExtraction?.VideosPerParent;
 
             try
             {
@@ -190,11 +191,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 throw;
             }
 
-            // A pool holds frames chosen under the old segment choices and would go on handing them
-            // out until it went idle, so the change would seem to have done nothing.
+            // A pool holds frames chosen under the old segment choices, sampling rate, and videos per
+            // parent, and would go on handing them out until it went idle.
             var avoidedAfter = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
             if (!System.Linq.Enumerable.SequenceEqual(avoidedBefore, avoidedAfter)
-                || samplingBefore != Configuration.FrameExtraction?.SamplingRate)
+                || samplingBefore != Configuration.FrameExtraction?.SamplingRate
+                || videosBefore != Configuration.FrameExtraction?.VideosPerParent)
             {
                 _framePool?.DiscardIdle();
             }

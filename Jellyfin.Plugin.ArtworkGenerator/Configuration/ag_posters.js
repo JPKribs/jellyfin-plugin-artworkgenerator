@@ -1233,6 +1233,10 @@ export default function (view) {
     // ── Lifecycle ───────────────────────────────────────────
 
     view.addEventListener('viewdestroy', function () {
+        // A pending or in-flight preview must not create a blob after this point, or it is never released.
+        schedulePreview.cancel();
+        _previewSeq++;
+
         // Release the blobs backing the live preview and the component thumbnails.
         Object.keys(_previewUrls).forEach(function (shape) {
             if (_previewUrls[shape]) {

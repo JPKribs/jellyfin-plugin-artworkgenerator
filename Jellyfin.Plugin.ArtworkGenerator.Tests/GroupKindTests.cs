@@ -243,11 +243,104 @@ public class GroupKindTests
         var readable = new System.Collections.Generic.HashSet<int>(Enumerable.Range(0, 1000).Where(i => i % 5 == 3));
 
         var kept = ArtworkSources.SpreadOrder(items, 200)
-            .Take(ArtworkSources.MaxGroupChecks)
+            .Take(200 * ArtworkSources.ChecksPerVideo)
             .Where(readable.Contains)
-            .Take(ArtworkSources.MaxGroupSources)
+            .Take(200)
             .ToList();
 
         Assert.Equal(200, kept.Count);
+    }
+    [Theory]
+    [InlineData(ArtworkItemKind.Series)]
+    [InlineData(ArtworkItemKind.Season)]
+    public void AParentKeepsAtMostItsVideosPerParentInBroadcastOrder(ArtworkItemKind kind)
+    {
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            var episodes = Enumerable.Range(1, 100)
+                .Select(i => new MediaBrowser.Controller.Entities.TV.Episode { Path = path, ParentIndexNumber = 1, IndexNumber = i })
+                .Reverse()
+                .ToList();
+
+            var kept = ArtworkSources.Choose(kind, episodes, 10);
+
+            Assert.Equal(10, kept.Count);
+            Assert.Equal(kept.OrderBy(e => e.IndexNumber), kept);
+            Assert.Equal(1, kept[0].IndexNumber);
+            Assert.True(kept[^1].IndexNumber > 90);
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ASeriesUnderTheLimitKeepsEveryEpisode()
+    {
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            var episodes = Enumerable.Range(1, 30)
+                .Select(i => new MediaBrowser.Controller.Entities.TV.Episode { Path = path, ParentIndexNumber = 1 + (i / 10), IndexNumber = i })
+                .ToList();
+
+            Assert.Equal(episodes, ArtworkSources.Choose(ArtworkItemKind.Series, episodes, ArtworkSources.DefaultVideosPerParent));
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void AParentStopsCheckingFilesOnceItHasEnough()
+    {
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            var missing = path + ".missing";
+            var episodes = Enumerable.Range(1, 1000)
+                .Select(i => new MediaBrowser.Controller.Entities.TV.Episode { Path = i % 2 == 0 ? path : missing, ParentIndexNumber = 1, IndexNumber = i })
+                .ToList();
+
+            var kept = ArtworkSources.Choose(ArtworkItemKind.Series, episodes, 5);
+
+            Assert.Equal(5, kept.Count);
+            Assert.All(kept, e => Assert.Equal(path, e.Path));
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(-5, 1)]
+    [InlineData(5000, 1000)]
+    public void VideosPerParentIsClampedToItsRange(int asked, int expected)
+    {
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            var episodes = Enumerable.Range(1, 1000)
+                .Select(i => new MediaBrowser.Controller.Entities.TV.Episode { Path = path, ParentIndexNumber = 1, IndexNumber = i })
+                .ToList();
+
+            Assert.Equal(expected, ArtworkSources.Choose(ArtworkItemKind.Series, episodes, asked).Count);
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void VideosPerParentDefaultsTo200()
+    {
+        Assert.Equal(200, new FrameExtractionSettings().VideosPerParent);
+        Assert.Equal(200, ArtworkSources.DefaultVideosPerParent);
     }
 }

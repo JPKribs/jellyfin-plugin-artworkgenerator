@@ -1,3 +1,7 @@
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Xunit;
@@ -27,6 +31,33 @@ public class LogoTextTests
     public void Clean_StripsTagsAndYearsFromFolderNames(string raw, string expected)
     {
         Assert.Equal(expected, LogoText.Clean(raw, new LogoSettings(), isFolderName: true));
+    }
+
+    /// <summary>
+    /// The built-in patterns are linear, so they carry no match timeout and clean a name even when
+    /// the thread is starved under load.
+    /// </summary>
+    [Fact]
+    public void Clean_BuiltInPatternsNeverTimeOut()
+    {
+        var patterns = typeof(LogoText)
+            .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+            .Where(method => method.ReturnType == typeof(Regex) && method.GetParameters().Length == 0)
+            .Select(method => (Regex)method.Invoke(null, null)!)
+            .ToList();
+
+        Assert.Equal(4, patterns.Count);
+        Assert.All(patterns, regex => Assert.Equal(Regex.InfiniteMatchTimeout, regex.MatchTimeout));
+    }
+
+    [Fact]
+    public void Clean_UnderParallelLoad_StillCleansEveryName()
+    {
+        var results = new string[2000];
+        Parallel.For(0, results.Length, i =>
+            results[i] = LogoText.Clean("Smiling Friends (2020) [tvdbid-379403]", new LogoSettings(), isFolderName: true));
+
+        Assert.All(results, result => Assert.Equal("Smiling Friends", result));
     }
 
     [Theory]

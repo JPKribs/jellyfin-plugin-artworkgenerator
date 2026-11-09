@@ -131,7 +131,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 return false;
             }
 
-            var match = NumberedName.Match(primary);
+            var match = NumberedName().Match(primary);
             return match.Success
                 && int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture, out var numbered)
                 && numbered == subject.FeaturedNumber.Value;

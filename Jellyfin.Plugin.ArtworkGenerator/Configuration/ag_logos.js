@@ -621,9 +621,16 @@ export default function (view) {
     // ── Lifecycle ───────────────────────────────────────────
 
     view.addEventListener('viewdestroy', function () {
+        // A pending or in-flight preview must not create a blob after this point, or it is never released.
+        schedulePreview.cancel();
+        _previewSeq++;
         if (_previewObjectUrl) {
             URL.revokeObjectURL(_previewObjectUrl);
             _previewObjectUrl = null;
+        }
+        if (_colorSourceUrl) {
+            URL.revokeObjectURL(_colorSourceUrl);
+            _colorSourceUrl = null;
         }
     });
 }

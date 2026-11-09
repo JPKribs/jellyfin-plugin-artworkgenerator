@@ -52,6 +52,12 @@
                             </div>
                             <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
 
+                            <div class="inputContainer">
+                                <label for="txtVideosPerParent"></label>
+                                <input is="emby-input" type="number" id="txtVideosPerParent" min="1" max="2000" step="1" data-frame-setting="VideosPerParent" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
                             <div class="selectContainer inputContainer">
                                 <label for="selectSamplingRate"></label>
                                 <select is="emby-select" id="selectSamplingRate" data-frame-setting="SamplingRate"></select>

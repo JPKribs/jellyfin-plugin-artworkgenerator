@@ -238,9 +238,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             return canvases;
         }
 
-        // PrepareFrame
-        // Decodes a pooled frame, crops it, and brightens it. Pooled frames are kept raw so each
-        // consumer can apply its own crop; the pool file itself is never modified.
         // GridCanvasesAsync
         // One canvas per requested candidate, each a grid of frames rather than a single one. The
         // pool is asked for enough frames to fill every grid, so no two candidates are the same.
@@ -332,6 +329,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
         }
 
+        // PrepareFrame
+        // Decodes a pooled frame, crops it, and brightens it. Pooled frames are kept raw so each
+        // consumer can apply its own crop; the pool file itself is never modified.
         private SKBitmap? PrepareFrame(string path, PosterSettings settings)
         {
             if (!File.Exists(path))

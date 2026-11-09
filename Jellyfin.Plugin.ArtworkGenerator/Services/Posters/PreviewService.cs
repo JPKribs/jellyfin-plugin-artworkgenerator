@@ -225,6 +225,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return (IPosterGenerator)Activator.CreateInstance(type, logger)!;
         }
 
+        // The generic CreateLogger<T>(ILoggerFactory), looked up once and shared by every generator. Declared
+        // before GeneratorTypes, whose initializer uses it.
+        private static readonly System.Reflection.MethodInfo CreateLoggerMethod = typeof(LoggerFactoryExtensions)
+            .GetMethod(nameof(LoggerFactoryExtensions.CreateLogger), new[] { typeof(ILoggerFactory) })!;
+
         // GeneratorTypes
         // Every concrete generator in the assembly, keyed by the style it says it draws. Built once:
         // the reflection happens on first use rather than per poster.
@@ -254,8 +259,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // A generator takes ILogger<itself>, so the logger is made for the type being built.
         private static object LoggerFor(Type generator, ILoggerFactory loggerFactory)
         {
-            return typeof(LoggerFactoryExtensions)
-                .GetMethod(nameof(LoggerFactoryExtensions.CreateLogger), new[] { typeof(ILoggerFactory) })!
+            return CreateLoggerMethod
                 .MakeGenericMethod(generator)
                 .Invoke(null, new object[] { loggerFactory })!;
         }

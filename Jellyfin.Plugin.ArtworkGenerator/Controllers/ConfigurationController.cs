@@ -16,7 +16,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
     [Route("Plugins/ArtworkGenerator")]
     public class ConfigurationController : ControllerBase
     {
-        // Cache reflection results — PluginConfiguration properties don't change at runtime
         private readonly ILogger<ConfigurationController> _logger;
 
         public ConfigurationController(ILogger<ConfigurationController> logger)

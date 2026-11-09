@@ -123,8 +123,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // A title that is one word and the item's own number, such as "Staffel 12" or "Series 12".
         // Letters must come first, so "12 Monkeys" is a name rather than a numbering.
-        private static readonly Regex NumberedName =
-            new(@"^\p{L}+\s*0*(\d+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        [GeneratedRegex(@"^\p{L}+\s*0*(\d+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+        private static partial Regex NumberedName();
 
         // WithFrameExtraction
         // Stamps the server's frame extraction settings onto a design's render settings. The design

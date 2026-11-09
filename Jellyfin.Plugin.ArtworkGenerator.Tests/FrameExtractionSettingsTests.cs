@@ -101,7 +101,7 @@ public class FrameExtractionSettingsTests
     {
         var text = SettingOptions.FrameExtractionText();
 
-        Assert.Equal(14, text.Count);
+        Assert.Equal(15, text.Count);
         Assert.All(text.Values, entry =>
         {
             Assert.False(string.IsNullOrWhiteSpace(entry.Label));

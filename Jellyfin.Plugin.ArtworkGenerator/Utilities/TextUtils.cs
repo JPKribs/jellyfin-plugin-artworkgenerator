@@ -8,10 +8,11 @@ using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Utilities;
 
-public static class TextUtils
+public static partial class TextUtils
 {
     // Divider between title segments: a spaced dash of any kind, or a colon.
-    private static readonly Regex SegmentSeparator = new Regex(@"(\s+[-–—]\s+|:\s*)", RegexOptions.Compiled);
+    [GeneratedRegex(@"(\s+[-–—]\s+|:\s*)")]
+    private static partial Regex SegmentSeparator();
 
     // TrySplitAtSeparator
     // Splits a name at its first colon or spaced dash into the title and the subtitle, as in
@@ -26,7 +27,7 @@ public static class TextUtils
             return false;
         }
 
-        var match = SegmentSeparator.Match(text);
+        var match = SegmentSeparator().Match(text);
         if (!match.Success)
         {
             return false;
@@ -208,7 +209,7 @@ public static class TextUtils
     {
         ArgumentNullException.ThrowIfNull(title);
 
-        var match = SegmentSeparator.Match(title);
+        var match = SegmentSeparator().Match(title);
         if (!match.Success || match.Index == 0)
             return null;
 
@@ -248,7 +249,7 @@ public static class TextUtils
     {
         ArgumentNullException.ThrowIfNull(title);
 
-        var parts = SegmentSeparator.Split(title);
+        var parts = SegmentSeparator().Split(title);
         var pieces = new List<string>();
         string? pendingSeparator = null;
 

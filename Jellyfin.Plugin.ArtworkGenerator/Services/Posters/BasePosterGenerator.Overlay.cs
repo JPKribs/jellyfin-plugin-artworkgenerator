@@ -129,7 +129,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (blurRadius > 0f)
             {
-                // SKPaint does not own its mask filter, so it is disposed with the paint below.
+                // SKPaint does not own its mask filter, so the caller disposes paint.MaskFilter too.
                 paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurRadius);
             }
 

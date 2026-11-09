@@ -79,6 +79,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 (canvas, _) =>
                 {
                     using var punchPaint = CreatePunchPaint(Math.Max(2f, unit * 0.002f));
+                    using var feather = punchPaint.MaskFilter;
                     canvas.DrawPath(brushMask, punchPaint);
                 },
                 // Traced after the layer is restored: inside it, the punch above would erase the

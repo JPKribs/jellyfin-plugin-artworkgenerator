@@ -21,10 +21,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     /// and this class decides what those mean for an episode, a season, a series, or a film.
     /// Supporting a new item kind means teaching this class, not every style.
     /// </remarks>
-    public class ArtworkSubject
+    public partial class ArtworkSubject
     {
         // "Season 2", "season 02", or a bare number: a name that only repeats the season number.
-        private static readonly Regex GenericSeasonName = new(@"^(season\s*)?0*\d+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        [GeneratedRegex(@"^(season\s*)?0*\d+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+        private static partial Regex GenericSeasonName();
 
         private readonly object _sourcesLock = new();
 
@@ -148,7 +149,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 }
 
                 var name = SeasonName.Trim();
-                return !GenericSeasonName.IsMatch(name);
+                return !GenericSeasonName().IsMatch(name);
             }
         }
 
