@@ -175,6 +175,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
             var avoidedBefore = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
+            var samplingBefore = Configuration.FrameExtraction?.SamplingRate;
 
             try
             {
@@ -192,7 +193,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             // A pool holds frames chosen under the old segment choices and would go on handing them
             // out until it went idle, so the change would seem to have done nothing.
             var avoidedAfter = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
-            if (!System.Linq.Enumerable.SequenceEqual(avoidedBefore, avoidedAfter))
+            if (!System.Linq.Enumerable.SequenceEqual(avoidedBefore, avoidedAfter)
+                || samplingBefore != Configuration.FrameExtraction?.SamplingRate)
             {
                 _framePool?.DiscardIdle();
             }

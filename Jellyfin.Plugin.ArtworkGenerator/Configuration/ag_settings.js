@@ -24,8 +24,7 @@ export default function (view) {
         leaveMessage: 'You have unsaved changes. Are you sure you want to leave?',
         bind: bindPage,
         load: function () {
-            loadFrameText();
-            loadConfig();
+            loadFrameText().then(loadConfig);
         }
     });
     var shared = page.shared;
@@ -84,6 +83,19 @@ export default function (view) {
             dataType: 'json'
         }).then(function (payload) {
             var text = (payload && (payload.frameText || payload.FrameText)) || {};
+            var options = (payload && (payload.frameOptions || payload.FrameOptions)) || {};
+
+            frameFields().forEach(function (el) {
+                if (el.tagName !== 'SELECT') return;
+
+                el.innerHTML = '';
+                (options[el.getAttribute('data-frame-setting')] || []).forEach(function (choice) {
+                    var option = document.createElement('option');
+                    option.value = choice.value || choice.Value;
+                    option.textContent = choice.label || choice.Label;
+                    el.appendChild(option);
+                });
+            });
 
             frameFields().forEach(function (el) {
                 var entry = text[el.getAttribute('data-frame-setting')];
@@ -120,7 +132,7 @@ export default function (view) {
     function loadConfig() {
         Dashboard.showLoadingMsg();
         shared.getConfig().then(function (config) {
-            view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 3;
+            view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 10;
             view.querySelector('#txtImageCacheMinutes').value = config.ImageCacheMinutes || 30;
             view.querySelector('#txtFixedSeed').value = (config.FixedExtractionSeed === null || config.FixedExtractionSeed === undefined) ? '' : config.FixedExtractionSeed;
 
@@ -157,8 +169,8 @@ export default function (view) {
         shared.getConfig().then(function (config) {
 
             var choices = parseInt(view.querySelector('#txtImageChoiceCount').value, 10);
-            if (isNaN(choices)) choices = 3;
-            config.ImageChoiceCount = Math.min(10, Math.max(1, choices));
+            if (isNaN(choices)) choices = 10;
+            config.ImageChoiceCount = Math.min(1000, Math.max(1, choices));
 
             var cacheMinutes = parseInt(view.querySelector('#txtImageCacheMinutes').value, 10);
             if (isNaN(cacheMinutes)) cacheMinutes = 30;
@@ -175,6 +187,11 @@ export default function (view) {
 
                 if (el.type === 'checkbox') {
                     config.FrameExtraction[name] = el.checked;
+                    return;
+                }
+
+                if (el.tagName === 'SELECT') {
+                    if (el.value) config.FrameExtraction[name] = el.value;
                     return;
                 }
 
@@ -208,7 +225,7 @@ export default function (view) {
         view.querySelector('#txtFixedSeed').addEventListener('input', tracker.check);
 
         frameFields().forEach(function (el) {
-            el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', function () {
+            el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', function () {
                 updateFrameVisibility();
                 tracker.check();
             });

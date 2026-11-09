@@ -145,6 +145,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return TextFrom(typeof(FrameExtractionSettings));
         }
 
+        // MARK: FrameExtractionOptions
+        public static IReadOnlyDictionary<string, IReadOnlyList<SettingOption>> FrameExtractionOptions()
+        {
+            return typeof(FrameExtractionSettings)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.PropertyType.IsEnum)
+                .ToDictionary(
+                    property => property.Name,
+                    property => (IReadOnlyList<SettingOption>)Choices(property.PropertyType),
+                    StringComparer.Ordinal);
+        }
+
         // TextFrom
         // Every Display attribute on a settings model, keyed by property name.
         private static Dictionary<string, SettingText> TextFrom(Type type)

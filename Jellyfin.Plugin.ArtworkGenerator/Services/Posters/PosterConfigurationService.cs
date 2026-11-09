@@ -93,6 +93,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 profile.SeriesIds ??= new List<Guid>();
                 profile.MovieIds ??= new List<Guid>();
                 profile.VideoIds ??= new List<Guid>();
+                profile.CollectionIds ??= new List<Guid>();
+                profile.FolderIds ??= new List<Guid>();
+                profile.LibraryIds ??= new List<Guid>();
                 profile.Slots ??= new List<SlotAssignment>();
                 profile.Slots.RemoveAll(slot => slot == null);
                 profile.Backdrop ??= new BackdropSettings();
@@ -142,9 +145,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     }
                 }
 
-                // A film and a standalone video are both assigned by their own id, so they share
-                // one index rather than each having a near-identical copy.
-                foreach (var ownId in (profile.MovieIds ?? new List<Guid>()).Concat(profile.VideoIds ?? new List<Guid>()))
+                // Films, standalone videos, collections, folders, and libraries are all assigned by
+                // their own id, so they share one index rather than each having a near-identical copy.
+                var ownIds = (profile.MovieIds ?? new List<Guid>())
+                    .Concat(profile.VideoIds ?? new List<Guid>())
+                    .Concat(profile.CollectionIds ?? new List<Guid>())
+                    .Concat(profile.FolderIds ?? new List<Guid>())
+                    .Concat(profile.LibraryIds ?? new List<Guid>());
+                foreach (var ownId in ownIds)
                 {
                     if (!byMovie.TryAdd(ownId, profile))
                     {
@@ -184,7 +192,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         public ArtworkProfile GetProfileFor(ArtworkItemKind kind, Guid id)
         {
             var snapshot = _snapshot;
-            var index = kind.IsStandalone() ? snapshot.ByOwnId : snapshot.BySeries;
+            var index = kind.IsAssignedByOwnId() ? snapshot.ByOwnId : snapshot.BySeries;
 
             return id != Guid.Empty && index.TryGetValue(id, out var assigned)
                 ? assigned

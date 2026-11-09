@@ -59,5 +59,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>Gets or sets the percent of a row that must be black to count as letterboxing.</summary>
         [Display(Name = "Detection Confidence (%)", Description = "Percent of pixels that must be black to count as letterboxing.")]
         public float LetterboxConfidence { get; set; } = 85.0f;
+
+        /// <summary>Gets or sets how many frames are scored from a video for each one kept.</summary>
+        [Display(Name = "Sampling Rate", Description = "How many frames are scored from a video for each one kept. Higher picks better frames but takes longer.")]
+        public SamplingRate SamplingRate { get; set; } = SamplingRate.Medium;
+
+        /// <summary>Gets or sets a value indicating whether image types draw from overlapping frames.</summary>
+        [Display(Name = "Reuse Samples", Description = "Let an item's poster, thumb, backdrop, and logo draw from overlapping frames. Off gives every image type its own frames, at the cost of extracting more.")]
+        public bool ReuseSamples { get; set; } = true;
     }
 }

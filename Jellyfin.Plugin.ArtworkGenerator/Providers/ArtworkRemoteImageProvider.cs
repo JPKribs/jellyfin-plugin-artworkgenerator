@@ -71,7 +71,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
         public int Order => 100;
 
         // Supports
-        // Series, seasons, episodes, films, and any other standalone video.
+        // Series, seasons, episodes, films, any other standalone video, collections, plain folders, and libraries.
         public bool Supports(BaseItem item) => item != null && ArtworkService.GetKind(item) != null;
 
         // GetSupportedImages

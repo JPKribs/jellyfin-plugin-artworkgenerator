@@ -27,9 +27,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // How many frames are looked at before the best are kept. The scorer ranks rather than
         // gates, so it needs a field to choose from: sampling one frame and taking it, which is what
         // an early exit amounted to on real video, is the same as not scoring at all.
-        private const int MinimumSamples = 8;
-        private const int SamplesPerCandidate = 4;
-        private const int MaxAttemptCeiling = 48;
         private const int ConsecutiveFailureLimit = 4;
 
         // A frame this dark once its bars are off is a fade or a blackout, not a picture.
@@ -93,6 +90,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             _settings = settings ?? (() => null);
         }
 
+        // MARK: MaxAttempts
+        internal static int MaxAttempts(int count, SamplingRate rate)
+        {
+            var (perCandidate, minimum, ceiling) = rate switch
+            {
+                SamplingRate.Low => (2, 4, 24),
+                SamplingRate.High => (8, 16, 64),
+                _ => (4, 8, 48)
+            };
+
+            return Math.Clamp(Math.Max(1, count) * perCandidate, minimum, ceiling);
+        }
+
         /// <summary>
         /// Extracts up to <paramref name="count"/> distinct frames from an episode, best first.
         /// Successive attempts walk a low-discrepancy sequence across the extraction window, so
@@ -149,7 +159,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             // Every sample is taken before any is chosen. The old loop stopped at the first frame
             // over a pass mark, which on real video was almost always the very first one.
-            var maxAttempts = Math.Clamp(count * SamplesPerCandidate, MinimumSamples, MaxAttemptCeiling);
+            var maxAttempts = MaxAttempts(count, _settings()?.SamplingRate ?? SamplingRate.Medium);
             var consecutiveFailures = 0;
 
             try

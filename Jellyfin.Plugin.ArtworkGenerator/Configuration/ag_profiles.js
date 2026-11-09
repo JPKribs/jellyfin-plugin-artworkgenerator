@@ -19,7 +19,10 @@ export default function (view) {
         { kind: 'Season', label: 'Seasons', shapeKey: 'SeasonPrimaryShape', defaultShape: 'Portrait' },
         { kind: 'Episode', label: 'Episodes', shapeKey: 'EpisodePrimaryShape', defaultShape: 'Landscape' },
         { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Video', label: 'Videos', shapeKey: 'VideoPrimaryShape', defaultShape: 'Portrait' }
+        { kind: 'Video', label: 'Videos', shapeKey: 'VideoPrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Collection', label: 'Collections', shapeKey: 'CollectionPrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Folder', label: 'Folders', shapeKey: 'FolderPrimaryShape', defaultShape: 'Landscape' },
+        { kind: 'Library', label: 'Libraries', shapeKey: 'LibraryPrimaryShape', defaultShape: 'Landscape' }
     ];
 
     // Which kinds each scope draws, mirroring ArtworkProfile.AppliesTo on the server.
@@ -32,7 +35,10 @@ export default function (view) {
         Season: ['Primary', 'Thumb', 'Backdrop'],
         Episode: ['Primary', 'Thumb', 'Backdrop'],
         Movie: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
-        Video: ['Primary', 'Thumb', 'Logo', 'Backdrop']
+        Video: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
+        Collection: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
+        Folder: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
+        Library: ['Primary', 'Thumb']
     };
 
     function getTabs() {
@@ -242,8 +248,7 @@ export default function (view) {
         if (!profile) return;
 
         profile.Slots = profile.Slots || [];
-        profile.SeriesIds = profile.SeriesIds || [];
-        profile.MovieIds = profile.MovieIds || [];
+        TARGETS.forEach(function (target) { assignedIds(profile, target); });
         profile.Backdrop = profile.Backdrop || {};
 
         var isDefault = !!profile.IsDefault;
@@ -576,19 +581,65 @@ export default function (view) {
             empty: 'No videos assigned.',
             missing: 'No videos found. Make sure you have music videos or home videos in your Jellyfin library.',
             items: []
+        },
+        {
+            key: 'CollectionIds',
+            itemType: 'BoxSet',
+            noun: 'collections',
+            label: 'Assigned Collections:',
+            button: 'Edit Collections',
+            modalTitle: 'Select Collections',
+            search: 'Search collections...',
+            empty: 'No collections assigned.',
+            missing: 'No collections found. Make sure you have collections in your Jellyfin library.',
+            items: []
+        },
+        {
+            key: 'FolderIds',
+            itemType: 'Folder',
+            noun: 'folders',
+            label: 'Assigned Folders:',
+            button: 'Edit Folders',
+            modalTitle: 'Select Folders',
+            search: 'Search folders...',
+            empty: 'No folders assigned.',
+            missing: 'No folders found. Make sure you have folders in a mixed content or home videos library.',
+            items: []
+        },
+        {
+            key: 'LibraryIds',
+            noun: 'libraries',
+            label: 'Assigned Libraries:',
+            button: 'Edit Libraries',
+            modalTitle: 'Select Libraries',
+            search: 'Search libraries...',
+            empty: 'No libraries assigned.',
+            missing: 'No libraries found.',
+            load: function () {
+                return ApiClient.getVirtualFolders().then(function (folders) {
+                    return (folders || []).map(function (folder) {
+                        return { Id: folder.ItemId, Name: folder.Name };
+                    });
+                });
+            },
+            items: []
         }
     ];
 
     function loadAssignableItems() {
         return Promise.all(TARGETS.map(function (target) {
-            return ApiClient.getItems(ApiClient.getCurrentUserId(), {
+            var request = target.load ? target.load() : ApiClient.getItems(ApiClient.getCurrentUserId(), {
                 IncludeItemTypes: target.itemType,
                 Recursive: true,
                 SortBy: 'SortName',
                 SortOrder: 'Ascending',
                 Fields: 'Overview,ProductionYear'
             }).then(function (result) {
-                target.items = result.Items || [];
+                return result.Items || [];
+            });
+
+            return request.then(function (items) {
+                target.items = items;
             }).catch(function (error) {
                 console.error('Failed to load ' + target.noun + ':', error);
                 target.items = [];
@@ -852,7 +903,7 @@ export default function (view) {
         var profile = getCurrentProfile();
         if (profile.IsDefault) return;
 
-        Dashboard.confirm('Delete this profile? Its series will use the default profile.', 'Delete Profile', function (confirmed) {
+        Dashboard.confirm('Delete this profile? Its assigned items will use the default profile.', 'Delete Profile', function (confirmed) {
             if (!confirmed) return;
             fullConfig.Profiles = fullConfig.Profiles.filter(function (p) { return p.Id !== profile.Id; });
             currentProfileId = null;
@@ -865,15 +916,14 @@ export default function (view) {
 
     function saveConfig() {
         var empty = fullConfig.Profiles.filter(function (p) {
-            // A profile is assigned by series or by film; either one is enough.
-            return !p.IsDefault
-                && (!p.SeriesIds || p.SeriesIds.length === 0)
-                && (!p.MovieIds || p.MovieIds.length === 0);
+            return !p.IsDefault && TARGETS.every(function (target) {
+                return !p[target.key] || p[target.key].length === 0;
+            });
         });
 
         if (empty.length > 0) {
             var names = empty.map(function (p) { return p.Name || 'Unnamed'; }).join(', ');
-            Dashboard.alert('Cannot save. These profiles have no series assigned: ' + names + '. Assign series or delete them.');
+            Dashboard.alert('Cannot save. These profiles have nothing assigned: ' + names + '. Assign items or delete them.');
             return;
         }
 

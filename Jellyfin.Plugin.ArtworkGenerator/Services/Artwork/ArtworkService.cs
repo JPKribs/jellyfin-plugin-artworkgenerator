@@ -24,11 +24,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
     public class ArtworkService
     {
         /// <summary>
-        /// Upper bound on how many frames a single request may ask for. Each distinct frame costs an
-        /// extraction, and a poster slot draws every frame once per design, so the Edit Images
-        /// picker can receive up to three times this many posters for one slot.
+        /// A safety ceiling on how many images one request may ask for, far above any practical
+        /// setting. It keeps a mistyped or hand-edited value from overflowing the frame arithmetic
+        /// or allocating more than the server can hold.
         /// </summary>
-        public const int MaxCandidates = 10;
+        public const int MaxCandidates = 1000;
 
         /// <summary>
         /// The most a portrait render may enlarge a design's text. A very tall crop would otherwise
@@ -57,18 +57,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         }
 
         /// <summary>Returns the artwork kind for a library item, or null when it is not supported.</summary>
-        public static ArtworkItemKind? GetKind(BaseItem item) => item switch
-        {
-            Episode => ArtworkItemKind.Episode,
-            Season => ArtworkItemKind.Season,
-            Series => ArtworkItemKind.Series,
-            Movie => ArtworkItemKind.Movie,
-
-            // Last, because Episode, Movie and MusicVideo all derive from Video: anything still
-            // unclaimed here is a video that stands on its own.
-            Video => ArtworkItemKind.Video,
-            _ => null
-        };
+        public static ArtworkItemKind? GetKind(BaseItem item) => ArtworkSources.KindOf(item);
 
         /// <summary>Returns the slot for a Jellyfin image type, or null when the plugin never fills it.</summary>
         public static ArtworkSlot? GetSlot(ImageType type) => type switch
@@ -226,8 +215,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
             return slot.Value switch
             {
-                ArtworkSlot.Logo => await RenderLogosAsync(item, subject, profile, assignment, count, cancellationToken).ConfigureAwait(false),
-                ArtworkSlot.Backdrop => await RenderBackdropsAsync(item, subject, profile, count, cancellationToken).ConfigureAwait(false),
+                ArtworkSlot.Logo => await RenderLogosAsync(item, subject, profile, assignment, count, includeAlternateDesigns, cancellationToken).ConfigureAwait(false),
+                ArtworkSlot.Backdrop => await RenderBackdropsAsync(item, subject, profile, count, includeAlternateDesigns, cancellationToken).ConfigureAwait(false),
                 _ => await RenderPostersAsync(item, subject, profile, kind.Value, slot.Value, assignment, count, includeAlternateDesigns, cancellationToken).ConfigureAwait(false)
             };
         }
@@ -264,7 +253,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             var perDesign = new List<IReadOnlyList<GeneratedArtwork?>>(designs.Count);
             foreach (var design in designs)
             {
-                perDesign.Add(await RenderDesignAsync(item, subject, ShapeAdjust(design, shape), shape, slot, count, cancellationToken).ConfigureAwait(false));
+                perDesign.Add(await RenderDesignAsync(item, subject, ShapeAdjust(design, shape), shape, slot, count, includeAlternateDesigns, cancellationToken).ConfigureAwait(false));
             }
 
             return InterleaveByFrame(perDesign);
@@ -281,6 +270,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             ArtworkShape shape,
             ArtworkSlot slot,
             int count,
+            bool picking,
             CancellationToken cancellationToken)
         {
             var generator = CreateGenerator(settings.PosterStyle, shape);
@@ -288,7 +278,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             ApplySubjectRules(subject, settings);
 
             var canvases = await _canvasService
-                .GenerateCanvasesAsync(item, subject, settings, shape, RankOffset(slot), count, cancellationToken)
+                .GenerateCanvasesAsync(item, subject, settings, shape, RankOffset(slot, count, picking), count, cancellationToken)
                 .ConfigureAwait(false);
 
             var results = new GeneratedArtwork?[canvases.Count];
@@ -350,10 +340,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             ArtworkSubject subject,
             ArtworkProfile profile,
             int count,
+            bool picking,
             CancellationToken cancellationToken)
         {
             var canvases = await _canvasService
-                .GenerateBackdropCanvasesAsync(item, subject, profile.Backdrop ?? new BackdropSettings(), RankOffset(ArtworkSlot.Backdrop), count, cancellationToken)
+                .GenerateBackdropCanvasesAsync(item, subject, profile.Backdrop ?? new BackdropSettings(), RankOffset(ArtworkSlot.Backdrop, count, picking), count, cancellationToken)
                 .ConfigureAwait(false);
 
             var results = new List<GeneratedArtwork>(canvases.Count);
@@ -390,6 +381,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             ArtworkProfile profile,
             SlotAssignment assignment,
             int count,
+            bool picking,
             CancellationToken cancellationToken)
         {
             var settings = _configService.GetLogoForSlot(assignment);
@@ -399,7 +391,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             }
 
             var photos = await _canvasService
-                .GenerateBackdropCanvasesAsync(item, subject, profile.Backdrop ?? new BackdropSettings(), RankOffset(ArtworkSlot.Logo), count, cancellationToken)
+                .GenerateBackdropCanvasesAsync(item, subject, profile.Backdrop ?? new BackdropSettings(), RankOffset(ArtworkSlot.Logo, count, picking), count, cancellationToken)
                 .ConfigureAwait(false);
 
             try
@@ -466,20 +458,45 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         // RankOffset
         // Each slot starts at a different rank of the shared pool, so a series' poster, backdrop,
         // thumb, and photo logo show four different frames rather than the same one four times.
-        private static int RankOffset(ArtworkSlot slot) => slot switch
+        // With samples reused the slots overlap, one rank apart. Without, each takes its own block
+        // of ranks: poster, thumb, logo, then backdrop last. Every block is as wide as the picker's
+        // choice count, which every type shares. A refresh draws one of each type except backdrops,
+        // which it fills to the library's limit, so its blocks are one rank wide and the backdrops,
+        // coming last, can run on without meeting another type.
+        private static int RankOffset(ArtworkSlot slot, int count, bool picking)
+            => RankOffset(slot, count, picking, Plugin.Instance?.Configuration?.FrameExtraction?.ReuseSamples ?? true);
+
+        internal static int RankOffset(ArtworkSlot slot, int count, bool picking, bool reuseSamples)
         {
-            ArtworkSlot.Backdrop => 1,
-            ArtworkSlot.Thumb => 2,
-            ArtworkSlot.Logo => 3,
-            _ => 0
-        };
+            if (reuseSamples)
+            {
+                return slot switch
+                {
+                    ArtworkSlot.Backdrop => 1,
+                    ArtworkSlot.Thumb => 2,
+                    ArtworkSlot.Logo => 3,
+                    _ => 0
+                };
+            }
+
+            var block = slot switch
+            {
+                ArtworkSlot.Thumb => 1,
+                ArtworkSlot.Logo => 2,
+                ArtworkSlot.Backdrop => 3,
+                _ => 0
+            };
+
+            var width = picking ? Math.Clamp(count, 1, MaxCandidates) : 1;
+            return block * width;
+        }
 
         // ProfileKey
-        // What a profile assignment is keyed on: a film is assigned by its own id, everything else
-        // by the series it belongs to.
+        // What a profile assignment is keyed on: a film, a video, a collection, a folder, or a
+        // library is assigned by its own id, everything else by the series it belongs to.
         private static Guid ProfileKey(BaseItem item, ArtworkItemKind kind)
         {
-            return kind.IsStandalone() ? item.Id : GetSeriesId(item);
+            return kind.IsAssignedByOwnId() ? item.Id : GetSeriesId(item);
         }
 
         private static Guid GetSeriesId(BaseItem item) => item switch

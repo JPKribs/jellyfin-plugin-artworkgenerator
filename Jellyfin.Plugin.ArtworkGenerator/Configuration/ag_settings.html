@@ -14,7 +14,7 @@
 
                     <div class="inputContainer">
                         <label for="txtImageChoiceCount">Choices In Edit Images:</label>
-                        <input is="emby-input" type="number" id="txtImageChoiceCount" min="1" max="10" step="1" />
+                        <input is="emby-input" type="number" id="txtImageChoiceCount" min="1" max="1000" step="1" />
                         <div class="fieldDescription">Alternates offered per image type in Edit Images. Each is a different frame, so a higher number is slower to open.</div>
                     </div>
 
@@ -51,6 +51,20 @@
                                 </div>
                             </div>
                             <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
+
+                            <div class="selectContainer inputContainer">
+                                <label for="selectSamplingRate"></label>
+                                <select is="emby-select" id="selectSamplingRate" data-frame-setting="SamplingRate"></select>
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="checkboxContainer">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="chkReuseSamples" data-frame-setting="ReuseSamples" />
+                                    <span class="checkboxLabel"></span>
+                                </label>
+                                <div class="fieldDescription"></div>
+                            </div>
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">

@@ -4,6 +4,21 @@ using System;
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
     /// <summary>
+    /// How many frames are scored from a video for each one that is kept.
+    /// </summary>
+    public enum SamplingRate
+    {
+        /// <summary>Fewer samples: faster, with less to choose from.</summary>
+        Low,
+
+        /// <summary>The standard number of samples.</summary>
+        Medium,
+
+        /// <summary>More samples: slower, with more to choose from.</summary>
+        High
+    }
+
+    /// <summary>
     /// The kinds of library item the plugin can generate artwork.
     /// </summary>
     public enum ArtworkItemKind
@@ -24,7 +39,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// A video that stands on its own rather than belonging to a series: a music video, a home
         /// video, or anything else a library holds as a plain video.
         /// </summary>
-        Video
+        Video,
+
+        /// <summary>A collection, drawn from the videos it holds.</summary>
+        Collection,
+
+        /// <summary>A plain library folder, drawn from the videos beneath it.</summary>
+        Folder,
+
+        /// <summary>A whole library, drawn from the videos it holds.</summary>
+        Library
     }
 
     /// <summary>
@@ -167,5 +191,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// </summary>
         public static bool IsStandalone(this ArtworkItemKind kind)
             => kind is ArtworkItemKind.Movie or ArtworkItemKind.Video;
+
+        /// <summary>
+        /// Whether the kind groups other items rather than being one, so its frames come from the
+        /// videos it holds.
+        /// </summary>
+        public static bool IsGroup(this ArtworkItemKind kind)
+            => kind is ArtworkItemKind.Collection or ArtworkItemKind.Folder or ArtworkItemKind.Library;
+
+        /// <summary>
+        /// Whether the kind is assigned to a profile by its own id rather than by its series.
+        /// </summary>
+        public static bool IsAssignedByOwnId(this ArtworkItemKind kind)
+            => kind.IsStandalone() || kind.IsGroup();
     }
 }

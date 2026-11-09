@@ -34,7 +34,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             (ArtworkItemKind.Video, ArtworkSlot.Primary),
             (ArtworkItemKind.Video, ArtworkSlot.Thumb),
             (ArtworkItemKind.Video, ArtworkSlot.Logo),
-            (ArtworkItemKind.Video, ArtworkSlot.Backdrop)
+            (ArtworkItemKind.Video, ArtworkSlot.Backdrop),
+            (ArtworkItemKind.Collection, ArtworkSlot.Primary),
+            (ArtworkItemKind.Collection, ArtworkSlot.Thumb),
+            (ArtworkItemKind.Collection, ArtworkSlot.Logo),
+            (ArtworkItemKind.Collection, ArtworkSlot.Backdrop),
+            (ArtworkItemKind.Folder, ArtworkSlot.Primary),
+            (ArtworkItemKind.Folder, ArtworkSlot.Thumb),
+            (ArtworkItemKind.Folder, ArtworkSlot.Logo),
+            (ArtworkItemKind.Folder, ArtworkSlot.Backdrop),
+            (ArtworkItemKind.Library, ArtworkSlot.Primary),
+            (ArtworkItemKind.Library, ArtworkSlot.Thumb)
         };
 
         public ArtworkProfile()
@@ -44,6 +54,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             SeriesIds = new List<Guid>();
             MovieIds = new List<Guid>();
             VideoIds = new List<Guid>();
+            CollectionIds = new List<Guid>();
+            FolderIds = new List<Guid>();
+            LibraryIds = new List<Guid>();
             Slots = new List<SlotAssignment>();
             Backdrop = new BackdropSettings();
         }
@@ -80,6 +93,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
         public List<Guid> VideoIds { get; set; }
 
+        /// <summary>Gets or sets the collections assigned to this profile.</summary>
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
+        public List<Guid> CollectionIds { get; set; }
+
+        /// <summary>Gets or sets the library folders assigned to this profile.</summary>
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
+        public List<Guid> FolderIds { get; set; }
+
+        /// <summary>Gets or sets the libraries assigned to this profile.</summary>
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
+        public List<Guid> LibraryIds { get; set; }
+
         /// <summary>Gets or sets the shape of series primary images.</summary>
         public ArtworkShape SeriesPrimaryShape { get; set; } = ArtworkShape.Portrait;
 
@@ -94,6 +122,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         /// <summary>Gets or sets the shape a standalone video's primary image is drawn in.</summary>
         public ArtworkShape VideoPrimaryShape { get; set; } = ArtworkShape.Portrait;
+
+        /// <summary>Gets or sets the shape a collection's primary image is drawn in.</summary>
+        public ArtworkShape CollectionPrimaryShape { get; set; } = ArtworkShape.Portrait;
+
+        /// <summary>Gets or sets the shape a library folder's primary image is drawn in.</summary>
+        public ArtworkShape FolderPrimaryShape { get; set; } = ArtworkShape.Landscape;
+
+        /// <summary>Gets or sets the shape a library's primary image is drawn in.</summary>
+        public ArtworkShape LibraryPrimaryShape { get; set; } = ArtworkShape.Landscape;
 
         [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
@@ -126,6 +163,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             ArtworkItemKind.Season => SeasonPrimaryShape,
             ArtworkItemKind.Movie => MoviePrimaryShape,
             ArtworkItemKind.Video => VideoPrimaryShape,
+            ArtworkItemKind.Collection => CollectionPrimaryShape,
+            ArtworkItemKind.Folder => FolderPrimaryShape,
+            ArtworkItemKind.Library => LibraryPrimaryShape,
             _ => EpisodePrimaryShape
         };
 

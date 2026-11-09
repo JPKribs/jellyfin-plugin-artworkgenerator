@@ -72,10 +72,25 @@ public class ArtworkRemoteImageProviderTests
     [Theory]
     [InlineData(0, 1)]
     [InlineData(1, 1)]
-    [InlineData(50, 10)]
-    public void Plan_ARefreshDrawsAtLeastOneBackdropAndNoMoreThanTheCap(int limit, int expected)
+    [InlineData(50, 50)]
+    [InlineData(500, 500)]
+    [InlineData(5000, 1000)]
+    public void Plan_ARefreshDrawsAtLeastOneBackdropAndAsManyAsTheLibraryKeeps(int limit, int expected)
     {
         var plan = ArtworkRemoteImageProvider.Plan(new[] { ImageType.Backdrop }, picking: false, choiceCount: 3, backdropLimit: limit);
+
+        Assert.Equal(expected, plan.Single().Count);
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(25, 25)]
+    [InlineData(50, 50)]
+    [InlineData(500, 500)]
+    [InlineData(int.MaxValue, 1000)]
+    public void Plan_ThePickerOffersAsManyChoicesAsConfigured(int choices, int expected)
+    {
+        var plan = ArtworkRemoteImageProvider.Plan(new[] { ImageType.Primary }, picking: true, choiceCount: choices, backdropLimit: 1);
 
         Assert.Equal(expected, plan.Single().Count);
     }

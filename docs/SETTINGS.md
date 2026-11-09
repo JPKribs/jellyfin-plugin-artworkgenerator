@@ -1,6 +1,6 @@
 # Artwork Generator Settings
 
-The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Artwork is made for series, seasons, episodes, films, and standalone videos such as music videos and home videos. Labels below match the configuration pages.
+The plugin has four tabs. **Designs** set how a poster looks, **Logos** set how a text logo looks, **Profiles** choose which images are made and which design draws each one, and **Settings** hold the plugin-wide options. Artwork is made for series, seasons, episodes, films, standalone videos such as music videos and home videos, collections, plain library folders, and whole libraries. Labels below match the configuration pages.
 
 ## Settings
 
@@ -8,7 +8,7 @@ The Settings tab, with Frame Extraction opened.
 
 ![Settings](screenshots/Settings.png)
 
-* **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, 1 to 10. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. An automatic metadata refresh keeps a single image of each type, so it renders only one, and only as many backdrops as the library keeps. A primary image or thumb with a second and third design draws each choice once per design. Default 3.
+* **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, from 1 to 1000. The 1000 is only a safety ceiling against a mistyped value. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. If the previews in the dialog are broken on other devices, set a published server address as described in [Installation](Installation.md#set-a-published-server-uri). An automatic metadata refresh keeps a single image of each type, so it renders only one, and only as many backdrops as the library keeps. A primary image or thumb with a second and third design draws each choice once per design. Rendered choices share a 256 MB memory cache, so a very high value can push the earliest ones out before one is picked. Default 10.
 * **Edit Images Cache (Minutes)**: how long the choices rendered for the Edit Images dialog stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones, unless the settings or the item's images have changed. The dialog loads each choice by address, so one picked after this has passed cannot be downloaded and the dialog has to be reopened. They are held in memory, up to 256 MB at once, oldest dropped first, and released as soon as they expire. Default 30.
 * **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
 
@@ -17,6 +17,8 @@ The Settings tab, with Frame Extraction opened.
 How frames are taken from a video and cleaned up, for every poster and every backdrop. These used to be a copy on each design and each profile, which let the same decision disagree with itself; they are set once here.
 
 * **Extraction Start (%)** and **Extraction End (%)**: the stretch of each episode frames are taken from, skipping intros and credits. Default 20 and 80.
+* **Sampling Rate**: how many frames are scored from a video for each one kept. Low scores 2 per frame kept (at least 4, at most 24 per video), Medium 4 (at least 8, at most 48), and High 8 (at least 16, at most 64). Higher picks better frames but takes longer, since every sample is its own seek. Changing it discards the frames already gathered, so the next image uses the new rate. Default Medium.
+* **Reuse Samples**: lets an item's poster, thumb, backdrop, and logo draw from overlapping frames. With 10 choices, the poster takes frames 1 to 10, the backdrop 2 to 11, the thumb 3 to 12, and the logo 4 to 13, so about 13 frames are extracted. Off, each image type takes its own block, so the poster takes frames 1 to 10, the thumb 11 to 20, the logo 21 to 30, and the backdrop 31 to 40: no two types share a frame, at the cost of extracting about 40. With it off, a refresh that keeps one image of each type also gives each type a different frame, and fills backdrops to the library's limit after the others, so no backdrop repeats another type's frame. With it on, refresh backdrops beyond the first can share the thumb's and logo's frames. Default on.
 * **Avoid Media Segments**: take no frame from inside an item's media segments, with two seconds to spare on either side of each. Segments come from a media segment provider plugin that is turned on for the library, so an item without any is unaffected and only the window above applies. When the segments cover the whole window they are ignored. Default on.
   * **Intros**, **Outros**, **Recaps**, **Previews**, and **Commercials**: the kinds of segment to avoid. Untick one to let frames come from it. Default all on.
 * **Brighten Frame (%)**: how much every extracted frame is brightened. Default 0.
@@ -35,12 +37,12 @@ The Profiles tab, with a design picked for each kind of item.
 ![Profiles](screenshots/Profiles.png)
 
 * **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.
-* **Assigned Series**, **Assigned Movies**, and **Assigned Videos**: the series, films, and standalone videos that use the active profile. An item belongs to one profile at a time. A profile can carry both.
-* **Images**: one row each for series, seasons, episodes, movies, and videos. Tick an image to generate it whenever an item is missing one.
-  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series, seasons, and movies default to portrait and episodes to landscape. Any design can draw either shape.
+* **Assigned Series**, **Assigned Movies**, **Assigned Videos**, **Assigned Collections**, **Assigned Folders**, and **Assigned Libraries**: the items that use the active profile. An item belongs to one profile at a time. A profile can carry any mix of them.
+* **Images**: one row each for series, seasons, episodes, movies, videos, collections, folders, and libraries. Tick an image to generate it whenever an item is missing one. Collections, folders, and libraries are off until ticked. A collection draws its frames from the films and episodes it holds, and a folder or library from the videos beneath it, so one holding only photos or music gets nothing. A large collection, folder, or library uses up to 200 of its readable videos, spread across the whole of it. One whose frames cannot be extracted, such as a folder of photos, is left with the artwork it has rather than given a blank image. The Collections library draws from the videos in its collections. Libraries offer a primary image and a thumb only. Music, book, photo, Live TV, and playlist libraries, and the folders inside them, are never drawn, and albums and playlists keep the artwork Jellyfin gives them.
+  * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series, seasons, movies, videos, and collections default to portrait; episodes, folders, and libraries to landscape. Any design can draw either shape.
   * **Thumb**: a landscape image, offered for every kind. An episode thumb is what many clients show in the next-up and resume rows.
   * **Second and third designs**: Primary and Thumb can each name up to two more designs, picked from the dropdowns under the design, where a dash means none. The third appears once a second is chosen, and clearing the second moves the third up. They only add choices to the Edit Images picker, where every design draws the same frames and each frame's versions sit side by side. Generating a missing image always uses the first design.
-  * **Logo**: a transparent text logo for a series or a film, drawn with a logo design.
+  * **Logo**: a transparent text logo for a series, a film, a video, a collection, or a folder, drawn with a logo design.
   * **Backdrop**: a frame from the video with no design. For an episode it is also saved after its primary image is made, when the episode has no backdrop.
 * **Backdrops**: the aspect ratio a backdrop is cropped to. How its frame is taken from the video is in Settings, under Frame Extraction.
 
@@ -59,7 +61,7 @@ Sizes are a percent of the poster's short side. A portrait image measures them a
 * **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design, and drops it wherever it was a second or third design. The default design cannot be renamed or deleted.
 * **New, Rename, Delete**: manage named designs.
 * **Export, Import**: save a design to JSON, or load one as a new design.
-* **Preview As**: whether the previews show a series, a season, an episode, a film, or a standalone video.
+* **Preview As**: whether the previews show a series, a season, an episode, a film, a standalone video, a collection, a folder, or a library.
 
 What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
 

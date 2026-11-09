@@ -235,7 +235,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// Gets a value indicating whether a cutout style punches out the title itself. A series has
         /// no code or number, so its name becomes the cutout and is not drawn a second time.
         /// </summary>
-        public bool CutoutIsPrimary => Kind is ArtworkItemKind.Series || Kind.IsStandalone() || Promoted;
+        public bool CutoutIsPrimary => Kind is ArtworkItemKind.Series || Kind.IsStandalone() || Kind.IsGroup() || Promoted;
 
         /// <summary>
         /// Returns the text a cutout style punches out: the featured number spelled out when the
@@ -260,17 +260,22 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         // FromItem
         // Builds the subject for any supported library item.
-        public static ArtworkSubject FromItem(BaseItem item) => item switch
+        public static ArtworkSubject FromItem(BaseItem item)
         {
-            Episode episode => FromEpisode(episode),
-            Season season => FromSeason(season),
-            Series series => FromSeries(series),
-            Movie movie => FromMovie(movie),
+            ArgumentNullException.ThrowIfNull(item);
 
-            // Last, because the kinds above all derive from Video.
-            Video video => FromStandalone(video, ArtworkItemKind.Video),
-            _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, and videos.", nameof(item))
-        };
+            var kind = ArtworkSources.KindOf(item);
+            return kind switch
+            {
+                ArtworkItemKind.Episode => FromEpisode((Episode)item),
+                ArtworkItemKind.Season => FromSeason((Season)item),
+                ArtworkItemKind.Series => FromSeries((Series)item),
+                ArtworkItemKind.Movie => FromMovie((Movie)item),
+                ArtworkItemKind.Video => FromStandalone((Video)item, ArtworkItemKind.Video),
+                { } group when group.IsGroup() => FromGroup((Folder)item, group),
+                _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, videos, collections, folders, and libraries that can hold video.", nameof(item))
+            };
+        }
 
         // FolderNameOf
         // The name of the folder a file sits in, which a logo can use as its text source.
@@ -310,6 +315,25 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 SortTitle = video.SortName,
                 FolderName = FolderNameOf(video.Path),
                 ProductionYear = video.ProductionYear
+            };
+        }
+
+        // MARK: FromGroup
+        public static ArtworkSubject FromGroup(Folder folder, ArtworkItemKind kind)
+        {
+            ArgumentNullException.ThrowIfNull(folder);
+
+            var path = folder.Path;
+
+            return new ArtworkSubject(VideoMetadata.Create(folder, null, null))
+            {
+                Kind = kind,
+                ItemId = folder.Id,
+                SeriesName = folder.Name,
+                OriginalTitle = folder.OriginalTitle,
+                SortTitle = folder.SortName,
+                FolderName = string.IsNullOrEmpty(path) ? null : Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+                ProductionYear = folder.ProductionYear
             };
         }
 

@@ -44,7 +44,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         /// <paramref name="rankOffset"/> of the item's frame pool. The settings must already be
         /// adjusted for <paramref name="shape"/>. Only extracted frames can produce more than one.
         /// When nothing can be extracted, the series backdrop and then a blank canvas stand in, so
-        /// a series or season without local episodes still gets artwork. The caller owns the bitmaps.
+        /// a series or season without local episodes still gets artwork. A collection, folder, or
+        /// library gets nothing instead, so one holding no video keeps the artwork Jellyfin gives it.
+        /// The caller owns the bitmaps.
         /// </summary>
         public async Task<IReadOnlyList<SKBitmap>> GenerateCanvasesAsync(
             BaseItem item,
@@ -81,6 +83,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     }
 
                     _logger.LogInformation("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
+                }
+
+                if (subject.Kind.IsGroup())
+                {
+                    _logger.LogDebug("No frames could be extracted for {Name}; a collection, folder, or library is left with the artwork it has", item.Name);
+                    return Array.Empty<SKBitmap>();
                 }
 
                 if (settings.CanvasSource != CanvasSource.None)

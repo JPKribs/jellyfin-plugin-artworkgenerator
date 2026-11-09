@@ -1,6 +1,6 @@
 <img src="docs/assets/icon.png" alt="Artwork Generator" width="96" align="left">
 
-A Jellyfin plugin that generates artwork for TV shows, films, and standalone videos using smart frame analysis, black frame detection, letterbox detection, and configurable styling. It makes episode posters, portrait series, season, and movie posters, thumbs, backdrops, and text logos, filling in missing or generic artwork with clean, consistent visuals.
+A Jellyfin plugin that generates artwork for TV shows, films, standalone videos, collections, folders, and whole libraries using smart frame analysis, black frame detection, letterbox detection, and configurable styling. It makes episode posters, portrait series, season, and movie posters, thumbs, backdrops, and text logos, filling in missing or generic artwork with clean, consistent visuals.
 
 <br clear="left">
 
