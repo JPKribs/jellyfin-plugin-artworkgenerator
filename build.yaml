@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.3.0"
+version: "12.4.4.0"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: Generate artwork from your own video
@@ -18,12 +18,10 @@ artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
   features:
-  - Generate artwork for collections, plain folders, and whole libraries. Each is off until ticked in a profile, and each can be assigned to its own profile. Collections default to a portrait primary image, folders and libraries to landscape
-  - Choices In Edit Images goes up to 1000 instead of 10, and defaults to 10 for new installs
-  - Sampling Rate in Frame Extraction scores fewer or more frames for each one kept. Medium matches earlier releases
-  - Reuse Samples in Frame Extraction can be turned off so every image type gets its own frames instead of overlapping ones
-  - The installation guide explains setting a Published Server URI so Edit Images previews load on other devices
+  - Videos Per Parent in Frame Extraction caps how many videos a series, season, collection, folder, or library takes frames from. 0 uses every video and is the default. A lower number is faster on network storage
   fixed:
-  - A profile with only videos assigned can be saved
+  - Logo text cleanup no longer fails on a busy server
+  - Design and logo previews release their images when the page closes
   developer:
-  - Built for Jellyfin 12.4 (target ABI 12.4.0.0). Servers on earlier Jellyfin versions keep the previous release.
+  - Built for Jellyfin 12.4 (target ABI 12.4.0.0).
+  - Built with JPKribs.Jellyfin.Base 2026.10.28.
