@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.4.3.0",
+        "changelog": "\n## Features\n- Generate artwork for collections, plain folders, and whole libraries. Each is off until ticked in a profile, and each can be assigned to its own profile. Collections default to a portrait primary image, folders and libraries to landscape\n- Choices In Edit Images goes up to 1000 instead of 10, and defaults to 10 for new installs\n- Sampling Rate in Frame Extraction scores fewer or more frames for each one kept. Medium matches earlier releases\n- Reuse Samples in Frame Extraction can be turned off so every image type gets its own frames instead of overlapping ones\n- The installation guide explains setting a Published Server URI so Edit Images previews load on other devices\n\n## Fixed\n- A profile with only videos assigned can be saved\n\n## Developer\n- Built for Jellyfin 12.4 (target ABI 12.4.0.0). Servers on earlier Jellyfin versions keep the previous release.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.4.3.0/jellyfin-plugin-artworkgenerator-12.4.3.0.zip",
+        "checksum": "b821e41a63dbd40239a19445226bd9d6",
+        "timestamp": "2026-11-09T04:04:51Z"
+      },
+      {
         "version": "12.2.2.1",
         "changelog": "\n## Fixed\n- Remove unnecessary logging. Episodes Jellyfin has not finished reading yet no longer log an error during the first library scan",
         "targetAbi": "12.2.0.0",
