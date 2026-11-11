@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.4.4.1",
+        "changelog": "\n## Removed\n- The Cleanup Backdrops scheduled task. It was a one time cleanup for backdrops that piled up in earlier versions and is no longer needed\n\n## Developer\n- Generated backdrops are no longer tagged with a marker comment, which only the task used.\n- Built for Jellyfin 12.4 (target ABI 12.4.0.0).\n- Built with JPKribs.Jellyfin.Base 2026.10.28.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.4.4.1/jellyfin-plugin-artworkgenerator-12.4.4.1.zip",
+        "checksum": "63209be32764542ff3aad457c5e3e1b5",
+        "timestamp": "2026-11-11T15:54:24Z"
+      },
+      {
         "version": "12.4.4.0",
         "changelog": "\n## Features\n- Videos Per Parent in Frame Extraction caps how many videos a series, season, collection, folder, or library takes frames from. 0 uses every video and is the default. A lower number is faster on network storage\n\n## Fixed\n- Logo text cleanup no longer fails on a busy server\n- Design and logo previews release their images when the page closes\n\n## Developer\n- Built for Jellyfin 12.4 (target ABI 12.4.0.0).\n- Built with JPKribs.Jellyfin.Base 2026.10.28.",
         "targetAbi": "12.4.0.0",
