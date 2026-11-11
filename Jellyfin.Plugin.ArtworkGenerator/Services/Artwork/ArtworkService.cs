@@ -334,7 +334,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
 
         // RenderBackdropsAsync
         // Backdrop: a frame from the item's pool cropped to the backdrop ratio, with no design.
-        // Each is tagged as the plugin's own, so Cleanup Backdrops can tell it from the user's.
         private async Task<IReadOnlyList<GeneratedArtwork>> RenderBackdropsAsync(
             BaseItem item,
             ArtworkSubject subject,
@@ -356,7 +355,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                     using var data = image.Encode(SKEncodedImageFormat.Jpeg, RenderConstants.JpegQuality);
                     if (data != null)
                     {
-                        results.Add(new GeneratedArtwork(GeneratedImageMarker.Tag(data.ToArray()), "image/jpeg", ImageFormat.Jpg, canvas.Width, canvas.Height));
+                        results.Add(new GeneratedArtwork(data.ToArray(), "image/jpeg", ImageFormat.Jpg, canvas.Width, canvas.Height));
                     }
                 }
             }
