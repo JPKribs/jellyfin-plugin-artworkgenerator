@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.4.4.2",
+        "changelog": "\n## Changed\n- The code and documentation are cleaned up, with no change to what the plugin does.\n\n## Developer\n- Removed an unused copy of the preview screenshot from the plugin assets (Assets/Preview-Modal.png).",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.4.4.2/jellyfin-plugin-artworkgenerator-12.4.4.2.zip",
+        "checksum": "96eaacce1740aa63b3dc5c838b2f3fc2",
+        "timestamp": "2026-11-13T08:45:06Z"
+      },
+      {
         "version": "12.4.4.1",
         "changelog": "\n## Removed\n- The Cleanup Backdrops scheduled task. It was a one time cleanup for backdrops that piled up in earlier versions and is no longer needed\n\n## Developer\n- Generated backdrops are no longer tagged with a marker comment, which only the task used.\n- Built for Jellyfin 12.4 (target ABI 12.4.0.0).\n- Built with JPKribs.Jellyfin.Base 2026.10.28.",
         "targetAbi": "12.4.0.0",
