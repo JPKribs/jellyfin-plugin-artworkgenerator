@@ -60,7 +60,7 @@ Sizes are a percent of the poster's short side. A portrait image measures them a
 * **Export, Import**: save a design to JSON, or load one as a new design.
 * **Preview As**: whether the previews show a series, a season, an episode, a film, a standalone video, a collection, a folder, or a library.
 
-What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows the series name as the title and its season, such as SEASON 2 or S02. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
+What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows its own name as the title when it has one, and its season, such as SEASON 2 or S02, as the subtitle; a season with no name of its own moves that label up into the title. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
 
 Split lays out landscape only, so its portrait images are drawn with Standard instead. The Designs page says so under the previews.
 
@@ -120,7 +120,7 @@ The logo is the one selected for the item, then its season, then its series. Wit
 
 ## Title Text
 
-* **Show Title**: draw the title, which is the episode name for an episode and the series name otherwise. Default on.
+* **Show Title**: draw the title, which is the item's own name: the episode name for an episode, a named season's name for a season, and the series or film name otherwise. Default on.
 * **Long Titles**: what to do when a title does not fit. Ellipsis trims it. Abbreviate shortens it in stages: first the text before a divider, then the first sentence, then the first letter of every word with periods such as L.O.T.R., keeping dividers and skipping middle initials if still too wide. Drop Name hides it. Default Ellipsis.
 * **Font**: font family for the title. Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
@@ -151,7 +151,7 @@ The Logos tab, previewing a sample name.
 
 ![Logos](screenshots/Logos.png)
 
-Logo designs are stored in their own file, `logos.json`, in the plugin's data directory, rather than inside the plugin configuration. Editing a logo therefore never rewrites the rest of your settings. Designs saved by an earlier version move into that file automatically the first time the plugin loads.
+Logo designs are stored in their own file, `logos.json`, in the plugin's data directory, rather than inside the plugin configuration. Editing a logo therefore never rewrites the rest of your settings.
 
 * **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
 * **Sample name**: the box under the preview, which starts out reading Demo Logo Text. What you type is previewed but never saved.

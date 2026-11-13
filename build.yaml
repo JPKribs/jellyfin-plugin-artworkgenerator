@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.4.1"
+version: "12.4.4.2"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: Generate artwork from your own video
@@ -17,9 +17,7 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
-  removed:
-  - The Cleanup Backdrops scheduled task. It was a one time cleanup for backdrops that piled up in earlier versions and is no longer needed
+  changed:
+  - The code and documentation are cleaned up, with no change to what the plugin does.
   developer:
-  - Generated backdrops are no longer tagged with a marker comment, which only the task used.
-  - Built for Jellyfin 12.4 (target ABI 12.4.0.0).
-  - Built with JPKribs.Jellyfin.Base 2026.10.28.
+  - Removed an unused copy of the preview screenshot from the plugin assets (Assets/Preview-Modal.png).
