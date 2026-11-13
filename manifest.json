@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.4.4.3",
+        "changelog": "\n## Changed\n- No change to what the plugin does. It writes no activity log entries, so none needed summing or rewording.\n\n## Developer\n- Uses JPKribs.Jellyfin.Base 2026.11.13.2.",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.4.4.3/jellyfin-plugin-artworkgenerator-12.4.4.3.zip",
+        "checksum": "cd8f2deb4fe845cb7990afd67f181f11",
+        "timestamp": "2026-11-13T18:59:02Z"
+      },
+      {
         "version": "12.4.4.2",
         "changelog": "\n## Changed\n- The code and documentation are cleaned up, with no change to what the plugin does.\n\n## Developer\n- Removed an unused copy of the preview screenshot from the plugin assets (Assets/Preview-Modal.png).",
         "targetAbi": "12.4.0.0",
