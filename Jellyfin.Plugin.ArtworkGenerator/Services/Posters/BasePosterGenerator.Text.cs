@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using SkiaSharp;
@@ -138,7 +135,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // CreatePrimaryStyle
-        // The font and paints for the episode title, sized and colored from the settings.
+        // The font and paints for the title, sized and colored from the settings.
         protected static TextStyle CreatePrimaryStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
         {
             ArgumentNullException.ThrowIfNull(settings);
@@ -149,7 +146,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // CreateSecondaryStyle
-        // The font and paints for the episode code or number, sized and colored from the settings.
+        // The font and paints for the subtitle, sized and colored from the settings.
         protected static TextStyle CreateSecondaryStyle(PosterSettings settings, int height, SKTextAlign align = SKTextAlign.Center, bool withShadow = true)
         {
             ArgumentNullException.ThrowIfNull(settings);
@@ -169,7 +166,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // ResolveSecondaryTypeface
-        // The episode face in the given weight. Not disposed by callers: FontUtils owns the cache.
+        // The subtitle's face in the given weight. Not disposed by callers: FontUtils owns the cache.
         protected static SKTypeface ResolveSecondaryTypeface(PosterSettings settings, SKFontStyle style)
         {
             ArgumentNullException.ThrowIfNull(settings);
@@ -335,8 +332,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawSeasonEpisodeInfo
-        // Draws "season • episode" centered on the slot's bottom edge. The bullet uses the
-        // regular weight so it does not overpower the numbers beside it.
+        // Draws "season • episode" on the slot's bottom edge, aligned as the style asks. The
+        // bullet uses the regular weight so it does not overpower the numbers beside it.
         protected static void DrawSeasonEpisodeInfo(SKCanvas canvas, int seasonNumber, int episodeNumber, TextStyle secondaryStyle, PosterSettings settings, int height, SKRect slot)
         {
             ArgumentNullException.ThrowIfNull(secondaryStyle);
@@ -372,7 +369,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawSeparatorLine
-        // Draws a horizontal rule across the slot in the episode color, with a shadow.
+        // Draws a horizontal rule across the slot in the subtitle color, with a shadow.
         protected static void DrawSeparatorLine(SKCanvas canvas, PosterSettings settings, int height, SKRect slot)
         {
             ArgumentNullException.ThrowIfNull(settings);

@@ -1,6 +1,6 @@
-using SkiaSharp;
 using System;
 using System.Globalization;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Utilities;
 

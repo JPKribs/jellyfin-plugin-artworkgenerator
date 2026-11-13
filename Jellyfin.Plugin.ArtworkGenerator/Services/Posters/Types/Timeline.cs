@@ -153,6 +153,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             leftStyle.Draw(canvas, subject.SecondaryShort, slot.Left, baselineY);
             rightStyle.Draw(canvas, subject.ProgressText, slot.Right, baselineY);
         }
-
     }
 }

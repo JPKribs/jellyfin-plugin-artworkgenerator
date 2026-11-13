@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.TV;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
@@ -28,6 +27,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
     public sealed class FramePoolService : IDisposable
     {
         private const int MaxPools = 16;
+
         // The fewest episodes a season or series pool draws from. A pool asked for more frames than
         // this takes in more episodes rather than more frames per episode, so a request for N
         // candidates can return N different episodes.
@@ -318,7 +318,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                 pool.Frames.Count,
                 chosen.Count);
         }
-
 
         // InterleaveBySource
         // Ranks the frames so that consecutive ranks come from different episodes wherever the batch

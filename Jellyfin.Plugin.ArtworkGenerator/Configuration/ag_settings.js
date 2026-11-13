@@ -167,7 +167,6 @@ export default function (view) {
         // Read-modify-write: the poster configurations live in the same configuration object
         // and are edited on the other tab, so a blind overwrite here would discard them.
         shared.getConfig().then(function (config) {
-
             var choices = parseInt(view.querySelector('#txtImageChoiceCount').value, 10);
             if (isNaN(choices)) choices = 10;
             config.ImageChoiceCount = Math.min(1000, Math.max(1, choices));

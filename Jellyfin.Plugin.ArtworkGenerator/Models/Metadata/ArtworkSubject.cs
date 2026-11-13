@@ -178,7 +178,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         /// <summary>
         /// Gets the numbers joined by a bullet in the compact number line, such as 12 • 7. Only an
-        /// episode has more than one; other kinds draw <see cref="Label"/> instead.
+        /// episode has more than one; other kinds draw <see cref="Secondary"/> instead.
         /// </summary>
         public IReadOnlyList<int> SecondaryParts => Kind == ArtworkItemKind.Episode
             ? new[] { SeasonNumber ?? 0, EpisodeNumberStart ?? 0 }
@@ -241,7 +241,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>
         /// Returns the text a cutout style punches out: the featured number spelled out when the
         /// design asks for that and the item has one, otherwise the item's own line, and otherwise
-        /// the <see cref="Code"/>. The spelled-out number comes first, since an item named after
+        /// the <see cref="SecondaryShort"/> code. The spelled-out number comes first, since an item named after
         /// nothing but its number is exactly where a numeral belongs.
         /// </summary>
         public string CutoutText(CutoutType type)

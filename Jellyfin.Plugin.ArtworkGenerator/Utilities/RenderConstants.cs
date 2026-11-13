@@ -9,7 +9,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
     // Pixel sizes are expressed at a 1080 pixel tall reference poster and scaled to the poster
     // actually being drawn. A shadow offset or rule width that is fixed in pixels reads as a
     // hairline on a 4K frame and as a slab on a DVD rip; scaling keeps the same visual weight
-    // at every resolution the extractor can hand us.
+    // at every resolution the extractor can hand over.
     public static class RenderConstants
     {
         // Poster height every reference size below is expressed against.

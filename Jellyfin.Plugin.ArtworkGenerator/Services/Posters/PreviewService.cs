@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
-using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
+using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SkiaSharp;
@@ -227,7 +228,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
         // The generic CreateLogger<T>(ILoggerFactory), looked up once and shared by every generator. Declared
         // before GeneratorTypes, whose initializer uses it.
-        private static readonly System.Reflection.MethodInfo CreateLoggerMethod = typeof(LoggerFactoryExtensions)
+        private static readonly MethodInfo CreateLoggerMethod = typeof(LoggerFactoryExtensions)
             .GetMethod(nameof(LoggerFactoryExtensions.CreateLogger), new[] { typeof(ILoggerFactory) })!;
 
         // GeneratorTypes

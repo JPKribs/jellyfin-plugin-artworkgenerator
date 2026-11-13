@@ -1,7 +1,7 @@
 using System;
-using SkiaSharp;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -42,6 +42,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             DrawTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
-
     }
 }

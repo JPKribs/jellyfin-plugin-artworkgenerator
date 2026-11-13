@@ -1,5 +1,5 @@
-using System.ComponentModel;
 using System;
+using System.ComponentModel;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     }
 
     /// <summary>
-    /// The kinds of library item the plugin can generate artwork.
+    /// The kinds of library item the plugin can generate artwork for.
     /// </summary>
     public enum ArtworkItemKind
     {

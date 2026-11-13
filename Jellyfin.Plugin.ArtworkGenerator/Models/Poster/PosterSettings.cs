@@ -7,7 +7,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public class PosterSettings
     {
         /// <summary>
-        /// Gets the effective episode font path (null when custom font is disabled).
+        /// Gets the effective subtitle font path (null when custom font is disabled).
         /// </summary>
         [JsonIgnore]
         public string? EffectiveSecondaryFontPath => SecondaryUseCustomFont ? SecondaryFontPath : null;
@@ -58,7 +58,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         [Display(Name = "Type", Description = "Show the episode as a code like S01E01 or as a word like ONE.")]
         public CutoutType CutoutType { get; set; } = CutoutType.Code;
-
 
         /// <summary>
         /// Gets or sets where the title and subtitle sit inside the safe area. Left on its default,

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
-using SkiaSharp;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -79,20 +79,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
         }
 
-
         // DrawFocalText
-        // Draws the focal text, a Roman numeral or a series name, sized to fill, and centered on its
-        // ink in, the area.
-        private static void DrawFocalText(SKCanvas canvas, string numeralText, PosterSettings config, SKRect area, int unit)
+        // Draws the focal text, a Roman numeral or a series name, sized to fill the area and
+        // centered on its ink.
+        private static void DrawFocalText(SKCanvas canvas, string text, PosterSettings config, SKRect area, int unit)
         {
             var typeface = ResolveSecondaryTypeface(config);
 
-            float fontSize = FontUtils.CalculateOptimalFontSize(numeralText, typeface, area.Width, area.Height);
+            float fontSize = FontUtils.CalculateOptimalFontSize(text, typeface, area.Width, area.Height);
 
             using var style = PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.SecondaryFontColor), fontSize, typeface, unit);
 
-            var bounds = style.MeasureBounds(numeralText);
-            style.Draw(canvas, numeralText, area.MidX, area.MidY - bounds.MidY);
+            var bounds = style.MeasureBounds(text);
+            style.Draw(canvas, text, area.MidX, area.MidY - bounds.MidY);
         }
     }
 }

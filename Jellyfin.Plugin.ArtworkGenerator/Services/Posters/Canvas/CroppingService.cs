@@ -1,10 +1,9 @@
 using System;
 using System.Globalization;
-using SkiaSharp;
-using Jellyfin.Plugin.ArtworkGenerator.Configuration;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services
 {
@@ -58,9 +57,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     _logger.LogDebug("Letterbox/pillarbox removed: {Original} -> {New}",
                         originalSize, $"{cropped.Width}x{cropped.Height}");
 
-                    var oldResult = result;
                     result = cropped;
-                    if (oldResult != source) oldResult.Dispose();
                 }
             }
 
@@ -77,8 +74,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
                     if (result != source)
                     {
-                        using (result) { }
+                        result.Dispose();
                     }
+
                     result = filled;
                 }
             }
@@ -100,7 +98,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     var scaled = ScaleTo(result, targetWidth, targetHeight);
                     if (result != source)
                     {
-                        using (result) { }
+                        result.Dispose();
                     }
 
                     result = scaled;
@@ -329,9 +327,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     targetWidth = posterDimensions.width;
                     targetHeight = posterDimensions.height;
                     break;
-
-                case PosterFill.Original:
-                    return source;
 
                 default:
                     return source;

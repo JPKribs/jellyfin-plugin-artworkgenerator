@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
@@ -24,19 +25,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
     /// </summary>
     public static class PosterSettingRules
     {
-        /// <summary>Setting names shared by the rules below.</summary>
+        /// <summary>The title toggle.</summary>
         public const string ShowPrimary = "ShowPrimary";
 
-        /// <summary>The number and code toggle.</summary>
+        /// <summary>The subtitle toggle.</summary>
         public const string ShowSecondary = "ShowSecondary";
 
-        /// <summary>The number and code size.</summary>
+        /// <summary>The subtitle size.</summary>
         public const string SecondaryFontSize = "SecondaryFontSize";
 
-        /// <summary>The number and code color.</summary>
+        /// <summary>The subtitle color.</summary>
         public const string SecondaryFontColor = "SecondaryFontColor";
 
-        /// <summary>Which edge of a framed poster the title sits in.</summary>
         // LoneLineFollowsTitle
         // What a framed design does when the item carries only one of its two lines.
         public const string LoneLineFollowsTitle = "LoneLineFollowsTitle";
@@ -50,7 +50,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // make the text part of the artwork.
         public const string TextAlignment = "TextAlignment";
 
-        /// <summary>The cutout's text choice.</summary>
         // OverlayColor
         // The overlay's main color. Always offered; only its wording changes by design.
         public const string OverlayColor = "OverlayColor";
@@ -65,6 +64,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // that never does, and otherwise shown only when a gradient asks for it.
         public const string OverlaySecondaryColor = "OverlaySecondaryColor";
 
+        /// <summary>The cutout's text choice.</summary>
         public const string CutoutType = "CutoutType";
 
         /// <summary>The outline drawn around a cut-out shape.</summary>
@@ -93,7 +93,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         /// <returns>The rules for one style, keyed by setting name.</returns>
         public static IReadOnlyDictionary<string, PosterSettingState> Build(params (string Setting, PosterSettingState State)[] overrides)
         {
-            var rules = new Dictionary<string, PosterSettingState>(System.StringComparer.Ordinal)
+            var rules = new Dictionary<string, PosterSettingState>(StringComparer.Ordinal)
             {
                 [LoneLineFollowsTitle] = PosterSettingState.Hidden,
                 [CutoutType] = PosterSettingState.Hidden,

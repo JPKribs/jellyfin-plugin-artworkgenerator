@@ -132,7 +132,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
 
             var bySeries = new Dictionary<Guid, ArtworkProfile>();
-            var byMovie = new Dictionary<Guid, ArtworkProfile>();
+            var byOwnId = new Dictionary<Guid, ArtworkProfile>();
             var duplicates = 0;
             foreach (var profile in config.Profiles.Where(p => !p.IsDefault))
             {
@@ -147,14 +147,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
                 // Films, standalone videos, collections, folders, and libraries are all assigned by
                 // their own id, so they share one index rather than each having a near-identical copy.
-                var ownIds = (profile.MovieIds ?? new List<Guid>())
-                    .Concat(profile.VideoIds ?? new List<Guid>())
-                    .Concat(profile.CollectionIds ?? new List<Guid>())
-                    .Concat(profile.FolderIds ?? new List<Guid>())
-                    .Concat(profile.LibraryIds ?? new List<Guid>());
+                var ownIds = profile.MovieIds
+                    .Concat(profile.VideoIds)
+                    .Concat(profile.CollectionIds)
+                    .Concat(profile.FolderIds)
+                    .Concat(profile.LibraryIds);
                 foreach (var ownId in ownIds)
                 {
-                    if (!byMovie.TryAdd(ownId, profile))
+                    if (!byOwnId.TryAdd(ownId, profile))
                     {
                         duplicates++;
                         _logger.LogWarning("Item {ItemId} is assigned to more than one profile; using the first", ownId);
@@ -171,7 +171,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 logo.Settings,
                 config.Profiles.First(p => p.IsDefault),
                 bySeries,
-                byMovie);
+                byOwnId);
             Interlocked.Increment(ref _version);
 
             _logger.LogInformation(

@@ -10,18 +10,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
     public class BloomPosterGenerator : BasePosterGenerator
     {
         // How far the bloom reaches, as a share of the size unit, so the glow keeps the same weight
-        // on a portrait poster as on a landscape one rather than stretching with the frame. Kept
-        // well under half the short side on purpose: a radius that runs past the frame leaves tint
-        // on every edge, which reads as an overall haze instead of a pool of color.
+        // on a portrait poster as on a landscape one rather than stretching with the frame.
         private const float RadiusRatio = 0.85f;
 
-        // The bloom holds its full color only this far out, leaving nearly all of the radius to the
-        // eased falloff. That is what spreads the color widely and gently; a long core concentrates
-        // it into a dark disc with a visible edge instead.
         // The falloff is sampled at this many stops and eased rather than ramped straight down.
         // A straight ramp changes slope abruptly where the core ends, and the eye reads that as the
         // edge of a drawn disc; easing spreads it out so the pool reads as light.
         private const int FalloffSteps = 6;
+
+        // The bloom holds its full color only this far out, leaving nearly all of the radius to the
+        // eased falloff. That is what spreads the color widely and gently; a long core concentrates
+        // it into a dark disc with a visible edge instead.
         private const float CoreStop = 0.22f;
 
         // Share of the safe width the text may use, so lines wrap inside the bloom rather than
@@ -220,6 +219,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 primaryStyle.DrawLines(skCanvas, primaryLines, AlignedX(safeArea, align), primaryStyle.BaselineAtTop(primarySlot));
             }
         }
-
     }
 }

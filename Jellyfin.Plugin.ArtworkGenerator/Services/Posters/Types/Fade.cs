@@ -111,15 +111,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             skCanvas.DrawRect(rect, overlayPaint);
         }
 
-        // RenderTypography
-        // Renders a large number pinned to the bottom left with the title rotated vertically along
-        // the left edge above it. A series has no number, so its title runs the full height.
         // MeasureTypography
         // The title runs sideways up the edge and the number is pinned to the foot, both part of
         // the artwork rather than a block laid over it.
         protected override SKRect MeasureTypography(ArtworkSubject subject, PosterSettings settings, int width, int height)
             => SKRect.Empty;
 
+        // RenderTypography
+        // Renders a large number pinned to the bottom left with the title rotated vertically along
+        // the left edge above it. A series has no number, so its title runs the full height.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(subject);
@@ -198,7 +198,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             // A focal title is already sized to run the whole height on one row. Wrapping it would
             // stack rows across the poster instead of along it, which is how it ran off the edge.
             var lines = focal
-                ? (IReadOnlyList<string>)new[] { text }
+                ? new[] { text }
                 : TextUtils.FitTextLines(text, style.Font, availableRun, config.LongTextHandling);
             if (lines.Count == 0)
             {
@@ -241,6 +241,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             return PaintFactory.CreateTextStyle(ColorUtils.ParseHexColor(config.PrimaryFontColor), fontSize, typeface, unit, SKTextAlign.Left);
         }
-
     }
 }

@@ -8,7 +8,6 @@ using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.MediaSegments;
@@ -24,9 +23,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
     /// </summary>
     public class FrameExtractionService
     {
-        // How many frames are looked at before the best are kept. The scorer ranks rather than
-        // gates, so it needs a field to choose from: sampling one frame and taking it, which is what
-        // an early exit amounted to on real video, is the same as not scoring at all.
+        // Failed extractions in a row after which the file is taken to be unreadable and the sweep
+        // stops.
         private const int ConsecutiveFailureLimit = 4;
 
         // A frame this dark once its bars are off is a fade or a blackout, not a picture.
@@ -91,6 +89,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         }
 
         // MARK: MaxAttempts
+        // How many frames are looked at before the best are kept. The scorer ranks rather than
+        // gates, so it needs a field to choose from: sampling one frame and taking it, which is what
+        // an early exit amounted to on real video, is the same as not scoring at all.
         internal static int MaxAttempts(int count, SamplingRate rate)
         {
             var (perCandidate, minimum, ceiling) = rate switch
@@ -154,7 +155,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             var seekRanges = await GetSeekRangesAsync(episode, videoDurationSeconds, windowStartPercent, windowEndPercent).ConfigureAwait(false);
 
-            // Candidates kept so far, worst-scoring first so eviction is cheap.
+            // Candidates kept so far, never more than count of them.
             var candidates = new List<FrameCandidate>(count);
 
             // Every sample is taken before any is chosen. The old loop stopped at the first frame
@@ -470,7 +471,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 return null;
             }
 
-            float scale = Math.Min((float)AnalysisSize / content.Width, (float)AnalysisSize / content.Height);
+            float scale = Math.Min(AnalysisSize / content.Width, AnalysisSize / content.Height);
             int newWidth = Math.Max(1, (int)(content.Width * scale));
             int newHeight = Math.Max(1, (int)(content.Height * scale));
 

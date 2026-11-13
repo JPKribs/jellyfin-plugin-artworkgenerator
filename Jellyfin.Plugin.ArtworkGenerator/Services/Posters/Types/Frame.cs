@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
-using SkiaSharp;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -119,12 +119,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             DrawFrameBorder(skCanvas, safeArea, topInfo, bottomInfo, spacing, unit);
         }
 
-
-        // ResolveEdges
-        // Which edge each line takes. The "first" choices fill the chosen edge with whichever line
-        // the item has, so a poster carrying a single line always looks the same whether that line
-        // is a title or a subtitle. The pinned choices keep the title on its edge and leave the
-        // other one empty when its line is missing.
         // ResolveEdges
         // Which border edge each line takes. The title goes where the text position says; the
         // subtitle takes the other edge. When the item has no title, the subtitle either moves up
@@ -144,9 +138,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         // DrawPrimaryLine
-        // Draws the uppercase title into the top edge of the safe area, or into the bottom edge
-        // when nothing else claims it, and returns its extent. Null when the long title handling
-        // drops a title that does not fit.
+        // Draws the uppercase title into the top or bottom edge of the safe area and returns its
+        // extent. Null when the long title handling drops a title that does not fit.
         private static TextInfo? DrawPrimaryLine(SKCanvas canvas, string title, PosterSettings config, int unit, SKRect safeArea, bool atBottom)
         {
             using var style = CreatePrimaryStyle(config, unit);
@@ -214,7 +207,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // DrawFrameBorder
         // Draws the rounded border with the top and bottom edges opened around whatever text sits
         // in them. The stroke, its shadow, and the corner radius all scale with the poster.
-        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? primaryInfo, TextInfo? secondaryInfo, float spacing, int unit)
+        private static void DrawFrameBorder(SKCanvas canvas, SKRect safeArea, TextInfo? topInfo, TextInfo? bottomInfo, float spacing, int unit)
         {
             var radius = RenderConstants.Scaled(CornerRadiusReference, unit);
 
@@ -224,7 +217,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             using var shadowPaint = PaintFactory.CreateLinePaint(SKColors.Black.WithAlpha(200), RenderConstants.Scaled(BorderShadowStrokeReference, unit), SKStrokeCap.Round);
             shadowPaint.StrokeJoin = SKStrokeJoin.Round;
 
-            using var path = BuildFramePath(safeArea, radius, GapFor(primaryInfo, spacing), GapFor(secondaryInfo, spacing));
+            using var path = BuildFramePath(safeArea, radius, GapFor(topInfo, spacing), GapFor(bottomInfo, spacing));
 
             canvas.DrawPath(path, shadowPaint);
             canvas.DrawPath(path, borderPaint);

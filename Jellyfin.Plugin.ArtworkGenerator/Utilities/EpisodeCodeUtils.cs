@@ -28,10 +28,6 @@ public static class EpisodeCodeUtils
     {
         return cutoutType switch
         {
-            CutoutType.Text => episodeNumber >= 100
-                ? episodeNumber.ToString(CultureInfo.InvariantCulture)
-                : NumberUtils.NumberToWords(episodeNumber),
-
             CutoutType.Code => FormatEpisodeCode(seasonNumber, episodeNumber),
 
             _ => episodeNumber >= 100

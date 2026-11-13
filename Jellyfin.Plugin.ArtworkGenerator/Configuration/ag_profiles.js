@@ -25,7 +25,7 @@ export default function (view) {
         { kind: 'Library', label: 'Libraries', shapeKey: 'LibraryPrimaryShape', defaultShape: 'Landscape' }
     ];
 
-    // Which kinds each scope draws, mirroring ArtworkProfile.AppliesTo on the server.
+    // The image slots, in the order the matrix shows them as columns.
     var SLOTS = ['Primary', 'Thumb', 'Logo', 'Backdrop'];
 
     // Mirrors ArtworkProfile.SupportedSlots on the server: Jellyfin clients never show logos for
@@ -540,8 +540,8 @@ export default function (view) {
     // ── Assignment ──────────────────────────────────────────
 
     // A profile draws every kind of item, so what it applies to is decided purely by assignment.
-    // Series and films differ only in which list they are stored in and what they are called, so
-    // one set of functions serves both rather than two near-identical copies.
+    // The assignable kinds differ only in which list they are stored in and what they are called,
+    // so one set of functions serves them all rather than a near-identical copy for each.
     var TARGETS = [
         {
             key: 'SeriesIds',

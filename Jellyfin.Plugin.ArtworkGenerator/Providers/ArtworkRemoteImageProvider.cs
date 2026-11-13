@@ -32,7 +32,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
     /// Jellyfin renders the picker by fetching each <see cref="RemoteImageInfo.Url"/> with the
     /// server's own HTTP client, and downloads the chosen one the same way. Those requests carry
     /// no user credentials, so the images are rendered here, inside an authenticated call, and
-    /// parked in <see cref="Services.Posters.GeneratedImageCache"/> under an unguessable token.
+    /// parked in <see cref="GeneratedImageCache"/> under an unguessable token.
     /// The URLs point back at this server over loopback and resolve to a plain cache lookup.
     /// </remarks>
     public class ArtworkRemoteImageProvider : IRemoteImageProvider, IHasOrder
@@ -137,11 +137,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
 
             foreach (var (type, count) in Plan(plugin.ArtworkService.GetEnabledImageTypes(item), picking, plugin.Configuration.ImageChoiceCount, backdropLimit))
             {
-                var choosing = picking;
-
                 try
                 {
-                    var generated = await plugin.ArtworkService.GenerateAsync(item, type, count, choosing, cancellationToken).ConfigureAwait(false);
+                    var generated = await plugin.ArtworkService.GenerateAsync(item, type, count, picking, cancellationToken).ConfigureAwait(false);
                     foreach (var artwork in generated)
                     {
                         var token = plugin.GeneratedImageCache.Add(artwork.Bytes, artwork.MimeType);
@@ -187,9 +185,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
         // How many images of each enabled type to render. The picker offers the configured number
         // of choices in every design the slot lists. A refresh renders every type, since it may be
         // replacing images the item already has, but keeps one of each, drawn with the slot's first
-        // design, so only one is drawn; backdrops are filled up to the library's limit from the
-        // same list, so that many are drawn. A color logo is text only, so the artwork service
-        // returns just one whatever is asked.
+        // design; backdrops are filled up to the library's limit from the same list. A color logo
+        // is text only, so the artwork service returns just one whatever is asked.
         internal static IReadOnlyList<(ImageType Type, int Count)> Plan(IReadOnlyList<ImageType> enabled, bool picking, int choiceCount, int backdropLimit)
         {
             var plan = new List<(ImageType Type, int Count)>(enabled.Count);

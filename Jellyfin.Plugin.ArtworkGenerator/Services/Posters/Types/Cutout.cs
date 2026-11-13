@@ -1,10 +1,10 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
-using SkiaSharp;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -36,19 +36,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             (PosterSettingRules.ShowSecondary, PosterSettingState.Required),
             (PosterSettingRules.SecondaryFontSize, PosterSettingState.Hidden),
             (PosterSettingRules.SecondaryFontColor, PosterSettingState.Hidden),
-            // Text position is hidden here: the lettering is cut out of the image and has to stay centered in it.
-            // The lettering is cut centered into the image and stays there, but the title line
-            // beneath it is ordinary text and can be pulled to a side.
+            // Text position is hidden here: the lettering is cut centered into the image and stays
+            // there. The title line beneath it is ordinary text, so it can still be pulled to a side.
             (PosterSettingRules.TextPosition, PosterSettingState.Hidden));
 
         // Baseline-to-baseline spacing between stacked cutout words, relative to the font size.
         private const float WordLineSpacing = 1.1f;
 
-        // The title never squeezes the cutout below this share of the safe height.
         // The cutout may shrink this far before the fit gives up. The old floor of 50 was taller
         // than a narrow portrait area allows, so the letters overflowed instead of shrinking.
         private const float MinimumCutoutFontSize = 12f;
 
+        // The title never squeezes the cutout below this share of the safe height.
         private const float MinimumCutoutAreaRatio = 0.6f;
 
         private static readonly char[] WordSeparators = { ' ', '-' };
@@ -94,22 +93,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var align = ResolveTextAlign(settings);
             using var primaryStyle = CreatePrimaryStyle(settings, unit, align);
 
-            var column = BuildColumn(safeArea, settings, unit, primaryStyle, true);
+            var column = BuildColumn(safeArea, settings, unit, primaryStyle);
             if (column.TryGetSlot(PrimaryBlock, out var primarySlot))
             {
                 DrawPrimaryInSlot(skCanvas, subject.Primary, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
 
-
         // BuildColumn
         // The one description of the vertical layout: a fixed two line title zone against the
         // bottom of the safe area. The cutout takes whatever the column leaves, so the title and
         // the letters are measured from the same numbers and cannot collide.
-        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle primaryStyle, bool reserveTitle)
+        private static LayoutColumn BuildColumn(SKRect safeArea, PosterSettings settings, int unit, TextStyle primaryStyle)
         {
             return new LayoutColumn(safeArea, GetElementSpacing(settings, unit), LayoutAnchor.Bottom)
-                .Add(PrimaryBlock, settings.ShowPrimary && reserveTitle ? primaryStyle.BlockHeight(2) : 0f);
+                .Add(PrimaryBlock, settings.ShowPrimary ? primaryStyle.BlockHeight(2) : 0f);
         }
 
         // MeasureTypography
@@ -126,7 +124,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             var safeArea = GetSafeAreaBounds(width, height, settings);
             using var primaryStyle = CreatePrimaryStyle(settings, unit);
 
-            return BuildColumn(safeArea, settings, unit, primaryStyle, true).Span;
+            return BuildColumn(safeArea, settings, unit, primaryStyle).Span;
         }
 
         // CalculateCutoutArea
@@ -141,7 +139,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
 
             using var primaryStyle = CreatePrimaryStyle(config, unit);
-            var remaining = BuildColumn(safeArea, config, unit, primaryStyle, reserveTitle).Remaining;
+            var remaining = BuildColumn(safeArea, config, unit, primaryStyle).Remaining;
 
             return CenterInSafeArea(safeArea, FocalBandHeight(safeArea, remaining.Height, MinimumCutoutAreaRatio));
         }

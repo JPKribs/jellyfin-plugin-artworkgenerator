@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using SkiaSharp;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -121,7 +121,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             DrawTextStack(skCanvas, safeArea, subject, settings, SizeUnit(width, height));
         }
-
 
         // CalculatePosterWidth
         // Calculates the width for a 2:3 aspect ratio poster that fills the full height.

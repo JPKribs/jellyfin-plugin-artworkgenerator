@@ -92,12 +92,10 @@
     min-width: 120px;
 }
 
-/* ── Series Assignment ───────────────────────────────── */
+/* ── Selection Modal (list/search inside a base dialog) ────────── */
 /* The dialog/modal shell (.jpk-dialog, .jpk-dialog-content[-narrow],
    .jpk-dialog-close, .jpk-modal-title/-body/-field/-button-row/-button) all come
-   from the base shared CSS. Only the EPG-specific bits inside the dialogs live here. */
-
-/* ── Series Selection Modal (list/search inside a base dialog) ────────── */
+   from the base shared CSS. Only the picker's own pieces inside the dialogs live here. */
 .picker-content {
     width: 90vw;
     max-width: 600px;
@@ -118,10 +116,6 @@
     font-size: 13px;
     color: var(--ag-text-secondary);
 }
-
-/* ── Series Checkbox Items ───────────────────────────── */
-/* Input modal is now built entirely from base dialog/modal components
-   (.jpk-dialog-content-narrow, .jpk-modal-title/-body/-field/-button-row). */
 
 /* Unsaved indicator (.jpk-unsaved) comes from the base shared CSS. */
 
@@ -156,10 +150,10 @@
     .picker-content {
         width: 95vw;
     }
-        }
+}
 
 @media (max-width: 480px) {
-                .cutout-logo-group,
+    .cutout-logo-group,
     .nested-settings {
         margin-left: 0.75em !important;
         padding-left: 0.5em !important;

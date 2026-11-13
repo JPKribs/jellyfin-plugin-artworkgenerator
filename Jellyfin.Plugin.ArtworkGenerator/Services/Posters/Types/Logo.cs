@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
-using SkiaSharp;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -79,7 +79,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 DrawPrimaryInSlot(skCanvas, headline, primaryStyle, primarySlot, AlignedX(primarySlot, align), primarySlot.Width * RenderConstants.TextWidthMultiplier, settings.LongTextHandling);
             }
         }
-
 
         // GetText
         // The headline and the code line, the same way for every item: its title above its code. A

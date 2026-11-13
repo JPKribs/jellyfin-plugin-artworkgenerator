@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Configuration;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
+using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using JPKribs.Jellyfin.Base;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
@@ -23,6 +25,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
     {
         public override string Name => "Artwork Generator";
         public override Guid Id => Guid.Parse("b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e");
+
         /// <summary>
         /// Gets the configuration file name, pinned to the plugin's former assembly name.
         /// Jellyfin derives this from the assembly, so renaming the project would otherwise make the
@@ -97,7 +100,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
 
             // Container images ship almost none of the common desktop fonts, so a configured
             // family often silently falls back to Skia's default. Surface it once per family.
-            Utilities.FontUtils.SetMissingFamilyReporter(family =>
+            FontUtils.SetMissingFamilyReporter(family =>
                 _logger.LogWarning(
                     "Font family '{Family}' is not installed on this server. Falling back to the default font. Install the font, or pick one offered by the configuration page.",
                     family));
@@ -194,7 +197,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             // A pool holds frames chosen under the old segment choices, sampling rate, and videos per
             // parent, and would go on handing them out until it went idle.
             var avoidedAfter = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
-            if (!System.Linq.Enumerable.SequenceEqual(avoidedBefore, avoidedAfter)
+            if (!avoidedBefore.SequenceEqual(avoidedAfter)
                 || samplingBefore != Configuration.FrameExtraction?.SamplingRate
                 || videosBefore != Configuration.FrameExtraction?.VideosPerParent)
             {

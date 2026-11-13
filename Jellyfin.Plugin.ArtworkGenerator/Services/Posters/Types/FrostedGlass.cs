@@ -186,6 +186,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             };
             skCanvas.DrawRoundRect(panel, borderPaint);
         }
-
     }
 }

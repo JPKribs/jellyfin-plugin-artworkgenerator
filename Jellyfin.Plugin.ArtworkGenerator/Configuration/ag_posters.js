@@ -283,7 +283,6 @@ export default function (view) {
 
             populateConfigDropdown();
             syncColorControls();
-            takeConfigSnapshot();
             markClean();
             Dashboard.hideLoadingMsg();
         }).catch(function (error) {
@@ -904,7 +903,7 @@ export default function (view) {
 
         // Use ApiClient.ajax so Jellyfin's auth headers are attached the same way the
         // working Configuration calls authenticate. Without a dataType it resolves to
-        // the raw Response, so we can read the JPEG body as a blob.
+        // the raw Response, so the JPEG body can be read as a blob.
         var url = ApiClient.getUrl('Plugins/ArtworkGenerator/Preview', { kind: kind, shape: shape });
 
         ApiClient.ajax({
@@ -995,7 +994,6 @@ export default function (view) {
 
     // ── Visibility ──────────────────────────────────────────
 
-    // Styles that REQUIRE a given toggle to be on (the style always renders that element).
     // Which settings a style uses comes from the server, where each generator declares its own
     // rules, so a new style needs no change here. A required setting is switched on and its toggle
     // taken away; a hidden one is a setting the style ignores.

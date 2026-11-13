@@ -241,7 +241,7 @@ public static partial class TextUtils
 
     // AbbreviateTitle
     // Reduces a title to the first letter of every word with a period after
-    // each, so "Lord of the Ring" becomes "L.O.T.R.". Dividers are kept
+    // each, so "Lord of the Rings" becomes "L.O.T.R.". Dividers are kept
     // between segments, so "The Power that Burns Fire - Akainu's Final Move"
     // becomes "T.P.T.B.F. - A.F.M.". Every word contributes regardless of
     // case, so all lowercase titles abbreviate too.

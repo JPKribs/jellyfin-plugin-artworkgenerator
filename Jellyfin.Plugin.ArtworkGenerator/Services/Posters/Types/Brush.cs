@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using SkiaSharp;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -100,9 +100,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // Produces a deterministic int seed for a subject using a stable FNV-1a hash of its source
         // path. The string overload of GetHashCode() is randomized per process on modern .NET, so
         // the bytes are hashed here to keep posters stable across server restarts.
-        private static int GenerateBrushSeed(ArtworkSubject metadata)
+        private static int GenerateBrushSeed(ArtworkSubject subject)
         {
-            var path = metadata.VideoMetadata?.SourcePath;
+            var path = subject.VideoMetadata?.SourcePath;
             if (!string.IsNullOrEmpty(path))
             {
                 unchecked
@@ -119,17 +119,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
 
             int fallback = 0;
-            if (metadata.SeriesId != Guid.Empty)
+            if (subject.SeriesId != Guid.Empty)
             {
-                var bytes = metadata.SeriesId.ToByteArray();
+                var bytes = subject.SeriesId.ToByteArray();
                 fallback = BitConverter.ToInt32(bytes, 0)
                     ^ BitConverter.ToInt32(bytes, 4)
                     ^ BitConverter.ToInt32(bytes, 8)
                     ^ BitConverter.ToInt32(bytes, 12);
             }
 
-            fallback = (fallback * 397) ^ (metadata.SeasonNumber ?? 0);
-            fallback = (fallback * 397) ^ (metadata.EpisodeNumberStart ?? 1);
+            fallback = (fallback * 397) ^ (subject.SeasonNumber ?? 0);
+            fallback = (fallback * 397) ^ (subject.EpisodeNumberStart ?? 1);
             return fallback;
         }
 
@@ -173,6 +173,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 DrawPrimaryInSlot(skCanvas, subject.Primary!, primaryStyle, primarySlot, AlignedX(safeArea, align), safeArea.Width * TextWidthRatio, settings.LongTextHandling);
             }
         }
-
     }
 }

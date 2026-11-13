@@ -1,14 +1,11 @@
 using System;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using SkiaSharp;
-using Jellyfin.Plugin.ArtworkGenerator.Configuration;
+using System.Text.RegularExpressions;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
-using MediaBrowser.Controller.Entities.TV;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 {
@@ -166,11 +163,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         protected static float GetElementSpacing(PosterSettings settings, float unit)
             => unit * (Math.Max(0f, settings.ElementSpacing) / 100f);
 
-        // Layout block keys shared by the styles that stack text against the bottom edge.
         // How far a line may be shrunk to fit before it is trimmed instead. Below this it stops
         // being readable, and a smaller unreadable line is worse than a shorter readable one.
         private const float MinimumFittedScale = 0.6f;
 
+        // Layout block keys shared by the styles that stack text against the bottom edge.
         protected const string SecondaryBlock = "secondary";
         protected const string SeparatorBlock = "separator";
         protected const string PrimaryBlock = "primary";
@@ -421,6 +418,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 _ => safeTop + (safeHeight - graphicHeight) / 2f
             };
         }
-
     }
 }

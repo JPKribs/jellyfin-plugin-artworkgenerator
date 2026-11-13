@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -132,11 +131,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         }
 
         /// <summary>
-        /// Gets the label and help text for the backdrop settings. These keep their own map because
-        /// several of their names — the extraction window, the letterbox thresholds — are also
-        /// design setting names, and one dictionary would let the two overwrite each other.
-        /// </summary>
-        /// <summary>
         /// Gets the label and help text for the frame extraction settings, which live on the server
         /// rather than on a design and so are not in either of the maps above.
         /// </summary>
@@ -145,7 +139,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return TextFrom(typeof(FrameExtractionSettings));
         }
 
-        // MARK: FrameExtractionOptions
+        /// <summary>
+        /// Gets the choices for each frame extraction setting that has a fixed set of them, keyed by
+        /// setting name.
+        /// </summary>
         public static IReadOnlyDictionary<string, IReadOnlyList<SettingOption>> FrameExtractionOptions()
         {
             return typeof(FrameExtractionSettings)
@@ -177,22 +174,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return text;
         }
 
+        /// <summary>
+        /// Gets the label and help text for the backdrop settings, which live on a profile rather
+        /// than on a design and so are kept in a map of their own.
+        /// </summary>
         public static IReadOnlyDictionary<string, SettingText> BackdropText()
         {
-            var text = new Dictionary<string, SettingText>(StringComparer.Ordinal);
-
-            foreach (var property in typeof(BackdropSettings).GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                var display = property.GetCustomAttribute<DisplayAttribute>();
-                if (display?.Name == null)
-                {
-                    continue;
-                }
-
-                text[property.Name] = new SettingText(display.Name, display.Description ?? string.Empty);
-            }
-
-            return text;
+            return TextFrom(typeof(BackdropSettings));
         }
 
         // SettableLogoProperties
@@ -217,13 +205,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             return Settable().Select(p => (Property: p, Source: (object)defaults))
                 .Concat(SettableLogoProperties().Select(p => (Property: p, Source: (object)logoDefaults)))
                 .ToDictionary(
-                entry => entry.Property.Name,
-                entry =>
-                {
-                    var value = entry.Property.GetValue(entry.Source);
-                    return entry.Property.PropertyType.IsEnum ? value?.ToString() : value;
-                },
-                StringComparer.Ordinal);
+                    entry => entry.Property.Name,
+                    entry =>
+                    {
+                        var value = entry.Property.GetValue(entry.Source);
+                        return entry.Property.PropertyType.IsEnum ? value?.ToString() : value;
+                    },
+                    StringComparer.Ordinal);
         }
 
         /// <summary>

@@ -106,7 +106,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
             float startX = bounds.Left - bounds.Width * 0.04f;
             float endX = bounds.Right + bounds.Width * 0.04f;
 
-            var centerline = BuildCenterline(startX, endX, centerY, strokeHeight, strokeIndex);
+            var centerline = BuildCenterline(startX, endX, centerY, strokeHeight);
 
             AppendStrokeBody(combined, centerline, strokeHeight, strokeIndex);
 
@@ -215,8 +215,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
 
         // AppendOffsetRibbon
         // Adds a closed ribbon to `combined` representing one polyline thickened by
-        // halfWidth on each side. We compute per-vertex perpendiculars from the tangent
-        // and walk top forward then bottom backward, guaranteeing clockwise winding.
+        // halfWidth on each side. Per-vertex perpendiculars come from the tangent, and the
+        // walk goes top forward then bottom backward, guaranteeing clockwise winding.
         // This replaces SKPaint.GetFillPath, whose winding is unpredictable for wobbly
         // polylines and was causing XOR-style carve-outs in the brush body.
         private void AppendOffsetRibbon(SKPath combined, List<SKPoint> pts, float halfWidth)
@@ -270,7 +270,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
         // BuildCenterline
         // Samples the stroke's spine as a slow undulating curve made of two stacked sine
         // waves — enough motion to look painted, not enough to look like a snake.
-        private List<SKPoint> BuildCenterline(float startX, float endX, float centerY, float strokeHeight, int seed)
+        private List<SKPoint> BuildCenterline(float startX, float endX, float centerY, float strokeHeight)
         {
             int samples = 120;
             var points = new List<SKPoint>(samples + 1);
@@ -387,6 +387,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Utilities
             float t = span > 0f ? (x - points[lo].X) / span : 0f;
             return points[lo].Y * (1f - t) + points[hi].Y * t;
         }
-
     }
 }

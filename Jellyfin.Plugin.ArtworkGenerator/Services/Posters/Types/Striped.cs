@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using Microsoft.Extensions.Logging;
@@ -111,14 +111,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             skCanvas.Restore();
         }
 
-        // RenderTypography
-        // Draws the title along the sash and the code in the top-right corner. When there is no
-        // title the code rides the sash instead.
         // MeasureTypography
         // The title rides the sash, which is the design itself rather than a block laid over it.
         protected override SKRect MeasureTypography(ArtworkSubject subject, PosterSettings settings, int width, int height)
             => SKRect.Empty;
 
+        // RenderTypography
+        // Draws the title along the sash and the code in the top-right corner. When there is no
+        // title the code rides the sash instead.
         protected override void RenderTypography(SKCanvas skCanvas, ArtworkSubject subject, PosterSettings settings, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(subject);
@@ -205,6 +205,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             using var style = CreateSecondaryStyle(settings, unit, SKTextAlign.Right);
             style.Draw(canvas, code, safeArea.Right, style.BaselineAtTop(safeArea));
         }
-
     }
 }

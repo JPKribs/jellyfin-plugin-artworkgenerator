@@ -11,6 +11,5 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>Gets or sets the backdrop aspect ratio, such as 16:9.</summary>
         [Display(Name = "Aspect Ratio", Description = "The ratio the frame is cropped to, such as 16:9.")]
         public string AspectRatio { get; set; } = "16:9";
-
     }
 }
