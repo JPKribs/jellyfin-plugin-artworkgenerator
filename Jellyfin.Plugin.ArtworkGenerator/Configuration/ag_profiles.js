@@ -105,7 +105,7 @@ export default function (view) {
 
         indicator.innerHTML = '';
         var dot = document.createElement('span');
-        dot.className = 'jpk-unsaved-dot';
+        dot.className = 'base-unsaved-dot';
         dot.style.background = 'var(--ag-success-text)';
         indicator.appendChild(dot);
         indicator.appendChild(document.createTextNode(' Saved!'));
@@ -114,7 +114,7 @@ export default function (view) {
         setTimeout(function () {
             indicator.classList.remove('visible', 'save-success');
             setTimeout(function () {
-                indicator.innerHTML = '<span class="jpk-unsaved-dot"></span> Unsaved changes';
+                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
             }, 300);
         }, 2000);
     }
@@ -125,7 +125,7 @@ export default function (view) {
     // in the name, selected, the way the page's own modal did.
     function promptName(title, field) {
         var result = promptDialog([{ name: 'name', label: 'Name', value: field.value || '', placeholder: field.placeholder }], { title: title });
-        var input = document.body.lastElementChild && document.body.lastElementChild.querySelector('.jpk-dialog input');
+        var input = document.body.lastElementChild && document.body.lastElementChild.querySelector('.base-dialog input');
         if (input) { input.focus(); input.select(); }
         return result;
     }
@@ -672,13 +672,13 @@ export default function (view) {
         block.appendChild(label);
 
         var list = document.createElement('div');
-        list.className = 'jpk-tags';
+        list.className = 'base-tags';
         block.appendChild(list);
 
         var ids = assignedIds(profile, target);
         if (ids.length === 0) {
             var msg = document.createElement('div');
-            msg.className = 'jpk-empty';
+            msg.className = 'base-empty';
             msg.textContent = '\u26a0 ' + target.empty;
             list.appendChild(msg);
         } else {
@@ -703,10 +703,10 @@ export default function (view) {
 
     function buildAssignedTag(item, target, id) {
         var tag = document.createElement('div');
-        tag.className = 'jpk-tag';
+        tag.className = 'base-tag';
 
         var img = document.createElement('img');
-        img.className = 'jpk-check-thumb';
+        img.className = 'base-check-thumb';
         img.src = ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
         img.onerror = function () { this.style.display = 'none'; };
 
@@ -714,7 +714,7 @@ export default function (view) {
         name.textContent = item.Name;
 
         var remove = document.createElement('span');
-        remove.className = 'jpk-tag-remove';
+        remove.className = 'base-tag-remove';
         remove.textContent = '\u00d7';
         remove.addEventListener('click', function () { removeAssignment(target, id); });
 
@@ -765,38 +765,38 @@ export default function (view) {
             if (!isElsewhere) availableCount++;
 
             var item = document.createElement('label');
-            item.className = 'jpk-check-row' + (isElsewhere ? ' jpk-check-row-disabled' : '');
+            item.className = 'base-check-row' + (isElsewhere ? ' base-check-row-disabled' : '');
 
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.className = 'jpk-check-row-input';
+            checkbox.className = 'base-check-row-input';
             checkbox.value = entry.Id;
             checkbox.checked = isHere;
             checkbox.disabled = isElsewhere;
 
             var poster = document.createElement('img');
-            poster.className = 'jpk-check-thumb';
+            poster.className = 'base-check-thumb';
             poster.src = ApiClient.getImageUrl(entry.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
             poster.onerror = function () { this.style.visibility = 'hidden'; };
 
             var info = document.createElement('div');
-            info.className = 'jpk-check-text';
+            info.className = 'base-check-text';
 
             var nameSpan = document.createElement('span');
-            nameSpan.className = 'jpk-check-label';
+            nameSpan.className = 'base-check-label';
             nameSpan.textContent = entry.Name;
             info.appendChild(nameSpan);
 
             if (entry.ProductionYear) {
                 var yearSpan = document.createElement('span');
-                yearSpan.className = 'jpk-check-sub';
+                yearSpan.className = 'base-check-sub';
                 yearSpan.textContent = entry.ProductionYear;
                 info.appendChild(yearSpan);
             }
 
             if (isElsewhere) {
                 var badge = document.createElement('span');
-                badge.className = 'jpk-check-note';
+                badge.className = 'base-check-note';
                 badge.textContent = 'In another profile';
                 info.appendChild(badge);
             }
@@ -810,7 +810,7 @@ export default function (view) {
         });
 
         function updateSummary() {
-            var checked = listContainer.querySelectorAll('.jpk-check-row-input:checked').length;
+            var checked = listContainer.querySelectorAll('.base-check-row-input:checked').length;
             summaryEl.textContent = checked + ' of ' + availableCount + ' available ' + target.noun + ' selected';
         }
 
@@ -823,15 +823,15 @@ export default function (view) {
 
     var filterSelectionList = debounce(function () {
         var term = view.querySelector('#pickerSearch').value.toLowerCase();
-        view.querySelectorAll('.jpk-check-row').forEach(function (item) {
-            var name = item.querySelector('.jpk-check-label');
+        view.querySelectorAll('.base-check-row').forEach(function (item) {
+            var name = item.querySelector('.base-check-label');
             item.style.display = (name ? name.textContent : item.textContent).toLowerCase().includes(term) ? '' : 'none';
         });
     }, 200);
 
     function confirmSelection() {
         var selected = [];
-        view.querySelectorAll('.jpk-check-row-input:checked').forEach(function (cb) { selected.push(cb.value); });
+        view.querySelectorAll('.base-check-row-input:checked').forEach(function (cb) { selected.push(cb.value); });
         getCurrentProfile()[_modalTarget.key] = selected;
         renderAssignments();
         closeSelectionModal();

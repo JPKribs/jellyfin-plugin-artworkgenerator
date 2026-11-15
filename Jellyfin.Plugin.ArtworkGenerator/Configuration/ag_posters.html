@@ -11,36 +11,36 @@
                     </div>
 
                     <!-- Config Selector -->
-                    <div class="jpk-selector">
-                        <select is="emby-select" id="selectPosterConfig" class="jpk-selector-dropdown"></select>
-                        <div class="jpk-selector-actions">
-                            <button is="emby-button" type="button" id="btnRenameConfig" class="raised jpk-icon-btn" title="Rename">
+                    <div class="base-selector">
+                        <select is="emby-select" id="selectPosterConfig" class="base-selector-dropdown"></select>
+                        <div class="base-selector-actions">
+                            <button is="emby-button" type="button" id="btnRenameConfig" class="raised base-button secondary" title="Rename">
                                 <span class="material-icons" aria-hidden="true">edit</span>
-                                <span class="jpk-icon-btn-label">Rename</span>
+                                <span>Rename</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnExportConfig" class="raised jpk-icon-btn" title="Export">
+                            <button is="emby-button" type="button" id="btnExportConfig" class="raised base-button secondary" title="Export">
                                 <span class="material-icons" aria-hidden="true">file_upload</span>
-                                <span class="jpk-icon-btn-label">Export</span>
+                                <span>Export</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnImportConfig" class="raised jpk-icon-btn" title="Import">
+                            <button is="emby-button" type="button" id="btnImportConfig" class="raised base-button secondary" title="Import">
                                 <span class="material-icons" aria-hidden="true">file_download</span>
-                                <span class="jpk-icon-btn-label">Import</span>
+                                <span>Import</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnNewConfig" class="raised jpk-icon-btn button-submit" title="New">
+                            <button is="emby-button" type="button" id="btnNewConfig" class="raised base-button primary" title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
-                                <span class="jpk-icon-btn-label">New</span>
+                                <span>New</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnDeleteConfig" class="raised jpk-icon-btn button-delete" title="Delete">
+                            <button is="emby-button" type="button" id="btnDeleteConfig" class="raised base-button destructive" title="Delete">
                                 <span class="material-icons" aria-hidden="true">delete</span>
-                                <span class="jpk-icon-btn-label">Delete</span>
+                                <span>Delete</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Live Preview -->
-                    <div class="jpk-section poster-preview-section">
-                        <div class="jpk-section-title">Live Preview</div>
-                        <div class="jpk-section-content">
+                    <div class="base-section poster-preview-section">
+                        <div class="base-section-title">Live Preview</div>
+                        <div class="base-section-content">
                             <div class="poster-preview-layout">
                                 <div class="poster-preview-main">
                                     <div class="poster-preview-pair">
@@ -84,9 +84,9 @@
                     </div>
 
                     <!-- Poster: always open, since the style picker drives everything below it -->
-                    <div class="jpk-section">
-                        <div class="jpk-section-title">Poster</div>
-                        <div id="posterContent" class="jpk-section-content">
+                    <div class="base-section">
+                        <div class="base-section-title">Poster</div>
+                        <div id="posterContent" class="base-section-content">
 
                             <div class="inputContainer">
                                 <label for="selectPosterStyle"></label>
@@ -156,12 +156,12 @@
                     </div>
 
                     <!-- Canvas -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="canvasContent" data-target="canvasContent">
-                            <span class="jpk-collapsible-title">Canvas</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="canvasContent" data-target="canvasContent">
+                            <span class="base-collapsible-title">Canvas</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="canvasContent" class="jpk-collapsible-content collapsed">
+                        <div id="canvasContent" class="base-collapsible-content collapsed">
 
                             <div class="inputContainer">
                                 <label for="selectCanvasSource"></label>
@@ -170,12 +170,12 @@
                             </div>
 
                             <div class="nested-settings" data-depends-on-canvas="Grid">
-                                <div class="jpk-field-row">
-                                    <div class="jpk-field">
+                                <div class="base-field-row">
+                                    <div class="base-field">
                                         <label for="txtGridFrames"></label>
                                         <input is="emby-input" type="number" id="txtGridFrames" min="2" max="16" step="1" data-setting="GridFrames" data-type="number" />
                                     </div>
-                                    <div class="jpk-field">
+                                    <div class="base-field">
                                         <label for="txtGridGap"></label>
                                         <input is="emby-input" type="number" id="txtGridGap" min="0" max="25" step="0.5" data-setting="GridGap" data-type="number" />
                                     </div>
@@ -189,12 +189,12 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="jpk-field-row">
-                                <div class="jpk-field" id="landscapeRatioField">
+                            <div class="base-field-row">
+                                <div class="base-field" id="landscapeRatioField">
                                     <label for="txtPosterDimensionRatio"></label>
                                     <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
                                 </div>
-                                <div class="jpk-field">
+                                <div class="base-field">
                                     <label for="txtPortraitDimensionRatio"></label>
                                     <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
                                 </div>
@@ -217,12 +217,12 @@
                     </div>
 
                     <!-- Overlay -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="overlayContent" data-target="overlayContent">
-                            <span class="jpk-collapsible-title">Overlay</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="overlayContent" data-target="overlayContent">
+                            <span class="base-collapsible-title">Overlay</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="overlayContent" class="jpk-collapsible-content collapsed">
+                        <div id="overlayContent" class="base-collapsible-content collapsed">
 
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
@@ -266,12 +266,12 @@
                     </div>
 
                     <!-- Static Graphic -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="graphicContent" data-target="graphicContent">
-                            <span class="jpk-collapsible-title">Static Graphic</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="graphicContent" data-target="graphicContent">
+                            <span class="base-collapsible-title">Static Graphic</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="graphicContent" class="jpk-collapsible-content collapsed">
+                        <div id="graphicContent" class="base-collapsible-content collapsed">
 
                             <div class="inputContainer">
                                 <label for="txtGraphicPath"></label>
@@ -301,12 +301,12 @@
                     </div>
 
                     <!-- Title -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeTitleContent" data-target="episodeTitleContent">
-                            <span class="jpk-collapsible-title">Title</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeTitleContent" data-target="episodeTitleContent">
+                            <span class="base-collapsible-title">Title</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="episodeTitleContent" class="jpk-collapsible-content collapsed">
+                        <div id="episodeTitleContent" class="base-collapsible-content collapsed">
 
                             <div id="primaryStyleNote" class="fieldDescription ag-section-note"></div>
 
@@ -402,12 +402,12 @@
                     </div>
 
                     <!-- Subtitle -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
-                            <span class="jpk-collapsible-title">Subtitle</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
+                            <span class="base-collapsible-title">Subtitle</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="episodeInfoContent" class="jpk-collapsible-content collapsed">
+                        <div id="episodeInfoContent" class="base-collapsible-content collapsed">
 
                             <div id="secondaryStyleNote" class="fieldDescription ag-section-note"></div>
 
@@ -512,11 +512,11 @@
 
                     <!-- Save -->
                     <div class="inputContainer">
-                        <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
+                        <button is="emby-button" type="submit" class="raised base-button primary fill">
                             <span>Save</span>
                         </button>
-                        <span id="unsavedIndicator" class="jpk-unsaved">
-                            <span class="jpk-unsaved-dot"></span>
+                        <span id="unsavedIndicator" class="base-unsaved">
+                            <span class="base-unsaved-dot"></span>
                             Unsaved changes
                         </span>
                     </div>
@@ -527,40 +527,40 @@
     </div>
 
     <!-- Enlarged Preview Modal -->
-    <div id="previewModal" class="jpk-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle">
-        <div class="jpk-dialog-content">
-            <button type="button" id="btnClosePreviewModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
-            <h2 id="previewModalTitle" class="jpk-modal-title">Poster Preview</h2>
-            <div class="jpk-modal-body">
+    <div id="previewModal" class="base-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle">
+        <div class="base-dialog-content">
+            <button type="button" id="btnClosePreviewModal" class="base-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="previewModalTitle" class="base-modal-title">Poster Preview</h2>
+            <div class="base-modal-body">
                 <img id="posterPreviewModalImage" class="poster-preview-modal-image" src="" alt="Poster preview enlarged" />
             </div>
         </div>
     </div>
 
     <!-- Preview Component Modal -->
-    <div id="componentModal" class="jpk-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="componentModalTitle">
-        <div class="jpk-dialog-content">
-            <button type="button" id="btnCloseComponentModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
-            <h2 id="componentModalTitle" class="jpk-modal-title">Component</h2>
-            <div class="jpk-modal-body">
+    <div id="componentModal" class="base-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="componentModalTitle">
+        <div class="base-dialog-content">
+            <button type="button" id="btnCloseComponentModal" class="base-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="componentModalTitle" class="base-modal-title">Component</h2>
+            <div class="base-modal-body">
                 <img id="componentModalImage" class="poster-preview-modal-image" src="" alt="Preview component" />
             </div>
         </div>
     </div>
 
     <!-- Input Modal -->
-    <div id="inputModal" class="jpk-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="inputModalTitle">
-        <div class="jpk-dialog-content jpk-dialog-content-narrow">
-            <button type="button" id="btnCloseInputModal" class="jpk-dialog-close" aria-label="Close">&times;</button>
-            <h2 id="inputModalTitle" class="jpk-modal-title"></h2>
-            <div class="jpk-modal-body">
+    <div id="inputModal" class="base-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="inputModalTitle">
+        <div class="base-dialog-content">
+            <button type="button" id="btnCloseInputModal" class="base-dialog-close" aria-label="Close">&times;</button>
+            <h2 id="inputModalTitle" class="base-modal-title"></h2>
+            <div class="base-modal-body">
                 <div id="inputModalFields"></div>
             </div>
-            <div class="jpk-modal-button-row">
-                <button is="emby-button" type="button" id="btnCancelInputModal" class="raised jpk-modal-button">
+            <div class="base-modal-button-row">
+                <button is="emby-button" type="button" id="btnCancelInputModal" class="raised base-modal-button">
                     <span>Cancel</span>
                 </button>
-                <button is="emby-button" type="button" id="btnConfirmInputModal" class="raised button-submit jpk-modal-button">
+                <button is="emby-button" type="button" id="btnConfirmInputModal" class="raised base-button primary base-modal-button">
                     <span>OK</span>
                 </button>
             </div>

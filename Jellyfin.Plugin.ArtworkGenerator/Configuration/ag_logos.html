@@ -11,28 +11,28 @@
                     </div>
 
                     <!-- Logo Selector -->
-                    <div class="jpk-selector">
-                        <select is="emby-select" id="selectLogo" class="jpk-selector-dropdown" aria-label="Logo design"></select>
-                        <div class="jpk-selector-actions">
-                            <button is="emby-button" type="button" id="btnRenameLogo" class="raised jpk-icon-btn" title="Rename">
+                    <div class="base-selector">
+                        <select is="emby-select" id="selectLogo" class="base-selector-dropdown" aria-label="Logo design"></select>
+                        <div class="base-selector-actions">
+                            <button is="emby-button" type="button" id="btnRenameLogo" class="raised base-button secondary" title="Rename">
                                 <span class="material-icons" aria-hidden="true">edit</span>
-                                <span class="jpk-icon-btn-label">Rename</span>
+                                <span>Rename</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnNewLogo" class="raised jpk-icon-btn button-submit" title="New">
+                            <button is="emby-button" type="button" id="btnNewLogo" class="raised base-button primary" title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
-                                <span class="jpk-icon-btn-label">New</span>
+                                <span>New</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnDeleteLogo" class="raised jpk-icon-btn button-delete" title="Delete">
+                            <button is="emby-button" type="button" id="btnDeleteLogo" class="raised base-button destructive" title="Delete">
                                 <span class="material-icons" aria-hidden="true">delete</span>
-                                <span class="jpk-icon-btn-label">Delete</span>
+                                <span>Delete</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Live Preview: same shape as the Designs page, so both read the same way -->
-                    <div class="jpk-section poster-preview-section">
-                        <div class="jpk-section-title">Live Preview</div>
-                        <div class="jpk-section-content">
+                    <div class="base-section poster-preview-section">
+                        <div class="base-section-title">Live Preview</div>
+                        <div class="base-section-content">
                             <div class="poster-preview-layout">
                                 <div class="poster-preview-main" id="logoPreviewColumn">
                                     <div id="logoPreviewFrame" class="logo-preview-frame">
@@ -43,7 +43,7 @@
                                         <input is="emby-input" type="text" id="txtSampleName" placeholder="Demo Logo Text" />
                                     </div>
                                     <div class="logo-preview-controls">
-                                        <button is="emby-button" type="button" id="btnToggleLogoBackground" class="raised jpk-button-small">
+                                        <button is="emby-button" type="button" id="btnToggleLogoBackground" class="raised base-button secondary small">
                                             <span>Light Background</span>
                                         </button>
                                         <div class="poster-preview-components" id="logoColorSourceRow" style="display: none;">
@@ -59,9 +59,9 @@
                     </div>
 
                     <!-- Text -->
-                    <div class="jpk-section">
-                        <div class="jpk-section-title">Text</div>
-                        <div class="jpk-section-content">
+                    <div class="base-section">
+                        <div class="base-section-title">Text</div>
+                        <div class="base-section-content">
                             <div class="inputContainer">
                                 <label for="selectTitleSource"></label>
                                 <select is="emby-select" id="selectTitleSource" data-setting="TitleSource" data-default="Title"></select>
@@ -110,12 +110,12 @@
                     </div>
 
                     <!-- Font -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="logoFontContent" data-target="logoFontContent">
-                            <span class="jpk-collapsible-title">Font</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="logoFontContent" data-target="logoFontContent">
+                            <span class="base-collapsible-title">Font</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="logoFontContent" class="jpk-collapsible-content collapsed">
+                        <div id="logoFontContent" class="base-collapsible-content collapsed">
                             <div class="checkboxContainer">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkLogoUseCustomFont" data-setting="UseCustomFont" data-default-unchecked />
@@ -146,12 +146,12 @@
                     </div>
 
                     <!-- Color -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="logoColorContent" data-target="logoColorContent">
-                            <span class="jpk-collapsible-title">Color</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="logoColorContent" data-target="logoColorContent">
+                            <span class="base-collapsible-title">Color</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="logoColorContent" class="jpk-collapsible-content collapsed">
+                        <div id="logoColorContent" class="base-collapsible-content collapsed">
                             <div class="inputContainer">
                                 <label for="selectLogoFill"></label>
                                 <select is="emby-select" id="selectLogoFill" data-setting="Fill" data-default="Color"></select>
@@ -209,12 +209,12 @@
                     </div>
 
                     <!-- Size -->
-                    <div class="jpk-collapsible-section">
-                        <button type="button" class="jpk-collapsible-header collapsed" aria-expanded="false" aria-controls="logoSizeContent" data-target="logoSizeContent">
-                            <span class="jpk-collapsible-title">Size</span>
-                            <span class="jpk-collapsible-icon">&#9660;</span>
+                    <div class="base-collapsible-section">
+                        <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="logoSizeContent" data-target="logoSizeContent">
+                            <span class="base-collapsible-title">Size</span>
+                            <span class="base-collapsible-icon"></span>
                         </button>
-                        <div id="logoSizeContent" class="jpk-collapsible-content collapsed">
+                        <div id="logoSizeContent" class="base-collapsible-content collapsed">
                             <div class="inputContainer">
                                 <label for="txtLogoWidth"></label>
                                 <input is="emby-input" type="number" id="txtLogoWidth" min="100" max="4000" step="1" data-setting="Width" data-type="number" />
@@ -229,11 +229,11 @@
 
                     <!-- Save -->
                     <div class="inputContainer">
-                        <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
+                        <button is="emby-button" type="submit" class="raised base-button primary fill">
                             <span>Save</span>
                         </button>
-                        <span id="unsavedIndicator" class="jpk-unsaved">
-                            <span class="jpk-unsaved-dot"></span>
+                        <span id="unsavedIndicator" class="base-unsaved">
+                            <span class="base-unsaved-dot"></span>
                             Unsaved changes
                         </span>
                     </div>

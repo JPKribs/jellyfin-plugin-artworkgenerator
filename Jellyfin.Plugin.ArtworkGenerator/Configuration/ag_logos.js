@@ -81,7 +81,7 @@ export default function (view) {
 
         indicator.innerHTML = '';
         var dot = document.createElement('span');
-        dot.className = 'jpk-unsaved-dot';
+        dot.className = 'base-unsaved-dot';
         dot.style.background = 'var(--ag-success-text)';
         indicator.appendChild(dot);
         indicator.appendChild(document.createTextNode(' Saved!'));
@@ -90,7 +90,7 @@ export default function (view) {
         setTimeout(function () {
             indicator.classList.remove('visible', 'save-success');
             setTimeout(function () {
-                indicator.innerHTML = '<span class="jpk-unsaved-dot"></span> Unsaved changes';
+                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
             }, 300);
         }, 2000);
     }
@@ -101,7 +101,7 @@ export default function (view) {
     // in the name, selected, the way the page's own modal did.
     function promptName(title, field) {
         var result = promptDialog([{ name: 'name', label: 'Name', value: field.value || '', placeholder: field.placeholder }], { title: title });
-        var input = document.body.lastElementChild && document.body.lastElementChild.querySelector('.jpk-dialog input');
+        var input = document.body.lastElementChild && document.body.lastElementChild.querySelector('.base-dialog input');
         if (input) { input.focus(); input.select(); }
         return result;
     }
@@ -187,7 +187,7 @@ export default function (view) {
             var text = logoSettingText[key];
             if (!text) return;
 
-            var container = el.closest('.inputContainer, .checkboxContainer, .jpk-field');
+            var container = el.closest('.inputContainer, .checkboxContainer, .base-field');
             if (!container) return;
 
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');

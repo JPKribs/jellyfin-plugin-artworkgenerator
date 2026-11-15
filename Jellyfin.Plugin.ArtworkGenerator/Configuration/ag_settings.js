@@ -53,7 +53,7 @@ export default function (view) {
 
         indicator.innerHTML = '';
         var dot = document.createElement('span');
-        dot.className = 'jpk-unsaved-dot';
+        dot.className = 'base-unsaved-dot';
         dot.style.background = 'var(--ag-success-text)';
         indicator.appendChild(dot);
         indicator.appendChild(document.createTextNode(' Saved!'));
@@ -62,7 +62,7 @@ export default function (view) {
         setTimeout(function () {
             indicator.classList.remove('visible', 'save-success');
             setTimeout(function () {
-                indicator.innerHTML = '<span class="jpk-unsaved-dot"></span> Unsaved changes';
+                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
             }, 300);
         }, 2000);
     }
@@ -101,7 +101,7 @@ export default function (view) {
                 var entry = text[el.getAttribute('data-frame-setting')];
                 if (!entry) return;
 
-                var container = el.closest('.inputContainer, .checkboxContainer, .jpk-field');
+                var container = el.closest('.inputContainer, .checkboxContainer, .base-field');
                 if (!container) return;
 
                 var name = entry.label || entry.Label || '';

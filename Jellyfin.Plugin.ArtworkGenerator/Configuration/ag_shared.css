@@ -3,9 +3,9 @@
     --ag-text-secondary: rgba(255, 255, 255, 0.5);
 }
 
-/* Config selector (.jpk-selector*), icon buttons (.jpk-icon-btn), the dropdown
+/* Config selector (.base-selector*), icon buttons (.base-icon-btn), the dropdown
    chevron (.pluginConfigurationPage select), the emby-checkbox label spacing, and
-   collapsible sections (.jpk-collapsible-*) all come from the base shared CSS. */
+   collapsible sections (.base-collapsible-*) all come from the base shared CSS. */
 
 /* ── Nested/Grouped Settings ─────────────────────────── */
 .cutout-logo-group {
@@ -16,7 +16,7 @@
 }
 
 .nested-settings {
-    border-left: 2px solid var(--jpk-border);
+    border-left: 2px solid var(--base-border);
 }
 
 /* Beat base form.css .pluginConfigurationPage .inputContainer (0,2,0 !important) on the indent */
@@ -43,15 +43,15 @@
     align-items: center;
     flex-wrap: wrap;
     padding: 8px;
-    border: 1px solid var(--jpk-border);
+    border: 1px solid var(--base-border);
     border-radius: 4px;
-    background: var(--jpk-surface);
+    background: var(--base-surface);
 }
 
 .color-picker {
     width: 50px;
     height: 40px;
-    border: 1px solid var(--jpk-border);
+    border: 1px solid var(--base-border);
     border-radius: 3px;
     background: none;
     cursor: pointer;
@@ -93,8 +93,8 @@
 }
 
 /* ── Selection Modal (list/search inside a base dialog) ────────── */
-/* The dialog/modal shell (.jpk-dialog, .jpk-dialog-content[-narrow],
-   .jpk-dialog-close, .jpk-modal-title/-body/-field/-button-row/-button) all come
+/* The dialog/modal shell (.base-dialog, .base-dialog-content[-narrow],
+   .base-dialog-close, .base-modal-title/-body/-field/-button-row/-button) all come
    from the base shared CSS. Only the picker's own pieces inside the dialogs live here. */
 .picker-content {
     width: 90vw;
@@ -117,7 +117,7 @@
     color: var(--ag-text-secondary);
 }
 
-/* Unsaved indicator (.jpk-unsaved) comes from the base shared CSS. */
+/* Unsaved indicator (.base-unsaved) comes from the base shared CSS. */
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -199,15 +199,15 @@
 }
 
 .poster-component:hover {
-    background: var(--jpk-surface);
+    background: var(--base-surface);
 }
 
 .poster-component-img {
     width: 48px;
     height: 48px;
     object-fit: contain;
-    background: var(--jpk-surface);
-    border: 1px solid var(--jpk-border);
+    background: var(--base-surface);
+    border: 1px solid var(--base-border);
     border-radius: 4px;
     flex-shrink: 0;
 }
@@ -218,7 +218,7 @@
     line-height: 1.2;
 }
 
-/* Enlarged image shown inside the base jpk-dialog modals (preview + components). */
+/* Enlarged image shown inside the base base-dialog modals (preview + components). */
 .poster-preview-modal-image {
     display: block;
     max-width: min(80vw, 960px);
@@ -233,8 +233,8 @@
     width: 100%;
     max-width: 480px;
     aspect-ratio: 16 / 9;
-    background: var(--jpk-surface);
-    border: 1px solid var(--jpk-border);
+    background: var(--base-surface);
+    border: 1px solid var(--base-border);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -292,7 +292,7 @@
 
 .poster-preview-note {
     margin-top: 0.4em;
-    color: var(--jpk-warning);
+    color: var(--base-warning);
     font-size: 0.9em;
     text-align: center;
     display: none;
@@ -345,7 +345,7 @@
     width: 100%;
     max-width: 560px;
     aspect-ratio: 800 / 310;
-    border: 1px solid var(--jpk-border);
+    border: 1px solid var(--base-border);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -389,7 +389,7 @@
 .slot-matrix th,
 .slot-matrix td {
     padding: 0.7em 0.6em;
-    border-bottom: 1px solid var(--jpk-border);
+    border-bottom: 1px solid var(--base-border);
     text-align: left;
     vertical-align: top;
 }
@@ -426,9 +426,9 @@
 .slot-cell .slot-select {
     width: 100%;
     padding: 0.35em 0.5em;
-    background: var(--jpk-surface);
+    background: var(--base-surface);
     color: inherit;
-    border: 1px solid var(--jpk-border);
+    border: 1px solid var(--base-border);
     border-radius: 4px;
 }
 
@@ -453,6 +453,6 @@
 /* Jellyfin upgrades an emby-input after the page loads, so the real input is not always a direct
    child of the field and Base's child-scoped margin reset stops reaching it. That left the two
    ratio boxes carrying a bottom margin and their help line sitting lower than every other row's. */
-.jpk-field-row .jpk-field input {
+.base-field-row .base-field input {
     margin-bottom: 0;
 }

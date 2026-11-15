@@ -114,7 +114,7 @@ export default function (view) {
 
         indicator.innerHTML = '';
         var dot = document.createElement('span');
-        dot.className = 'jpk-unsaved-dot';
+        dot.className = 'base-unsaved-dot';
         dot.style.background = 'var(--ag-success-text)';
         indicator.appendChild(dot);
         indicator.appendChild(document.createTextNode(' Saved!'));
@@ -123,7 +123,7 @@ export default function (view) {
         setTimeout(function () {
             indicator.classList.remove('visible', 'save-success');
             setTimeout(function () {
-                indicator.innerHTML = '<span class="jpk-unsaved-dot"></span> Unsaved changes';
+                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
             }, 300);
         }, 2000);
     }
@@ -146,7 +146,7 @@ export default function (view) {
     function showInputModal(title, fields, callback) {
         var triggerElement = document.activeElement;
         var modal = view.querySelector('#inputModal');
-        var modalContent = view.querySelector('#inputModal .jpk-dialog-content');
+        var modalContent = view.querySelector('#inputModal .base-dialog-content');
         var fieldsContainer = view.querySelector('#inputModalFields');
         var btnConfirm = view.querySelector('#btnConfirmInputModal');
         var btnCancel = view.querySelector('#btnCancelInputModal');
@@ -157,10 +157,10 @@ export default function (view) {
 
         fields.forEach(function (field, index) {
             var container = document.createElement('div');
-            container.className = 'jpk-modal-field';
+            container.className = 'base-modal-field';
 
             var label = document.createElement('label');
-            label.className = 'jpk-modal-field-label';
+            label.className = 'base-modal-field-label';
             label.setAttribute('for', 'inputModalField_' + index);
             label.textContent = field.label;
             container.appendChild(label);
@@ -745,7 +745,7 @@ export default function (view) {
             var text = textFor(el.getAttribute('data-setting'));
             if (!text) return;
 
-            var container = el.closest('.inputContainer, .checkboxContainer, .jpk-field');
+            var container = el.closest('.inputContainer, .checkboxContainer, .base-field');
             if (!container) return;
 
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
@@ -939,14 +939,14 @@ export default function (view) {
     var schedulePreview = debounce(renderPreview, 500);
 
     // openImageModal
-    // Opens one of the base jpk-dialog image modals with the given image and title.
+    // Opens one of the base base-dialog image modals with the given image and title.
     function openImageModal(modalId, imageId, src, title) {
         var dialog = imageDialogs[modalId];
         var modalImg = view.querySelector('#' + imageId);
         if (!dialog || !modalImg || !src) return;
 
         if (title) {
-            var titleEl = dialog.element.querySelector('.jpk-modal-title');
+            var titleEl = dialog.element.querySelector('.base-modal-title');
             if (titleEl) titleEl.textContent = title;
         }
 
