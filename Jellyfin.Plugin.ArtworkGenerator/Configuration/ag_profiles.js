@@ -3,11 +3,13 @@
 
 import {
     createArtworkPage,
-    createCheckboxList,
+    createArtworkSaveBar,
+    createMatrixGrid,
+    createMediaPicker,
+    createSubTabs,
     confirmDialog,
     generateGuid,
     initCollapsibles,
-    openDialog,
     promptName,
     sameId
 } from './configurationpage?name=ag_shared.js';
@@ -18,7 +20,10 @@ export default function (view) {
     var fullConfig = null;
     var currentProfileId = null;
     var logoDesigns = [];
-    var _saving = false;
+    var _slotTabs = null;
+    var _grids = [];
+    var _assignmentTabs = null;
+    var _pickers = [];
 
     var EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -33,11 +38,11 @@ export default function (view) {
         { kind: 'Library', label: 'Libraries', shapeKey: 'LibraryPrimaryShape', defaultShape: 'Landscape' }
     ];
 
-    // The image slots, in the order the matrix shows them as columns.
+    // The image slots, in the order their tabs show.
     var SLOTS = ['Primary', 'Thumb', 'Logo', 'Backdrop'];
 
     // Mirrors ArtworkProfile.SupportedSlots on the server: Jellyfin clients never show logos for
-    // seasons or episodes, so those cells are not offered.
+    // seasons or episodes, so those rows are not offered.
     var SUPPORTED = {
         Series: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
         Season: ['Primary', 'Thumb', 'Backdrop'],
@@ -52,6 +57,7 @@ export default function (view) {
     var page = createArtworkPage(view, 2, {
         bind: function () {
             initCollapsibles(view);
+            buildSaveBar();
             bindEventListeners();
         },
         load: loadConfig
@@ -67,13 +73,24 @@ export default function (view) {
         return JSON.stringify(fullConfig ? fullConfig.Profiles : null);
     }
 
-    var tracker = shared.createChangeTracker({ serialize: snapshot, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    var tracker = shared.createChangeTracker({ serialize: snapshot });
     page.guardUnsaved(tracker);
+    var saveBar = null;
+
+    // buildSaveBar
+    // Draws Base's Save Bar under the form.
+    function buildSaveBar() {
+        saveBar = createArtworkSaveBar(view.querySelector('#AgProfilesForm'), view.querySelector('#saveBarHost'), tracker, {
+            save: saveConfig,
+            savedText: 'Profiles saved.',
+            failedText: 'Could not save the profiles.'
+        });
+    }
 
     // checkDirty
-    // Shows the unsaved indicator while the profiles differ from the last load or save.
+    // Shows Unsaved changes while the profiles differ from the last load or save.
     function checkDirty() {
-        if (fullConfig) tracker.check();
+        if (fullConfig) saveBar.check();
     }
 
     // The backdrop settings' labels and help text live on the settings model, the way the Designs
@@ -144,10 +161,10 @@ export default function (view) {
             }
 
             populateProfileDropdown();
-            tracker.markClean();
+            saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load profiles:', error);
-            shared.setStatus('saveStatus', 'Could not load the profiles. Reload the page.', true, { timeout: 0 });
+            saveBar.setState('failed', 'Could not load the profiles. Reload the page.');
         });
     }
 
@@ -196,8 +213,12 @@ export default function (view) {
         view.querySelector('#btnRenameProfile').classList.toggle('hidden', isDefault);
         view.querySelector('#assignmentSection').classList.toggle('hidden', isDefault);
 
-        if (!isDefault) renderAssignments();
-        renderMatrix();
+        if (isDefault) {
+            destroyAssignments();
+        } else {
+            renderAssignments();
+        }
+        renderSlots();
         loadBackdropSettings();
     }
 
@@ -216,11 +237,11 @@ export default function (view) {
     // Every design draws both shapes, so a slot may use any of them.
     function designOptions(currentId, deletedText) {
         var options = sortedDesigns().map(function (d) {
-            return { value: d.Id, text: d.Name || 'Unnamed Design' };
+            return { value: d.Id, label: d.Name || 'Unnamed Design' };
         });
 
         if (!findDesign(currentId) && currentId && !sameId(currentId, EMPTY_GUID)) {
-            options.unshift({ value: currentId, text: deletedText || 'Deleted design (uses the default)' });
+            options.unshift({ value: currentId, label: deletedText || 'Deleted design (uses the default)' });
         }
 
         return options;
@@ -229,14 +250,14 @@ export default function (view) {
     // A secondary or tertiary design is optional, and a deleted one is skipped rather than
     // replaced by the default.
     function extraDesignOptions(currentId) {
-        return [{ value: EMPTY_GUID, text: '\u2014' }].concat(designOptions(currentId, 'Deleted design (skipped)'));
+        return [{ value: EMPTY_GUID, label: 'None' }].concat(designOptions(currentId, 'Deleted design (skipped)'));
     }
 
     function logoOptions(currentId) {
-        var options = logoDesigns.map(function (l) { return { value: l.Id, text: l.Name || 'Unnamed Logo' }; });
+        var options = logoDesigns.map(function (l) { return { value: l.Id, label: l.Name || 'Unnamed Logo' }; });
         var exists = logoDesigns.some(function (l) { return sameId(l.Id, currentId); });
         if (!exists && currentId && !sameId(currentId, EMPTY_GUID)) {
-            options.unshift({ value: currentId, text: 'Deleted logo (uses the default)' });
+            options.unshift({ value: currentId, label: 'Deleted logo (uses the default)' });
         }
         return options;
     }
@@ -250,191 +271,200 @@ export default function (view) {
         return assignment;
     }
 
-    function makeSelect(options, value, label) {
-        var select = document.createElement('select');
-        select.className = 'emby-select ag-slot-select';
-        if (label) select.setAttribute('aria-label', label);
+    // The columns each image's grid shows. Generate is a Base toggle and each design a Base select.
+    var SLOT_COLUMNS = {
+        Primary: ['Enabled', 'Shape', 'DesignId', 'SecondaryDesignId', 'TertiaryDesignId'],
+        Thumb: ['Enabled', 'DesignId', 'SecondaryDesignId', 'TertiaryDesignId'],
+        Logo: ['Enabled', 'DesignId'],
+        Backdrop: ['Enabled']
+    };
 
-        setOptions(select, options, value);
-        return select;
+    var COLUMNS = {
+        Enabled: { key: 'Enabled', label: 'Generate', icon: 'check' },
+        Shape: { key: 'Shape', label: 'Shape', icon: 'crop', type: 'select', options: ['Portrait', 'Landscape'] },
+        DesignId: { key: 'DesignId', label: 'Design', icon: 'brush', type: 'select', options: [] },
+        SecondaryDesignId: { key: 'SecondaryDesignId', label: 'Second Design', icon: 'filter_2', type: 'select', options: [] },
+        TertiaryDesignId: { key: 'TertiaryDesignId', label: 'Third Design', icon: 'filter_3', type: 'select', options: [] }
+    };
+
+    // optionValue
+    // Finds the choice that names a stored id, which may differ from it in case or dashes.
+    //
+    // Inputs
+    // options [Array]: The choices, as { value, label }.
+    // id [string]: The stored id.
+    //
+    // Output
+    // [string]: The matching choice's value, or the first choice's when none matches.
+    function optionValue(options, id) {
+        var match = options.find(function (o) { return sameId(o.value, id) || o.value === id; });
+        return match ? match.value : (options[0] ? options[0].value : '');
     }
 
-    function setOptions(select, options, value) {
-        select.innerHTML = '';
+    // slotRows
+    // Builds one grid row per kind of item that shows this image. A row whose Generate is off shows only the toggle, and the third design shows once there is a second.
+    //
+    // Inputs
+    // profile [object]: The profile on screen.
+    // slot [string]: The image, such as Primary.
+    //
+    // Output
+    // [object]: rows for createMatrixGrid and the value of each cell.
+    function slotRows(profile, slot) {
+        var rows = [];
+        var value = {};
 
-        options.forEach(function (o) {
-            var option = document.createElement('option');
-            option.value = o.value;
-            option.textContent = o.text;
-            select.appendChild(option);
+        KINDS.forEach(function (k) {
+            if (SUPPORTED[k.kind].indexOf(slot) === -1) return;
+
+            var assignment = getSlot(profile, k.kind, slot);
+            var cells = {};
+            var cellValue = { Enabled: !!assignment.Enabled };
+
+            // A slot with no design takes the first one, whether or not it is generated.
+            if (SLOT_COLUMNS[slot].indexOf('DesignId') !== -1 && sameId(assignment.DesignId, EMPTY_GUID)) {
+                var first = slot === 'Logo' ? logoOptions(assignment.DesignId) : designOptions(assignment.DesignId);
+                if (first.length > 0) assignment.DesignId = first[0].value;
+            }
+
+            SLOT_COLUMNS[slot].forEach(function (key) {
+                if (key === 'Enabled') return;
+                if (!assignment.Enabled) {
+                    cells[key] = null;
+                    return;
+                }
+
+                if (key === 'Shape') {
+                    cellValue.Shape = profile[k.shapeKey] || k.defaultShape;
+                    return;
+                }
+
+                if (key === 'TertiaryDesignId' && sameId(assignment.SecondaryDesignId || EMPTY_GUID, EMPTY_GUID)) {
+                    cells[key] = null;
+                    return;
+                }
+
+                var options;
+                if (key === 'DesignId') {
+                    options = slot === 'Logo' ? logoOptions(assignment.DesignId) : designOptions(assignment.DesignId);
+                } else {
+                    options = extraDesignOptions(assignment[key] || EMPTY_GUID);
+                }
+
+                cells[key] = { options: options };
+                cellValue[key] = optionValue(options, assignment[key] || EMPTY_GUID);
+            });
+
+            rows.push({ key: k.kind, label: k.label, cells: cells });
+            value[k.kind] = cellValue;
         });
 
-        var match = options.find(function (o) { return sameId(o.value, value) || o.value === value; });
-        if (match) select.value = match.value;
+        return { rows: rows, value: value };
     }
 
-    function renderMatrix() {
+    // unsupportedNote
+    // Names the kinds of item Jellyfin clients never show this image for.
+    //
+    // Inputs
+    // slot [string]: The image, such as Logo.
+    //
+    // Output
+    // [string]: The note, or an empty string when every kind shows it.
+    function unsupportedNote(slot) {
+        var missing = KINDS.filter(function (k) { return SUPPORTED[k.kind].indexOf(slot) === -1; })
+            .map(function (k) { return k.label.toLowerCase(); });
+        if (!missing.length) return '';
+        var list = missing.length === 1 ? missing[0] : missing.slice(0, -1).join(', ') + ' or ' + missing[missing.length - 1];
+        return 'Jellyfin clients do not show this image for ' + list + '.';
+    }
+
+    // buildSlotGrid
+    // Draws one image's Base Matrix Grid, with a row per kind of item and a column per choice.
+    //
+    // Inputs
+    // profile [object]: The profile on screen.
+    // slot [string]: The image, such as Primary.
+    //
+    // Output
+    // [object]: The grid handle.
+    function buildSlotGrid(profile, slot) {
+        var built = slotRows(profile, slot);
+        var grid = createMatrixGrid({
+            rows: built.rows,
+            columns: SLOT_COLUMNS[slot].map(function (key) { return COLUMNS[key]; }),
+            value: built.value,
+            rowHeader: 'Item',
+            label: slot + ' Images',
+            note: unsupportedNote(slot),
+            onChange: function (value, kind, key) {
+                var assignment = getSlot(profile, kind, slot);
+                var cell = value[kind][key];
+                var redraw = false;
+
+                if (key === 'Enabled') {
+                    assignment.Enabled = !!cell;
+                    redraw = true;
+                } else if (key === 'Shape') {
+                    var k = KINDS.find(function (entry) { return entry.kind === kind; });
+                    profile[k.shapeKey] = cell;
+                } else {
+                    assignment[key] = cell;
+                }
+
+                // Clearing the second design moves the third up into its place, so the two never leave a gap.
+                if (key === 'SecondaryDesignId' || key === 'TertiaryDesignId') {
+                    if (sameId(assignment.SecondaryDesignId || EMPTY_GUID, EMPTY_GUID) && !sameId(assignment.TertiaryDesignId || EMPTY_GUID, EMPTY_GUID)) {
+                        assignment.SecondaryDesignId = assignment.TertiaryDesignId;
+                        assignment.TertiaryDesignId = EMPTY_GUID;
+                    }
+                    redraw = true;
+                }
+
+                if (redraw) {
+                    var next = slotRows(profile, slot);
+                    grid.setRows(next.rows);
+                    grid.setValue(next.value);
+                }
+
+                checkDirty();
+            }
+        });
+        return grid;
+    }
+
+    // renderSlots
+    // Draws a Base Sub Tab for each image, each holding that image's grid, and keeps the tab the reader had open.
+    function renderSlots() {
         var profile = getCurrentProfile();
-        var container = view.querySelector('#slotMatrix');
-        container.innerHTML = '';
+        var host = view.querySelector('#slotTabs');
+        var selected = _slotTabs ? _slotTabs.getValue() : SLOTS[0];
+        destroySlots();
         if (!profile) return;
 
-        var table = document.createElement('table');
-        var thead = document.createElement('thead');
-        var headRow = document.createElement('tr');
+        // Every image's assignments are filled in now, not when its tab first opens, so opening a tab never reads as an edit.
+        SLOTS.forEach(function (slot) { slotRows(profile, slot); });
 
-        ['Item', 'Primary', 'Thumb', 'Logo', 'Backdrop'].forEach(function (text) {
-            var th = document.createElement('th');
-            th.scope = 'col';
-            th.textContent = text;
-            headRow.appendChild(th);
+        _slotTabs = createSubTabs({
+            label: 'Images',
+            value: selected,
+            tabs: SLOTS.map(function (slot) { return { id: slot, label: slot }; }),
+            render: function (tab) {
+                var grid = buildSlotGrid(profile, tab.id);
+                _grids.push(grid);
+                return grid.element;
+            }
         });
-
-        thead.appendChild(headRow);
-        table.appendChild(thead);
-
-        var tbody = document.createElement('tbody');
-        KINDS.forEach(function (k) {
-            var row = document.createElement('tr');
-            var th = document.createElement('th');
-            th.scope = 'row';
-            th.textContent = k.label;
-            row.appendChild(th);
-
-            SLOTS.forEach(function (slot) {
-                var td = document.createElement('td');
-                if (SUPPORTED[k.kind].indexOf(slot) === -1) {
-                    td.className = 'ag-slot-cell-unavailable';
-                    td.textContent = '\u2014';
-                    td.title = 'Jellyfin clients do not show this image for ' + k.label.toLowerCase() + '.';
-                } else {
-                    td.appendChild(buildCell(profile, k, slot));
-                }
-                row.appendChild(td);
-            });
-
-            tbody.appendChild(row);
-        });
-
-        table.appendChild(tbody);
-        container.appendChild(table);
+        host.appendChild(_slotTabs.element);
     }
 
-    function buildCell(profile, k, slot) {
-        var assignment = getSlot(profile, k.kind, slot);
-        var cell = document.createElement('div');
-        cell.className = 'ag-slot-cell';
-
-        var toggle = document.createElement('label');
-        toggle.className = 'ag-slot-toggle';
-        var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = !!assignment.Enabled;
-        checkbox.setAttribute('aria-label', 'Generate ' + k.label.toLowerCase() + ' ' + slot.toLowerCase());
-        toggle.appendChild(checkbox);
-        toggle.appendChild(document.createTextNode(' Generate'));
-        cell.appendChild(toggle);
-
-        var controls = [];
-
-        if (slot === 'Primary') {
-            var shape = profile[k.shapeKey] || k.defaultShape;
-            var shapeSelect = makeSelect([
-                { value: 'Portrait', text: 'Portrait' },
-                { value: 'Landscape', text: 'Landscape' }
-            ], shape, k.label + ' primary shape');
-
-            shapeSelect.addEventListener('change', function () {
-                profile[k.shapeKey] = shapeSelect.value;
-                checkDirty();
-            });
-
-            cell.appendChild(shapeSelect);
-            controls.push(shapeSelect);
-        }
-
-        if (slot === 'Primary' || slot === 'Thumb') {
-            var options = designOptions(assignment.DesignId);
-            var designSelect = makeSelect(options, assignment.DesignId, k.label + ' ' + slot.toLowerCase() + ' design');
-
-            if (sameId(assignment.DesignId, EMPTY_GUID) && options.length > 0) {
-                assignment.DesignId = options[0].value;
-            }
-
-            designSelect.addEventListener('change', function () {
-                assignment.DesignId = designSelect.value;
-                checkDirty();
-            });
-
-            cell.appendChild(designSelect);
-            controls.push(designSelect);
-
-            // A second and third design only add choices to the Edit Images picker, drawn over the
-            // same frames. The third is offered once there is a second, and clearing the second
-            // moves the third up into its place, so the two never leave a gap.
-            var secondarySelect = makeSelect([], null, k.label + ' ' + slot.toLowerCase() + ' second design');
-            var tertiarySelect = makeSelect([], null, k.label + ' ' + slot.toLowerCase() + ' third design');
-
-            var refreshExtras = function () {
-                var second = assignment.SecondaryDesignId || EMPTY_GUID;
-                var third = assignment.TertiaryDesignId || EMPTY_GUID;
-
-                if (sameId(second, EMPTY_GUID) && !sameId(third, EMPTY_GUID)) {
-                    second = assignment.SecondaryDesignId = third;
-                    third = assignment.TertiaryDesignId = EMPTY_GUID;
-                }
-
-                setOptions(secondarySelect, extraDesignOptions(second), second);
-                setOptions(tertiarySelect, extraDesignOptions(third), third);
-                tertiarySelect.style.display = sameId(second, EMPTY_GUID) ? 'none' : '';
-            };
-
-            secondarySelect.addEventListener('change', function () {
-                assignment.SecondaryDesignId = secondarySelect.value;
-                refreshExtras();
-                checkDirty();
-            });
-
-            tertiarySelect.addEventListener('change', function () {
-                assignment.TertiaryDesignId = tertiarySelect.value;
-                refreshExtras();
-                checkDirty();
-            });
-
-            refreshExtras();
-            cell.appendChild(secondarySelect);
-            cell.appendChild(tertiarySelect);
-            controls.push(secondarySelect, tertiarySelect);
-        } else if (slot === 'Logo') {
-            var logos = logoOptions(assignment.DesignId);
-            var logoSelect = makeSelect(logos, assignment.DesignId, k.label + ' logo design');
-
-            if (sameId(assignment.DesignId, EMPTY_GUID) && logos.length > 0) {
-                assignment.DesignId = logos[0].value;
-            }
-
-            logoSelect.addEventListener('change', function () {
-                assignment.DesignId = logoSelect.value;
-                checkDirty();
-            });
-
-            cell.appendChild(logoSelect);
-            controls.push(logoSelect);
-        }
-
-        function updateState() {
-            controls.forEach(function (control) { control.disabled = !assignment.Enabled; });
-            cell.classList.toggle('ag-slot-cell-off', !assignment.Enabled);
-        }
-
-        checkbox.addEventListener('change', function () {
-            assignment.Enabled = checkbox.checked;
-            updateState();
-            checkDirty();
-        });
-
-        updateState();
-        return cell;
+    // destroySlots
+    // Removes the image tabs and their grids.
+    function destroySlots() {
+        _grids.forEach(function (grid) { grid.destroy(); });
+        _grids = [];
+        if (_slotTabs) _slotTabs.destroy();
+        _slotTabs = null;
+        view.querySelector('#slotTabs').innerHTML = '';
     }
 
     var BACKDROP_DEFAULTS = {
@@ -479,9 +509,8 @@ export default function (view) {
             key: 'SeriesIds',
             itemType: 'Series',
             noun: 'series',
+            tab: 'Series',
             label: 'Assigned Series',
-            button: 'Edit Series',
-            modalTitle: 'Select Series',
             search: 'Search series',
             empty: 'No series assigned.',
             missing: 'No series found. Make sure you have TV series in your Jellyfin library.',
@@ -491,9 +520,8 @@ export default function (view) {
             key: 'MovieIds',
             itemType: 'Movie',
             noun: 'movies',
+            tab: 'Movies',
             label: 'Assigned Movies',
-            button: 'Edit Movies',
-            modalTitle: 'Select Movies',
             search: 'Search movies',
             empty: 'No movies assigned.',
             missing: 'No movies found. Make sure you have movies in your Jellyfin library.',
@@ -506,9 +534,8 @@ export default function (view) {
             // everything a library holds that is not part of a series and not a film.
             itemType: 'MusicVideo,Video',
             noun: 'videos',
+            tab: 'Videos',
             label: 'Assigned Videos',
-            button: 'Edit Videos',
-            modalTitle: 'Select Videos',
             search: 'Search videos',
             empty: 'No videos assigned.',
             missing: 'No videos found. Make sure you have music videos or home videos in your Jellyfin library.',
@@ -518,9 +545,8 @@ export default function (view) {
             key: 'CollectionIds',
             itemType: 'BoxSet',
             noun: 'collections',
+            tab: 'Collections',
             label: 'Assigned Collections',
-            button: 'Edit Collections',
-            modalTitle: 'Select Collections',
             search: 'Search collections',
             empty: 'No collections assigned.',
             missing: 'No collections found. Make sure you have collections in your Jellyfin library.',
@@ -530,9 +556,8 @@ export default function (view) {
             key: 'FolderIds',
             itemType: 'Folder',
             noun: 'folders',
+            tab: 'Folders',
             label: 'Assigned Folders',
-            button: 'Edit Folders',
-            modalTitle: 'Select Folders',
             search: 'Search folders',
             empty: 'No folders assigned.',
             missing: 'No folders found. Make sure you have folders in a mixed content or home videos library.',
@@ -541,16 +566,15 @@ export default function (view) {
         {
             key: 'LibraryIds',
             noun: 'libraries',
+            tab: 'Libraries',
             label: 'Assigned Libraries',
-            button: 'Edit Libraries',
-            modalTitle: 'Select Libraries',
             search: 'Search libraries',
             empty: 'No libraries assigned.',
             missing: 'No libraries found.',
             load: function () {
                 return ApiClient.getVirtualFolders().then(function (folders) {
                     return (folders || []).map(function (folder) {
-                        return { Id: folder.ItemId, Name: folder.Name };
+                        return { Id: folder.ItemId, Name: folder.Name, Type: 'CollectionFolder' };
                     });
                 });
             },
@@ -584,75 +608,89 @@ export default function (view) {
         return profile[target.key];
     }
 
+    // Item types named on the second line of a picked item.
+    var TYPE_LABELS = { BoxSet: 'Collection', CollectionFolder: 'Library', MusicVideo: 'Music Video' };
+
+    // destroyAssignments
+    // Removes the assignment tabs and their pickers.
+    function destroyAssignments() {
+        _pickers.forEach(function (picker) { picker.destroy(); });
+        _pickers = [];
+        if (_assignmentTabs) _assignmentTabs.destroy();
+        _assignmentTabs = null;
+        view.querySelector('#assignmentTabs').innerHTML = '';
+    }
+
+    // renderAssignments
+    // Draws a Base Sub Tab for each kind of item a profile can be assigned, each holding a Media Picker, and keeps the tab the reader had open.
     function renderAssignments() {
         var profile = getCurrentProfile();
-        var host = view.querySelector('#assignmentBlocks');
-        host.innerHTML = '';
+        var selected = _assignmentTabs ? _assignmentTabs.getValue() : TARGETS[0].key;
+        destroyAssignments();
         if (!profile) return;
 
-        TARGETS.forEach(function (target) {
-            host.appendChild(buildAssignmentBlock(profile, target));
+        _assignmentTabs = createSubTabs({
+            label: 'Assigned Items',
+            value: selected,
+            tabs: TARGETS.map(function (target) { return { id: target.key, label: target.tab }; }),
+            render: function (tab) {
+                var target = TARGETS.find(function (entry) { return entry.key === tab.id; });
+                var picker = buildPicker(profile, target);
+                _pickers.push(picker);
+                return picker.element;
+            }
         });
+        view.querySelector('#assignmentTabs').appendChild(_assignmentTabs.element);
     }
 
-    function buildAssignmentBlock(profile, target) {
-        var block = document.createElement('div');
-        block.className = 'inputContainer';
-
-        var label = document.createElement('label');
-        label.textContent = target.label;
-        block.appendChild(label);
-
-        var list = document.createElement('div');
-        list.className = 'base-tags';
-        block.appendChild(list);
-
-        var ids = assignedIds(profile, target);
-        if (ids.length === 0) {
-            list.innerHTML = shared.emptySection(target.empty, { inline: true });
-        } else {
-            ids.forEach(function (id) {
-                var item = target.items.find(function (candidate) { return sameId(candidate.Id, id); });
-                if (!item) return;
-                list.appendChild(buildAssignedTag(item, target, id));
-            });
-        }
-
-        var button = document.createElement('button');
-        button.setAttribute('is', 'emby-button');
-        button.type = 'button';
-        button.className = 'raised base-button secondary small';
-        button.appendChild(document.createElement('span')).textContent = target.button;
-        button.addEventListener('click', function () { showSelectionModal(target); });
-        block.appendChild(button);
-
-        return block;
-    }
-
-    // buildAssignedTag
-    // Draws one assigned item as a Base tag with a remove button.
+    // findItem
+    // Finds a loaded item by its stored id.
     //
     // Inputs
-    // item [object]: The Jellyfin item.
-    // target [object]: The assignable kind it belongs to.
-    // id [string]: The stored id, removed when the tag is.
+    // target [object]: The assignable kind.
+    // id [string]: The stored id.
     //
     // Output
-    // [HTMLElement]: The tag.
-    function buildAssignedTag(item, target, id) {
-        var tag = document.createElement('span');
-        tag.className = 'base-tag';
-        tag.appendChild(document.createTextNode(item.Name));
+    // [object|undefined]: The item.
+    function findItem(target, id) {
+        return target.items.find(function (candidate) { return sameId(candidate.Id, id); });
+    }
 
-        var remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'base-tag-remove material-icons';
-        remove.setAttribute('aria-label', 'Remove ' + item.Name);
-        remove.textContent = 'close';
-        remove.addEventListener('click', function () { removeAssignment(target, id); });
+    // buildPicker
+    // Draws a Base Media Picker over the loaded items of one kind. Items another profile holds are left out of the results.
+    //
+    // Inputs
+    // profile [object]: The profile on screen.
+    // target [object]: The assignable kind.
+    //
+    // Output
+    // [object]: The picker handle.
+    function buildPicker(profile, target) {
+        var picked = assignedIds(profile, target).map(function (id) { return findItem(target, id); }).filter(Boolean);
 
-        tag.appendChild(remove);
-        return tag;
+        return createMediaPicker({
+            label: target.label,
+            value: picked,
+            placeholder: target.search,
+            emptyText: target.empty,
+            noResultsText: target.items.length ? 'No ' + target.noun + ' match.' : target.missing,
+            typeLabels: TYPE_LABELS,
+            minChars: 1,
+            searchFn: function (query) {
+                var wanted = query.toLowerCase();
+                var elsewhere = getAssignedElsewhere(target);
+                return Promise.resolve(target.items.filter(function (item) {
+                    return String(item.Name || '').toLowerCase().indexOf(wanted) !== -1
+                        && !elsewhere.some(function (other) { return sameId(other, item.Id); });
+                }));
+            },
+            onChange: function (items) {
+                // An id whose item is not in the library today stays assigned, as it was stored.
+                var unknown = assignedIds(profile, target).filter(function (id) { return !findItem(target, id); });
+                profile[target.key] = items.map(function (item) { return item.Id; }).concat(unknown);
+                checkDirty();
+            }
+        });
     }
 
     // Ids claimed by another profile, so the same item cannot be assigned to two of them.
@@ -664,69 +702,6 @@ export default function (view) {
             }
         });
         return ids;
-    }
-
-    // showSelectionModal
-    // Opens a Base dialog holding a Checkbox List of every item of one kind. Items another profile holds are shown but cannot be picked.
-    //
-    // Inputs
-    // target [object]: The assignable kind to pick from.
-    function showSelectionModal(target) {
-        if (!target.items || target.items.length === 0) {
-            shared.setStatus('assignmentStatus', target.missing, true);
-            return;
-        }
-
-        var elsewhere = getAssignedElsewhere(target);
-        var current = assignedIds(getCurrentProfile(), target).filter(function (id) {
-            return !elsewhere.some(function (other) { return sameId(other, id); });
-        });
-
-        var list = createCheckboxList({
-            items: target.items,
-            idKey: 'Id',
-            matchKey: function (id) { return String(id || '').replace(/-/g, '').toLowerCase(); },
-            value: current,
-            disabledIds: elsewhere,
-            placeholder: target.search,
-            searchKeys: ['Name'],
-            emptyMessage: 'No ' + target.noun + ' match.',
-            renderRow: function (item) {
-                var taken = elsewhere.some(function (other) { return sameId(other, item.Id); });
-                return {
-                    label: item.Name,
-                    sublabel: item.ProductionYear ? String(item.ProductionYear) : null,
-                    imageUrl: ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 80, quality: 80 }),
-                    note: taken ? 'In another profile' : null
-                };
-            }
-        });
-
-        openDialog({
-            title: target.modalTitle,
-            body: list.element,
-            buttons: [
-                { text: 'Cancel', value: null },
-                {
-                    text: 'Done',
-                    className: 'base-button primary',
-                    action: function (close) {
-                        getCurrentProfile()[target.key] = list.getValue();
-                        renderAssignments();
-                        checkDirty();
-                        close(true);
-                    }
-                }
-            ],
-            onClose: function () { list.destroy(); }
-        });
-    }
-
-    function removeAssignment(target, id) {
-        var profile = getCurrentProfile();
-        profile[target.key] = assignedIds(profile, target).filter(function (existing) { return !sameId(existing, id); });
-        renderAssignments();
-        checkDirty();
     }
 
     function nameIsTaken(name, exceptId) {
@@ -800,6 +775,11 @@ export default function (view) {
         });
     }
 
+    // saveConfig
+    // Saves the profiles, once every profile but the default has something assigned.
+    //
+    // Output
+    // [Promise]: Resolves once saved, or rejects with the reason.
     function saveConfig() {
         var empty = fullConfig.Profiles.filter(function (p) {
             return !p.IsDefault && TARGETS.every(function (target) {
@@ -809,35 +789,21 @@ export default function (view) {
 
         if (empty.length > 0) {
             var names = empty.map(function (p) { return p.Name || 'Unnamed'; }).join(', ');
-            shared.setStatus('saveStatus', 'Could not save, since ' + names + ' has nothing assigned. Assign items or remove the profile.', true, { timeout: 0 });
-            return;
+            return Promise.reject('Could not save, since ' + names + ' has nothing assigned. Assign items or remove the profile.');
         }
-
-        if (_saving) return;
-        _saving = true;
 
         // Read-modify-write: designs, logos, and plugin-wide settings live in the same
         // configuration object and are edited on the other tabs.
-        shared.getConfig().then(function (serverConfig) {
+        return shared.getConfig().then(function (serverConfig) {
             serverConfig.Profiles = fullConfig.Profiles;
             return shared.saveConfig(serverConfig);
-        }).then(function () {
-            tracker.flashSaved();
-            shared.setStatus('saveStatus', 'Profiles saved.');
         }).catch(function (error) {
             console.error('Failed to save profiles:', error);
-            shared.errorText(error, 'Could not save the profiles.').then(function (text) { shared.setStatus('saveStatus', text, true); });
-        }).finally(function () {
-            _saving = false;
+            throw error;
         });
     }
 
     function bindEventListeners() {
-        view.querySelector('#AgProfilesForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            saveConfig();
-        });
-
         view.querySelector('#selectProfile').addEventListener('change', function () {
             currentProfileId = this.value;
             loadCurrentProfile();
@@ -855,4 +821,9 @@ export default function (view) {
             });
         });
     }
+
+    view.addEventListener('viewdestroy', function () {
+        destroyAssignments();
+        destroySlots();
+    });
 }

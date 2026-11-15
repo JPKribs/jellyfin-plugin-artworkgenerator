@@ -1,12 +1,10 @@
 // ag_settings.js
 // The Settings tab, which holds the plugin wide options and Frame Extraction.
 
-import { createArtworkPage, initCollapsibles } from './configurationpage?name=ag_shared.js';
+import { createArtworkPage, createArtworkSaveBar, disableHiddenFields, initCollapsibles } from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
     'use strict';
-
-    var _saving = false;
 
     var page = createArtworkPage(view, 3, {
         bind: bindPage,
@@ -32,9 +30,10 @@ export default function (view) {
         });
     }
 
-    // The indicator shows while the fields differ from the last load or save.
-    var tracker = shared.createChangeTracker({ serialize: currentState, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    // The Save Bar shows Unsaved changes while the fields differ from the last load or save.
+    var tracker = shared.createChangeTracker({ serialize: currentState });
     page.guardUnsaved(tracker);
+    var saveBar = null;
 
     // The frame extraction fields carry the name of the property they set, so loading and saving
     // them is one loop rather than a line each.
@@ -89,10 +88,11 @@ export default function (view) {
     }
 
     // updateFrameVisibility
-    // Shows the segment types and the letterbox thresholds only while their checkbox is on.
+    // Shows the segment types and the letterbox thresholds only while their checkbox is on, and disables the hidden ones so Base's validation skips them.
     function updateFrameVisibility() {
         shared.bindReveal('chkAvoidMediaSegments', 'segmentTypes');
         shared.bindReveal('chkLetterboxDetection', 'letterboxSettings');
+        disableHiddenFields(view.querySelector('#AgSettingsForm'));
     }
 
     function loadConfig() {
@@ -114,20 +114,22 @@ export default function (view) {
             });
 
             updateFrameVisibility();
-            tracker.markClean();
+            saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
-            shared.setStatus('saveStatus', 'Could not load the settings. Reload the page.', true);
+            saveBar.setState('failed', 'Could not load the settings. Reload the page.');
         });
     }
 
+    // savePluginSettings
+    // Saves the plugin wide settings. The Save Bar has checked every field through Base's validation first.
+    //
+    // Output
+    // [Promise]: Resolves once saved.
     function savePluginSettings() {
-        if (_saving) return;
-        _saving = true;
-
         // Read-modify-write: the poster configurations live in the same configuration object
         // and are edited on the other tab, so a blind overwrite here would discard them.
-        shared.getConfig().then(function (config) {
+        return shared.getConfig().then(function (config) {
             var choices = parseInt(view.querySelector('#txtImageChoiceCount').value, 10);
             if (isNaN(choices)) choices = 10;
             config.ImageChoiceCount = Math.min(1000, Math.max(1, choices));
@@ -162,26 +164,30 @@ export default function (view) {
             });
 
             return shared.saveConfig(config);
-        }).then(function () {
-            tracker.flashSaved();
-            shared.setStatus('saveStatus', 'Settings saved.');
         }).catch(function (error) {
             console.error('Failed to save settings:', error);
-            shared.errorText(error, 'Could not save the settings.').then(function (text) { shared.setStatus('saveStatus', text, true); });
-        }).finally(function () {
-            _saving = false;
+            throw error;
         });
     }
 
     function bindPage() {
         initCollapsibles(view);
-        view.querySelector('#btnSavePlugin').addEventListener('click', savePluginSettings);
-        view.querySelector('#txtImageChoiceCount').addEventListener('input', tracker.check);
-        view.querySelector('#txtImageCacheMinutes').addEventListener('input', tracker.check);
-        view.querySelector('#txtFixedSeed').addEventListener('input', tracker.check);
+        saveBar = createArtworkSaveBar(view.querySelector('#AgSettingsForm'), view.querySelector('#saveBarHost'), tracker, {
+            save: savePluginSettings,
+            savedText: 'Settings saved.',
+            failedText: 'Could not save the settings.'
+        });
+
+        view.querySelector('#txtImageChoiceCount').addEventListener('input', saveBar.check);
+        view.querySelector('#txtImageCacheMinutes').addEventListener('input', saveBar.check);
+        view.querySelector('#txtFixedSeed').addEventListener('input', saveBar.check);
 
         frameFields().forEach(function (el) {
-            el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', tracker.check);
+            el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', saveBar.check);
+        });
+
+        ['#chkAvoidMediaSegments', '#chkLetterboxDetection'].forEach(function (selector) {
+            view.querySelector(selector).addEventListener('change', updateFrameVisibility);
         });
     }
 }

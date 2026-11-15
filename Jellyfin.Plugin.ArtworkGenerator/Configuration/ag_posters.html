@@ -42,38 +42,24 @@
                     <div class="base-section">
                         <div class="base-section-title">Live Preview</div>
                         <div class="base-section-content">
-                            <div class="ag-preview-layout">
-                                <div class="ag-preview-main">
-                                    <div class="ag-preview-pair">
-                                        <div class="ag-preview-shape">
-                                            <div id="posterPreviewLandscape" class="ag-preview-host"></div>
-                                            <div class="ag-preview-shape-label">Landscape</div>
-                                        </div>
-                                        <div class="ag-preview-shape ag-portrait">
-                                            <div id="posterPreviewPortrait" class="ag-preview-host"></div>
-                                            <div class="ag-preview-shape-label">Portrait</div>
-                                        </div>
+                            <div class="ag-preview">
+                                <div class="ag-preview-pair">
+                                    <div class="ag-preview-shape">
+                                        <div id="posterPreviewLandscape"></div>
+                                        <div class="fieldDescription">Landscape</div>
                                     </div>
-                                    <div id="posterShapeNote" class="ag-preview-note"></div>
-                                    <div class="inputContainer ag-preview-kind">
-                                        <label for="selectPreviewKind">Preview As</label>
-                                        <select is="emby-select" id="selectPreviewKind" data-options="PreviewKind"></select>
+                                    <div class="ag-preview-shape ag-portrait">
+                                        <div id="posterPreviewPortrait"></div>
+                                        <div class="fieldDescription">Portrait</div>
                                     </div>
                                 </div>
-                                <div class="ag-preview-components">
-                                    <div class="ag-component" data-component="canvas" title="Expand">
-                                        <img class="ag-component-img" src="" alt="Canvas image" data-component="canvas" />
-                                        <span class="ag-component-label">Canvas Image</span>
-                                    </div>
-                                    <div class="ag-component" data-component="poster" title="Expand">
-                                        <img class="ag-component-img" src="" alt="Series poster" data-component="poster" />
-                                        <span class="ag-component-label">Series Poster</span>
-                                    </div>
-                                    <div class="ag-component" data-component="logo" title="Expand">
-                                        <img class="ag-component-img" src="" alt="Logo" data-component="logo" />
-                                        <span class="ag-component-label">Logo</span>
-                                    </div>
+                                <div id="posterShapeNote" class="base-warn hidden" role="status"></div>
+                                <div class="inputContainer">
+                                    <label for="selectPreviewKind">Preview As</label>
+                                    <select is="emby-select" id="selectPreviewKind" data-options="PreviewKind"></select>
                                 </div>
+                                <h3 class="base-subsection-title">Sample Images</h3>
+                                <div id="previewSamples"></div>
                             </div>
                         </div>
                     </div>
@@ -101,7 +87,7 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="base-indent ag-style-group" id="frameOptions">
+                            <div class="base-indent" data-style-group id="frameOptions">
                                 <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkLoneLineFollowsTitle" data-setting="LoneLineFollowsTitle" />
@@ -111,7 +97,7 @@
                                 </div>
                             </div>
 
-                            <div class="base-indent ag-style-group" id="outlineOptions">
+                            <div class="base-indent" data-style-group id="outlineOptions">
                                 <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkCutoutBorder" data-setting="CutoutBorder" />
@@ -121,7 +107,7 @@
                                 </div>
                             </div>
 
-                            <div class="base-indent ag-style-group" id="cutoutOptions">
+                            <div class="base-indent" data-style-group id="cutoutOptions">
                                 <div class="inputContainer">
                                     <label for="selectCutoutType"></label>
                                     <select is="emby-select" id="selectCutoutType" data-setting="CutoutType" data-default="Code"></select>
@@ -129,7 +115,7 @@
                                 </div>
                             </div>
 
-                            <div class="base-indent ag-style-group" id="logoOptions">
+                            <div class="base-indent" data-style-group id="logoOptions">
                                 <div class="inputContainer">
                                     <label for="selectLogoAlignment"></label>
                                     <select is="emby-select" id="selectLogoAlignment" data-setting="LogoAlignment" data-default="Center"></select>
@@ -164,18 +150,17 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="base-indent" data-depends-on-canvas="Grid">
-                                <div class="base-field-row">
-                                    <div class="base-field">
-                                        <label for="txtGridFrames"></label>
-                                        <input is="emby-input" type="number" id="txtGridFrames" min="2" max="16" step="1" data-setting="GridFrames" data-type="number" />
-                                    </div>
-                                    <div class="base-field">
-                                        <label for="txtGridGap"></label>
-                                        <input is="emby-input" type="number" id="txtGridGap" min="0" max="25" step="0.5" data-setting="GridGap" data-type="number" />
-                                    </div>
+                            <div id="gridOptions" class="base-indent">
+                                <div class="inputContainer">
+                                    <label for="txtGridFrames"></label>
+                                    <input is="emby-input" type="number" id="txtGridFrames" min="2" max="16" step="1" data-setting="GridFrames" data-type="number" />
+                                    <div class="fieldDescription"></div>
                                 </div>
-                                <div class="fieldDescription">The frames are tiled as evenly as their number allows.</div>
+                                <div class="inputContainer">
+                                    <label for="txtGridGap"></label>
+                                    <input is="emby-input" type="number" id="txtGridGap" min="0" max="25" step="0.5" data-setting="GridGap" data-type="number" />
+                                    <div class="fieldDescription"></div>
+                                </div>
                             </div>
 
                             <div class="inputContainer">
@@ -184,17 +169,15 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="base-field-row">
-                                <div class="base-field" id="landscapeRatioField">
-                                    <label for="txtPosterDimensionRatio"></label>
-                                    <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
-                                </div>
-                                <div class="base-field">
-                                    <label for="txtPortraitDimensionRatio"></label>
-                                    <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
-                                </div>
+                            <div class="inputContainer" id="landscapeRatioField">
+                                <label for="txtPosterDimensionRatio"></label>
+                                <input is="emby-input" type="text" id="txtPosterDimensionRatio" placeholder="16:9" data-setting="PosterDimensionRatio" />
                             </div>
-                            <div id="ratioNote" class="fieldDescription">The shape each image is cropped to, such as 16:9 and 2:3.</div>
+                            <div class="inputContainer">
+                                <label for="txtPortraitDimensionRatio"></label>
+                                <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
+                                <div id="ratioNote" class="fieldDescription">The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.</div>
+                            </div>
 
                             <div class="inputContainer">
                                 <label for="txtPosterSafeArea"></label>
@@ -229,7 +212,7 @@
 
                             <div class="inputContainer">
                                 <label for="txtOverlayColor" data-color-label="Overlay Color" data-opacity-label="Overlay Opacity">Overlay Color</label>
-                                <div class="ag-color-field" data-palette-aware>
+                                <div data-color-field data-palette-aware>
                                         <input type="hidden" id="txtOverlayColor" data-setting="OverlayColor" data-fallback="#66000000" />
                                     </div>
                                 <div id="descOverlayColor" class="fieldDescription" data-color-desc="ARGB hex color for the overlay." data-opacity-desc="How strongly the episode's dominant color tints the poster. The color itself comes from the image.">ARGB hex color for the overlay.</div>
@@ -241,10 +224,10 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="base-indent" data-depends-on-gradient="selectOverlayGradient">
+                            <div id="secondaryOverlay" class="base-indent">
                                 <div class="inputContainer">
                                     <label for="txtOverlaySecondaryColor" data-color-label="Secondary Overlay Color" data-opacity-label="Secondary Overlay Opacity">Secondary Overlay Color</label>
-                                    <div class="ag-color-field" data-palette-aware>
+                                    <div data-color-field data-palette-aware>
                                         <input type="hidden" id="txtOverlaySecondaryColor" data-setting="OverlaySecondaryColor" data-fallback="#66000000" />
                                     </div>
                                     <div id="descOverlaySecondaryColor" class="fieldDescription" data-color-desc="ARGB hex color for the gradient end." data-opacity-desc="Opacity of the gradient end, drawn as a darker shade of the same dominant color.">ARGB hex color for the gradient end.</div>
@@ -268,7 +251,7 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="base-indent ag-style-group" data-depends-on-value="txtGraphicPath">
+                            <div id="graphicOptions" class="base-indent" data-style-group>
                                 <div class="inputContainer">
                                     <label for="selectGraphicPosition"></label>
                                     <select is="emby-select" id="selectGraphicPosition" data-setting="GraphicPosition" data-default="Center"></select>
@@ -307,13 +290,14 @@
                                 <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                            <div id="primaryOptions">
+                            <div class="inputContainer">
                                 <label for="selectLongTextHandling"></label>
                                 <select is="emby-select" id="selectLongTextHandling" data-setting="LongTextHandling" data-default="Ellipsis"></select>
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer checkboxContainer-withDescription" data-depends-on="chkShowPrimary">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkPrimaryUseCustomFont" data-setting="PrimaryUseCustomFont" />
                                     <span class="checkboxLabel"></span>
@@ -321,13 +305,13 @@
                                 <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowPrimary,chkPrimaryUseCustomFont">
+                            <div id="primaryFontPath" class="inputContainer">
                                 <label for="txtPrimaryFontPath"></label>
                                 <input is="emby-input" type="text" id="txtPrimaryFontPath" placeholder="/path/to/font.ttf" data-setting="PrimaryFontPath" />
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div data-hide-when-checked="chkPrimaryUseCustomFont" data-depends-on="chkShowPrimary">
+                            <div id="primaryFontPicker">
                                 <div class="inputContainer">
                                     <label for="selectPrimaryFontFamily"></label>
                                     <select is="emby-select" id="selectPrimaryFontFamily" data-setting="PrimaryFontFamily" data-default="Arial">
@@ -370,18 +354,19 @@
                                 </div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                            <div class="inputContainer">
                                 <label for="txtPrimaryFontSize"></label>
                                 <input is="emby-input" type="number" id="txtPrimaryFontSize" min="1.0" max="100.0" data-setting="PrimaryFontSize" data-type="number" />
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowPrimary">
+                            <div class="inputContainer">
                                 <label for="txtPrimaryFontColor"></label>
-                                <div class="ag-color-field">
+                                <div data-color-field>
                                         <input type="hidden" id="txtPrimaryFontColor" data-setting="PrimaryFontColor" data-fallback="#FFFFFFFF" />
                                     </div>
                                 <div id="descPrimaryFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
+                            </div>
                             </div>
 
                         </div>
@@ -405,7 +390,8 @@
                                 <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer checkboxContainer-withDescription" data-depends-on="chkShowSecondary">
+                            <div id="secondaryOptions">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkHideRepeatedSubtitle" data-setting="HideRepeatedSubtitle" data-default-unchecked />
                                     <span class="checkboxLabel"></span>
@@ -413,13 +399,13 @@
                                 <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                            <div class="inputContainer">
                                 <label for="selectLongSubtitleHandling"></label>
                                 <select is="emby-select" id="selectLongSubtitleHandling" data-setting="LongSubtitleHandling" data-default="ShortCode"></select>
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer checkboxContainer-withDescription" data-depends-on="chkShowSecondary">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkSecondaryUseCustomFont" data-setting="SecondaryUseCustomFont" />
                                     <span class="checkboxLabel"></span>
@@ -427,13 +413,13 @@
                                 <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowSecondary,chkSecondaryUseCustomFont">
+                            <div id="secondaryFontPath" class="inputContainer">
                                 <label for="txtSecondaryFontPath"></label>
                                 <input is="emby-input" type="text" id="txtSecondaryFontPath" placeholder="/path/to/font.ttf" data-setting="SecondaryFontPath" />
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div data-hide-when-checked="chkSecondaryUseCustomFont" data-depends-on="chkShowSecondary">
+                            <div id="secondaryFontPicker">
                                 <div class="inputContainer">
                                     <label for="selectSecondaryFontFamily"></label>
                                     <select is="emby-select" id="selectSecondaryFontFamily" data-setting="SecondaryFontFamily" data-default="Arial">
@@ -476,33 +462,25 @@
                                 </div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                            <div class="inputContainer">
                                 <label for="txtSecondaryFontSize"></label>
                                 <input is="emby-input" type="number" id="txtSecondaryFontSize" min="1.0" max="100.0" data-setting="SecondaryFontSize" data-type="number" />
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkShowSecondary">
+                            <div class="inputContainer">
                                 <label for="txtSecondaryFontColor"></label>
-                                <div class="ag-color-field">
+                                <div data-color-field>
                                         <input type="hidden" id="txtSecondaryFontColor" data-setting="SecondaryFontColor" data-fallback="#FFFFFFFF" />
                                     </div>
                                 <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
+                            </div>
                             </div>
 
                         </div>
                     </div>
 
-                    <!-- Save -->
-                    <div class="inputContainer">
-                        <button is="emby-button" type="submit" class="raised base-button primary fill">
-                            <span>Save</span>
-                        </button>
-                        <span id="unsavedIndicator" class="base-unsaved">
-                            <span class="base-unsaved-dot"></span>Unsaved
-                        </span>
-                        <div id="saveStatus" class="base-status-text" role="status"></div>
-                    </div>
+                    <div id="saveBarHost"></div>
 
                 </div>
             </form>

@@ -1,38 +1,36 @@
 /* ag_shared.css */
-/* The layout the Designs, Logos, Profiles, and Settings pages add to Base. Every class carries the ag- prefix. */
+/* The layout the Designs, Logos, Profiles, and Settings pages add between Base components. Every class carries the ag- prefix. */
 
 /* ag-section-note */
-/* The one line at the top of a section saying what it is for. */
+/* The space under the one line at the top of a section saying what it is for. */
 /* Example: <div class="fieldDescription ag-section-note">How frames are taken from a video.</div> */
 .ag-section-note {
     margin: 0 0 var(--base-gap-wide);
 }
 
-/* ag-preview-layout */
-/* The live preview row, the preview column beside the column of sample images that feed it. */
-/* Example: <div class="ag-preview-layout"><div class="ag-preview-main"></div><div class="ag-preview-components"></div></div> */
-.ag-preview-layout {
-    display: flex;
-    gap: var(--base-gap-wide);
-    align-items: flex-start;
-}
-
-.ag-preview-main {
-    flex: 1;
-    min-width: 0;
+/* ag-preview */
+/* The Live Preview column: the Preview Frames, the note under them, the Preview As field, and the sample images. */
+/* Example: <div class="ag-preview"><div class="ag-preview-pair"></div><div id="previewSamples"></div></div> */
+.ag-preview {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: var(--base-gap-wide);
+}
+
+/* ag-logo-preview */
+/* The Logos tab's preview column, kept to the width a logo needs. */
+/* Example: <div class="ag-preview ag-logo-preview"><div id="logoPreviewHost"></div></div> */
+.ag-logo-preview {
+    max-width: 35rem;
 }
 
 /* ag-preview-pair */
-/* The landscape and portrait Preview Frames side by side, each sized to its shape, with a caption under each. */
-/* Example: <div class="ag-preview-pair"><div class="ag-preview-shape"><div class="ag-preview-host"></div><div class="ag-preview-shape-label">Landscape</div></div></div> */
+/* The landscape and portrait Preview Frames side by side, each sized to its shape, with its caption under it. */
+/* Example: <div class="ag-preview-pair"><div class="ag-preview-shape"><div id="posterPreviewLandscape"></div><div class="fieldDescription">Landscape</div></div></div> */
 .ag-preview-pair {
     display: flex;
-    gap: var(--base-gap-wide);
-    width: 100%;
     flex-wrap: wrap;
+    gap: var(--base-gap-wide);
 }
 
 .ag-preview-shape {
@@ -40,213 +38,9 @@
     min-width: 10rem;
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: var(--base-gap-narrow);
 }
 
 .ag-preview-shape.ag-portrait {
     flex: 3 1 0;
-}
-
-.ag-preview-host {
-    width: 100%;
-}
-
-.ag-preview-shape-label {
-    font-size: 0.85em;
-    opacity: 0.6;
-}
-
-/* ag-preview-note */
-/* A warning line under the previews, shown only while it holds text. */
-/* Example: <div class="ag-preview-note">This style cannot lay out portrait images.</div> */
-.ag-preview-note {
-    margin-top: var(--base-gap-narrow);
-    color: var(--base-warning);
-    font-size: 0.9em;
-    text-align: center;
-    display: none;
-}
-
-/* ag-preview-kind */
-/* The field under the previews, spanning the column, with its help text kept to a short line. */
-/* Example: <div class="inputContainer ag-preview-kind"><select is="emby-select"></select></div> */
-.ag-preview-kind {
-    margin-top: var(--base-gap-wide);
-    width: 100%;
-    align-self: stretch;
-}
-
-.ag-preview-kind select {
-    width: 100%;
-}
-
-.ag-preview-kind .fieldDescription {
-    max-width: 40ch;
-}
-
-/* ag-preview-components */
-/* The column of sample images a preview is drawn from. Each opens larger when selected. */
-/* Example: <div class="ag-preview-components"><div class="ag-component"><img class="ag-component-img" /><span class="ag-component-label">Logo</span></div></div> */
-.ag-preview-components {
-    display: flex;
-    flex-direction: column;
-    gap: var(--base-gap-narrow);
-    width: 10rem;
-    flex-shrink: 0;
-}
-
-.ag-component {
-    display: flex;
-    align-items: center;
-    gap: var(--base-gap-narrow);
-    cursor: pointer;
-    border-radius: var(--base-radius-small);
-    padding: 2px;
-}
-
-.ag-component:hover {
-    background: var(--base-wash);
-}
-
-.ag-component-img {
-    width: 3rem;
-    height: 3rem;
-    object-fit: contain;
-    background: var(--base-surface);
-    border: 1px solid var(--base-border);
-    border-radius: var(--base-radius-small);
-    flex-shrink: 0;
-}
-
-.ag-component-label {
-    font-size: 0.78em;
-    line-height: 1.2;
-    opacity: 0.6;
-}
-
-/* ag-logo-preview */
-/* The logo preview column, as wide as its frame, with the color source sample under it. */
-/* Example: <div class="ag-preview-main" id="logoPreviewColumn"><div class="ag-logo-preview-host"></div><div class="ag-logo-preview-controls"></div></div> */
-#logoPreviewColumn {
-    align-items: flex-start;
-    width: 100%;
-    max-width: 35rem;
-}
-
-.ag-logo-preview-host {
-    width: 100%;
-}
-
-.ag-logo-preview-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--base-gap-wide);
-    margin-top: var(--base-gap-narrow);
-}
-
-.ag-logo-preview-controls #logoColorSourceRow {
-    width: auto;
-}
-
-/* ag-dialog-image */
-/* One image shown large in a Base dialog. */
-/* Example: <img class="ag-dialog-image" src="poster.jpg" alt="Logo" /> */
-.ag-dialog-image {
-    display: block;
-    max-width: 100%;
-    max-height: 75vh;
-    margin: 0 auto;
-    object-fit: contain;
-    border-radius: var(--base-radius-medium);
-}
-
-/* ag-slot-matrix */
-/* The Images table on the Profiles tab, one row per kind of item and one column per image, each cell a Generate toggle and its design pickers. */
-/* Example: <div class="ag-slot-matrix"><table><tbody><tr><th>Series</th><td><div class="ag-slot-cell"><label class="ag-slot-toggle"></label><select class="ag-slot-select"></select></div></td></tr></tbody></table></div> */
-.ag-slot-matrix {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.ag-slot-matrix table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.ag-slot-matrix th,
-.ag-slot-matrix td {
-    padding: 0.7em 0.6em;
-    border-bottom: 1px solid var(--base-border);
-    text-align: left;
-    vertical-align: top;
-}
-
-.ag-slot-matrix tbody tr:last-child th,
-.ag-slot-matrix tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.ag-slot-matrix thead th {
-    font-weight: 600;
-    font-size: 0.9em;
-    opacity: 0.6;
-}
-
-.ag-slot-matrix tbody th {
-    white-space: nowrap;
-    font-weight: 600;
-}
-
-.ag-slot-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45em;
-    min-width: 11rem;
-}
-
-.ag-slot-cell.ag-slot-cell-off .ag-slot-select {
-    opacity: 0.45;
-}
-
-.ag-slot-cell .ag-slot-select {
-    width: 100%;
-}
-
-.ag-slot-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
-    cursor: pointer;
-}
-
-.ag-slot-cell-unavailable {
-    font-style: italic;
-    text-align: center;
-    opacity: 0.6;
-}
-
-@media (max-width: 768px) {
-    .ag-preview-layout {
-        flex-direction: column;
-    }
-
-    .ag-preview-components {
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .ag-component {
-        width: 7.5rem;
-    }
-
-}
-
-/* Stopgap for a Base defect. Base resets the margin only on a direct child of base-field, and Jellyfin wraps an */
-/* upgraded emby-input after the page loads, so the input keeps its margin and its help line sits low. */
-/* Delete this rule in the commit that moves to a Base version that resets the wrapped input. */
-.base-field-row .base-field input {
-    margin-bottom: 0;
 }

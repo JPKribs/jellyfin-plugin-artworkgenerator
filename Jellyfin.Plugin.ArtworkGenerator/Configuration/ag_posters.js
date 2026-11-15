@@ -4,10 +4,14 @@
 import {
     bindColorField,
     createArtworkPage,
+    createArtworkSaveBar,
+    createList,
+    createMediaCard,
     createPreviewFrame,
     confirmDialog,
     downloadJson,
     generateGuid,
+    disableHiddenFields,
     initCollapsibles,
     openImageDialog,
     pickJsonFile,
@@ -21,13 +25,14 @@ export default function (view) {
     var fullConfig = null;
     var currentConfigId = null;
     var _componentObjectUrls = [];
-    var _saving = false;
     var _staticDataPromise = null;
     var _previews = {};
+    var _samples = null;
 
     var page = createArtworkPage(view, 0, {
         bind: function () {
             initCollapsibles(view);
+            buildSaveBar();
             buildPreviews();
             bindEventListeners();
             bindColorControls();
@@ -53,21 +58,32 @@ export default function (view) {
         return JSON.stringify(fullConfig ? fullConfig.PosterConfigurations : null);
     }
 
-    var tracker = shared.createChangeTracker({ serialize: snapshot, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    var tracker = shared.createChangeTracker({ serialize: snapshot });
     page.guardUnsaved(tracker);
+    var saveBar = null;
+
+    // buildSaveBar
+    // Draws Base's Save Bar under the form.
+    function buildSaveBar() {
+        saveBar = createArtworkSaveBar(view.querySelector('#AgPostersForm'), view.querySelector('#saveBarHost'), tracker, {
+            save: saveConfig,
+            savedText: 'Designs saved.',
+            failedText: 'Could not save the designs.'
+        });
+    }
 
     // checkDirty
-    // Reads the fields into the design on screen and shows the unsaved indicator while the designs differ from the last load or save.
+    // Reads the fields into the design on screen and shows Unsaved changes while the designs differ from the last load or save.
     function checkDirty() {
         if (!fullConfig) return;
         saveCurrentConfigSettings();
-        tracker.check();
+        saveBar.check();
     }
 
     // bindColorControls
     // Draws each color setting with Base's Color Picker, and its opacity alone with Base's slider when the image gives the color.
     function bindColorControls() {
-        view.querySelectorAll('.ag-color-field').forEach(function (field) {
+        view.querySelectorAll('[data-color-field]').forEach(function (field) {
             var handle = bindColorField(field, function () { checkDirty(); schedulePreview(); });
             handle.field = field;
             colorFields.push(handle);
@@ -91,10 +107,10 @@ export default function (view) {
             populateConfigDropdown();
             syncColorControls();
             saveCurrentConfigSettings();
-            tracker.markClean();
+            saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
-            shared.setStatus('saveStatus', 'Could not load the designs. Reload the page.', true, { timeout: 0 });
+            saveBar.setState('failed', 'Could not load the designs. Reload the page.');
         });
     }
 
@@ -362,53 +378,22 @@ export default function (view) {
         });
     }
 
-    function validateNumberInputs() {
-        var errors = [];
-        view.querySelectorAll('[data-setting][data-type="number"]').forEach(function (input) {
-            if (input.offsetParent === null) return;
-
-            var value = parseFloat(input.value);
-            var min = parseFloat(input.getAttribute('min'));
-            var max = parseFloat(input.getAttribute('max'));
-            var labelEl = input.closest('.inputContainer');
-            var labelText = labelEl ? labelEl.querySelector('label') : null;
-            var name = (labelText && labelText.textContent.trim()) || input.id;
-
-            if (isNaN(value)) {
-                errors.push(name + ' must be a valid number.');
-            } else {
-                if (!isNaN(min) && value < min) errors.push(name + ' must be at least ' + min + '.');
-                if (!isNaN(max) && value > max) errors.push(name + ' must be at most ' + max + '.');
-            }
-        });
-        return errors;
-    }
-
+    // saveConfig
+    // Saves the designs. The Save Bar has checked every shown field through Base's validation first.
+    //
+    // Output
+    // [Promise]: Resolves once saved.
     function saveConfig() {
         saveCurrentConfigSettings();
 
-        var validationErrors = validateNumberInputs();
-        if (validationErrors.length > 0) {
-            shared.setStatus('saveStatus', validationErrors.join(' '), true, { timeout: 0 });
-            return;
-        }
-
-        if (_saving) return;
-        _saving = true;
-
         // Read-modify-write: the plugin-wide settings on the other tab live in the same
         // configuration object, so only the poster configurations are overwritten here.
-        shared.getConfig().then(function (serverConfig) {
+        return shared.getConfig().then(function (serverConfig) {
             serverConfig.PosterConfigurations = fullConfig.PosterConfigurations;
             return shared.saveConfig(serverConfig);
-        }).then(function () {
-            tracker.flashSaved();
-            shared.setStatus('saveStatus', 'Designs saved.');
         }).catch(function (error) {
             console.error('Failed to save poster configurations:', error);
-            shared.errorText(error, 'Could not save the designs.').then(function (text) { shared.setStatus('saveStatus', text, true); });
-        }).finally(function () {
-            _saving = false;
+            throw error;
         });
     }
 
@@ -610,7 +595,7 @@ export default function (view) {
         note.textContent = missing.length
             ? 'This style cannot lay out ' + missing.join(' or ').toLowerCase() + ' images, so those are drawn with Standard instead.'
             : '';
-        note.style.display = missing.length ? 'block' : 'none';
+        shared.setVisible(note, missing.length > 0);
     }
 
     // buildPreviews
@@ -662,41 +647,44 @@ export default function (view) {
         Object.keys(_previews).forEach(function (shape) { _previews[shape].update(); });
     }
 
+    // The sample images the preview is drawn from.
+    var SAMPLES = [
+        { component: 'canvas', title: 'Canvas Image' },
+        { component: 'poster', title: 'Series Poster' },
+        { component: 'logo', title: 'Logo' }
+    ];
+
+    // loadPreviewComponents
+    // Lists the sample images as Base Media Cards. Each opens larger when selected.
     function loadPreviewComponents() {
-        var componentTitles = {
-            canvas: 'Canvas Image',
-            poster: 'Series Poster',
-            logo: 'Logo',
-            graphic: 'Static Graphic'
-        };
-
-        // Fetched through ApiClient rather than assigned straight to img.src: a bare <img>
-        // request carries no auth header, which is why this endpoint used to have to allow
-        // anonymous access. Loading the bytes here keeps it behind the admin policy.
-        view.querySelectorAll('.ag-component-img').forEach(function (img) {
-            var component = img.getAttribute('data-component');
-            var hide = function () {
-                var wrapper = img.closest('.ag-component');
-                if (wrapper) wrapper.style.display = 'none';
-            };
-
-            shared.fetchObjectUrl('Preview/Component/' + component).then(function (objectUrl) {
-                _componentObjectUrls.push(objectUrl);
-                img.src = objectUrl;
-            }).catch(function (error) {
-                console.error('Failed to load preview component "' + component + '":', error);
-                hide();
-            });
+        _samples = createList({
+            items: SAMPLES,
+            layout: 'rows',
+            label: 'Sample Images',
+            render: function (sample) {
+                return createMediaCard({
+                    shape: 'square',
+                    icon: 'image',
+                    title: sample.title,
+                    // Fetched through ApiClient rather than assigned straight to the image, since a bare
+                    // image request carries no auth header and the endpoint stays behind the admin policy.
+                    image: function () {
+                        return shared.fetchObjectUrl('Preview/Component/' + sample.component).then(function (objectUrl) {
+                            _componentObjectUrls.push(objectUrl);
+                            sample.url = objectUrl;
+                            return objectUrl;
+                        }, function (error) {
+                            console.error('Failed to load preview component "' + sample.component + '":', error);
+                            return '';
+                        });
+                    },
+                    onClick: function () {
+                        if (sample.url) openImageDialog(sample.title, sample.url);
+                    }
+                });
+            }
         });
-
-        view.querySelectorAll('.ag-component').forEach(function (comp) {
-            comp.addEventListener('click', function () {
-                var img = comp.querySelector('.ag-component-img');
-                if (!img || !img.src) return;
-                var component = comp.getAttribute('data-component');
-                openImageDialog(componentTitles[component] || 'Component', img.src);
-            });
-        });
+        view.querySelector('#previewSamples').appendChild(_samples.element);
     }
 
     // Which settings a style uses comes from the server, where each generator declares its own
@@ -724,97 +712,57 @@ export default function (view) {
         });
 
         // A group whose settings are all gone would otherwise leave an empty box behind.
-        view.querySelectorAll('.ag-style-group').forEach(function (group) {
+        view.querySelectorAll('[data-style-group]').forEach(function (group) {
             var shown = group.querySelectorAll('[data-setting]');
             var anyVisible = Array.prototype.some.call(shown, function (el) {
                 return settingState(posterStyle, el.getAttribute('data-setting')) === 'Optional';
             });
-            group.style.display = anyVisible ? 'block' : 'none';
+            group.hidden = !anyVisible;
         });
     }
 
+    // updateVisibility
+    // Shows each field only where it applies, through Base's bindReveal for a checkbox and setVisible for any other rule. The style's own rules hide a field with the hidden attribute, so the two never undo each other.
     function updateVisibility() {
         var posterStyle = view.querySelector('#selectPosterStyle').value;
         var posterFill = view.querySelector('#selectPosterFill').value;
-        var canvasSourceEl = view.querySelector('#selectCanvasSource');
-        var canvasSource = canvasSourceEl ? canvasSourceEl.value : 'Extract';
-
-        function canvasOk(el) {
-            var allowed = el.getAttribute('data-depends-on-canvas');
-            return !allowed || allowed.split(',').includes(canvasSource);
-        }
+        var canvasSource = view.querySelector('#selectCanvasSource').value || 'Extract';
 
         applyStyleRules(posterStyle);
 
         // The Original strategy keeps a landscape frame's own shape, so the landscape ratio does
         // nothing there and is taken off screen rather than left to be set and ignored.
         var landscapeRatioApplies = posterFill !== 'Original';
-        var landscapeRatio = view.querySelector('#landscapeRatioField');
-        if (landscapeRatio) {
-            landscapeRatio.hidden = !landscapeRatioApplies;
-        }
+        shared.setVisible('landscapeRatioField', landscapeRatioApplies);
+        view.querySelector('#ratioNote').textContent = landscapeRatioApplies
+            ? 'The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.'
+            : 'Portrait images always crop to the portrait ratio. Landscape images keep the frame\'s own shape.';
 
-        var ratioNote = view.querySelector('#ratioNote');
-        if (ratioNote) {
-            ratioNote.textContent = landscapeRatioApplies
-                ? 'The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.'
-                : 'Portrait images always crop to the portrait ratio. Landscape images keep the frame\'s own shape.';
-        }
+        shared.setVisible('gridOptions', canvasSource === 'Grid');
 
-        // Hide elements for specific fill modes
-        view.querySelectorAll('[data-hide-for-posterfill]').forEach(function (el) {
-            el.style.display = el.getAttribute('data-hide-for-posterfill').split(',').includes(posterFill) ? 'none' : 'block';
-        });
-
-        // Canvas source dependency (elements with only a canvas constraint)
-        view.querySelectorAll('[data-depends-on-canvas]:not([data-depends-on])').forEach(function (el) {
-            el.style.display = canvasOk(el) ? 'block' : 'none';
-        });
-
-        // Checkbox dependency chains (also honoring any canvas constraint)
-        view.querySelectorAll('[data-depends-on]').forEach(function (el) {
-            var deps = el.getAttribute('data-depends-on').split(',');
-            var met = deps.every(function (id) {
-                var dep = view.querySelector('#' + id.trim());
-                return dep && dep.checked;
-            });
-
-            // A container the style rules already took away stays away.
-            var hiddenByStyle = el.hidden || (el.querySelector('[data-setting]')
-                && settingState(posterStyle, el.querySelector('[data-setting]').getAttribute('data-setting')) !== 'Optional');
-            el.style.display = (met && !hiddenByStyle && canvasOk(el)) ? 'block' : 'none';
-        });
-
-        // Gradient dependency
         // The second overlay color is the gradient's far end on most designs, so it only appears
         // once a gradient is chosen. A design that shapes its own overlay hides the gradient
         // entirely and uses both colors directly, so there it is always on show.
-        view.querySelectorAll('[data-depends-on-gradient]').forEach(function (el) {
-            var select = view.querySelector('#' + el.getAttribute('data-depends-on-gradient'));
-            var gradientOffered = settingState(posterStyle, 'OverlayGradient') !== 'Hidden';
-            var wanted = !gradientOffered || (select && select.value !== 'None');
+        var gradientOffered = settingState(posterStyle, 'OverlayGradient') !== 'Hidden';
+        var secondaryOverlay = view.querySelector('#secondaryOverlay');
+        shared.setVisible(secondaryOverlay, !gradientOffered || view.querySelector('#selectOverlayGradient').value !== 'None');
 
-            el.style.display = wanted ? 'block' : 'none';
+        // Nested styling says "this belongs to the control above it". With no gradient above
+        // it, the second color stands on its own and the indent reads as a mistake.
+        secondaryOverlay.classList.toggle('base-indent', gradientOffered);
 
-            // Nested styling says "this belongs to the control above it". With no gradient above
-            // it, the second color stands on its own and the indent reads as a mistake.
-            el.classList.toggle('base-indent', gradientOffered);
-        });
+        // The graphic's placement shows once there is a graphic to place.
+        shared.setVisible('graphicOptions', view.querySelector('#txtGraphicPath').value.trim() !== '');
 
-        // Show when another input has been filled in, such as the graphic's placement once there
-        // is a graphic to place.
-        view.querySelectorAll('[data-depends-on-value]').forEach(function (el) {
-            var input = view.querySelector('#' + el.getAttribute('data-depends-on-value'));
-            el.style.display = (input && input.value && input.value.trim() !== '') ? 'block' : 'none';
-        });
-
-        // Hide when checkbox is checked (inverse dependency)
-        view.querySelectorAll('[data-hide-when-checked]').forEach(function (el) {
-            var cb = view.querySelector('#' + el.getAttribute('data-hide-when-checked'));
-            el.style.display = (cb && cb.checked) ? 'none' : 'block';
-        });
+        shared.bindReveal('chkShowPrimary', 'primaryOptions');
+        shared.bindReveal('chkPrimaryUseCustomFont', 'primaryFontPath');
+        shared.bindReveal('chkPrimaryUseCustomFont', 'primaryFontPicker', true);
+        shared.bindReveal('chkShowSecondary', 'secondaryOptions');
+        shared.bindReveal('chkSecondaryUseCustomFont', 'secondaryFontPath');
+        shared.bindReveal('chkSecondaryUseCustomFont', 'secondaryFontPicker', true);
 
         updatePaletteMode();
+        disableHiddenFields(view.querySelector('#AgPostersForm'));
     }
 
     // With Palette-Derived Colors on, the renderer replaces the overlay RGB channels with the
@@ -862,12 +810,6 @@ export default function (view) {
     }
 
     function bindEventListeners() {
-        // Form save
-        view.querySelector('#AgPostersForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            saveConfig();
-        });
-
         // Config selector
         view.querySelector('#selectPosterConfig').addEventListener('change', function () {
             saveCurrentConfigSettings();
@@ -923,6 +865,8 @@ export default function (view) {
         // The frames free their own images. The component thumbnails are released here.
         Object.keys(_previews).forEach(function (shape) { _previews[shape].destroy(); });
         _previews = {};
+        if (_samples) _samples.destroy();
+        _samples = null;
         _componentObjectUrls.forEach(URL.revokeObjectURL);
         _componentObjectUrls = [];
     });

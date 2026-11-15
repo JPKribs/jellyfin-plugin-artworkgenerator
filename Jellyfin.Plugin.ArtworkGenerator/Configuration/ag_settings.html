@@ -40,17 +40,16 @@
 
                             <div class="fieldDescription ag-section-note">How frames are taken from a video and cleaned up, for every poster and every backdrop.</div>
 
-                            <div class="base-field-row">
-                                <div class="base-field">
-                                    <label for="txtExtractWindowStart"></label>
-                                    <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-frame-setting="ExtractWindowStart" data-type="number" />
-                                </div>
-                                <div class="base-field">
-                                    <label for="txtExtractWindowEnd"></label>
-                                    <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-frame-setting="ExtractWindowEnd" data-type="number" />
-                                </div>
+                            <div class="inputContainer">
+                                <label for="txtExtractWindowStart"></label>
+                                <input is="emby-input" type="number" id="txtExtractWindowStart" min="0" max="100" step="1" data-frame-setting="ExtractWindowStart" data-type="number" />
+                                <div class="fieldDescription"></div>
                             </div>
-                            <div class="fieldDescription">The stretch of each episode frames are taken from, skipping intros and credits.</div>
+                            <div class="inputContainer">
+                                <label for="txtExtractWindowEnd"></label>
+                                <input is="emby-input" type="number" id="txtExtractWindowEnd" min="0" max="100" step="1" data-frame-setting="ExtractWindowEnd" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
 
                             <div class="inputContainer">
                                 <label for="txtVideosPerParent"></label>
@@ -148,16 +147,7 @@
                         </div>
                     </div>
 
-                    <!-- Save -->
-                    <div class="inputContainer">
-                        <button is="emby-button" type="button" id="btnSavePlugin" class="raised base-button primary fill">
-                            <span>Save</span>
-                        </button>
-                        <span id="unsavedIndicator" class="base-unsaved">
-                            <span class="base-unsaved-dot"></span>Unsaved
-                        </span>
-                        <div id="saveStatus" class="base-status-text" role="status"></div>
-                    </div>
+                    <div id="saveBarHost"></div>
 
                 </div>
             </form>

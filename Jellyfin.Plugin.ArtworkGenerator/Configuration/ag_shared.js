@@ -2,30 +2,38 @@
 // The one module that imports Base, with the tab list and the page wrapper every Artwork Generator page uses.
 
 import {
-    createCheckboxList,
     createColorPicker,
     createConfigPage,
+    createList,
+    createMatrixGrid,
+    createMediaCard,
+    createMediaPicker,
     createPreviewFrame,
+    createSaveBar,
     createSliderField,
+    createSubTabs,
     confirmDialog,
-    debounce,
     downloadJson,
+    errorText,
     generateGuid,
     initCollapsibles,
     openDialog,
     pickJsonFile,
-    promptDialog
+    promptDialog,
+    validateAll
 } from './configurationpage?name=ag_jpkribs_shared.js';
 
 export {
-    createCheckboxList,
+    createList,
+    createMatrixGrid,
+    createMediaCard,
+    createMediaPicker,
     createPreviewFrame,
+    createSubTabs,
     confirmDialog,
-    debounce,
     downloadJson,
     generateGuid,
     initCollapsibles,
-    openDialog,
     pickJsonFile,
     promptDialog
 };
@@ -102,18 +110,94 @@ export function promptName(title, value, placeholder, check) {
 }
 
 // openImageDialog
-// Shows one image large in a Base dialog.
+// Shows one image large in a Base dialog, drawn in a Base Preview Frame.
 //
 // Inputs
-// title [string]: The dialog title.
+// title [string]: The dialog title, which also names the image.
 // src [string]: The image address.
-// alt [string]: The image's alt text.
-export function openImageDialog(title, src, alt) {
-    var img = document.createElement('img');
-    img.className = 'ag-dialog-image';
-    img.src = src;
-    img.alt = alt || title;
-    openDialog({ title: title, body: img, size: 'large' });
+export function openImageDialog(title, src) {
+    var frame = createPreviewFrame({
+        label: title,
+        backgrounds: false,
+        zoom: false,
+        render: function () { return src; }
+    });
+    openDialog({ title: title, body: frame.element, size: 'large', onClose: function () { frame.destroy(); } });
+    frame.refresh();
+}
+
+// disableHiddenFields
+// Disables every field a show or hide rule has taken off screen, and enables the rest, so Base's validation skips the hidden ones.
+//
+// Inputs
+// root [ParentNode]: The form whose fields are checked.
+export function disableHiddenFields(root) {
+    root.querySelectorAll('input, select, textarea').forEach(function (el) {
+        if (el.type === 'hidden') return;
+        el.disabled = !!el.closest('.hidden, [hidden]');
+    });
+}
+
+// revealInvalid
+// Opens the collapsed section that holds the first field Base marked invalid, and moves focus to it.
+//
+// Inputs
+// root [ParentNode]: The form that was checked.
+function revealInvalid(root) {
+    var field = root.querySelector('[aria-invalid="true"]');
+    if (!field) return;
+    var content = field.closest('.base-collapsible-content.collapsed');
+    if (content) {
+        var header = root.querySelector('.base-collapsible-header[data-target="' + content.id + '"]');
+        if (header) header.click();
+    }
+    field.focus();
+}
+
+// createArtworkSaveBar
+// Draws Base's Save Bar in a host, checks the form through Base's validation first, and keeps the bar in step with a change tracker.
+//
+// Inputs
+// form [HTMLFormElement]: The form whose fields are checked before a save. Enter in a field saves too.
+// host [HTMLElement]: Where the bar goes.
+// tracker [object]: The page's change tracker from shared.createChangeTracker.
+// opts [object]: save, a function returning a promise that rejects with a sentence or an error; savedText; failedText.
+//
+// Output
+// [object]: The Save Bar handle, with check, which shows Unsaved changes while the tracker is dirty, and markClean, which clears it after a load.
+export function createArtworkSaveBar(form, host, tracker, opts) {
+    var bar = createSaveBar({
+        fill: true,
+        savedText: opts.savedText,
+        onSave: function () {
+            if (!validateAll(form)) {
+                revealInvalid(form);
+                return fail('Fix the fields marked in red.');
+            }
+            return Promise.resolve().then(opts.save).then(function () {
+                tracker.markClean();
+            }, fail);
+        }
+    });
+
+    // The bar shows its own failed line when the promise rejects, so the reason replaces it once that has run.
+    function fail(reason) {
+        var text = typeof reason === 'string' ? Promise.resolve(reason) : errorText(reason, opts.failedText);
+        return text.then(function (sentence) {
+            setTimeout(function () { bar.setState('failed', sentence); }, 0);
+            throw new Error(sentence);
+        });
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        bar.save();
+    });
+
+    host.appendChild(bar.element);
+    bar.check = function () { bar.setDirty(tracker.check()); };
+    bar.markClean = function () { tracker.markClean(); bar.setDirty(false); };
+    return bar;
 }
 
 // alphaPercent
@@ -150,7 +234,7 @@ export function withAlpha(value, percent) {
 // Draws one ARGB color setting with Base's Color Picker, and Base's slider for when only its opacity applies.
 //
 // Inputs
-// field [HTMLElement]: The ag-color-field element that holds the setting's hidden input.
+// field [HTMLElement]: The data-color-field element that holds the setting's hidden input.
 // onChange [function]: Called after the reader changes the color or the opacity.
 //
 // Output

@@ -4,8 +4,11 @@
 import {
     bindColorField,
     createArtworkPage,
+    createArtworkSaveBar,
+    createMediaCard,
     createPreviewFrame,
     confirmDialog,
+    disableHiddenFields,
     generateGuid,
     initCollapsibles,
     promptName,
@@ -18,7 +21,6 @@ export default function (view) {
     var fullConfig = null;
     var logoDesigns = [];
     var currentLogoId = null;
-    var _saving = false;
     var _fontsPromise = null;
     var _preview = null;
     var logoSettingText = {};
@@ -28,6 +30,7 @@ export default function (view) {
     var page = createArtworkPage(view, 1, {
         bind: function () {
             initCollapsibles(view);
+            buildSaveBar();
             buildPreview();
             bindEventListeners();
             bindColorControls();
@@ -47,21 +50,32 @@ export default function (view) {
         return JSON.stringify(logoDesigns);
     }
 
-    var tracker = shared.createChangeTracker({ serialize: snapshot, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    var tracker = shared.createChangeTracker({ serialize: snapshot });
     page.guardUnsaved(tracker);
+    var saveBar = null;
+
+    // buildSaveBar
+    // Draws Base's Save Bar under the form.
+    function buildSaveBar() {
+        saveBar = createArtworkSaveBar(view.querySelector('#AgLogosForm'), view.querySelector('#saveBarHost'), tracker, {
+            save: saveConfig,
+            savedText: 'Logo designs saved.',
+            failedText: 'Could not save the logo designs.'
+        });
+    }
 
     // checkDirty
-    // Reads the fields into the design on screen and shows the unsaved indicator while the designs differ from the last load or save.
+    // Reads the fields into the design on screen and shows Unsaved changes while the designs differ from the last load or save.
     function checkDirty() {
         if (!fullConfig) return;
         saveCurrentSettings();
-        tracker.check();
+        saveBar.check();
     }
 
     // bindColorControls
     // Draws each color setting with Base's Color Picker, and its opacity alone with Base's slider when the image gives the color.
     function bindColorControls() {
-        view.querySelectorAll('.ag-color-field').forEach(function (field) {
+        view.querySelectorAll('[data-color-field]').forEach(function (field) {
             var handle = bindColorField(field, onSettingChanged);
             handle.field = field;
             colorFields.push(handle);
@@ -192,10 +206,10 @@ export default function (view) {
 
             populateDropdown();
             saveCurrentSettings();
-            tracker.markClean();
+            saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load logo designs:', error);
-            shared.setStatus('saveStatus', 'Could not load the logo designs. Reload the page.', true, { timeout: 0 });
+            saveBar.setState('failed', 'Could not load the logo designs. Reload the page.');
         });
     }
 
@@ -288,47 +302,61 @@ export default function (view) {
     // Where a sampled color comes from. The preview draws its logo over the bundled demo art, and
     // these are the same two images the renderer samples: the item's own poster, or its backdrop.
     var COLOR_SOURCES = {
-        SeriesPoster: { component: 'poster', label: 'Color sampled from this poster' },
-        SeriesBackdrop: { component: 'canvas', label: 'Color sampled from this backdrop' }
+        SeriesPoster: { component: 'poster', title: 'Series Poster', subtitle: 'The color is sampled from this poster.' },
+        SeriesBackdrop: { component: 'canvas', title: 'Series Backdrop', subtitle: 'The color is sampled from this backdrop.' }
     };
 
-    var _colorSourceUrl = null;
-    var _colorSourceComponent = null;
+    var _colorSourceUrls = {};
+    var _colorSourceCard = null;
 
-    // A tinted logo with no visible source looks arbitrary, so the artwork it was sampled from is
-    // shown beside it. A fixed color has no source, so nothing is shown.
-    function updateColorSourceSample() {
-        var row = view.querySelector('#logoColorSourceRow');
-        if (!row) return;
-
-        var source = COLOR_SOURCES[view.querySelector('#selectColorSource').value];
-        if (!source) {
-            row.classList.add('hidden');
-            return;
-        }
-
-        row.classList.remove('hidden');
-        view.querySelector('#logoColorSourceLabel').textContent = source.label;
-
-        // The two demo images never change, so each is fetched once.
-        if (_colorSourceComponent === source.component) return;
-        _colorSourceComponent = source.component;
-
-        shared.fetchObjectUrl('Preview/Component/' + source.component).then(function (objectUrl) {
-            if (_colorSourceUrl) URL.revokeObjectURL(_colorSourceUrl);
-            _colorSourceUrl = objectUrl;
-            view.querySelector('#logoColorSourceImage').src = _colorSourceUrl;
-        }).catch(function (error) {
+    // colorSourceImage
+    // Fetches one demo image once, through ApiClient so the request carries the admin's auth.
+    //
+    // Inputs
+    // component [string]: The demo image's name.
+    //
+    // Output
+    // [Promise<string>]: Its object URL, or an empty string when it could not load.
+    function colorSourceImage(component) {
+        if (_colorSourceUrls[component]) return Promise.resolve(_colorSourceUrls[component]);
+        return shared.fetchObjectUrl('Preview/Component/' + component).then(function (objectUrl) {
+            _colorSourceUrls[component] = objectUrl;
+            return objectUrl;
+        }, function (error) {
             console.error('Failed to load the color source image:', error);
-            row.classList.add('hidden');
-            _colorSourceComponent = null;
+            return '';
         });
     }
 
+    // updateColorSourceSample
+    // A tinted logo with no visible source looks arbitrary, so a Base Media Card shows the artwork the color was sampled from. A fixed color or a photo fill has no source, so nothing is shown.
+    function updateColorSourceSample() {
+        var fill = view.querySelector('#selectLogoFill').value;
+        var source = fill === 'Photo' ? null : COLOR_SOURCES[view.querySelector('#selectColorSource').value];
+        shared.setVisible('logoColorSource', !!source);
+        if (!source) return;
+
+        var options = {
+            shape: source.component === 'canvas' ? 'wide' : 'portrait',
+            title: source.title,
+            subtitle: source.subtitle,
+            image: function () { return colorSourceImage(source.component); }
+        };
+
+        if (_colorSourceCard) {
+            if (_colorSourceCard.getValue().title !== source.title) _colorSourceCard.setValue(options);
+            return;
+        }
+
+        _colorSourceCard = createMediaCard(options);
+        view.querySelector('#logoColorSource').appendChild(_colorSourceCard.element);
+    }
+
+    // updateVisibility
+    // Shows each field only where it applies, through Base's bindReveal for a checkbox and setVisible for a choice.
     function updateVisibility() {
         var mode = view.querySelector('#selectSubtitleMode').value;
-        var twoSizes = mode === 'TitleLarge' || mode === 'SubtitleLarge';
-        view.querySelector('#secondarySizeContainer').style.display = twoSizes ? 'block' : 'none';
+        shared.setVisible('secondarySizeContainer', mode === 'TitleLarge' || mode === 'SubtitleLarge');
 
         // Sampling takes the color from the artwork, so leaving a swatch on screen would imply the
         // chosen color still paints the text. The control collapses to the opacity it does control.
@@ -347,23 +375,15 @@ export default function (view) {
             colorDesc.textContent = colorDesc.getAttribute(sampling ? 'data-opacity-desc' : 'data-color-desc');
         }
 
+        // A frame fill has no color to pick, so the color controls step aside for it.
+        shared.setVisible('logoColorOptions', view.querySelector('#selectLogoFill').value !== 'Photo');
         updateColorSourceSample();
 
-        // A frame fill has no color to pick, so the color controls step aside for it.
-        var fill = view.querySelector('#selectLogoFill').value;
-        view.querySelectorAll('[data-hide-for-fill]').forEach(function (el) {
-            el.style.display = el.getAttribute('data-hide-for-fill') === fill ? 'none' : 'block';
-        });
+        shared.bindReveal('chkLogoUseCustomFont', 'logoFontPath');
+        shared.bindReveal('chkLogoUseCustomFont', 'logoFontPicker', true);
+        shared.bindReveal('chkLogoOutline', 'logoOutlineOptions');
 
-        view.querySelectorAll('[data-depends-on]').forEach(function (el) {
-            var cb = view.querySelector('#' + el.getAttribute('data-depends-on'));
-            el.style.display = cb && cb.checked ? 'block' : 'none';
-        });
-
-        view.querySelectorAll('[data-hide-when-checked]').forEach(function (el) {
-            var cb = view.querySelector('#' + el.getAttribute('data-hide-when-checked'));
-            el.style.display = cb && cb.checked ? 'none' : 'block';
-        });
+        disableHiddenFields(view.querySelector('#AgLogosForm'));
     }
 
     // buildPreview
@@ -492,34 +512,28 @@ export default function (view) {
         });
     }
 
+    // saveConfig
+    // Saves the logo designs to their own file. The Save Bar has checked every shown field through Base's validation first.
+    //
+    // Output
+    // [Promise]: Resolves once saved.
     function saveConfig() {
         saveCurrentSettings();
-        if (_saving) return;
-        _saving = true;
 
-        ApiClient.ajax({
+        return ApiClient.ajax({
             type: 'POST',
             url: ApiClient.getUrl('Plugins/ArtworkGenerator/Logos'),
             data: JSON.stringify(logoDesigns),
             contentType: 'application/json'
         }).then(function (response) {
             if (!response.ok) throw new Error('Save failed: ' + response.status);
-            tracker.flashSaved();
-            shared.setStatus('saveStatus', 'Logo designs saved.');
         }).catch(function (error) {
             console.error('Failed to save logo designs:', error);
-            shared.errorText(error, 'Could not save the logo designs.').then(function (text) { shared.setStatus('saveStatus', text, true); });
-        }).finally(function () {
-            _saving = false;
+            throw error;
         });
     }
 
     function bindEventListeners() {
-        view.querySelector('#AgLogosForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            saveConfig();
-        });
-
         view.querySelector('#selectLogo').addEventListener('change', function () {
             saveCurrentSettings();
             currentLogoId = this.value;
@@ -540,14 +554,16 @@ export default function (view) {
     }
 
     view.addEventListener('viewdestroy', function () {
-        // The frame frees its own image. The color source image is released here.
+        // The frame frees its own image. The color source images are released here.
         if (_preview) {
             _preview.destroy();
             _preview = null;
         }
-        if (_colorSourceUrl) {
-            URL.revokeObjectURL(_colorSourceUrl);
-            _colorSourceUrl = null;
+        if (_colorSourceCard) {
+            _colorSourceCard.destroy();
+            _colorSourceCard = null;
         }
+        Object.keys(_colorSourceUrls).forEach(function (key) { URL.revokeObjectURL(_colorSourceUrls[key]); });
+        _colorSourceUrls = {};
     });
 }

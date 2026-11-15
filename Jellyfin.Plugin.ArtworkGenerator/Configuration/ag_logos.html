@@ -30,25 +30,18 @@
                     </div>
                     <div id="logoStatus" class="base-status-text" role="status"></div>
 
-                    <!-- Live Preview: same shape as the Designs page, so both read the same way -->
+                    <!-- Live Preview -->
                     <div class="base-section">
                         <div class="base-section-title">Live Preview</div>
                         <div class="base-section-content">
-                            <div class="ag-preview-layout">
-                                <div class="ag-preview-main" id="logoPreviewColumn">
-                                    <div id="logoPreviewHost" class="ag-logo-preview-host"></div>
-                                    <div class="inputContainer ag-preview-kind">
-                                        <input is="emby-input" type="text" id="txtSampleName" placeholder="Demo Logo Text" aria-label="Sample Name" />
-                                    </div>
-                                    <div class="ag-logo-preview-controls">
-                                        <div class="ag-preview-components hidden" id="logoColorSourceRow">
-                                            <div class="ag-component" id="logoColorSourceComponent">
-                                                <img class="ag-component-img" id="logoColorSourceImage" src="" alt="Artwork the color is sampled from" />
-                                                <span class="ag-component-label" id="logoColorSourceLabel"></span>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="ag-preview ag-logo-preview">
+                                <div id="logoPreviewHost"></div>
+                                <div class="inputContainer">
+                                    <label for="txtSampleName">Sample Name</label>
+                                    <input is="emby-input" type="text" id="txtSampleName" placeholder="Demo Logo Text" />
+                                    <div class="fieldDescription">The name the preview draws. It is not saved.</div>
                                 </div>
+                                <div id="logoColorSource" class="hidden"></div>
                             </div>
                         </div>
                     </div>
@@ -119,13 +112,13 @@
                                 <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-depends-on="chkLogoUseCustomFont">
+                            <div id="logoFontPath" class="inputContainer">
                                 <label for="txtLogoFontPath"></label>
                                 <input is="emby-input" type="text" id="txtLogoFontPath" placeholder="/path/to/font.ttf" data-setting="FontPath" />
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div data-hide-when-checked="chkLogoUseCustomFont">
+                            <div id="logoFontPicker">
                                 <div class="inputContainer">
                                     <label for="selectLogoFontFamily"></label>
                                     <select is="emby-select" id="selectLogoFontFamily" data-setting="FontFamily" data-default="Arial">
@@ -153,18 +146,20 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-hide-for-fill="Photo">
+                            <div id="logoColorOptions">
+                            <div class="inputContainer">
                                 <label for="selectColorSource"></label>
                                 <select is="emby-select" id="selectColorSource" data-setting="ColorSource" data-default="Fixed"></select>
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="inputContainer" data-hide-for-fill="Photo">
+                            <div class="inputContainer">
                                 <label for="txtLogoColor" data-color-label="Text Color" data-opacity-label="Text Opacity">Text Color</label>
-                                <div class="ag-color-field">
+                                <div data-color-field>
                                         <input type="hidden" id="txtLogoColor" data-setting="Color" data-fallback="#FFFFFFFF" />
                                     </div>
                                 <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn. The color itself comes from the item's own artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
+                            </div>
                             </div>
 
                             <div class="checkboxContainer checkboxContainer-withDescription">
@@ -181,10 +176,10 @@
                                 </label>
                             </div>
 
-                            <div class="base-indent" data-depends-on="chkLogoOutline">
+                            <div id="logoOutlineOptions" class="base-indent">
                                 <div class="inputContainer">
                                     <label for="txtLogoOutlineColor"></label>
-                                    <div class="ag-color-field">
+                                    <div data-color-field>
                                         <input type="hidden" id="txtLogoOutlineColor" data-setting="OutlineColor" data-fallback="#FF000000" />
                                     </div>
                                 </div>
@@ -216,16 +211,7 @@
                         </div>
                     </div>
 
-                    <!-- Save -->
-                    <div class="inputContainer">
-                        <button is="emby-button" type="submit" class="raised base-button primary fill">
-                            <span>Save</span>
-                        </button>
-                        <span id="unsavedIndicator" class="base-unsaved">
-                            <span class="base-unsaved-dot"></span>Unsaved
-                        </span>
-                        <div id="saveStatus" class="base-status-text" role="status"></div>
-                    </div>
+                    <div id="saveBarHost"></div>
 
                 </div>
             </form>
