@@ -9,7 +9,7 @@ The Settings tab, with Frame Extraction opened.
 ![Settings](screenshots/Settings.png)
 
 * **Choices In Edit Images**: how many alternates to offer per image type when replacing an image from the Edit Images dialog, from 1 to 1000. The 1000 is only a safety ceiling against a mistyped value. Each one is rendered from a different frame and costs its own ffmpeg extraction, so higher values make the dialog slower to open. If the previews in the dialog are broken on other devices, set a published server address as described in [Installation](Installation.md#set-a-published-server-uri). An automatic metadata refresh keeps a single image of each type, so it renders only one, and only as many backdrops as the library keeps. A primary image or thumb with a second and third design draws each choice once per design. Rendered choices share a 256 MB memory cache, so a very high value can push the earliest ones out before one is picked. Default 10.
-* **Edit Images Cache (Minutes)**: how long the choices rendered for the Edit Images dialog stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones, unless the settings or the item's images have changed. The dialog loads each choice by address, so one picked after this has passed cannot be downloaded and the dialog has to be reopened. They are held in memory, up to 256 MB at once, oldest dropped first, and released as soon as they expire. Default 30.
+* **Edit Images Cache (minutes)**: how long the choices rendered for the Edit Images dialog stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones, unless the settings or the item's images have changed. The dialog loads each choice by address, so one picked after this has passed cannot be downloaded and the dialog has to be reopened. They are held in memory, up to 256 MB at once, oldest dropped first, and released as soon as they expire. Default 30.
 * **Fixed Frame Seed**: leave empty to pick new frames on every refresh. Any whole number makes frame choice repeatable, so the same item always gets the same frames. Every image of one item, such as a season's poster, thumb, and backdrop, draws from the same shuffled set of frames, each starting at a different place in it. Default empty.
 
 ### Frame Extraction
@@ -33,7 +33,7 @@ The Profiles tab, with a design picked for each kind of item.
 
 ![Profiles](screenshots/Profiles.png)
 
-* **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or deleted.
+* **Profile**: the profile being viewed and edited. The default profile applies to everything not assigned to another one. It cannot be renamed or removed. **New**, **Rename**, and **Remove** manage the others.
 * **Assigned Series**, **Assigned Movies**, **Assigned Videos**, **Assigned Collections**, **Assigned Folders**, and **Assigned Libraries**: the items that use the active profile. An item belongs to one profile at a time. A profile can carry any mix of them.
 * **Images**: one row each for series, seasons, episodes, movies, videos, collections, folders, and libraries. Tick an image to generate it whenever an item is missing one. Collections, folders, and libraries are off until ticked. A collection draws its frames from the films and episodes it holds, and a folder or library from the videos beneath it, so one holding only photos or music gets nothing. A collection, folder, or library uses its readable videos, up to **Videos Per Parent** when that is above 0. One whose frames cannot be extracted, such as a folder of photos, is left with the artwork it has rather than given a blank image. The Collections library draws from the videos in its collections. Libraries offer a primary image and a thumb only. Music, book, photo, Live TV, and playlist libraries, and the folders inside them, are never drawn, and albums and playlists keep the artwork Jellyfin gives them.
   * **Primary**: the main poster. Choose Portrait or Landscape, then a design. Series, seasons, movies, videos, and collections default to portrait; episodes, folders, and libraries to landscape. Any design can draw either shape.
@@ -55,9 +55,9 @@ Every design draws both shapes. The profile decides which one each image uses, s
 
 Sizes are a percent of the poster's short side. A portrait image measures them against the average of its two sides instead, so text carries the same weight on a tall poster as it does on a wide one.
 
-* **Active Design**: the design being viewed and edited. Profiles pick designs by name; deleting one sends its images to the default design, and drops it wherever it was a second or third design. The default design cannot be renamed or deleted.
-* **New, Rename, Delete**: manage named designs.
-* **Export, Import**: save a design to JSON, or load one as a new design.
+* **Active Design**: the design being viewed and edited. Profiles pick designs by name. Removing one sends its images to the default design, and drops it wherever it was a second or third design. The default design cannot be renamed or removed.
+* **New, Rename, Remove**: manage named designs.
+* **Import, Export**: load a design from JSON as a new design, or save one to JSON.
 * **Preview As**: whether the previews show a series, a season, an episode, a film, a standalone video, a collection, a folder, or a library.
 
 What a design draws depends on the item. An episode shows its name as the title and a code such as S01E05. A season shows its own name as the title when it has one, and its season, such as SEASON 2 or S02, as the subtitle; a season with no name of its own moves that label up into the title. A series shows only its name: no season count and no year, since the name is a series' whole identity. Styles built around a number adapt: Cutout punches the series name itself out of the overlay, Numeral draws the name where the numeral would go, and Timeline drops its progress bar.
@@ -153,7 +153,7 @@ The Logos tab, previewing a sample name.
 
 Logo designs are stored in their own file, `logos.json`, in the plugin's data directory, rather than inside the plugin configuration. Editing a logo therefore never rewrites the rest of your settings.
 
-* **Logo Design**: the logo design being viewed and edited, with New, Rename, and Delete. At least one must exist.
+* **Logo Design**: the logo design being viewed and edited, with New, Rename, and Remove. At least one must exist.
 * **Sample name**: the box under the preview, which starts out reading Demo Logo Text. What you type is previewed but never saved.
 * **Logo Source**: Title, Original Title, Sort Title, or Folder Name. Falls back to the title when the chosen name is empty. Default Title.
 * **Remove Year**: remove a year in brackets such as (2019). Folder names also lose a trailing year and tags like [tvdbid-12345]. Default on.

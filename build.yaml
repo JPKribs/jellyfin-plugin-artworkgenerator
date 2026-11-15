@@ -17,7 +17,16 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
+  changed:
+  - Every tab takes the JPKribs.Jellyfin.Base 2026.11.17 look, and results show beside the Save button or the picker rather than in a popup
+  - Remove replaces Delete on the Designs, Logos, and Profiles pickers, and Import comes before Export
+  - Names are checked in the New and Rename dialogs before they close
+  - The logo preview shows the logo over a Dark, Light, or Checkered background
+  - Assigned items on the Profiles tab are picked from a searchable Base list
   fixed:
   - The arrows on collapsible sections are back to their usual size
   developer:
-  - Uses JPKribs.Jellyfin.Base 2026.11.13.3
+  - Uses JPKribs.Jellyfin.Base 2026.11.17, whose record selector, buttons, Preview Frame, Checkbox List, prompt and confirm dialogs, change tracker, indent, and status text replace the hand built versions
+  - ag_shared.js holds the tab list and is the one module that imports Base
+  - Plugin classes carry the ag- prefix
+  - Adds starthere.md, agent.md, and the guides in skills
