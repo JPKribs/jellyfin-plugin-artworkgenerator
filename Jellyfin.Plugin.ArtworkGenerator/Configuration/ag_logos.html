@@ -160,14 +160,11 @@
                             </div>
 
                             <div class="inputContainer" data-hide-for-fill="Photo">
-                                <label for="txtLogoColor" class="ag-color-control-label" data-color-label="Text Color" data-opacity-label="Text Opacity">Text Color</label>
-                                <div class="ag-color-control-group">
-                                    <input type="color" id="colorLogoColor" class="ag-color-picker" />
-                                    <input type="range" id="alphaLogoColor" class="ag-alpha-slider" min="0" max="255" value="255" />
-                                    <span class="ag-alpha-label">255</span>
-                                    <input is="emby-input" type="text" id="txtLogoColor" placeholder="#FFFFFFFF" data-setting="Color" class="ag-hex-input" />
-                                </div>
-                                <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn, 0 to 255. The color itself comes from the item's own artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
+                                <label for="txtLogoColor" data-color-label="Text Color" data-opacity-label="Text Opacity">Text Color</label>
+                                <div class="ag-color-field">
+                                        <input type="hidden" id="txtLogoColor" data-setting="Color" data-fallback="#FFFFFFFF" />
+                                    </div>
+                                <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn. The color itself comes from the item's own artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
                             </div>
 
                             <div class="checkboxContainer checkboxContainer-withDescription">
@@ -187,11 +184,8 @@
                             <div class="base-indent" data-depends-on="chkLogoOutline">
                                 <div class="inputContainer">
                                     <label for="txtLogoOutlineColor"></label>
-                                    <div class="ag-color-control-group">
-                                        <input type="color" id="colorLogoOutlineColor" class="ag-color-picker" />
-                                        <input type="range" id="alphaLogoOutlineColor" class="ag-alpha-slider" min="0" max="255" value="255" />
-                                        <span class="ag-alpha-label">255</span>
-                                        <input is="emby-input" type="text" id="txtLogoOutlineColor" placeholder="#FF000000" data-setting="OutlineColor" class="ag-hex-input" />
+                                    <div class="ag-color-field">
+                                        <input type="hidden" id="txtLogoOutlineColor" data-setting="OutlineColor" data-fallback="#FF000000" />
                                     </div>
                                 </div>
                                 <div class="inputContainer">

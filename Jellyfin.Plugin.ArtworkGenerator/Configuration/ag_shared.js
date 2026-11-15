@@ -3,8 +3,10 @@
 
 import {
     createCheckboxList,
+    createColorPicker,
     createConfigPage,
     createPreviewFrame,
+    createSliderField,
     confirmDialog,
     debounce,
     downloadJson,
@@ -112,4 +114,107 @@ export function openImageDialog(title, src, alt) {
     img.src = src;
     img.alt = alt || title;
     openDialog({ title: title, body: img, size: 'large' });
+}
+
+// alphaPercent
+// Reads the opacity of an ARGB color as a percent.
+//
+// Inputs
+// value [string]: A color as #AARRGGBB or #RRGGBB.
+//
+// Output
+// [number]: The opacity from 0 to 100.
+export function alphaPercent(value) {
+    var hex = String(value || '').replace('#', '');
+    if (hex.length !== 8) return 100;
+    return Math.round(parseInt(hex.substring(0, 2), 16) * 100 / 255);
+}
+
+// withAlpha
+// Gives an ARGB color a new opacity and keeps its red, green, and blue.
+//
+// Inputs
+// value [string]: A color as #AARRGGBB or #RRGGBB.
+// percent [number]: The opacity from 0 to 100.
+//
+// Output
+// [string]: The color as #AARRGGBB.
+export function withAlpha(value, percent) {
+    var hex = String(value || '').replace('#', '');
+    var rgb = hex.length === 8 ? hex.substring(2) : (hex.length === 6 ? hex : 'FFFFFF');
+    var alpha = Math.max(0, Math.min(255, Math.round(percent * 255 / 100)));
+    return ('#' + alpha.toString(16).padStart(2, '0') + rgb).toUpperCase();
+}
+
+// bindColorField
+// Draws one ARGB color setting with Base's Color Picker, and Base's slider for when only its opacity applies.
+//
+// Inputs
+// field [HTMLElement]: The ag-color-field element that holds the setting's hidden input.
+// onChange [function]: Called after the reader changes the color or the opacity.
+//
+// Output
+// [object]: A handle with sync, which redraws from the stored value, and setOpacityOnly, which shows the slider alone.
+export function bindColorField(field, onChange) {
+    var input = field.querySelector('input[data-setting]');
+    var fallback = input.getAttribute('data-fallback') || '#FFFFFFFF';
+    var label = field.closest('.inputContainer').querySelector('label[for="' + input.id + '"]');
+    var quiet = false;
+
+    function current() {
+        return input.value || fallback;
+    }
+
+    var picker = createColorPicker({
+        format: 'argb',
+        value: current(),
+        label: label ? label.textContent : 'Color',
+        onChange: function (value) {
+            if (quiet) return;
+            input.value = String(value).toUpperCase();
+            onChange();
+        }
+    });
+
+    var opacity = createSliderField({
+        min: 0,
+        max: 100,
+        suffix: '%',
+        value: alphaPercent(current()),
+        label: 'Opacity',
+        onChange: function (percent) {
+            if (quiet) return;
+            input.value = withAlpha(current(), percent);
+            quiet = true;
+            picker.setValue(input.value);
+            quiet = false;
+            onChange();
+        }
+    });
+
+    picker.input.id = input.id + 'Color';
+    opacity.input.id = input.id + 'Opacity';
+
+    var full = document.createElement('div');
+    full.appendChild(picker.element);
+    var only = document.createElement('div');
+    only.className = 'hidden';
+    only.appendChild(opacity.element);
+    field.appendChild(full);
+    field.appendChild(only);
+    if (label) label.htmlFor = picker.input.id;
+
+    return {
+        sync: function () {
+            quiet = true;
+            picker.setValue(current());
+            opacity.setValue(alphaPercent(current()));
+            quiet = false;
+        },
+        setOpacityOnly: function (on) {
+            full.classList.toggle('hidden', on);
+            only.classList.toggle('hidden', !on);
+            if (label) label.htmlFor = on ? opacity.input.id : picker.input.id;
+        }
+    };
 }

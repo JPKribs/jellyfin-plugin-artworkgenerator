@@ -310,9 +310,12 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | A secret | `bindSecretField`, `readSecretField`, and `clearSecretField` |
 | A template with `{name}` tokens | `placeholderHint` and `bindPlaceholders` |
 | Code or JSON, read only | `base-code-block` |
+| A color setting | `createColorPicker` with `format: 'argb'`, through `bindColorField` in `ag_shared.js` |
+| An opacity alone, or another number on a range | `createSliderField` |
 
 * Use `emby-select`, never `base-selector-dropdown`, for a field. `base-selector-dropdown` is only for the record picker.
 * Every input has a `<label for>`.
+* A color setting whose color comes from the image, such as under **Palette Colors** or **Color From**, shows only its opacity on a slider. `bindColorField` swaps the picker for the slider.
 
 ### Buttons
 
@@ -442,7 +445,6 @@ These pieces are still built by hand in this plugin. Each waits on a Base gap, n
 
 | Hand built today | Replace with | Base gap |
 | :--- | :--- | :--- |
-| `.ag-color-control-group` on the Designs and Logos tabs | `createColorPicker` with `format: 'argb'` | No mode that shows only the opacity, which **Palette Colors** and **Color From** need |
 | `.ag-slot-matrix`, the **Images** table on the Profiles tab | `createMatrixGrid` | A cell holds one control, and each cell here holds **Generate** and up to four selects |
 | `.ag-component` sample images beside the previews | `createMediaCard` | None. Replace it when the page is next changed |
 | The `data-depends-on` rules on the Designs and Logos tabs | `base-indent` with `shared.bindReveal` | `bindReveal` takes one checkbox, and these rules also read the style, the canvas, and other fields |

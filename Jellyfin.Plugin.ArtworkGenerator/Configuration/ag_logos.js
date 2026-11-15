@@ -2,6 +2,7 @@
 // The Logos tab, which edits text logo designs and previews them against a sample name.
 
 import {
+    bindColorField,
     createArtworkPage,
     createPreviewFrame,
     confirmDialog,
@@ -35,13 +36,7 @@ export default function (view) {
     });
     var shared = page.shared;
 
-    function parseARGBHex(input) {
-        if (!input) return null;
-        input = input.replace('#', '').toUpperCase();
-        if (input.length === 8) return { rgb: '#' + input.substring(2), alpha: parseInt(input.substring(0, 2), 16) };
-        if (input.length === 6) return { rgb: '#' + input, alpha: 255 };
-        return null;
-    }
+    var colorFields = [];
 
     // snapshot
     // Serializes the logo designs, so the change tracker can tell an edit from the last load or save.
@@ -63,33 +58,20 @@ export default function (view) {
         tracker.check();
     }
 
+    // bindColorControls
+    // Draws each color setting with Base's Color Picker, and its opacity alone with Base's slider when the image gives the color.
     function bindColorControls() {
-        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
-            var container = picker.parentElement;
-            var slider = container.querySelector('.ag-alpha-slider');
-            var label = container.querySelector('.ag-alpha-label');
-            var hex = container.querySelector('.ag-hex-input');
-
-            function fromControls() {
-                var alpha = parseInt(slider.value, 10);
-                hex.value = '#' + alpha.toString(16).padStart(2, '0').toUpperCase() + picker.value.substring(1).toUpperCase();
-            }
-
-            picker.addEventListener('input', function () { fromControls(); onSettingChanged(); });
-            slider.addEventListener('input', function () { label.textContent = slider.value; fromControls(); onSettingChanged(); });
-            hex.addEventListener('input', function () { syncColorControls(); onSettingChanged(); });
+        view.querySelectorAll('.ag-color-field').forEach(function (field) {
+            var handle = bindColorField(field, onSettingChanged);
+            handle.field = field;
+            colorFields.push(handle);
         });
     }
 
+    // syncColorControls
+    // Redraws every color setting from its stored value.
     function syncColorControls() {
-        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
-            var container = picker.parentElement;
-            var parsed = parseARGBHex(container.querySelector('.ag-hex-input').value);
-            if (!parsed) return;
-            picker.value = parsed.rgb;
-            container.querySelector('.ag-alpha-slider').value = parsed.alpha;
-            container.querySelector('.ag-alpha-label').textContent = parsed.alpha;
-        });
+        colorFields.forEach(function (handle) { handle.sync(); });
     }
 
     // A logo setting's choices, default, label, and help text all come from LogoSettings in C#, the
@@ -351,10 +333,11 @@ export default function (view) {
         // Sampling takes the color from the artwork, so leaving a swatch on screen would imply the
         // chosen color still paints the text. The control collapses to the opacity it does control.
         var sampling = view.querySelector('#selectColorSource').value !== 'Fixed';
-        var group = view.querySelector('#txtLogoColor').closest('.ag-color-control-group');
-        if (group) group.classList.toggle('ag-palette-derived', sampling);
+        colorFields.forEach(function (handle) {
+            if (handle.field.contains(view.querySelector('#txtLogoColor'))) handle.setOpacityOnly(sampling);
+        });
 
-        var colorLabel = view.querySelector('label[for="txtLogoColor"]');
+        var colorLabel = view.querySelector('#txtLogoColor').closest('.inputContainer').querySelector('label[data-color-label]');
         if (colorLabel) {
             colorLabel.textContent = colorLabel.getAttribute(sampling ? 'data-opacity-label' : 'data-color-label');
         }
@@ -550,7 +533,7 @@ export default function (view) {
         view.querySelector('#txtSampleName').addEventListener('input', schedulePreview);
 
         view.querySelectorAll('[data-setting]').forEach(function (el) {
-            if (el.classList.contains('ag-hex-input')) return;
+            if (el.type === 'hidden') return;
             var evt = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
             el.addEventListener(evt, onSettingChanged);
         });

@@ -23,6 +23,7 @@ changelog:
   - Names are checked in the New and Rename dialogs before they close
   - The logo preview shows the logo over a Dark, Light, or Checkered background
   - Assigned items on the Profiles tab are picked from a searchable Base list
+  - Color settings use the Base color picker with its opacity box. When Palette Colors or Color From sampling is on, only an opacity slider shows, in percent
   fixed:
   - The arrows on collapsible sections are back to their usual size
   developer:

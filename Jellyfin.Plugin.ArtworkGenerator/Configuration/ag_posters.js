@@ -2,6 +2,7 @@
 // The Designs tab, which edits poster designs and previews them in both shapes.
 
 import {
+    bindColorField,
     createArtworkPage,
     createPreviewFrame,
     confirmDialog,
@@ -41,21 +42,7 @@ export default function (view) {
     });
     var shared = page.shared;
 
-    function parseARGBHex(input) {
-        if (!input) return null;
-        input = input.replace('#', '').toUpperCase();
-        if (input.length === 8) {
-            return { rgb: '#' + input.substring(2), alpha: parseInt(input.substring(0, 2), 16) };
-        }
-        if (input.length === 6) {
-            return { rgb: '#' + input, alpha: 255 };
-        }
-        if (input.length === 3) {
-            var expanded = input[0] + input[0] + input[1] + input[1] + input[2] + input[2];
-            return { rgb: '#' + expanded, alpha: 255 };
-        }
-        return null;
-    }
+    var colorFields = [];
 
     // snapshot
     // Serializes the designs, so the change tracker can tell an edit from the last load or save.
@@ -77,46 +64,20 @@ export default function (view) {
         tracker.check();
     }
 
-    function updateHexFromControls(container) {
-        var rgb = container.querySelector('.ag-color-picker').value.substring(1);
-        var alpha = parseInt(container.querySelector('.ag-alpha-slider').value);
-        container.querySelector('.ag-hex-input').value = '#' + alpha.toString(16).padStart(2, '0').toUpperCase() + rgb.toUpperCase();
-    }
-
-    function updateControlsFromHex(container) {
-        var parsed = parseARGBHex(container.querySelector('.ag-hex-input').value);
-        if (parsed) {
-            container.querySelector('.ag-color-picker').value = parsed.rgb;
-            container.querySelector('.ag-alpha-slider').value = parsed.alpha;
-            container.querySelector('.ag-alpha-label').textContent = parsed.alpha;
-        }
-    }
-
+    // bindColorControls
+    // Draws each color setting with Base's Color Picker, and its opacity alone with Base's slider when the image gives the color.
     function bindColorControls() {
-        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
-            var container = picker.parentElement;
-            var slider = container.querySelector('.ag-alpha-slider');
-            var label = container.querySelector('.ag-alpha-label');
-
-            picker.addEventListener('input', function () { updateHexFromControls(container); checkDirty(); schedulePreview(); });
-            slider.addEventListener('input', function () { label.textContent = slider.value; updateHexFromControls(container); checkDirty(); schedulePreview(); });
-            container.querySelector('.ag-hex-input').addEventListener('input', function () { updateControlsFromHex(container); checkDirty(); schedulePreview(); });
+        view.querySelectorAll('.ag-color-field').forEach(function (field) {
+            var handle = bindColorField(field, function () { checkDirty(); schedulePreview(); });
+            handle.field = field;
+            colorFields.push(handle);
         });
     }
 
+    // syncColorControls
+    // Redraws every color setting from its stored value.
     function syncColorControls() {
-        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
-            var container = picker.parentElement;
-            var hex = container.querySelector('.ag-hex-input').value;
-            if (hex) {
-                var parsed = parseARGBHex(hex);
-                if (parsed) {
-                    picker.value = parsed.rgb;
-                    container.querySelector('.ag-alpha-slider').value = parsed.alpha;
-                    container.querySelector('.ag-alpha-label').textContent = parsed.alpha;
-                }
-            }
-        });
+        colorFields.forEach(function (handle) { handle.sync(); });
     }
 
     function loadConfig() {
@@ -864,10 +825,11 @@ export default function (view) {
         var paletteCb = view.querySelector('#chkPaletteDerivedColors');
         var on = !!(paletteCb && paletteCb.checked);
 
-        view.querySelectorAll('[data-palette-aware]').forEach(function (group) {
-            group.classList.toggle('ag-palette-derived', on);
+        colorFields.forEach(function (handle) {
+            if (!handle.field.hasAttribute('data-palette-aware')) return;
+            handle.setOpacityOnly(on);
 
-            var container = group.closest('.inputContainer');
+            var container = handle.field.closest('.inputContainer');
             if (!container) return;
 
             // A design may name the overlay for what it actually draws, such as the bloom or the
@@ -875,7 +837,7 @@ export default function (view) {
             var field = container.querySelector('[data-setting]');
             var own = field ? textFor(field.getAttribute('data-setting')) : null;
 
-            var label = container.querySelector('.ag-color-control-label');
+            var label = container.querySelector('label[data-color-label]');
             if (label) {
                 var key = on ? 'data-opacity-label' : 'data-color-label';
                 var ownLabel = !on && own && (own.label || own.Label);

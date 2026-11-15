@@ -228,13 +228,10 @@
                             </div>
 
                             <div class="inputContainer">
-                                <label for="txtOverlayColor" class="ag-color-control-label" data-color-label="Overlay Color" data-opacity-label="Overlay Opacity">Overlay Color</label>
-                                <div class="ag-color-control-group" data-palette-aware>
-                                    <input type="color" id="colorOverlayColor" class="ag-color-picker" />
-                                    <input type="range" id="alphaOverlayColor" class="ag-alpha-slider" min="0" max="255" value="102" />
-                                    <span class="ag-alpha-label">102</span>
-                                    <input is="emby-input" type="text" id="txtOverlayColor" placeholder="#66000000" data-setting="OverlayColor" class="ag-hex-input" aria-describedby="descOverlayColor" />
-                                </div>
+                                <label for="txtOverlayColor" data-color-label="Overlay Color" data-opacity-label="Overlay Opacity">Overlay Color</label>
+                                <div class="ag-color-field" data-palette-aware>
+                                        <input type="hidden" id="txtOverlayColor" data-setting="OverlayColor" data-fallback="#66000000" />
+                                    </div>
                                 <div id="descOverlayColor" class="fieldDescription" data-color-desc="ARGB hex color for the overlay." data-opacity-desc="How strongly the episode's dominant color tints the poster. The color itself comes from the image.">ARGB hex color for the overlay.</div>
                             </div>
 
@@ -246,12 +243,9 @@
 
                             <div class="base-indent" data-depends-on-gradient="selectOverlayGradient">
                                 <div class="inputContainer">
-                                    <label for="txtOverlaySecondaryColor" class="ag-color-control-label" data-color-label="Secondary Overlay Color" data-opacity-label="Secondary Overlay Opacity">Secondary Overlay Color</label>
-                                    <div class="ag-color-control-group" data-palette-aware>
-                                        <input type="color" id="colorOverlaySecondaryColor" class="ag-color-picker" />
-                                        <input type="range" id="alphaOverlaySecondaryColor" class="ag-alpha-slider" min="0" max="255" value="102" />
-                                        <span class="ag-alpha-label">102</span>
-                                        <input is="emby-input" type="text" id="txtOverlaySecondaryColor" placeholder="#66000000" data-setting="OverlaySecondaryColor" class="ag-hex-input" aria-describedby="descOverlaySecondaryColor" />
+                                    <label for="txtOverlaySecondaryColor" data-color-label="Secondary Overlay Color" data-opacity-label="Secondary Overlay Opacity">Secondary Overlay Color</label>
+                                    <div class="ag-color-field" data-palette-aware>
+                                        <input type="hidden" id="txtOverlaySecondaryColor" data-setting="OverlaySecondaryColor" data-fallback="#66000000" />
                                     </div>
                                     <div id="descOverlaySecondaryColor" class="fieldDescription" data-color-desc="ARGB hex color for the gradient end." data-opacity-desc="Opacity of the gradient end, drawn as a darker shade of the same dominant color.">ARGB hex color for the gradient end.</div>
                                 </div>
@@ -384,12 +378,9 @@
 
                             <div class="inputContainer" data-depends-on="chkShowPrimary">
                                 <label for="txtPrimaryFontColor"></label>
-                                <div class="ag-color-control-group">
-                                    <input type="color" id="colorPrimaryFontColor" class="ag-color-picker" />
-                                    <input type="range" id="alphaPrimaryFontColor" class="ag-alpha-slider" min="0" max="255" value="255" />
-                                    <span class="ag-alpha-label">255</span>
-                                    <input is="emby-input" type="text" id="txtPrimaryFontColor" placeholder="#FFFFFFFF" data-setting="PrimaryFontColor" class="ag-hex-input" aria-describedby="descPrimaryFontColor" />
-                                </div>
+                                <div class="ag-color-field">
+                                        <input type="hidden" id="txtPrimaryFontColor" data-setting="PrimaryFontColor" data-fallback="#FFFFFFFF" />
+                                    </div>
                                 <div id="descPrimaryFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
                             </div>
 
@@ -493,12 +484,9 @@
 
                             <div class="inputContainer" data-depends-on="chkShowSecondary">
                                 <label for="txtSecondaryFontColor"></label>
-                                <div class="ag-color-control-group">
-                                    <input type="color" id="colorSecondaryFontColor" class="ag-color-picker" />
-                                    <input type="range" id="alphaSecondaryFontColor" class="ag-alpha-slider" min="0" max="255" value="255" />
-                                    <span class="ag-alpha-label">255</span>
-                                    <input is="emby-input" type="text" id="txtSecondaryFontColor" placeholder="#FFFFFFFF" data-setting="SecondaryFontColor" class="ag-hex-input" aria-describedby="descSecondaryFontColor" />
-                                </div>
+                                <div class="ag-color-field">
+                                        <input type="hidden" id="txtSecondaryFontColor" data-setting="SecondaryFontColor" data-fallback="#FFFFFFFF" />
+                                    </div>
                                 <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
                             </div>
 

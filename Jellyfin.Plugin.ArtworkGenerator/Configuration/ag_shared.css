@@ -8,58 +8,6 @@
     margin: 0 0 var(--base-gap-wide);
 }
 
-/* ag-color-control-group */
-/* A swatch, an alpha slider and its number, and an ARGB hex field on one line. With ag-palette-derived only the slider shows, since the image gives the color. */
-/* Example: <div class="ag-color-control-group"><input type="color" class="ag-color-picker" /><input type="range" class="ag-alpha-slider" /><span class="ag-alpha-label">255</span><input class="ag-hex-input" /></div> */
-.ag-color-control-group {
-    display: flex;
-    gap: var(--base-gap-narrow);
-    align-items: center;
-    flex-wrap: wrap;
-    padding: var(--base-pad-small);
-    border: 1px solid var(--base-border);
-    border-radius: var(--base-radius-small);
-    background: var(--base-surface);
-}
-
-.ag-color-picker {
-    width: 3rem;
-    height: 2.5rem;
-    border: 1px solid var(--base-border);
-    border-radius: var(--base-radius-small);
-    background: none;
-    cursor: pointer;
-}
-
-.ag-alpha-slider {
-    width: 5rem;
-}
-
-.ag-alpha-label {
-    min-width: 2rem;
-    font-size: var(--base-font-small);
-    opacity: 0.7;
-}
-
-.ag-hex-input {
-    flex: 1;
-    min-width: 7.5rem;
-}
-
-.ag-color-control-group.ag-palette-derived .ag-color-picker,
-.ag-color-control-group.ag-palette-derived .ag-hex-input {
-    display: none;
-}
-
-.ag-color-control-group.ag-palette-derived .ag-alpha-slider {
-    flex: 1;
-}
-
-.ag-color-control-group.ag-palette-derived .ag-alpha-label::after {
-    content: " / 255";
-    opacity: 0.6;
-}
-
 /* ag-preview-layout */
 /* The live preview row, the preview column beside the column of sample images that feed it. */
 /* Example: <div class="ag-preview-layout"><div class="ag-preview-main"></div><div class="ag-preview-components"></div></div> */
@@ -294,23 +242,6 @@
         width: 7.5rem;
     }
 
-    .ag-color-control-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .ag-color-picker {
-        width: 100%;
-        height: 2.75rem;
-    }
-
-    .ag-alpha-slider {
-        width: 100%;
-    }
-
-    .ag-hex-input {
-        min-width: 0;
-    }
 }
 
 /* Stopgap for a Base defect. Base resets the margin only on a direct child of base-field, and Jellyfin wraps an */
