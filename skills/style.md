@@ -267,9 +267,9 @@ Pick one model per page and keep it.
 | One Save per section | Sections are independent and long | `raised base-button primary small` in `base-collapsible-actions flush` |
 | Editor dialog | Each record is edited on its own | **Done** in `openEditorDialog` |
 
-* Track unsaved changes with `createChangeTracker` and the `base-unsaved` indicator, which reads "Unsaved".
+* Draw the Save button with `createArtworkSaveBar` in `ag_shared.js`, which wraps Base's `createSaveBar`. It checks every shown field through `validateAll` first, and its line reports unsaved changes and the result.
+* Track unsaved changes with `createChangeTracker`, and pass it to the Save Bar.
 * Guard leaving the page with `page.guardUnsaved`.
-* Report the result with `shared.setStatus` next to the button.
 * Use `shared.saveConfigWith` for get, change, save, and report.
 
 ## Components
@@ -299,6 +299,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | A mode that needs a sentence per option | `createChoiceGroup` with `base-choice` cards |
 | Several on or off options in a row | `base-toggle-group` with `base-toggle` pills |
 | Many checkboxes | `base-check-grid` |
+| Library items, such as those a profile is assigned | `createMediaPicker` |
 | Many items from a long or searchable list | `createCheckboxList`, with `renderRow` giving each row a `label`, a `sublabel`, and an `image` loader |
 | Rows of several fields that are added and removed | `createRepeater` |
 | Pairs of a name and a value | `createKeyValueEditor` |
@@ -441,14 +442,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 
 ## Hand Built Pieces
 
-These pieces are still built by hand in this plugin. Each waits on a Base gap, named beside it. Replace each when Base closes the gap, and delete its `ag-` styles in the same commit. Add nothing to this list.
-
-| Hand built today | Replace with | Base gap |
-| :--- | :--- | :--- |
-| `.ag-slot-matrix`, the **Images** table on the Profiles tab | `createMatrixGrid` | A cell holds one control, and each cell here holds **Generate** and up to four selects |
-| `.ag-component` sample images beside the previews | `createMediaCard` | None. Replace it when the page is next changed |
-| The `data-depends-on` rules on the Designs and Logos tabs | `base-indent` with `shared.bindReveal` | `bindReveal` takes one checkbox, and these rules also read the style, the canvas, and other fields |
-| `validateNumberInputs` on the Designs tab | `validateAll` | `validateAll` checks hidden fields, and a style hides the settings it ignores |
+Nothing on the Designs, Logos, Profiles, or Settings tabs is built by hand. `ag_shared.css` holds only layout between Base components: the preview column, the two Preview Frames side by side, and the space under a section note. Add nothing hand built. When Base lacks an option, report the gap and add a row here naming the Base option that is missing.
 
 ## Checklist
 

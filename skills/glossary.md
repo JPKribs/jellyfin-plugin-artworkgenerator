@@ -61,7 +61,7 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | Profile | Which images each kind of item gets, which design draws each, and the items it applies to | `ArtworkProfile` | Rule, preset |
 | Default profile | The profile every item not assigned elsewhere uses. It cannot be renamed or removed | `IsDefault` | Global profile |
 | Assigned | An item listed under a profile. An item belongs to one profile at a time | `SeriesIds`, `MovieIds`, and the other id lists | Linked, mapped |
-| Images table | The **Images** grid of kinds by images, each cell turned on with **Generate** | `Slots` of `SlotAssignment` | Slot matrix, grid |
+| Images | The **Images** tabs on the Profiles tab, one grid per image with a row per kind of item, each row turned on with **Generate** | `Slots` of `SlotAssignment` | Slot matrix, Images table |
 | Generate | Makes an image whenever an item is missing it | `SlotAssignment.Enabled` | Enable, active |
 | Second design, third design | Extra designs that only add choices in **Edit Images** | `SecondaryDesignId`, `TertiaryDesignId` | Alternate design, fallback |
 

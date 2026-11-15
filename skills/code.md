@@ -31,9 +31,13 @@ How to write, comment, and test code in this plugin. It covers C#, JavaScript, H
 | Config page lifecycle | `createConfigPage`, through `createArtworkPage` in `ag_shared.js` |
 | Page helpers | `createShared`, the `shared` bag on the page handle |
 | Unsaved changes | `shared.createChangeTracker` and `page.guardUnsaved` |
+| Saving and field checks | `createSaveBar` and `validateAll`, through `createArtworkSaveBar` in `ag_shared.js` |
+| Showing and hiding fields | `shared.bindReveal` for a checkbox, `shared.setVisible` for any other rule, and `disableHiddenFields` in `ag_shared.js` so validation skips them |
 | Names and other values from a dialog | `promptDialog`, through `promptName` in `ag_shared.js` |
 | Generated images beside their fields | `createPreviewFrame` |
-| Picking many items | `createCheckboxList` |
+| Picking library items | `createMediaPicker` |
+| Sample images and other media | `createMediaCard` in a `createList` |
+| A grid of choices by kind of item | `createMatrixGrid`, one per `createSubTabs` tab |
 | Dialogs | `openDialog`, `confirmDialog`, `promptDialog`, `openEditorDialog` |
 | Lists and row editors | `createRepeater`, `createSortableCardList` |
 | Tables | `createPaginatedTable`, `createMatrixGrid` |
@@ -188,7 +192,7 @@ export function createArtworkPage(view, tabIndex, opts) {
 
 * Each config page is an ES module whose default export calls `createArtworkPage`, which wraps Base's `createConfigPage` and holds the tab list.
 * Keep one handle for each Base component a page draws, such as a Preview Frame. Call `destroy` when the view is destroyed.
-* Track unsaved changes with one `createChangeTracker` per page, passed to `page.guardUnsaved`.
+* Track unsaved changes with one `createChangeTracker` per page, passed to `page.guardUnsaved` and to `createArtworkSaveBar`.
 * Read the server's choices, defaults, labels, and help text from `Plugins/ArtworkGenerator/SettingOptions`, so a setting's wording lives on its model in C#.
 * Keep a stored value the page does not offer selectable, marked unavailable, rather than rewriting it.
 * Save with a read, change, and write of the configuration, so a page never overwrites what another tab edits.
