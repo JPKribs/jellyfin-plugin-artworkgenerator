@@ -1,16 +1,24 @@
-import { initCollapsibles, createConfigPage, generateGuid, debounce, promptDialog, bindDialog } from './configurationpage?name=ag_jpkribs_shared.js';
+// ag_profiles.js
+// The Profiles tab, which picks the images each kind of item gets and the items each profile applies to.
+
+import {
+    createArtworkPage,
+    createCheckboxList,
+    confirmDialog,
+    generateGuid,
+    initCollapsibles,
+    openDialog,
+    promptName,
+    sameId
+} from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
     'use strict';
 
-    var pluginId = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
     var fullConfig = null;
     var currentProfileId = null;
     var logoDesigns = [];
-    var _dirty = false;
     var _saving = false;
-    var _snapshot = null;
-    var _modalTarget = null;
 
     var EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -41,23 +49,7 @@ export default function (view) {
         Library: ['Primary', 'Thumb']
     };
 
-    function getTabs() {
-        return [
-            { href: 'configurationpage?name=ag_posters', name: 'Designs' },
-            { href: 'configurationpage?name=ag_logos', name: 'Logos' },
-            { href: 'configurationpage?name=ag_profiles', name: 'Profiles' },
-            { href: 'configurationpage?name=ag_settings', name: 'Settings' }
-        ];
-    }
-
-    var page = createConfigPage(view, {
-        pluginId: pluginId,
-        apiPrefix: 'Plugins/ArtworkGenerator',
-        tabsKey: 'ag',
-        tabIndex: 2,
-        tabs: getTabs(),
-        leaveMessage: 'You have unsaved changes. Are you sure you want to leave?',
-        isDirty: function () { return _dirty; },
+    var page = createArtworkPage(view, 2, {
         bind: function () {
             initCollapsibles(view);
             bindEventListeners();
@@ -66,71 +58,23 @@ export default function (view) {
     });
     var shared = page.shared;
 
-    // The series, movie, and video picker. Escape, the backdrop, and the corner button close it.
-    var pickerDialog = bindDialog('pickerModal', {
-        root: view,
-        onClose: function () { _modalTarget = null; }
-    });
-
-    // ── Utilities ────────────────────────────────────────────
-
-    function sameId(a, b) {
-        return String(a || '').replace(/-/g, '').toLowerCase() === String(b || '').replace(/-/g, '').toLowerCase();
-    }
-
-    // ── Unsaved Changes ─────────────────────────────────────
-
+    // snapshot
+    // Serializes the profiles, so the change tracker can tell an edit from the last load or save.
+    //
+    // Output
+    // [string]: The profiles as JSON.
     function snapshot() {
         return JSON.stringify(fullConfig ? fullConfig.Profiles : null);
     }
 
-    function takeSnapshot() {
-        _snapshot = snapshot();
-    }
+    var tracker = shared.createChangeTracker({ serialize: snapshot, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    page.guardUnsaved(tracker);
 
-    function setDirty(dirty) {
-        _dirty = dirty;
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (indicator) indicator.classList.toggle('visible', dirty);
-    }
-
+    // checkDirty
+    // Shows the unsaved indicator while the profiles differ from the last load or save.
     function checkDirty() {
-        if (!fullConfig || _snapshot === null) return;
-        setDirty(snapshot() !== _snapshot);
+        if (fullConfig) tracker.check();
     }
-
-    function flashSaveSuccess() {
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (!indicator) return;
-
-        indicator.innerHTML = '';
-        var dot = document.createElement('span');
-        dot.className = 'base-unsaved-dot';
-        dot.style.background = 'var(--ag-success-text)';
-        indicator.appendChild(dot);
-        indicator.appendChild(document.createTextNode(' Saved!'));
-        indicator.classList.add('visible', 'save-success');
-
-        setTimeout(function () {
-            indicator.classList.remove('visible', 'save-success');
-            setTimeout(function () {
-                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
-            }, 300);
-        }, 2000);
-    }
-
-    // ── Input Modal ─────────────────────────────────────────
-
-    // Asks for a profile name. promptDialog focuses its close button first, so the caret is put
-    // in the name, selected, the way the page's own modal did.
-    function promptName(title, field) {
-        var result = promptDialog([{ name: 'name', label: 'Name', value: field.value || '', placeholder: field.placeholder }], { title: title });
-        var input = document.body.lastElementChild && document.body.lastElementChild.querySelector('.base-dialog input');
-        if (input) { input.focus(); input.select(); }
-        return result;
-    }
-
-    // ── Loading ─────────────────────────────────────────────
 
     // The backdrop settings' labels and help text live on the settings model, the way the Designs
     // and Logos pages take theirs, so the wording is changed next to the setting itself.
@@ -159,7 +103,7 @@ export default function (view) {
             var name = text.label || text.Label || '';
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
             if (label && name) {
-                label.textContent = el.type === 'checkbox' ? name : name + ':';
+                label.textContent = name;
             }
 
             var description = container.querySelector('.fieldDescription');
@@ -183,7 +127,6 @@ export default function (view) {
     }
 
     function loadConfig() {
-        Dashboard.showLoadingMsg();
         Promise.all([shared.getConfig(), loadAssignableItems(), fetchLogos(), loadBackdropText()]).then(function (results) {
             fullConfig = results[0];
             fullConfig.Profiles = fullConfig.Profiles || [];
@@ -201,13 +144,10 @@ export default function (view) {
             }
 
             populateProfileDropdown();
-            takeSnapshot();
-            setDirty(false);
-            Dashboard.hideLoadingMsg();
+            tracker.markClean();
         }).catch(function (error) {
             console.error('Failed to load profiles:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to load profiles. Please reload the page.', 'Error');
+            shared.setStatus('saveStatus', 'Could not load the profiles. Reload the page.', true, { timeout: 0 });
         });
     }
 
@@ -254,14 +194,12 @@ export default function (view) {
         var isDefault = !!profile.IsDefault;
         view.querySelector('#btnDeleteProfile').classList.toggle('hidden', isDefault);
         view.querySelector('#btnRenameProfile').classList.toggle('hidden', isDefault);
-        view.querySelector('#assignmentSection').style.display = isDefault ? 'none' : 'block';
+        view.querySelector('#assignmentSection').classList.toggle('hidden', isDefault);
 
         if (!isDefault) renderAssignments();
         renderMatrix();
         loadBackdropSettings();
     }
-
-    // ── Designs ─────────────────────────────────────────────
 
     function sortedDesigns() {
         return fullConfig.PosterConfigurations.slice().sort(function (a, b) {
@@ -303,8 +241,6 @@ export default function (view) {
         return options;
     }
 
-    // ── Slot Matrix ─────────────────────────────────────────
-
     function getSlot(profile, kind, slot) {
         var assignment = profile.Slots.find(function (s) { return s.Kind === kind && s.Slot === slot; });
         if (!assignment) {
@@ -316,7 +252,7 @@ export default function (view) {
 
     function makeSelect(options, value, label) {
         var select = document.createElement('select');
-        select.className = 'emby-select slot-select';
+        select.className = 'emby-select ag-slot-select';
         if (label) select.setAttribute('aria-label', label);
 
         setOptions(select, options, value);
@@ -368,7 +304,7 @@ export default function (view) {
             SLOTS.forEach(function (slot) {
                 var td = document.createElement('td');
                 if (SUPPORTED[k.kind].indexOf(slot) === -1) {
-                    td.className = 'slot-cell-unavailable';
+                    td.className = 'ag-slot-cell-unavailable';
                     td.textContent = '\u2014';
                     td.title = 'Jellyfin clients do not show this image for ' + k.label.toLowerCase() + '.';
                 } else {
@@ -387,10 +323,10 @@ export default function (view) {
     function buildCell(profile, k, slot) {
         var assignment = getSlot(profile, k.kind, slot);
         var cell = document.createElement('div');
-        cell.className = 'slot-cell';
+        cell.className = 'ag-slot-cell';
 
         var toggle = document.createElement('label');
-        toggle.className = 'slot-toggle';
+        toggle.className = 'ag-slot-toggle';
         var checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = !!assignment.Enabled;
@@ -488,7 +424,7 @@ export default function (view) {
 
         function updateState() {
             controls.forEach(function (control) { control.disabled = !assignment.Enabled; });
-            cell.classList.toggle('slot-cell-off', !assignment.Enabled);
+            cell.classList.toggle('ag-slot-cell-off', !assignment.Enabled);
         }
 
         checkbox.addEventListener('change', function () {
@@ -500,8 +436,6 @@ export default function (view) {
         updateState();
         return cell;
     }
-
-    // ── Backdrop Settings ───────────────────────────────────
 
     var BACKDROP_DEFAULTS = {
         AspectRatio: '16:9'
@@ -537,8 +471,6 @@ export default function (view) {
         }
     }
 
-    // ── Assignment ──────────────────────────────────────────
-
     // A profile draws every kind of item, so what it applies to is decided purely by assignment.
     // The assignable kinds differ only in which list they are stored in and what they are called,
     // so one set of functions serves them all rather than a near-identical copy for each.
@@ -547,10 +479,10 @@ export default function (view) {
             key: 'SeriesIds',
             itemType: 'Series',
             noun: 'series',
-            label: 'Assigned Series:',
+            label: 'Assigned Series',
             button: 'Edit Series',
             modalTitle: 'Select Series',
-            search: 'Search series...',
+            search: 'Search series',
             empty: 'No series assigned.',
             missing: 'No series found. Make sure you have TV series in your Jellyfin library.',
             items: []
@@ -559,10 +491,10 @@ export default function (view) {
             key: 'MovieIds',
             itemType: 'Movie',
             noun: 'movies',
-            label: 'Assigned Movies:',
+            label: 'Assigned Movies',
             button: 'Edit Movies',
             modalTitle: 'Select Movies',
-            search: 'Search movies...',
+            search: 'Search movies',
             empty: 'No movies assigned.',
             missing: 'No movies found. Make sure you have movies in your Jellyfin library.',
             items: []
@@ -574,10 +506,10 @@ export default function (view) {
             // everything a library holds that is not part of a series and not a film.
             itemType: 'MusicVideo,Video',
             noun: 'videos',
-            label: 'Assigned Videos:',
+            label: 'Assigned Videos',
             button: 'Edit Videos',
             modalTitle: 'Select Videos',
-            search: 'Search videos...',
+            search: 'Search videos',
             empty: 'No videos assigned.',
             missing: 'No videos found. Make sure you have music videos or home videos in your Jellyfin library.',
             items: []
@@ -586,10 +518,10 @@ export default function (view) {
             key: 'CollectionIds',
             itemType: 'BoxSet',
             noun: 'collections',
-            label: 'Assigned Collections:',
+            label: 'Assigned Collections',
             button: 'Edit Collections',
             modalTitle: 'Select Collections',
-            search: 'Search collections...',
+            search: 'Search collections',
             empty: 'No collections assigned.',
             missing: 'No collections found. Make sure you have collections in your Jellyfin library.',
             items: []
@@ -598,10 +530,10 @@ export default function (view) {
             key: 'FolderIds',
             itemType: 'Folder',
             noun: 'folders',
-            label: 'Assigned Folders:',
+            label: 'Assigned Folders',
             button: 'Edit Folders',
             modalTitle: 'Select Folders',
-            search: 'Search folders...',
+            search: 'Search folders',
             empty: 'No folders assigned.',
             missing: 'No folders found. Make sure you have folders in a mixed content or home videos library.',
             items: []
@@ -609,10 +541,10 @@ export default function (view) {
         {
             key: 'LibraryIds',
             noun: 'libraries',
-            label: 'Assigned Libraries:',
+            label: 'Assigned Libraries',
             button: 'Edit Libraries',
             modalTitle: 'Select Libraries',
-            search: 'Search libraries...',
+            search: 'Search libraries',
             empty: 'No libraries assigned.',
             missing: 'No libraries found.',
             load: function () {
@@ -677,10 +609,7 @@ export default function (view) {
 
         var ids = assignedIds(profile, target);
         if (ids.length === 0) {
-            var msg = document.createElement('div');
-            msg.className = 'base-empty';
-            msg.textContent = '\u26a0 ' + target.empty;
-            list.appendChild(msg);
+            list.innerHTML = shared.emptySection(target.empty, { inline: true });
         } else {
             ids.forEach(function (id) {
                 var item = target.items.find(function (candidate) { return sameId(candidate.Id, id); });
@@ -692,8 +621,7 @@ export default function (view) {
         var button = document.createElement('button');
         button.setAttribute('is', 'emby-button');
         button.type = 'button';
-        button.className = 'raised';
-        button.style.marginTop = '8px';
+        button.className = 'raised base-button secondary small';
         button.appendChild(document.createElement('span')).textContent = target.button;
         button.addEventListener('click', function () { showSelectionModal(target); });
         block.appendChild(button);
@@ -701,25 +629,28 @@ export default function (view) {
         return block;
     }
 
+    // buildAssignedTag
+    // Draws one assigned item as a Base tag with a remove button.
+    //
+    // Inputs
+    // item [object]: The Jellyfin item.
+    // target [object]: The assignable kind it belongs to.
+    // id [string]: The stored id, removed when the tag is.
+    //
+    // Output
+    // [HTMLElement]: The tag.
     function buildAssignedTag(item, target, id) {
-        var tag = document.createElement('div');
+        var tag = document.createElement('span');
         tag.className = 'base-tag';
+        tag.appendChild(document.createTextNode(item.Name));
 
-        var img = document.createElement('img');
-        img.className = 'base-check-thumb';
-        img.src = ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 64, quality: 90 });
-        img.onerror = function () { this.style.display = 'none'; };
-
-        var name = document.createElement('span');
-        name.textContent = item.Name;
-
-        var remove = document.createElement('span');
-        remove.className = 'base-tag-remove';
-        remove.textContent = '\u00d7';
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'base-tag-remove material-icons';
+        remove.setAttribute('aria-label', 'Remove ' + item.Name);
+        remove.textContent = 'close';
         remove.addEventListener('click', function () { removeAssignment(target, id); });
 
-        tag.appendChild(img);
-        tag.appendChild(name);
         tag.appendChild(remove);
         return tag;
     }
@@ -735,111 +666,60 @@ export default function (view) {
         return ids;
     }
 
+    // showSelectionModal
+    // Opens a Base dialog holding a Checkbox List of every item of one kind. Items another profile holds are shown but cannot be picked.
+    //
+    // Inputs
+    // target [object]: The assignable kind to pick from.
     function showSelectionModal(target) {
         if (!target.items || target.items.length === 0) {
-            Dashboard.alert(target.missing);
+            shared.setStatus('assignmentStatus', target.missing, true);
             return;
         }
 
-        view.querySelector('#pickerTitle').textContent = target.modalTitle;
-        view.querySelector('#pickerSearch').placeholder = target.search;
-        pickerDialog.open();
-        _modalTarget = target;
-
-        populateSelectionModal();
-    }
-
-    function populateSelectionModal() {
-        var target = _modalTarget;
-        var listContainer = view.querySelector('#pickerList');
-        var summaryEl = view.querySelector('#pickerSummary');
-        var current = assignedIds(getCurrentProfile(), target);
         var elsewhere = getAssignedElsewhere(target);
-        var availableCount = 0;
-
-        listContainer.innerHTML = '';
-
-        target.items.forEach(function (entry) {
-            var isHere = current.some(function (id) { return sameId(id, entry.Id); });
-            var isElsewhere = !isHere && elsewhere.some(function (id) { return sameId(id, entry.Id); });
-            if (!isElsewhere) availableCount++;
-
-            var item = document.createElement('label');
-            item.className = 'base-check-row' + (isElsewhere ? ' base-check-row-disabled' : '');
-
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'base-check-row-input';
-            checkbox.value = entry.Id;
-            checkbox.checked = isHere;
-            checkbox.disabled = isElsewhere;
-
-            var poster = document.createElement('img');
-            poster.className = 'base-check-thumb';
-            poster.src = ApiClient.getImageUrl(entry.Id, { type: 'Primary', maxWidth: 80, quality: 80 });
-            poster.onerror = function () { this.style.visibility = 'hidden'; };
-
-            var info = document.createElement('div');
-            info.className = 'base-check-text';
-
-            var nameSpan = document.createElement('span');
-            nameSpan.className = 'base-check-label';
-            nameSpan.textContent = entry.Name;
-            info.appendChild(nameSpan);
-
-            if (entry.ProductionYear) {
-                var yearSpan = document.createElement('span');
-                yearSpan.className = 'base-check-sub';
-                yearSpan.textContent = entry.ProductionYear;
-                info.appendChild(yearSpan);
-            }
-
-            if (isElsewhere) {
-                var badge = document.createElement('span');
-                badge.className = 'base-check-note';
-                badge.textContent = 'In another profile';
-                info.appendChild(badge);
-            }
-
-            item.appendChild(checkbox);
-            item.appendChild(poster);
-            item.appendChild(info);
-            listContainer.appendChild(item);
-
-            checkbox.addEventListener('change', updateSummary);
+        var current = assignedIds(getCurrentProfile(), target).filter(function (id) {
+            return !elsewhere.some(function (other) { return sameId(other, id); });
         });
 
-        function updateSummary() {
-            var checked = listContainer.querySelectorAll('.base-check-row-input:checked').length;
-            summaryEl.textContent = checked + ' of ' + availableCount + ' available ' + target.noun + ' selected';
-        }
-
-        updateSummary();
-
-        var searchInput = view.querySelector('#pickerSearch');
-        searchInput.value = '';
-        searchInput.focus();
-    }
-
-    var filterSelectionList = debounce(function () {
-        var term = view.querySelector('#pickerSearch').value.toLowerCase();
-        view.querySelectorAll('.base-check-row').forEach(function (item) {
-            var name = item.querySelector('.base-check-label');
-            item.style.display = (name ? name.textContent : item.textContent).toLowerCase().includes(term) ? '' : 'none';
+        var list = createCheckboxList({
+            items: target.items,
+            idKey: 'Id',
+            matchKey: function (id) { return String(id || '').replace(/-/g, '').toLowerCase(); },
+            value: current,
+            disabledIds: elsewhere,
+            placeholder: target.search,
+            searchKeys: ['Name'],
+            emptyMessage: 'No ' + target.noun + ' match.',
+            renderRow: function (item) {
+                var taken = elsewhere.some(function (other) { return sameId(other, item.Id); });
+                return {
+                    label: item.Name,
+                    sublabel: item.ProductionYear ? String(item.ProductionYear) : null,
+                    imageUrl: ApiClient.getImageUrl(item.Id, { type: 'Primary', maxWidth: 80, quality: 80 }),
+                    note: taken ? 'In another profile' : null
+                };
+            }
         });
-    }, 200);
 
-    function confirmSelection() {
-        var selected = [];
-        view.querySelectorAll('.base-check-row-input:checked').forEach(function (cb) { selected.push(cb.value); });
-        getCurrentProfile()[_modalTarget.key] = selected;
-        renderAssignments();
-        closeSelectionModal();
-        checkDirty();
-    }
-
-    function closeSelectionModal() {
-        pickerDialog.close();
+        openDialog({
+            title: target.modalTitle,
+            body: list.element,
+            buttons: [
+                { text: 'Cancel', value: null },
+                {
+                    text: 'Done',
+                    className: 'base-button primary',
+                    action: function (close) {
+                        getCurrentProfile()[target.key] = list.getValue();
+                        renderAssignments();
+                        checkDirty();
+                        close(true);
+                    }
+                }
+            ],
+            onClose: function () { list.destroy(); }
+        });
     }
 
     function removeAssignment(target, id) {
@@ -849,22 +729,31 @@ export default function (view) {
         checkDirty();
     }
 
-    // ── Profile CRUD ────────────────────────────────────────
-
     function nameIsTaken(name, exceptId) {
         return fullConfig.Profiles.some(function (p) {
             return p.Id !== exceptId && p.Name && p.Name.toLowerCase() === name.toLowerCase();
         });
     }
 
-    function createNewProfile() {
-        promptName('New Profile', { placeholder: 'Anime' }).then(function (values) {
-            if (!values) return;
-            var name = (values.name || '').trim();
+    // checkName
+    // Says why a profile name cannot be used, or nothing when it can.
+    //
+    // Inputs
+    // name [string]: The trimmed name.
+    // exceptId [string]: The profile being renamed, which may keep its own name.
+    //
+    // Output
+    // [string|null]: The reason, or null.
+    function checkName(name, exceptId) {
+        if (!name) return 'Enter a name.';
+        if (name.toLowerCase() === 'default') return 'Default is reserved for the default profile.';
+        if (nameIsTaken(name, exceptId)) return 'A profile with this name already exists.';
+        return null;
+    }
 
-            if (!name) { Dashboard.alert('Profile name is required.'); return; }
-            if (name.toLowerCase() === 'default') { Dashboard.alert('The name "Default" is reserved.'); return; }
-            if (nameIsTaken(name)) { Dashboard.alert('A profile with this name already exists.'); return; }
+    function createNewProfile() {
+        promptName('New Profile', '', 'Anime', function (name) { return checkName(name); }).then(function (name) {
+            if (!name) return;
 
             // Start from a copy of the profile on screen, so a new profile only needs its differences.
             var source = getCurrentProfile();
@@ -885,13 +774,8 @@ export default function (view) {
         var profile = getCurrentProfile();
         if (profile.IsDefault) return;
 
-        promptName('Rename Profile', { value: profile.Name || '' }).then(function (values) {
-            if (!values) return;
-            var name = (values.name || '').trim();
-
+        promptName('Rename Profile', profile.Name || '', '', function (name) { return checkName(name, profile.Id); }).then(function (name) {
             if (!name) return;
-            if (name.toLowerCase() === 'default') { Dashboard.alert('The name "Default" is reserved.'); return; }
-            if (nameIsTaken(name, profile.Id)) { Dashboard.alert('A profile with this name already exists.'); return; }
 
             profile.Name = name;
             populateProfileDropdown();
@@ -903,7 +787,11 @@ export default function (view) {
         var profile = getCurrentProfile();
         if (profile.IsDefault) return;
 
-        Dashboard.confirm('Delete this profile? Its assigned items will use the default profile.', 'Delete Profile', function (confirmed) {
+        confirmDialog('Remove ' + (profile.Name || 'this profile') + '? Its assigned items use the default profile.', {
+            title: 'Remove Profile',
+            confirmText: 'Remove',
+            destructive: true
+        }).then(function (confirmed) {
             if (!confirmed) return;
             fullConfig.Profiles = fullConfig.Profiles.filter(function (p) { return p.Id !== profile.Id; });
             currentProfileId = null;
@@ -911,8 +799,6 @@ export default function (view) {
             checkDirty();
         });
     }
-
-    // ── Save ────────────────────────────────────────────────
 
     function saveConfig() {
         var empty = fullConfig.Profiles.filter(function (p) {
@@ -923,34 +809,28 @@ export default function (view) {
 
         if (empty.length > 0) {
             var names = empty.map(function (p) { return p.Name || 'Unnamed'; }).join(', ');
-            Dashboard.alert('Cannot save. These profiles have nothing assigned: ' + names + '. Assign items or delete them.');
+            shared.setStatus('saveStatus', 'Could not save, since ' + names + ' has nothing assigned. Assign items or remove the profile.', true, { timeout: 0 });
             return;
         }
 
         if (_saving) return;
         _saving = true;
-        Dashboard.showLoadingMsg();
 
         // Read-modify-write: designs, logos, and plugin-wide settings live in the same
         // configuration object and are edited on the other tabs.
         shared.getConfig().then(function (serverConfig) {
             serverConfig.Profiles = fullConfig.Profiles;
             return shared.saveConfig(serverConfig);
-        }).then(function (result) {
-            takeSnapshot();
-            setDirty(false);
-            flashSaveSuccess();
-            Dashboard.processPluginConfigurationUpdateResult(result);
+        }).then(function () {
+            tracker.flashSaved();
+            shared.setStatus('saveStatus', 'Profiles saved.');
         }).catch(function (error) {
             console.error('Failed to save profiles:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to save. Please check the server log and try again.', 'Error');
+            shared.errorText(error, 'Could not save the profiles.').then(function (text) { shared.setStatus('saveStatus', text, true); });
         }).finally(function () {
             _saving = false;
         });
     }
-
-    // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
         view.querySelector('#AgProfilesForm').addEventListener('submit', function (e) {
@@ -966,10 +846,6 @@ export default function (view) {
         view.querySelector('#btnNewProfile').addEventListener('click', createNewProfile);
         view.querySelector('#btnRenameProfile').addEventListener('click', renameCurrentProfile);
         view.querySelector('#btnDeleteProfile').addEventListener('click', deleteCurrentProfile);
-
-        view.querySelector('#btnCancelPicker').addEventListener('click', closeSelectionModal);
-        view.querySelector('#btnConfirmPicker').addEventListener('click', confirmSelection);
-        view.querySelector('#pickerSearch').addEventListener('input', filterSelectionList);
 
         view.querySelectorAll('[data-backdrop-setting]').forEach(function (el) {
             var evt = el.type === 'checkbox' ? 'change' : 'input';

@@ -13,19 +13,19 @@
                     <div class="fieldDescription ag-section-note">Artwork Generator is turned on per library, under Image Fetchers in that library's settings. Profiles decide which images it makes.</div>
 
                     <div class="inputContainer">
-                        <label for="txtImageChoiceCount">Choices In Edit Images:</label>
+                        <label for="txtImageChoiceCount">Choices In Edit Images</label>
                         <input is="emby-input" type="number" id="txtImageChoiceCount" min="1" max="1000" step="1" />
                         <div class="fieldDescription">Alternates offered per image type in Edit Images. Each is a different frame, so a higher number is slower to open.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="txtImageCacheMinutes">Edit Images Cache (Minutes):</label>
+                        <label for="txtImageCacheMinutes">Edit Images Cache (minutes)</label>
                         <input is="emby-input" type="number" id="txtImageCacheMinutes" min="5" max="1440" step="1" />
                         <div class="fieldDescription">How long the choices rendered for Edit Images stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="txtFixedSeed">Fixed Frame Seed:</label>
+                        <label for="txtFixedSeed">Fixed Frame Seed</label>
                         <input is="emby-input" type="number" id="txtFixedSeed" step="1" placeholder="Random" />
                         <div class="fieldDescription">Any whole number makes frame choice repeatable, so an item always gets the same frames. Empty picks new ones each refresh.</div>
                     </div>
@@ -64,57 +64,57 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkReuseSamples" data-frame-setting="ReuseSamples" />
                                     <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription"></div>
+                                <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkAvoidMediaSegments" data-frame-setting="AvoidMediaSegments" />
                                     <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription"></div>
+                                <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="nested-settings" data-depends-on="chkAvoidMediaSegments">
-                                <div class="checkboxContainer">
+                            <div id="segmentTypes" class="base-indent">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkAvoidIntros" data-frame-setting="AvoidIntros" />
                                         <span class="checkboxLabel"></span>
                                     </label>
-                                    <div class="fieldDescription"></div>
+                                    <div class="fieldDescription checkboxFieldDescription"></div>
                                 </div>
-                                <div class="checkboxContainer">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkAvoidOutros" data-frame-setting="AvoidOutros" />
                                         <span class="checkboxLabel"></span>
                                     </label>
-                                    <div class="fieldDescription"></div>
+                                    <div class="fieldDescription checkboxFieldDescription"></div>
                                 </div>
-                                <div class="checkboxContainer">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkAvoidRecaps" data-frame-setting="AvoidRecaps" />
                                         <span class="checkboxLabel"></span>
                                     </label>
-                                    <div class="fieldDescription"></div>
+                                    <div class="fieldDescription checkboxFieldDescription"></div>
                                 </div>
-                                <div class="checkboxContainer">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkAvoidPreviews" data-frame-setting="AvoidPreviews" />
                                         <span class="checkboxLabel"></span>
                                     </label>
-                                    <div class="fieldDescription"></div>
+                                    <div class="fieldDescription checkboxFieldDescription"></div>
                                 </div>
-                                <div class="checkboxContainer">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="chkAvoidCommercials" data-frame-setting="AvoidCommercials" />
                                         <span class="checkboxLabel"></span>
                                     </label>
-                                    <div class="fieldDescription"></div>
+                                    <div class="fieldDescription checkboxFieldDescription"></div>
                                 </div>
                             </div>
 
@@ -124,15 +124,15 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="checkboxContainer">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="chkLetterboxDetection" data-frame-setting="EnableLetterboxDetection" />
                                     <span class="checkboxLabel"></span>
                                 </label>
-                                <div class="fieldDescription"></div>
+                                <div class="fieldDescription checkboxFieldDescription"></div>
                             </div>
 
-                            <div class="nested-settings" data-depends-on="chkLetterboxDetection">
+                            <div id="letterboxSettings" class="base-indent">
                                 <div class="inputContainer">
                                     <label for="txtLetterboxBlack"></label>
                                     <input is="emby-input" type="number" id="txtLetterboxBlack" min="0" max="255" data-frame-setting="LetterboxBlackThreshold" data-type="number" />
@@ -154,9 +154,9 @@
                             <span>Save</span>
                         </button>
                         <span id="unsavedIndicator" class="base-unsaved">
-                            <span class="base-unsaved-dot"></span>
-                            Unsaved changes
+                            <span class="base-unsaved-dot"></span>Unsaved
                         </span>
+                        <div id="saveStatus" class="base-status-text" role="status"></div>
                     </div>
 
                 </div>

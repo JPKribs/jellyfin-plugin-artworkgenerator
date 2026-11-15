@@ -1,37 +1,33 @@
-import { initCollapsibles, createConfigPage, generateGuid, debounce, bindDialog, downloadJson, pickJsonFile } from './configurationpage?name=ag_jpkribs_shared.js';
+// ag_posters.js
+// The Designs tab, which edits poster designs and previews them in both shapes.
+
+import {
+    createArtworkPage,
+    createPreviewFrame,
+    confirmDialog,
+    downloadJson,
+    generateGuid,
+    initCollapsibles,
+    openImageDialog,
+    pickJsonFile,
+    promptDialog,
+    promptName
+} from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
     'use strict';
 
-    var pluginId = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
     var fullConfig = null;
     var currentConfigId = null;
-    var _dirty = false;
-    var _savedConfigSnapshot = null;
-    var _previewUrls = { Landscape: null, Portrait: null };
     var _componentObjectUrls = [];
     var _saving = false;
     var _staticDataPromise = null;
+    var _previews = {};
 
-    function getTabs() {
-        return [
-            { href: 'configurationpage?name=ag_posters', name: 'Designs' },
-            { href: 'configurationpage?name=ag_logos', name: 'Logos' },
-            { href: 'configurationpage?name=ag_profiles', name: 'Profiles' },
-            { href: 'configurationpage?name=ag_settings', name: 'Settings' }
-        ];
-    }
-
-    var page = createConfigPage(view, {
-        pluginId: pluginId,
-        apiPrefix: 'Plugins/ArtworkGenerator',
-        tabsKey: 'ag',
-        tabIndex: 0,
-        tabs: getTabs(),
-        leaveMessage: 'You have unsaved changes. Are you sure you want to leave?',
-        isDirty: function () { return _dirty; },
+    var page = createArtworkPage(view, 0, {
         bind: function () {
             initCollapsibles(view);
+            buildPreviews();
             bindEventListeners();
             bindColorControls();
             loadPreviewComponents();
@@ -44,15 +40,6 @@ export default function (view) {
         }
     });
     var shared = page.shared;
-
-    // The enlarged live preview and the enlarged preview component. Escape, the backdrop, and
-    // the corner button close them.
-    var imageDialogs = {
-        previewModal: bindDialog('previewModal', { root: view }),
-        componentModal: bindDialog('componentModal', { root: view })
-    };
-
-    // ── Utilities ────────────────────────────────────────────
 
     function parseARGBHex(input) {
         if (!input) return null;
@@ -70,210 +57,69 @@ export default function (view) {
         return null;
     }
 
-    function trapFocus(container, e) {
-        if (e.key !== 'Tab') return;
-        var focusable = container.querySelectorAll(
-            'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-        var first = focusable[0];
-        var last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-        }
+    // snapshot
+    // Serializes the designs, so the change tracker can tell an edit from the last load or save.
+    //
+    // Output
+    // [string]: The designs as JSON.
+    function snapshot() {
+        return JSON.stringify(fullConfig ? fullConfig.PosterConfigurations : null);
     }
 
-    // ── Unsaved Changes ─────────────────────────────────────
+    var tracker = shared.createChangeTracker({ serialize: snapshot, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    page.guardUnsaved(tracker);
 
-    function takeConfigSnapshot() {
-        _savedConfigSnapshot = JSON.stringify(fullConfig.PosterConfigurations);
-    }
-
-    function markDirty() {
-        if (!_dirty) {
-            _dirty = true;
-            var indicator = view.querySelector('#unsavedIndicator');
-            if (indicator) indicator.classList.add('visible');
-        }
-    }
-
-    function markClean() {
-        _dirty = false;
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (indicator) indicator.classList.remove('visible');
-        takeConfigSnapshot();
-    }
-
-    function flashSaveSuccess() {
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (!indicator) return;
-
-        indicator.innerHTML = '';
-        var dot = document.createElement('span');
-        dot.className = 'base-unsaved-dot';
-        dot.style.background = 'var(--ag-success-text)';
-        indicator.appendChild(dot);
-        indicator.appendChild(document.createTextNode(' Saved!'));
-        indicator.classList.add('visible', 'save-success');
-
-        setTimeout(function () {
-            indicator.classList.remove('visible', 'save-success');
-            setTimeout(function () {
-                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
-            }, 300);
-        }, 2000);
-    }
-
+    // checkDirty
+    // Reads the fields into the design on screen and shows the unsaved indicator while the designs differ from the last load or save.
     function checkDirty() {
-        if (!fullConfig || !_savedConfigSnapshot) return;
+        if (!fullConfig) return;
         saveCurrentConfigSettings();
-        var current = JSON.stringify(fullConfig.PosterConfigurations);
-        if (current !== _savedConfigSnapshot) {
-            markDirty();
-        } else {
-            _dirty = false;
-            var indicator = view.querySelector('#unsavedIndicator');
-            if (indicator) indicator.classList.remove('visible');
-        }
+        tracker.check();
     }
-
-    // ── Input Modal ─────────────────────────────────────────
-
-    function showInputModal(title, fields, callback) {
-        var triggerElement = document.activeElement;
-        var modal = view.querySelector('#inputModal');
-        var modalContent = view.querySelector('#inputModal .base-dialog-content');
-        var fieldsContainer = view.querySelector('#inputModalFields');
-        var btnConfirm = view.querySelector('#btnConfirmInputModal');
-        var btnCancel = view.querySelector('#btnCancelInputModal');
-        var btnClose = view.querySelector('#btnCloseInputModal');
-
-        view.querySelector('#inputModalTitle').textContent = title;
-        fieldsContainer.innerHTML = '';
-
-        fields.forEach(function (field, index) {
-            var container = document.createElement('div');
-            container.className = 'base-modal-field';
-
-            var label = document.createElement('label');
-            label.className = 'base-modal-field-label';
-            label.setAttribute('for', 'inputModalField_' + index);
-            label.textContent = field.label;
-            container.appendChild(label);
-
-            var input = document.createElement('input');
-            input.setAttribute('is', 'emby-input');
-            input.type = field.type || 'text';
-            input.id = 'inputModalField_' + index;
-            input.value = field.value || '';
-            if (field.placeholder) input.placeholder = field.placeholder;
-            if (field.required) input.required = true;
-            container.appendChild(input);
-
-            if (field.description) {
-                var desc = document.createElement('div');
-                desc.className = 'fieldDescription';
-                desc.textContent = field.description;
-                container.appendChild(desc);
-            }
-
-            fieldsContainer.appendChild(container);
-        });
-
-        modal.style.display = 'flex';
-        var firstInput = fieldsContainer.querySelector('input');
-        if (firstInput) {
-            setTimeout(function () { firstInput.focus(); firstInput.select(); }, 100);
-        }
-
-        function cleanup() {
-            btnConfirm.removeEventListener('click', onConfirm);
-            btnCancel.removeEventListener('click', onCancel);
-            btnClose.removeEventListener('click', onCancel);
-            modal.removeEventListener('click', onBackdrop);
-            document.removeEventListener('keydown', onKeydown);
-            modal.style.display = 'none';
-            if (triggerElement && triggerElement.focus) triggerElement.focus();
-        }
-
-        function onConfirm() {
-            var values = [];
-            fieldsContainer.querySelectorAll('input').forEach(function (input) {
-                values.push(input.value);
-            });
-            cleanup();
-            callback(values);
-        }
-
-        function onCancel() { cleanup(); callback(null); }
-
-        function onBackdrop(e) { if (e.target === modal) onCancel(); }
-
-        function onKeydown(e) {
-            if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
-            else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
-            else { trapFocus(modalContent, e); }
-        }
-
-        btnConfirm.addEventListener('click', onConfirm);
-        btnCancel.addEventListener('click', onCancel);
-        btnClose.addEventListener('click', onCancel);
-        modal.addEventListener('click', onBackdrop);
-        document.addEventListener('keydown', onKeydown);
-    }
-
-    // ── Color Controls ──────────────────────────────────────
 
     function updateHexFromControls(container) {
-        var rgb = container.querySelector('.color-picker').value.substring(1);
-        var alpha = parseInt(container.querySelector('.alpha-slider').value);
-        container.querySelector('.hex-input').value = '#' + alpha.toString(16).padStart(2, '0').toUpperCase() + rgb.toUpperCase();
+        var rgb = container.querySelector('.ag-color-picker').value.substring(1);
+        var alpha = parseInt(container.querySelector('.ag-alpha-slider').value);
+        container.querySelector('.ag-hex-input').value = '#' + alpha.toString(16).padStart(2, '0').toUpperCase() + rgb.toUpperCase();
     }
 
     function updateControlsFromHex(container) {
-        var parsed = parseARGBHex(container.querySelector('.hex-input').value);
+        var parsed = parseARGBHex(container.querySelector('.ag-hex-input').value);
         if (parsed) {
-            container.querySelector('.color-picker').value = parsed.rgb;
-            container.querySelector('.alpha-slider').value = parsed.alpha;
-            container.querySelector('.alpha-label').textContent = parsed.alpha;
+            container.querySelector('.ag-color-picker').value = parsed.rgb;
+            container.querySelector('.ag-alpha-slider').value = parsed.alpha;
+            container.querySelector('.ag-alpha-label').textContent = parsed.alpha;
         }
     }
 
     function bindColorControls() {
-        view.querySelectorAll('.color-picker').forEach(function (picker) {
+        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
             var container = picker.parentElement;
-            var slider = container.querySelector('.alpha-slider');
-            var label = container.querySelector('.alpha-label');
+            var slider = container.querySelector('.ag-alpha-slider');
+            var label = container.querySelector('.ag-alpha-label');
 
             picker.addEventListener('input', function () { updateHexFromControls(container); checkDirty(); schedulePreview(); });
             slider.addEventListener('input', function () { label.textContent = slider.value; updateHexFromControls(container); checkDirty(); schedulePreview(); });
-            container.querySelector('.hex-input').addEventListener('input', function () { updateControlsFromHex(container); checkDirty(); schedulePreview(); });
+            container.querySelector('.ag-hex-input').addEventListener('input', function () { updateControlsFromHex(container); checkDirty(); schedulePreview(); });
         });
     }
 
     function syncColorControls() {
-        view.querySelectorAll('.color-picker').forEach(function (picker) {
+        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
             var container = picker.parentElement;
-            var hex = container.querySelector('.hex-input').value;
+            var hex = container.querySelector('.ag-hex-input').value;
             if (hex) {
                 var parsed = parseARGBHex(hex);
                 if (parsed) {
                     picker.value = parsed.rgb;
-                    container.querySelector('.alpha-slider').value = parsed.alpha;
-                    container.querySelector('.alpha-label').textContent = parsed.alpha;
+                    container.querySelector('.ag-alpha-slider').value = parsed.alpha;
+                    container.querySelector('.ag-alpha-label').textContent = parsed.alpha;
                 }
             }
         });
     }
 
-    // ── Config Loading ──────────────────────────────────────
-
     function loadConfig() {
-        Dashboard.showLoadingMsg();
         shared.getConfig().then(function (config) {
             fullConfig = config;
 
@@ -283,12 +129,11 @@ export default function (view) {
 
             populateConfigDropdown();
             syncColorControls();
-            markClean();
-            Dashboard.hideLoadingMsg();
+            saveCurrentConfigSettings();
+            tracker.markClean();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to load poster configurations. Please reload the page.', 'Error');
+            shared.setStatus('saveStatus', 'Could not load the designs. Reload the page.', true, { timeout: 0 });
         });
     }
 
@@ -306,7 +151,7 @@ export default function (view) {
         configs.forEach(function (config) {
             var option = document.createElement('option');
             option.value = config.Id;
-            option.textContent = config.Name || 'Unnamed Configuration';
+            option.textContent = config.Name || 'Unnamed Design';
             select.appendChild(option);
         });
 
@@ -395,8 +240,6 @@ export default function (view) {
         el.selectedIndex = 0;
     }
 
-    // ── Config Actions ──────────────────────────────────────
-
     // The default design cannot be renamed or deleted: profiles fall back to it.
     function updateConfigActions() {
         var config = getCurrentConfig();
@@ -412,33 +255,31 @@ export default function (view) {
         });
     }
 
-    // ── Config CRUD ─────────────────────────────────────────
+    // checkName
+    // Says why a design name cannot be used, or nothing when it can.
+    //
+    // Inputs
+    // name [string]: The trimmed name.
+    // exceptId [string]: The design being renamed, which may keep its own name.
+    //
+    // Output
+    // [string|null]: The reason, or null.
+    function checkName(name, exceptId) {
+        if (!name) return 'Enter a name.';
+        if (name.toLowerCase() === 'default') return 'Default is reserved for the default design.';
+        var taken = fullConfig.PosterConfigurations.some(function (c) {
+            return c.Id !== exceptId && c.Name && c.Name.toLowerCase() === name.toLowerCase();
+        });
+        return taken ? 'A design with this name already exists.' : null;
+    }
 
     function createNewConfig() {
-        showInputModal('New Configuration', [
-            { label: 'Name', placeholder: 'My Poster Config', required: true }
-        ], function (values) {
-            if (!values) return;
-            var name = values[0];
-
-            if (!name || name.trim() === '') {
-                Dashboard.alert('Configuration name is required.');
-                return;
-            }
-            if (name.trim().toLowerCase() === 'default') {
-                Dashboard.alert('The name "Default" is reserved and cannot be used.');
-                return;
-            }
-            if (fullConfig.PosterConfigurations.some(function (c) {
-                return c.Name && c.Name.toLowerCase() === name.trim().toLowerCase();
-            })) {
-                Dashboard.alert('A configuration with this name already exists.');
-                return;
-            }
+        promptName('New Design', '', 'Bold Titles', function (name) { return checkName(name); }).then(function (name) {
+            if (!name) return;
 
             var newConfig = {
                 Id: generateGuid(),
-                Name: name.trim(),
+                Name: name,
                 Settings: Object.assign({}, posterSettingDefaults),
                 SeriesIds: []
             };
@@ -446,61 +287,40 @@ export default function (view) {
             fullConfig.PosterConfigurations.push(newConfig);
             currentConfigId = newConfig.Id;
             populateConfigDropdown();
-            markDirty();
+            checkDirty();
         });
     }
 
     function renameCurrentConfig() {
         var config = getCurrentConfig();
-        if (config.IsDefault) {
-            Dashboard.alert('The default configuration cannot be renamed.');
-            return;
-        }
+        if (config.IsDefault) return;
 
-        showInputModal('Rename Configuration', [
-            { label: 'Name', value: config.Name || 'Unnamed', required: true }
-        ], function (values) {
-            if (!values) return;
-            var newName = values[0];
+        promptName('Rename Design', config.Name || '', '', function (name) { return checkName(name, config.Id); }).then(function (name) {
+            if (!name) return;
 
-            if (!newName || newName.trim() === '') return;
-            if (newName.trim().toLowerCase() === 'default') {
-                Dashboard.alert('The name "Default" is reserved and cannot be used.');
-                return;
-            }
-            if (fullConfig.PosterConfigurations.some(function (c) {
-                return c.Id !== config.Id && c.Name && c.Name.toLowerCase() === newName.trim().toLowerCase();
-            })) {
-                Dashboard.alert('A configuration with this name already exists.');
-                return;
-            }
-
-            config.Name = newName.trim();
+            config.Name = name;
             populateConfigDropdown();
-            markDirty();
+            checkDirty();
         });
     }
 
     function deleteCurrentConfig() {
         var config = getCurrentConfig();
-        if (config.IsDefault) {
-            Dashboard.alert('Cannot delete the default configuration.');
-            return;
-        }
+        if (config.IsDefault) return;
 
         var users = profilesUsingDesign(config.Id).map(function (p) { return p.Name || 'Unnamed'; });
         var message = users.length
-            ? 'This design is used by: ' + users.join(', ') + '. Those images will use the default design for their shape instead. Delete it anyway?'
-            : 'Are you sure you want to delete this design?';
-        Dashboard.confirm(message, 'Delete Design', function (confirmed) {
-            if (confirmed) {
-                fullConfig.PosterConfigurations = fullConfig.PosterConfigurations.filter(function (c) {
-                    return c.Id !== currentConfigId;
-                });
-                currentConfigId = fullConfig.PosterConfigurations[0].Id;
-                populateConfigDropdown();
-                markDirty();
-            }
+            ? 'Remove ' + (config.Name || 'this design') + '? Its images in ' + users.join(', ') + ' use the default design.'
+            : 'Remove ' + (config.Name || 'this design') + '?';
+
+        confirmDialog(message, { title: 'Remove Design', confirmText: 'Remove', destructive: true }).then(function (confirmed) {
+            if (!confirmed) return;
+            fullConfig.PosterConfigurations = fullConfig.PosterConfigurations.filter(function (c) {
+                return c.Id !== currentConfigId;
+            });
+            currentConfigId = fullConfig.PosterConfigurations[0].Id;
+            populateConfigDropdown();
+            checkDirty();
         });
     }
 
@@ -508,90 +328,61 @@ export default function (view) {
         pickJsonFile().then(function (template) {
             if (!template) return;
             if (!template.settings) {
-                Dashboard.alert('Invalid template file: missing settings.');
+                shared.setStatus('designStatus', 'Could not import the file, since it holds no design settings.', true);
                 return;
             }
 
-            showInputModal('Import Configuration', [
-                { label: 'Name', value: template.name || 'Imported Configuration', required: true, description: 'Enter a name for the imported configuration.' }
-            ], function (values) {
-                if (!values) return;
-                var nameInput = values[0];
-
-                if (!nameInput || nameInput.trim() === '') return;
-                if (nameInput.trim().toLowerCase() === 'default') {
-                    Dashboard.alert('The name "Default" is reserved and cannot be used.');
-                    return;
-                }
-                if (fullConfig.PosterConfigurations.some(function (c) {
-                    return c.Name && c.Name.toLowerCase() === nameInput.trim().toLowerCase();
-                })) {
-                    Dashboard.alert('A configuration with this name already exists.');
-                    return;
-                }
+            promptName('Import Design', template.name || 'Imported Design', '', function (name) { return checkName(name); }).then(function (name) {
+                if (!name) return;
 
                 fullConfig.PosterConfigurations.push({
                     Id: generateGuid(),
-                    Name: nameInput.trim(),
+                    Name: name,
                     Settings: template.settings,
                     SeriesIds: [],
                     IsDefault: false
                 });
                 currentConfigId = fullConfig.PosterConfigurations[fullConfig.PosterConfigurations.length - 1].Id;
                 populateConfigDropdown();
-                markDirty();
+                checkDirty();
 
-                Dashboard.alert('Template imported successfully! Version: ' + (template.version || 'unknown') +
-                    (template.author ? '\nAuthor: ' + template.author : '') +
-                    (template.description ? '\nDescription: ' + template.description : ''));
+                var source = template.author ? ' by ' + template.author : '';
+                shared.setStatus('designStatus', name + source + ' imported. Select Save to keep it.');
             });
         }).catch(function (error) {
             console.error('Import error:', error);
-            Dashboard.alert('Failed to import template. Please ensure the file is a valid JSON template.');
+            shared.setStatus('designStatus', 'Could not import the file. Select a design template in JSON.', true);
         });
     }
 
     function exportCurrentConfig() {
         var config = getCurrentConfig();
-        if (!config) {
-            Dashboard.alert('No configuration selected.');
-            return;
-        }
+        if (!config) return;
 
-        showInputModal('Export Configuration', [
-            { label: 'Author', placeholder: 'Your name', required: true },
-            { label: 'Description', placeholder: 'Brief description of this config', required: true }
-        ], function (values) {
+        promptDialog([
+            { name: 'author', label: 'Author', placeholder: 'Your name', required: true },
+            { name: 'description', label: 'Description', placeholder: 'Bold titles over a dark fade', required: true }
+        ], { title: 'Export Design', submitText: 'Export' }).then(function (values) {
             if (!values) return;
-            var author = values[0];
-            var description = values[1];
 
-            if (!author || !author.trim()) { Dashboard.alert('Author name is required.'); return; }
-            if (!description || !description.trim()) { Dashboard.alert('Description is required.'); return; }
-
-            Dashboard.showLoadingMsg();
             shared.getConfig().then(function (pluginConfig) {
                 var ver = pluginConfig.Version;
                 downloadJson(config.Name.replace(/[^a-z0-9\s]/gi, '').replace(/\s+/g, '_') + '_v' + ver + '.json', {
                     name: config.Name,
-                    description: description.trim(),
-                    author: author.trim(),
+                    description: values.description.trim(),
+                    author: values.author.trim(),
                     version: ver,
                     createdDate: new Date().toISOString(),
                     settings: config.Settings
                 });
 
-                Dashboard.hideLoadingMsg();
-                Dashboard.alert('Template exported successfully!');
+                shared.setStatus('designStatus', 'Design exported.');
             }).catch(function (error) {
                 console.error('Failed to get plugin version:', error);
-                Dashboard.hideLoadingMsg();
-                Dashboard.alert('Export failed. Please try again.');
+                shared.setStatus('designStatus', 'Could not export the design.', true);
             });
         });
     }
-
-    // ── Save ────────────────────────────────────────────────
 
     function saveCurrentConfigSettings() {
         var config = getCurrentConfig();
@@ -620,7 +411,7 @@ export default function (view) {
             var max = parseFloat(input.getAttribute('max'));
             var labelEl = input.closest('.inputContainer');
             var labelText = labelEl ? labelEl.querySelector('label') : null;
-            var name = labelText ? labelText.textContent.replace(':', '').trim() : input.id;
+            var name = (labelText && labelText.textContent.trim()) || input.id;
 
             if (isNaN(value)) {
                 errors.push(name + ' must be a valid number.');
@@ -637,35 +428,28 @@ export default function (view) {
 
         var validationErrors = validateNumberInputs();
         if (validationErrors.length > 0) {
-            Dashboard.alert(validationErrors.join('\n'));
+            shared.setStatus('saveStatus', validationErrors.join(' '), true, { timeout: 0 });
             return;
         }
 
         if (_saving) return;
         _saving = true;
 
-        Dashboard.showLoadingMsg();
-
         // Read-modify-write: the plugin-wide settings on the other tab live in the same
         // configuration object, so only the poster configurations are overwritten here.
         shared.getConfig().then(function (serverConfig) {
             serverConfig.PosterConfigurations = fullConfig.PosterConfigurations;
             return shared.saveConfig(serverConfig);
-        }).then(function (result) {
-            markClean();
-            flashSaveSuccess();
-            Dashboard.processPluginConfigurationUpdateResult(result);
+        }).then(function () {
+            tracker.flashSaved();
+            shared.setStatus('saveStatus', 'Designs saved.');
         }).catch(function (error) {
-            // Without this the loading overlay would stay up forever on a failed save.
             console.error('Failed to save poster configurations:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to save. Please check the server log and try again.', 'Error');
+            shared.errorText(error, 'Could not save the designs.').then(function (text) { shared.setStatus('saveStatus', text, true); });
         }).finally(function () {
             _saving = false;
         });
     }
-
-    // ── Style Descriptions ──────────────────────────────────
 
     var posterSettingOptions = {};
     var posterSettingDefaults = {};
@@ -753,7 +537,7 @@ export default function (view) {
             // The color fields swap their own wording between color and opacity, so they keep it.
             if (label && !label.hasAttribute('data-color-label')) {
                 var name = text.label || text.Label || '';
-                label.textContent = el.type === 'checkbox' ? name : name + ':';
+                label.textContent = name;
             }
 
             var description = container.querySelector('.fieldDescription');
@@ -786,8 +570,6 @@ export default function (view) {
             if (previous) select.value = previous;
         });
     }
-
-    // ── Fonts ───────────────────────────────────────────────
 
     // Replace the font dropdowns with the families actually installed on the server. The old
     // hardcoded list was desktop fonts (Arial, Calibri, ...) that a container image does not
@@ -870,88 +652,53 @@ export default function (view) {
         note.style.display = missing.length ? 'block' : 'none';
     }
 
-    // ── Live Preview ────────────────────────────────────────
-
-    var _previewSeq = 0;
-
-    function renderPreview() {
-        if (!fullConfig) return;
-        saveCurrentConfigSettings();
-        var config = getCurrentConfig();
-        if (!config || !config.Settings) return;
-
-        // Renders can overlap while the user is editing; only the latest request may update an
-        // image so a slow older response can't overwrite a newer one.
-        var seq = ++_previewSeq;
-        var kindEl = view.querySelector('#selectPreviewKind');
-        var kind = (kindEl && kindEl.value) || 'Series';
-
-        renderPreviewShape('Landscape', config.Settings, kind, seq);
-        renderPreviewShape('Portrait', config.Settings, kind, seq);
+    // buildPreviews
+    // Draws one Base Preview Frame for each shape. Each renders the design on screen through the preview route.
+    function buildPreviews() {
+        ['Landscape', 'Portrait'].forEach(function (shape) {
+            _previews[shape] = createPreviewFrame({
+                label: shape + ' Preview',
+                delay: 500,
+                backgrounds: false,
+                render: function () { return renderPreviewShape(shape); }
+            });
+            view.querySelector('#posterPreview' + shape).appendChild(_previews[shape].element);
+        });
     }
 
     // renderPreviewShape
-    // Both previews come from the same settings: the server adjusts the design for the shape the
-    // same way it does when it generates the real image.
-    function renderPreviewShape(shape, settings, kind, seq) {
-        var img = view.querySelector('#posterPreviewImage' + shape);
-        var status = view.querySelector('#posterPreviewStatus' + shape);
-        if (!img || !status) return;
+    // Asks the server to draw the design on screen in one shape. The server adjusts the design for the shape the same way it does when it generates the real image.
+    //
+    // Inputs
+    // shape [string]: Landscape or Portrait.
+    //
+    // Output
+    // [Promise<Blob|null>]: The rendered image, or null before the designs load.
+    function renderPreviewShape(shape) {
+        if (!fullConfig) return Promise.resolve(null);
+        saveCurrentConfigSettings();
+        var config = getCurrentConfig();
+        if (!config || !config.Settings) return Promise.resolve(null);
 
-        status.textContent = 'Rendering…';
-        status.style.display = 'block';
+        var kindEl = view.querySelector('#selectPreviewKind');
+        var kind = (kindEl && kindEl.value) || 'Series';
 
-        // Use ApiClient.ajax so Jellyfin's auth headers are attached the same way the
-        // working Configuration calls authenticate. Without a dataType it resolves to
-        // the raw Response, so the JPEG body can be read as a blob.
-        var url = ApiClient.getUrl('Plugins/ArtworkGenerator/Preview', { kind: kind, shape: shape });
-
-        ApiClient.ajax({
+        // Without a dataType ApiClient.ajax resolves to the raw Response, so the JPEG can be read as a blob.
+        return ApiClient.ajax({
             type: 'POST',
-            url: url,
-            data: JSON.stringify(settings),
+            url: ApiClient.getUrl('Plugins/ArtworkGenerator/Preview', { kind: kind, shape: shape }),
+            data: JSON.stringify(config.Settings),
             contentType: 'application/json'
         }).then(function (response) {
             if (!response.ok) throw new Error('Preview failed: ' + response.status);
             return response.blob();
-        }).then(function (blob) {
-            if (seq !== _previewSeq) return;
-            if (_previewUrls[shape]) URL.revokeObjectURL(_previewUrls[shape]);
-            _previewUrls[shape] = URL.createObjectURL(blob);
-            img.src = _previewUrls[shape];
-            img.style.display = 'block';
-            status.style.display = 'none';
-
-            // Keep the enlarged modal in sync when it's open on this shape during live edits.
-            var modal = imageDialogs.previewModal;
-            var modalImg = view.querySelector('#posterPreviewModalImage');
-            if (modalImg && modal.isOpen() && modal.element.getAttribute('data-shape') === shape) {
-                modalImg.src = _previewUrls[shape];
-            }
-        }).catch(function (error) {
-            if (seq !== _previewSeq) return;
-            console.error('Poster preview error:', error);
-            status.textContent = 'Preview unavailable';
-            status.style.display = 'block';
         });
     }
 
-    var schedulePreview = debounce(renderPreview, 500);
-
-    // openImageModal
-    // Opens one of the base base-dialog image modals with the given image and title.
-    function openImageModal(modalId, imageId, src, title) {
-        var dialog = imageDialogs[modalId];
-        var modalImg = view.querySelector('#' + imageId);
-        if (!dialog || !modalImg || !src) return;
-
-        if (title) {
-            var titleEl = dialog.element.querySelector('.base-modal-title');
-            if (titleEl) titleEl.textContent = title;
-        }
-
-        modalImg.src = src;
-        dialog.open();
+    // schedulePreview
+    // Renders both shapes again once the fields stop changing.
+    function schedulePreview() {
+        Object.keys(_previews).forEach(function (shape) { _previews[shape].update(); });
     }
 
     function loadPreviewComponents() {
@@ -965,10 +712,10 @@ export default function (view) {
         // Fetched through ApiClient rather than assigned straight to img.src: a bare <img>
         // request carries no auth header, which is why this endpoint used to have to allow
         // anonymous access. Loading the bytes here keeps it behind the admin policy.
-        view.querySelectorAll('.poster-component-img').forEach(function (img) {
+        view.querySelectorAll('.ag-component-img').forEach(function (img) {
             var component = img.getAttribute('data-component');
             var hide = function () {
-                var wrapper = img.closest('.poster-component');
+                var wrapper = img.closest('.ag-component');
                 if (wrapper) wrapper.style.display = 'none';
             };
 
@@ -981,18 +728,15 @@ export default function (view) {
             });
         });
 
-        view.querySelectorAll('.poster-component').forEach(function (comp) {
+        view.querySelectorAll('.ag-component').forEach(function (comp) {
             comp.addEventListener('click', function () {
-                var img = comp.querySelector('.poster-component-img');
+                var img = comp.querySelector('.ag-component-img');
                 if (!img || !img.src) return;
                 var component = comp.getAttribute('data-component');
-                openImageModal('componentModal', 'componentModalImage',
-                    img.src, componentTitles[component] || 'Component');
+                openImageDialog(componentTitles[component] || 'Component', img.src);
             });
         });
     }
-
-    // ── Visibility ──────────────────────────────────────────
 
     // Which settings a style uses comes from the server, where each generator declares its own
     // rules, so a new style needs no change here. A required setting is switched on and its toggle
@@ -1019,7 +763,7 @@ export default function (view) {
         });
 
         // A group whose settings are all gone would otherwise leave an empty box behind.
-        view.querySelectorAll('.cutout-logo-group').forEach(function (group) {
+        view.querySelectorAll('.ag-style-group').forEach(function (group) {
             var shown = group.querySelectorAll('[data-setting]');
             var anyVisible = Array.prototype.some.call(shown, function (el) {
                 return settingState(posterStyle, el.getAttribute('data-setting')) === 'Optional';
@@ -1093,7 +837,7 @@ export default function (view) {
 
             // Nested styling says "this belongs to the control above it". With no gradient above
             // it, the second color stands on its own and the indent reads as a mistake.
-            el.classList.toggle('nested-settings', gradientOffered);
+            el.classList.toggle('base-indent', gradientOffered);
         });
 
         // Show when another input has been filled in, such as the graphic's placement once there
@@ -1121,7 +865,7 @@ export default function (view) {
         var on = !!(paletteCb && paletteCb.checked);
 
         view.querySelectorAll('[data-palette-aware]').forEach(function (group) {
-            group.classList.toggle('palette-derived', on);
+            group.classList.toggle('ag-palette-derived', on);
 
             var container = group.closest('.inputContainer');
             if (!container) return;
@@ -1131,12 +875,12 @@ export default function (view) {
             var field = container.querySelector('[data-setting]');
             var own = field ? textFor(field.getAttribute('data-setting')) : null;
 
-            var label = container.querySelector('.color-control-label');
+            var label = container.querySelector('.ag-color-control-label');
             if (label) {
                 var key = on ? 'data-opacity-label' : 'data-color-label';
                 var ownLabel = !on && own && (own.label || own.Label);
                 if (ownLabel) {
-                    label.textContent = ownLabel + ':';
+                    label.textContent = ownLabel;
                 } else if (label.getAttribute(key)) {
                     label.textContent = label.getAttribute(key);
                 }
@@ -1154,8 +898,6 @@ export default function (view) {
             }
         });
     }
-
-    // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
         // Form save
@@ -1179,21 +921,8 @@ export default function (view) {
         view.querySelector('#btnExportConfig').addEventListener('click', exportCurrentConfig);
         view.querySelector('#btnImportConfig').addEventListener('click', importCurrentConfig);
 
-        // Clicking either live preview opens it enlarged in the shared modal.
-        view.querySelectorAll('.poster-preview-frame').forEach(function (frame) {
-            frame.addEventListener('click', function () {
-                var shape = frame.getAttribute('data-shape');
-                if (!_previewUrls[shape]) return;
-
-                var modal = view.querySelector('#previewModal');
-                if (modal) modal.setAttribute('data-shape', shape);
-                openImageModal('previewModal', 'posterPreviewModalImage',
-                    _previewUrls[shape], shape + ' Preview');
-            });
-        });
-
         // Preview subject
-        view.querySelector('#selectPreviewKind').addEventListener('change', renderPreview);
+        view.querySelector('#selectPreviewKind').addEventListener('change', schedulePreview);
 
         // Controls that affect visibility
         var visibilityControls = [
@@ -1228,20 +957,10 @@ export default function (view) {
         });
     }
 
-    // ── Lifecycle ───────────────────────────────────────────
-
     view.addEventListener('viewdestroy', function () {
-        // A pending or in-flight preview must not create a blob after this point, or it is never released.
-        schedulePreview.cancel();
-        _previewSeq++;
-
-        // Release the blobs backing the live preview and the component thumbnails.
-        Object.keys(_previewUrls).forEach(function (shape) {
-            if (_previewUrls[shape]) {
-                URL.revokeObjectURL(_previewUrls[shape]);
-                _previewUrls[shape] = null;
-            }
-        });
+        // The frames free their own images. The component thumbnails are released here.
+        Object.keys(_previews).forEach(function (shape) { _previews[shape].destroy(); });
+        _previews = {};
         _componentObjectUrls.forEach(URL.revokeObjectURL);
         _componentObjectUrls = [];
     });

@@ -79,6 +79,7 @@ validate_resources() {
         "$PROJECT_DIR/Configuration/ag_profiles.html"
         "$PROJECT_DIR/Configuration/ag_profiles.js"
         "$PROJECT_DIR/Configuration/ag_shared.css"
+        "$PROJECT_DIR/Configuration/ag_shared.js"
     )
     
     for file in "${config_files[@]}"; do

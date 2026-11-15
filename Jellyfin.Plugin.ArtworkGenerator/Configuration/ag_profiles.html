@@ -14,32 +14,33 @@
                     <div class="base-selector">
                         <select is="emby-select" id="selectProfile" class="base-selector-dropdown" aria-label="Profile"></select>
                         <div class="base-selector-actions">
-                            <button is="emby-button" type="button" id="btnRenameProfile" class="raised base-button secondary" title="Rename">
-                                <span class="material-icons" aria-hidden="true">edit</span>
-                                <span>Rename</span>
-                            </button>
                             <button is="emby-button" type="button" id="btnNewProfile" class="raised base-button primary" title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
                                 <span>New</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnDeleteProfile" class="raised base-button destructive" title="Delete">
+                            <button is="emby-button" type="button" id="btnRenameProfile" class="raised base-button secondary" title="Rename">
+                                <span class="material-icons" aria-hidden="true">edit</span>
+                                <span>Rename</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnDeleteProfile" class="raised base-button destructive" title="Remove">
                                 <span class="material-icons" aria-hidden="true">delete</span>
-                                <span>Delete</span>
+                                <span>Remove</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Assignment -->
-                    <div id="assignmentSection" style="display: none; margin-bottom: 1.5em;">
+                    <div id="assignmentSection" class="hidden">
                         <div id="assignmentBlocks"></div>
                         <div class="fieldDescription">Pick the series and films this profile draws. Anything not picked uses the default profile.</div>
+                        <div id="assignmentStatus" class="base-status-text" role="status"></div>
                     </div>
 
                     <!-- Images -->
                     <div class="base-section">
                         <div class="base-section-title">Images</div>
                         <div class="base-section-content">
-                            <div id="slotMatrix" class="slot-matrix"></div>
+                            <div id="slotMatrix" class="ag-slot-matrix"></div>
                         </div>
                     </div>
 
@@ -63,34 +64,13 @@
                             <span>Save</span>
                         </button>
                         <span id="unsavedIndicator" class="base-unsaved">
-                            <span class="base-unsaved-dot"></span>
-                            Unsaved changes
+                            <span class="base-unsaved-dot"></span>Unsaved
                         </span>
+                        <div id="saveStatus" class="base-status-text" role="status"></div>
                     </div>
 
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Selection Modal -->
-    <div id="pickerModal" class="base-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
-        <div class="base-dialog-content picker-content">
-            <button type="button" id="btnClosePicker" class="base-dialog-close" aria-label="Close">&times;</button>
-            <h2 id="pickerTitle" class="base-modal-title">Select Series</h2>
-            <div class="picker-search">
-                <input is="emby-input" type="text" id="pickerSearch" class="base-check-list-search" placeholder="Search series..." />
-            </div>
-            <div class="picker-summary" id="pickerSummary"></div>
-            <div id="pickerList" class="base-check-list-body"></div>
-            <div class="base-modal-button-row">
-                <button is="emby-button" type="button" id="btnCancelPicker" class="raised base-modal-button">
-                    <span>Cancel</span>
-                </button>
-                <button is="emby-button" type="button" id="btnConfirmPicker" class="raised base-button primary base-modal-button">
-                    <span>Save Selection</span>
-                </button>
-            </div>
         </div>
     </div>
 

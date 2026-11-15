@@ -1,49 +1,39 @@
-import { initCollapsibles, createConfigPage, generateGuid, debounce, promptDialog } from './configurationpage?name=ag_jpkribs_shared.js';
+// ag_logos.js
+// The Logos tab, which edits text logo designs and previews them against a sample name.
+
+import {
+    createArtworkPage,
+    createPreviewFrame,
+    confirmDialog,
+    generateGuid,
+    initCollapsibles,
+    promptName,
+    sameId
+} from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
     'use strict';
 
-    var pluginId = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
     var fullConfig = null;
     var logoDesigns = [];
     var currentLogoId = null;
-    var _dirty = false;
     var _saving = false;
-    var _snapshot = null;
-    var _previewObjectUrl = null;
-    var _previewSeq = 0;
     var _fontsPromise = null;
+    var _preview = null;
     var logoSettingText = {};
     var logoSettingOptions = {};
     var logoSettingDefaults = {};
 
-    function getTabs() {
-        return [
-            { href: 'configurationpage?name=ag_posters', name: 'Designs' },
-            { href: 'configurationpage?name=ag_logos', name: 'Logos' },
-            { href: 'configurationpage?name=ag_profiles', name: 'Profiles' },
-            { href: 'configurationpage?name=ag_settings', name: 'Settings' }
-        ];
-    }
-
-    var page = createConfigPage(view, {
-        pluginId: pluginId,
-        apiPrefix: 'Plugins/ArtworkGenerator',
-        tabsKey: 'ag',
-        tabIndex: 1,
-        tabs: getTabs(),
-        leaveMessage: 'You have unsaved changes. Are you sure you want to leave?',
-        isDirty: function () { return _dirty; },
+    var page = createArtworkPage(view, 1, {
         bind: function () {
             initCollapsibles(view);
+            buildPreview();
             bindEventListeners();
             bindColorControls();
         },
         load: loadConfig
     });
     var shared = page.shared;
-
-    // ── Utilities ────────────────────────────────────────────
 
     function parseARGBHex(input) {
         if (!input) return null;
@@ -53,67 +43,32 @@ export default function (view) {
         return null;
     }
 
-    function sameId(a, b) {
-        return String(a || '').replace(/-/g, '').toLowerCase() === String(b || '').replace(/-/g, '').toLowerCase();
-    }
-
-    // ── Unsaved Changes ─────────────────────────────────────
-
+    // snapshot
+    // Serializes the logo designs, so the change tracker can tell an edit from the last load or save.
+    //
+    // Output
+    // [string]: The designs as JSON.
     function snapshot() {
         return JSON.stringify(logoDesigns);
     }
 
-    function setDirty(dirty) {
-        _dirty = dirty;
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (indicator) indicator.classList.toggle('visible', dirty);
-    }
+    var tracker = shared.createChangeTracker({ serialize: snapshot, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
+    page.guardUnsaved(tracker);
 
+    // checkDirty
+    // Reads the fields into the design on screen and shows the unsaved indicator while the designs differ from the last load or save.
     function checkDirty() {
-        if (!fullConfig || _snapshot === null) return;
+        if (!fullConfig) return;
         saveCurrentSettings();
-        setDirty(snapshot() !== _snapshot);
+        tracker.check();
     }
-
-    function flashSaveSuccess() {
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (!indicator) return;
-
-        indicator.innerHTML = '';
-        var dot = document.createElement('span');
-        dot.className = 'base-unsaved-dot';
-        dot.style.background = 'var(--ag-success-text)';
-        indicator.appendChild(dot);
-        indicator.appendChild(document.createTextNode(' Saved!'));
-        indicator.classList.add('visible', 'save-success');
-
-        setTimeout(function () {
-            indicator.classList.remove('visible', 'save-success');
-            setTimeout(function () {
-                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
-            }, 300);
-        }, 2000);
-    }
-
-    // ── Input Modal ─────────────────────────────────────────
-
-    // Asks for a design name. promptDialog focuses its close button first, so the caret is put
-    // in the name, selected, the way the page's own modal did.
-    function promptName(title, field) {
-        var result = promptDialog([{ name: 'name', label: 'Name', value: field.value || '', placeholder: field.placeholder }], { title: title });
-        var input = document.body.lastElementChild && document.body.lastElementChild.querySelector('.base-dialog input');
-        if (input) { input.focus(); input.select(); }
-        return result;
-    }
-
-    // ── Color Controls ──────────────────────────────────────
 
     function bindColorControls() {
-        view.querySelectorAll('.color-picker').forEach(function (picker) {
+        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
             var container = picker.parentElement;
-            var slider = container.querySelector('.alpha-slider');
-            var label = container.querySelector('.alpha-label');
-            var hex = container.querySelector('.hex-input');
+            var slider = container.querySelector('.ag-alpha-slider');
+            var label = container.querySelector('.ag-alpha-label');
+            var hex = container.querySelector('.ag-hex-input');
 
             function fromControls() {
                 var alpha = parseInt(slider.value, 10);
@@ -127,17 +82,15 @@ export default function (view) {
     }
 
     function syncColorControls() {
-        view.querySelectorAll('.color-picker').forEach(function (picker) {
+        view.querySelectorAll('.ag-color-picker').forEach(function (picker) {
             var container = picker.parentElement;
-            var parsed = parseARGBHex(container.querySelector('.hex-input').value);
+            var parsed = parseARGBHex(container.querySelector('.ag-hex-input').value);
             if (!parsed) return;
             picker.value = parsed.rgb;
-            container.querySelector('.alpha-slider').value = parsed.alpha;
-            container.querySelector('.alpha-label').textContent = parsed.alpha;
+            container.querySelector('.ag-alpha-slider').value = parsed.alpha;
+            container.querySelector('.ag-alpha-label').textContent = parsed.alpha;
         });
     }
-
-    // ── Loading ─────────────────────────────────────────────
 
     // A logo setting's choices, default, label, and help text all come from LogoSettings in C#, the
     // same way the Designs page reads them off PosterSettings.
@@ -195,7 +148,7 @@ export default function (view) {
             // The color field swaps its own wording between color and opacity, so it keeps it.
             if (label && !label.hasAttribute('data-color-label')) {
                 var name = text.label || text.Label || '';
-                label.textContent = el.type === 'checkbox' ? name : name + ':';
+                label.textContent = name;
             }
 
             var description = container.querySelector('.fieldDescription');
@@ -245,7 +198,6 @@ export default function (view) {
     }
 
     function loadConfig() {
-        Dashboard.showLoadingMsg();
         Promise.all([loadFonts(), fetchLogos(), shared.getConfig(), loadSettingMetadata()]).then(function (results) {
             logoDesigns = results[1] || [];
             fullConfig = results[2] || {};
@@ -257,13 +209,11 @@ export default function (view) {
             }
 
             populateDropdown();
-            _snapshot = snapshot();
-            setDirty(false);
-            Dashboard.hideLoadingMsg();
+            saveCurrentSettings();
+            tracker.markClean();
         }).catch(function (error) {
             console.error('Failed to load logo designs:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to load logo designs. Please reload the page.', 'Error');
+            shared.setStatus('saveStatus', 'Could not load the logo designs. Reload the page.', true, { timeout: 0 });
         });
     }
 
@@ -353,8 +303,6 @@ export default function (view) {
         });
     }
 
-    // ── Visibility ──────────────────────────────────────────
-
     // Where a sampled color comes from. The preview draws its logo over the bundled demo art, and
     // these are the same two images the renderer samples: the item's own poster, or its backdrop.
     var COLOR_SOURCES = {
@@ -373,11 +321,11 @@ export default function (view) {
 
         var source = COLOR_SOURCES[view.querySelector('#selectColorSource').value];
         if (!source) {
-            row.style.display = 'none';
+            row.classList.add('hidden');
             return;
         }
 
-        row.style.display = '';
+        row.classList.remove('hidden');
         view.querySelector('#logoColorSourceLabel').textContent = source.label;
 
         // The two demo images never change, so each is fetched once.
@@ -390,7 +338,7 @@ export default function (view) {
             view.querySelector('#logoColorSourceImage').src = _colorSourceUrl;
         }).catch(function (error) {
             console.error('Failed to load the color source image:', error);
-            row.style.display = 'none';
+            row.classList.add('hidden');
             _colorSourceComponent = null;
         });
     }
@@ -403,8 +351,8 @@ export default function (view) {
         // Sampling takes the color from the artwork, so leaving a swatch on screen would imply the
         // chosen color still paints the text. The control collapses to the opacity it does control.
         var sampling = view.querySelector('#selectColorSource').value !== 'Fixed';
-        var group = view.querySelector('#txtLogoColor').closest('.color-control-group');
-        if (group) group.classList.toggle('palette-derived', sampling);
+        var group = view.querySelector('#txtLogoColor').closest('.ag-color-control-group');
+        if (group) group.classList.toggle('ag-palette-derived', sampling);
 
         var colorLabel = view.querySelector('label[for="txtLogoColor"]');
         if (colorLabel) {
@@ -435,27 +383,33 @@ export default function (view) {
         });
     }
 
-    // ── Live Preview ────────────────────────────────────────
+    // buildPreview
+    // Draws the Base Preview Frame, whose Dark, Light, and Checkered backgrounds show the logo over each.
+    function buildPreview() {
+        _preview = createPreviewFrame({
+            label: 'Logo Preview',
+            delay: 400,
+            render: renderPreview
+        });
+        view.querySelector('#logoPreviewHost').appendChild(_preview.element);
+    }
 
+    // renderPreview
+    // Asks the server to draw the design on screen over the sample name.
+    //
+    // Output
+    // [Promise<Blob|null>]: The rendered logo, or null before the designs load.
     function renderPreview() {
-        if (!fullConfig) return;
+        if (!fullConfig) return Promise.resolve(null);
         saveCurrentSettings();
         var logo = getCurrentLogo();
-        if (!logo) return;
-
-        var img = view.querySelector('#logoPreviewImage');
-        var status = view.querySelector('#logoPreviewStatus');
-        status.textContent = 'Rendering…';
-        status.style.display = 'block';
-
-        // Only the latest request may update the image, so a slow older response cannot win.
-        var seq = ++_previewSeq;
+        if (!logo) return Promise.resolve(null);
 
         // The sample name is a preview aid only, so it travels in the query rather than the design.
         var sample = view.querySelector('#txtSampleName').value.trim();
         var url = ApiClient.getUrl('Plugins/ArtworkGenerator/Preview/Logo', sample ? { name: sample } : undefined);
 
-        ApiClient.ajax({
+        return ApiClient.ajax({
             type: 'POST',
             url: url,
             data: JSON.stringify(logo.Settings),
@@ -463,30 +417,20 @@ export default function (view) {
         }).then(function (response) {
             if (!response.ok) throw new Error('Preview failed: ' + response.status);
             return response.blob();
-        }).then(function (blob) {
-            if (seq !== _previewSeq) return;
-            if (_previewObjectUrl) URL.revokeObjectURL(_previewObjectUrl);
-            _previewObjectUrl = URL.createObjectURL(blob);
-            img.src = _previewObjectUrl;
-            img.style.display = 'block';
-            status.style.display = 'none';
-        }).catch(function (error) {
-            if (seq !== _previewSeq) return;
-            console.error('Logo preview error:', error);
-            status.textContent = 'Preview unavailable';
-            status.style.display = 'block';
         });
     }
 
-    var schedulePreview = debounce(renderPreview, 400);
+    // schedulePreview
+    // Renders the logo again once the fields stop changing.
+    function schedulePreview() {
+        if (_preview) _preview.update();
+    }
 
     function onSettingChanged() {
         updateVisibility();
         checkDirty();
         schedulePreview();
     }
-
-    // ── Logo CRUD ───────────────────────────────────────────
 
     function nameIsTaken(name, exceptId) {
         return logoDesigns.some(function (l) {
@@ -500,12 +444,23 @@ export default function (view) {
         });
     }
 
+    // checkName
+    // Says why a logo design name cannot be used, or nothing when it can.
+    //
+    // Inputs
+    // name [string]: The trimmed name.
+    // exceptId [string]: The design being renamed, which may keep its own name.
+    //
+    // Output
+    // [string|null]: The reason, or null.
+    function checkName(name, exceptId) {
+        if (!name) return 'Enter a name.';
+        return nameIsTaken(name, exceptId) ? 'A logo design with this name already exists.' : null;
+    }
+
     function createNewLogo() {
-        promptName('New Logo Design', { placeholder: 'Uppercase Outline' }).then(function (values) {
-            if (!values) return;
-            var name = (values.name || '').trim();
-            if (!name) { Dashboard.alert('Name is required.'); return; }
-            if (nameIsTaken(name)) { Dashboard.alert('A logo design with this name already exists.'); return; }
+        promptName('New Logo Design', '', 'Uppercase Outline', function (name) { return checkName(name); }).then(function (name) {
+            if (!name) return;
 
             saveCurrentSettings();
             var source = getCurrentLogo();
@@ -524,11 +479,8 @@ export default function (view) {
 
     function renameCurrentLogo() {
         var logo = getCurrentLogo();
-        promptName('Rename Logo Design', { value: logo.Name || '' }).then(function (values) {
-            if (!values) return;
-            var name = (values.name || '').trim();
+        promptName('Rename Logo Design', logo.Name || '', '', function (name) { return checkName(name, logo.Id); }).then(function (name) {
             if (!name) return;
-            if (nameIsTaken(name, logo.Id)) { Dashboard.alert('A logo design with this name already exists.'); return; }
 
             logo.Name = name;
             populateDropdown();
@@ -538,17 +490,17 @@ export default function (view) {
 
     function deleteCurrentLogo() {
         if (logoDesigns.length <= 1) {
-            Dashboard.alert('Keep at least one logo design. Turn logos off in a profile instead.');
+            shared.setStatus('logoStatus', 'Keep at least one logo design. Turn logos off in a profile instead.', true);
             return;
         }
 
         var logo = getCurrentLogo();
         var users = profilesUsingLogo(logo.Id).map(function (p) { return p.Name || 'Unnamed'; });
         var message = users.length
-            ? 'This logo design is used by: ' + users.join(', ') + '. Those logos will use the default design instead. Delete it anyway?'
-            : 'Delete this logo design?';
+            ? 'Remove ' + (logo.Name || 'this logo design') + '? Its logos in ' + users.join(', ') + ' use the default design.'
+            : 'Remove ' + (logo.Name || 'this logo design') + '?';
 
-        Dashboard.confirm(message, 'Delete Logo Design', function (confirmed) {
+        confirmDialog(message, { title: 'Remove Logo Design', confirmText: 'Remove', destructive: true }).then(function (confirmed) {
             if (!confirmed) return;
             logoDesigns = logoDesigns.filter(function (l) { return l.Id !== logo.Id; });
             currentLogoId = null;
@@ -557,13 +509,10 @@ export default function (view) {
         });
     }
 
-    // ── Save ────────────────────────────────────────────────
-
     function saveConfig() {
         saveCurrentSettings();
         if (_saving) return;
         _saving = true;
-        Dashboard.showLoadingMsg();
 
         ApiClient.ajax({
             type: 'POST',
@@ -572,20 +521,15 @@ export default function (view) {
             contentType: 'application/json'
         }).then(function (response) {
             if (!response.ok) throw new Error('Save failed: ' + response.status);
-            _snapshot = snapshot();
-            setDirty(false);
-            flashSaveSuccess();
-            Dashboard.hideLoadingMsg();
+            tracker.flashSaved();
+            shared.setStatus('saveStatus', 'Logo designs saved.');
         }).catch(function (error) {
             console.error('Failed to save logo designs:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to save. Please check the server log and try again.', 'Error');
+            shared.errorText(error, 'Could not save the logo designs.').then(function (text) { shared.setStatus('saveStatus', text, true); });
         }).finally(function () {
             _saving = false;
         });
     }
-
-    // ── Event Binding ───────────────────────────────────────
 
     function bindEventListeners() {
         view.querySelector('#AgLogosForm').addEventListener('submit', function (e) {
@@ -605,28 +549,18 @@ export default function (view) {
 
         view.querySelector('#txtSampleName').addEventListener('input', schedulePreview);
 
-        view.querySelector('#btnToggleLogoBackground').addEventListener('click', function () {
-            var frame = view.querySelector('#logoPreviewFrame');
-            var light = frame.classList.toggle('light');
-            this.querySelector('span').textContent = light ? 'Dark Background' : 'Light Background';
-        });
-
         view.querySelectorAll('[data-setting]').forEach(function (el) {
-            if (el.classList.contains('hex-input')) return;
+            if (el.classList.contains('ag-hex-input')) return;
             var evt = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
             el.addEventListener(evt, onSettingChanged);
         });
     }
 
-    // ── Lifecycle ───────────────────────────────────────────
-
     view.addEventListener('viewdestroy', function () {
-        // A pending or in-flight preview must not create a blob after this point, or it is never released.
-        schedulePreview.cancel();
-        _previewSeq++;
-        if (_previewObjectUrl) {
-            URL.revokeObjectURL(_previewObjectUrl);
-            _previewObjectUrl = null;
+        // The frame frees its own image. The color source image is released here.
+        if (_preview) {
+            _preview.destroy();
+            _preview = null;
         }
         if (_colorSourceUrl) {
             URL.revokeObjectURL(_colorSourceUrl);

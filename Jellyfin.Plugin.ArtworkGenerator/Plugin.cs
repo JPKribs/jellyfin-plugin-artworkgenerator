@@ -141,7 +141,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 MenuIcon = "image"
             };
 
-            foreach (var name in new[] { "ag_posters.js", "ag_logos", "ag_logos.js", "ag_profiles", "ag_profiles.js", "ag_settings", "ag_settings.js", "ag_shared.css" })
+            foreach (var name in new[] { "ag_posters.js", "ag_logos", "ag_logos.js", "ag_profiles", "ag_profiles.js", "ag_settings", "ag_settings.js", "ag_shared.css", "ag_shared.js" })
             {
                 var file = name.Contains('.', StringComparison.Ordinal) ? name : name + ".html";
                 yield return new PluginPageInfo

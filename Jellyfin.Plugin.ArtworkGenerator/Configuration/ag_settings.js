@@ -1,27 +1,14 @@
-import { initCollapsibles, createConfigPage } from './configurationpage?name=ag_jpkribs_shared.js';
+// ag_settings.js
+// The Settings tab, which holds the plugin wide options and Frame Extraction.
+
+import { createArtworkPage, initCollapsibles } from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
     'use strict';
 
-    var pluginId = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
     var _saving = false;
 
-    function getTabs() {
-        return [
-            { href: 'configurationpage?name=ag_posters', name: 'Designs' },
-            { href: 'configurationpage?name=ag_logos', name: 'Logos' },
-            { href: 'configurationpage?name=ag_profiles', name: 'Profiles' },
-            { href: 'configurationpage?name=ag_settings', name: 'Settings' }
-        ];
-    }
-
-    var page = createConfigPage(view, {
-        pluginId: pluginId,
-        apiPrefix: 'Plugins/ArtworkGenerator',
-        tabsKey: 'ag',
-        tabIndex: 3,
-        tabs: getTabs(),
-        leaveMessage: 'You have unsaved changes. Are you sure you want to leave?',
+    var page = createArtworkPage(view, 3, {
         bind: bindPage,
         load: function () {
             loadFrameText().then(loadConfig);
@@ -29,8 +16,11 @@ export default function (view) {
     });
     var shared = page.shared;
 
-    // ===== Unsaved Changes =====
-
+    // currentState
+    // Serializes every field, so the change tracker can tell an edit from the last load or save.
+    //
+    // Output
+    // [string]: The fields as JSON.
     function currentState() {
         return JSON.stringify({
             ImageChoiceCount: view.querySelector('#txtImageChoiceCount').value,
@@ -42,32 +32,9 @@ export default function (view) {
         });
     }
 
-    // Snapshots the fields; the indicator shows while they differ from the last load or save.
-    var tracker = shared.createChangeTracker({ serialize: currentState, indicatorId: 'unsavedIndicator' });
+    // The indicator shows while the fields differ from the last load or save.
+    var tracker = shared.createChangeTracker({ serialize: currentState, indicatorId: 'unsavedIndicator', savedText: 'Saved' });
     page.guardUnsaved(tracker);
-
-    // The base flash keeps the "Unsaved changes" wording, so this one swaps in "Saved!" itself.
-    function flashSaveSuccess() {
-        var indicator = view.querySelector('#unsavedIndicator');
-        if (!indicator) return;
-
-        indicator.innerHTML = '';
-        var dot = document.createElement('span');
-        dot.className = 'base-unsaved-dot';
-        dot.style.background = 'var(--ag-success-text)';
-        indicator.appendChild(dot);
-        indicator.appendChild(document.createTextNode(' Saved!'));
-        indicator.classList.add('visible', 'save-success');
-
-        setTimeout(function () {
-            indicator.classList.remove('visible', 'save-success');
-            setTimeout(function () {
-                indicator.innerHTML = '<span class="base-unsaved-dot"></span> Unsaved changes';
-            }, 300);
-        }, 2000);
-    }
-
-    // ===== Config =====
 
     // The frame extraction fields carry the name of the property they set, so loading and saving
     // them is one loop rather than a line each.
@@ -107,7 +74,7 @@ export default function (view) {
                 var name = entry.label || entry.Label || '';
                 var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
                 if (label && name) {
-                    label.textContent = el.type === 'checkbox' ? name : name + ':';
+                    label.textContent = name;
                 }
 
                 var description = container.querySelector('.fieldDescription');
@@ -121,16 +88,14 @@ export default function (view) {
         });
     }
 
-    // The letterbox thresholds and the segment types only matter while their checkbox is on.
+    // updateFrameVisibility
+    // Shows the segment types and the letterbox thresholds only while their checkbox is on.
     function updateFrameVisibility() {
-        view.querySelectorAll('[data-depends-on]').forEach(function (el) {
-            var on = view.querySelector('#' + el.getAttribute('data-depends-on'));
-            el.hidden = !(on && on.checked);
-        });
+        shared.bindReveal('chkAvoidMediaSegments', 'segmentTypes');
+        shared.bindReveal('chkLetterboxDetection', 'letterboxSettings');
     }
 
     function loadConfig() {
-        Dashboard.showLoadingMsg();
         shared.getConfig().then(function (config) {
             view.querySelector('#txtImageChoiceCount').value = config.ImageChoiceCount || 10;
             view.querySelector('#txtImageCacheMinutes').value = config.ImageCacheMinutes || 30;
@@ -150,19 +115,15 @@ export default function (view) {
 
             updateFrameVisibility();
             tracker.markClean();
-            Dashboard.hideLoadingMsg();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to load settings. Please reload the page.', 'Error');
+            shared.setStatus('saveStatus', 'Could not load the settings. Reload the page.', true);
         });
     }
 
     function savePluginSettings() {
         if (_saving) return;
         _saving = true;
-
-        Dashboard.showLoadingMsg();
 
         // Read-modify-write: the poster configurations live in the same configuration object
         // and are edited on the other tab, so a blind overwrite here would discard them.
@@ -201,20 +162,16 @@ export default function (view) {
             });
 
             return shared.saveConfig(config);
-        }).then(function (result) {
-            tracker.markClean();
-            flashSaveSuccess();
-            Dashboard.processPluginConfigurationUpdateResult(result);
+        }).then(function () {
+            tracker.flashSaved();
+            shared.setStatus('saveStatus', 'Settings saved.');
         }).catch(function (error) {
             console.error('Failed to save settings:', error);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to save settings. Please try again.', 'Error');
+            shared.errorText(error, 'Could not save the settings.').then(function (text) { shared.setStatus('saveStatus', text, true); });
         }).finally(function () {
             _saving = false;
         });
     }
-
-    // ===== Lifecycle =====
 
     function bindPage() {
         initCollapsibles(view);
@@ -224,10 +181,7 @@ export default function (view) {
         view.querySelector('#txtFixedSeed').addEventListener('input', tracker.check);
 
         frameFields().forEach(function (el) {
-            el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', function () {
-                updateFrameVisibility();
-                tracker.check();
-            });
+            el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', tracker.check);
         });
     }
 }
