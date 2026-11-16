@@ -267,7 +267,8 @@ Every save is Base's `createSaveBar` with `fill: true`, drawn through `createArt
 | One Save per section | Sections are independent and long | One bar at the bottom of each section's content |
 | Editor dialog | Each record is edited on its own | **Done** in `openEditorDialog` |
 
-* The Save Bar is the last element of what it saves. Nothing sits beside it or below it in that section.
+* The Save Bar is the last element of what it saves. Nothing sits beside it or below it in that section, and no divider line sits above it.
+* **Fonts** on the Settings tab is its own form, with a Save Bar reading **Upload** as its last element. It is the one bar that does not read **Save**, since it uploads files rather than saving settings.
 * Other actions that belong with that save, such as Reset to Defaults, Clear, Test, Run Now, Refresh, or a select for Test, go in one `<div class="base-button-row">` directly above the Save Bar. Base spaces that row. Its buttons have no margin of their own, so their edges line up with the Save Bar's, the row sits one `--base-gap-narrow` above the Save Bar, and its buttons use the same font weight as Save. A plugin adds no margin, gap, or weight of its own. The Save Bar's element goes directly after the row, never inside a wrapper, since Base spaces them as siblings.
 * Each button in that row is `<button is="emby-button" type="button" class="raised base-button secondary fill">`, or `destructive fill` for one that deletes or resets data. A select in that row stays a normal emby select. No `small` buttons in that row.
 * Never hand place a Save button, use a `small` Save, a Save Bar without `fill`, a status line of its own beside the Save Bar, or plugin CSS that positions a save or its neighbours.
@@ -278,7 +279,7 @@ Every save is Base's `createSaveBar` with `fill: true`, drawn through `createArt
 
 ## Components
 
-Every component below is in Base. Use it as Base ships it. When it does not fit, change Base.
+Every component below is in Base. Use it as Base ships it. When it does not fit, change Base. A Base component used wrong is worse than none, so look at the result on a test server, not only in the code.
 
 ### Find the Component
 
@@ -292,6 +293,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 * Rows of fields with Add and Remove are a `createRepeater`. A list of checkboxes is a `createCheckboxList`. A used amount out of a limit is a `createUsageMeter`. Parts of a whole are a `createPieChart`.
 * A hand built version of any of these is a defect, even when it looks the same.
 * When a Base component lacks one thing the page needs, use the component and report the gap to Base. Never fall back to building it by hand.
+* Never put a stand in where a Base option exists, and never keep a Base gap quietly. Name the missing option under [Hand Built Pieces](#hand-built-pieces) and ask Base's owner for it.
 
 ### Fields
 
@@ -316,12 +318,14 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | A template with `{name}` tokens | `placeholderHint` and `bindPlaceholders` |
 | Code or JSON, read only | `base-code-block` |
 | A color setting | `createColorPicker` with `format: 'argb'`, through `bindColorField` in `ag_shared.js`, in an `ag-field` with its `<label for>` and `fieldDescription` |
-| A number on a range | `createSliderField` |
+| A number on a range, such as an opacity | `createSliderField` |
+| A code, path, or link to copy | `createCopyField` |
 
 * Use `emby-select`, never `base-selector-dropdown`, for a field. `base-selector-dropdown` is only for the record picker.
 * Every input has a `<label for>`.
-* Never mount a Base component inside `inputContainer`. The server stretches every input there to full width, which turns checkboxes and radios into bars. Mount it in a plain wrapper, such as `ag-field`, with its label and `fieldDescription`.
-* A color setting whose color comes from the image, such as under **Palette Colors** or **Color From**, shows only its opacity. `bindColorField` turns on the Color Picker's `setOpacityOnly`.
+* A slider sets one number on a range, a color picker sets a color, and a copy field shows a code, path, or link. Never build any of them by hand.
+* Never mount a Base component that holds inputs inside `inputContainer`. Base keeps checkboxes and radios there at their own size, but the server still stretches every other input to full width. Mount it in a plain wrapper, such as `ag-field`, with its label and `fieldDescription`, unless the component's typings say otherwise.
+* A color setting whose color comes from the image, under **Palette Colors** or **Color From**, shows only its opacity. `bindColorField` hides the Color Picker and shows a `createSliderField` in percent in its place, and the label reads **Overlay Opacity**, **Secondary Overlay Opacity**, or **Text Opacity**.
 
 ### Buttons
 
@@ -370,6 +374,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 
 * A record picker's actions read **New**, **Rename**, **Remove**, then **Import** and **Export**, in that order.
 * Use `createPaginatedTable` for any list that can grow past one screen. Rows open with `actions.onRowClick`.
+* Give any other list that can grow past one screen `height: 'fill'`, so it ends at the bottom of the window and scrolls inside.
 
 ### Status
 
@@ -430,6 +435,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 * Look at every changed page on a test server before calling it done. Reload the page after installing a build, since the dashboard caches scripts.
 * Spacing comes from `--base-gap-wide` and `--base-gap-narrow`. Never add margins between fields.
 * Never set a width in pixels on a field. Let it fill its container.
+* Keep rows visibly separate, and put what each control does next to it. A lone toggle word at the far edge of a row is a defect.
 
 ## Accessibility
 
@@ -446,6 +452,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 * When Base has a defect that breaks a page, report it and add one marked stopgap rule under a comment that names the defect. Delete the rule in the commit that moves to the Base version with the fix.
 * Size a column in `rem` or `fr`. An `em` width changes with the font size of each row, so a smaller heading row falls out of line with its columns.
 * Never define a color token. Use Base's.
+* Watch for collisions with Jellyfin's own CSS. Jellyfin's global `.card` rule gives paint containment to any element with a bare `card` class, such as a row of Base's card Repeater. A Base component that draws a fixed popup, such as a select list or a color picker, must not sit inside an element with `contain`, `transform`, or `filter`, or its popup lands off screen.
 
 ## Hand Built Pieces
 

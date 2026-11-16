@@ -88,6 +88,17 @@ for f in Jellyfin.Plugin.ArtworkGenerator/Configuration/*.js; do node --check "$
 * Install the build on a test server, per [documentation.md](documentation.md#installing-a-build-by-hand), and open each changed tab. Reload the page after installing, since the dashboard caches scripts.
 * On each tab, change a field, save, reload, and check the value stayed. Check the browser console shows no errors.
 
+### Harness
+
+A page can be checked in a harness before it goes to a test server, and the docs screenshots come from one. A harness proves little unless it renders the way the dashboard does.
+
+* Load Jellyfin's real stylesheets from its `jellyfin-web` folder. Load the two `index.html` links first, then the chunk stylesheets, then `themes/dark/theme.css`. Leave out the book player chunk, which sets the root font size to 82 percent, and the TV layout chunk, since the dashboard loads neither. Base's CSS alone hides real bugs.
+* Mimic the upgrades Jellyfin's `emby-input`, `emby-select`, `emby-checkbox`, and `emby-button` elements make when they attach, including the label and arrow they insert.
+* Answer the plugin's routes with the plugin's own code, such as `SettingOptions`, `PreviewService`, and `FontCatalog`, so labels and previews are real. Stub only Jellyfin's own calls, with generic data.
+* Click through like a user. Type real keystrokes into every picker, open every tab, every collapsible, and every dialog, at 1280 and 375 px wide, and look at each screenshot.
+* Type part of a real name into every lookup field, such as **Assigned Items**, and check the list finds it.
+* Never call work done from a harness alone. Install the build on a test server and check every changed tab there after a hard reload.
+
 ## Demo Render
 
 The Demo project renders every template in `docs/examples/` with the plugin's own generators and writes the images beside them. The **Publish Plugin** workflow runs it for every release.
@@ -97,6 +108,8 @@ cd Jellyfin.Plugin.ArtworkGenerator.Demo && dotnet run
 ```
 
 * Run it after any change to how a style draws, and look at the images that changed.
+* Every template names bundled fonts only, so the images match on any server and in the workflow. Never name a font a server may lack.
+* Run it again whenever a template or the bundled fonts change, since the docs show these images as the plugin's output.
 * Commit the images only when the change meant to alter them.
 
 ## Checklist

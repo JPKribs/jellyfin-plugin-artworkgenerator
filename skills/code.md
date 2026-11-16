@@ -14,6 +14,7 @@ How to write, comment, and test code in this plugin. It covers C#, JavaScript, H
 * Never shadow a Base name. A local `FormatUtilities` beside Base's `FormatUtilities` is ambiguous.
 * Read Base from the package this plugin builds against. The C# source is in `~/.nuget/packages/jpkribs.jellyfin.base/<version>/src/`, and the JS typings are in `assets/jpkribs_shared.d.ts` beside it.
 * Treat the local Base checkout as read only. Base has its own owner and its own release, so report a gap and wait for the version that closes it.
+* Moving a page's UI to Base components is UI work, even on a sensitive tab. Only stored data, routes, authentication, and secret handling are [stop and ask](../starthere.md#stop-and-ask) items.
 * When Base differs from the local code it replaces, keep the local behavior in a small step around the Base call, and cover it with a test. `LogoDesignStore` reads its file itself, so a damaged file is told apart from a missing one, and writes it through `JsonFileStore`.
 
 | Need | Use from Base |
@@ -41,7 +42,7 @@ How to write, comment, and test code in this plugin. It covers C#, JavaScript, H
 | Dialogs | `openDialog`, `confirmDialog`, `promptDialog`, `openEditorDialog` |
 | Lists and row editors | `createRepeater`, `createSortableCardList` |
 | Tables | `createPaginatedTable`, `createMatrixGrid` |
-| Color fields | `createColorPicker` with `opacityOnly`, through `bindColorField` in `ag_shared.js` |
+| Color fields | `createColorPicker` with `format: 'argb'`, and `createSliderField` for an opacity alone, through `bindColorField` in `ag_shared.js` |
 
 ### Move Code Into Base
 
@@ -187,6 +188,14 @@ export function createArtworkPage(view, tabIndex, opts) {
 * Read the clock once in a method and reuse the value. Two reads can straddle a second and disagree.
 * Take a `TimeProvider` wherever time decides an outcome, so a test can move it.
 * Build the plugin's services in the `Plugin` constructor, and reach them through `Plugin.Instance`.
+* A whole library is never a target. `ArtworkSources.KindOf` maps a `CollectionFolder` to no kind, `PreviewKind` leaves it out, and no profile offers library cells. `ArtworkItemKind.Library` stays only so a stored configuration with library cells still loads, and those cells are dropped on load. Name only series, seasons, episodes, films, videos, collections, and folders in any label, message, or comment.
+
+### Fonts
+
+* A font family name resolves through `FontCatalog`, uploaded first, then bundled, then the server's, with the nearest style when one is missing. Never call `SKFontManager` for a family directly.
+* Bundled fonts sit in `Fonts/<Family>/` as embedded resources, each family with its `OFL.txt`. Add only fonts under the SIL Open Font License, and only static instances, since SkiaSharp 3.119 cannot vary a variable font.
+* A new bundled family goes in `BundledFontsTests`, the README credit line, and the bundled fonts table in `docs/SETTINGS.md`, in the same commit.
+* Uploaded fonts live in `fonts` in the `artworkgenerator` data folder, through `UploadedFontStore`. An upload is a .ttf or .otf of at most 20 MB with a font header that Skia can load. It is named with `FileNameSanitizer`, kept in the folder with `PathContainment`, and written with `AtomicFile`. A refused upload returns one sentence that says why.
 
 ## JavaScript Conventions
 

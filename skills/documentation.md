@@ -157,7 +157,7 @@ Give every admonition a short title.
 The README is a landing page. The docs site holds the detail.
 
 1. The icon, `<img src="docs/assets/icon.png" alt="Artwork Generator" width="96" align="left">`, then a one paragraph pitch and `<br clear="left">`.
-2. `## Documentation`. One sentence on what the docs cover, a bold link to the site, then the repository URL for Jellyfin in a code block.
+2. `## Documentation`. One sentence on what the docs cover, a bold link to the site, then the repository URL for Jellyfin in a code block. It closes with one sentence that credits the bundled fonts, naming each family and the SIL Open Font License 1.1, and says each family's license sits beside its files in `Jellyfin.Plugin.ArtworkGenerator/Fonts/`.
 3. `## AI Disclaimer`. The owner's note on how the project is made. Leave its words as they are.
 
 Use `##` for README headings. Keep the README under 40 lines.
@@ -166,19 +166,22 @@ Use `##` for README headings. Keep the README under 40 lines.
 
 ### What to Capture
 
-* Capture every tab and dialog a docs page describes.
+* Capture every tab, section, and dialog a docs page describes, including **Fonts** on the Settings tab.
 * Capture the dark theme only, which is Jellyfin's default.
-* Capture from a test server with generic library names, so nothing private shows.
-* Capture with designs and profiles filled in, so the previews and the **Images** table show real choices.
-* Hide nothing with editing. When a value is private, change the server's data instead.
+* Capture from the page harness described in [testing.md](testing.md#harness), with headless Chromium at 2x. Never capture a live server's data.
+* Use generic data. Series such as `Northern Lights` and `Harbor Town`, designs `Default` and `Bold Title`, profiles `Default` and `Anime`, and a logo sample name such as `Northern Lights`.
+* Capture with designs and profiles filled in, so the previews, the **Assigned Items** list, and the **Images** grids show real choices.
+* Draw every preview with the plugin's own renderer and a bundled font, so the screenshot shows real output.
+* Hide nothing with editing. When a value is private, change the harness data instead.
 
 ### Sizes
 
 | Kind | Size | How |
 | :--- | :--- | :--- |
-| Dialog | 800 wide | The browser at 800 px, cropped to the dialog |
-| Full page | 1920 wide | The browser at 1920 px, cropped to the content area |
-| Phone | 375 wide at 2x | The browser's device mode at 375 px |
+| Full page | 1656 wide | The browser at 860 px and 2x, cropped to the form with 12 px on each side |
+| Section | 1656 wide | The same, cropped from the section's header to its last element |
+| Dialog | About 1380 wide | The browser at 860 px and 2x, cropped to the dialog |
+| Phone | 750 wide | The browser's device mode at 375 px and 2x |
 
 Save every capture as PNG. Crop out the browser frame and the Jellyfin header unless the header is the subject.
 
@@ -188,6 +191,10 @@ Save every capture as PNG. Crop out the browser frame and the Jellyfin header un
 * Name the file after what it shows, in Title Case, with a dash between words. `Designs.png`, `Preview-Modal.png`.
 * Link with alt text that names the subject. `![Designs](screenshots/Designs.png)`.
 * Place two related shots side by side in a table whose header row holds the captions.
+
+### Artwork Examples
+
+The images under `docs/examples/` are the plugin's own output. The demo render draws them from each `Template.json`, per [testing.md](testing.md#demo-render). Every template names bundled fonts only, so the images match on any server. Never edit an example image by hand.
 
 ### When to Retake
 
@@ -237,6 +244,7 @@ changelog:
 ```
 
 * This is the one place that may say "now", "no longer", and "was".
+* List only this release. Drop a line that shipped in the last release, and a line a later change in this release replaced.
 * Write full sentences with no closing period.
 * Write one entry per change a user would notice. Fold internal steps into the change they serve.
 * Name UI labels exactly as the page shows them, without bold or backticks.
@@ -255,6 +263,8 @@ changelog:
 
 * [ ] Nothing describes an earlier version, a removed feature, or a fixed bug.
 * [ ] Every UI label matches the page exactly and is bold.
+* [ ] No page names a whole library as something the plugin draws. The targets are series, seasons, episodes, films, videos, collections, and folders.
+* [ ] The bundled fonts table in Settings, the README credit, and the fonts the plugin ships name the same nine families.
 * [ ] Every heading is Title Case.
 * [ ] No em dashes, semicolons, or contractions.
 * [ ] Every screenshot matches the current UI and uses generic data.

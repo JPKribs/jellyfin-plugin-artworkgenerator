@@ -42,7 +42,7 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | Element Spacing | The gap kept between the logo, title, and subtitle | `ElementSpacing` | Margin |
 | Live Preview | The images at the top of the **Designs** and **Logos** tabs, drawn from the settings on screen | `PreviewService` | Sample, demo |
 | Preview As | The kind of item the design previews are drawn for | `PreviewKind` | Preview type |
-| Component | A sample image a preview is drawn from, such as **Canvas Image** or **Series Poster** | | Asset, input image |
+| Component | A sample image a preview is drawn from, such as the sample poster shown under the logo preview when **Color From** samples it | | Asset, input image |
 
 ## Logos
 
@@ -87,6 +87,7 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | Uploaded font | A .ttf or .otf file in the fonts folder, added with **Upload** on the **Settings** tab | `UploadedFontStore` | Custom font, user font |
 | Server font | A font family installed on the server, the **Server** group in a font list | `FontSource.System` | System font, local font |
 | Fonts folder | `fonts` in the plugin's data folder, which holds the uploaded fonts | `UploadedFontStore.Folder` | Font directory |
+| Opacity | How solid a color is drawn. A color the image gives shows only this, as a slider in percent | `bindColorField`, `setOpacityOnly` | Alpha, transparency |
 
 ## Jellyfin
 
