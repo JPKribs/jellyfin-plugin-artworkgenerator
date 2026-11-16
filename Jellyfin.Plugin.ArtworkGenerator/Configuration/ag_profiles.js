@@ -327,20 +327,16 @@ export default function (view) {
                 if (first.length > 0) assignment.DesignId = first[0].value;
             }
 
+            // A cell that does not apply yet shows its value grayed out: every choice while Generate is off,
+            // and the third design until a second one is picked.
             SLOT_COLUMNS[slot].forEach(function (key) {
                 if (key === 'Enabled') return;
-                if (!assignment.Enabled) {
-                    cells[key] = null;
-                    return;
-                }
+                var off = !assignment.Enabled
+                    || (key === 'TertiaryDesignId' && sameId(assignment.SecondaryDesignId || EMPTY_GUID, EMPTY_GUID));
 
                 if (key === 'Shape') {
+                    if (off) cells.Shape = { disabled: true };
                     cellValue.Shape = profile[k.shapeKey] || k.defaultShape;
-                    return;
-                }
-
-                if (key === 'TertiaryDesignId' && sameId(assignment.SecondaryDesignId || EMPTY_GUID, EMPTY_GUID)) {
-                    cells[key] = null;
                     return;
                 }
 
@@ -351,7 +347,7 @@ export default function (view) {
                     options = extraDesignOptions(assignment[key] || EMPTY_GUID);
                 }
 
-                cells[key] = { options: options };
+                cells[key] = off ? { options: options, disabled: true } : { options: options };
                 cellValue[key] = optionValue(options, assignment[key] || EMPTY_GUID);
             });
 

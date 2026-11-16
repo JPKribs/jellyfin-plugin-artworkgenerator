@@ -316,12 +316,12 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | A template with `{name}` tokens | `placeholderHint` and `bindPlaceholders` |
 | Code or JSON, read only | `base-code-block` |
 | A color setting | `createColorPicker` with `format: 'argb'`, through `bindColorField` in `ag_shared.js`, in an `ag-field` with its `<label for>` and `fieldDescription` |
-| An opacity alone, or another number on a range | `createSliderField` |
+| A number on a range | `createSliderField` |
 
 * Use `emby-select`, never `base-selector-dropdown`, for a field. `base-selector-dropdown` is only for the record picker.
 * Every input has a `<label for>`.
 * Never mount a Base component inside `inputContainer`. The server stretches every input there to full width, which turns checkboxes and radios into bars. Mount it in a plain wrapper, such as `ag-field`, with its label and `fieldDescription`.
-* A color setting whose color comes from the image, such as under **Palette Colors** or **Color From**, shows only its opacity on a slider. `bindColorField` swaps the picker for the slider.
+* A color setting whose color comes from the image, such as under **Palette Colors** or **Color From**, shows only its opacity. `bindColorField` turns on the Color Picker's `setOpacityOnly`.
 
 ### Buttons
 
@@ -449,7 +449,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 
 ## Hand Built Pieces
 
-Nothing on the Designs, Logos, Profiles, or Settings tabs is built by hand. `ag_shared.css` holds only layout between Base components: the preview column, the two Preview Frames side by side, and the space under a section note. Add nothing hand built. When Base lacks an option, report the gap and add a row here naming the Base option that is missing.
+Nothing on the Designs, Logos, Profiles, or Settings tabs is built by hand. `ag_shared.css` holds only layout between Base components: the preview column, the two Preview Frames side by side, the space under a section note, and the `ag-field` wrapper around a color setting. Add nothing hand built. When Base lacks an option, report the gap and add a row here naming the Base option that is missing.
 
 ## Checklist
 

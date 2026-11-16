@@ -37,11 +37,11 @@ How to write, comment, and test code in this plugin. It covers C#, JavaScript, H
 | Generated images beside their fields | `createPreviewFrame` |
 | Picking library items | `createMediaPicker` |
 | Sample images and other media | `createMediaCard` in a `createList` |
-| A grid of choices by kind of item | `createMatrixGrid`, one per `createSubTabs` tab |
+| A grid of choices by kind of item | `createMatrixGrid`, one per `createSubTabs` tab, with a cell that does not apply yet `disabled` |
 | Dialogs | `openDialog`, `confirmDialog`, `promptDialog`, `openEditorDialog` |
 | Lists and row editors | `createRepeater`, `createSortableCardList` |
 | Tables | `createPaginatedTable`, `createMatrixGrid` |
-| Color fields | `createColorPicker` |
+| Color fields | `createColorPicker` with `opacityOnly`, through `bindColorField` in `ag_shared.js` |
 
 ### Move Code Into Base
 
@@ -193,6 +193,7 @@ export function createArtworkPage(view, tabIndex, opts) {
 * Each config page is an ES module whose default export calls `createArtworkPage`, which wraps Base's `createConfigPage` and holds the tab list.
 * Keep one handle for each Base component a page draws, such as a Preview Frame. Call `destroy` when the view is destroyed.
 * Track unsaved changes with one `createChangeTracker` per page, passed to `page.guardUnsaved` and to `createArtworkSaveBar`.
+* A save rejects with an Error or a sentence, and the Save Bar shows it as the failed line.
 * Read the server's choices, defaults, labels, and help text from `Plugins/ArtworkGenerator/SettingOptions`, so a setting's wording lives on its model in C#.
 * Keep a stored value the page does not offer selectable, marked unavailable, rather than rewriting it.
 * Save with a read, change, and write of the configuration, so a page never overwrites what another tab edits.

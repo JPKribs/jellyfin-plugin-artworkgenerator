@@ -81,7 +81,7 @@ export default function (view) {
     }
 
     // bindColorControls
-    // Draws each color setting with Base's Color Picker, and its opacity alone with Base's slider when the image gives the color.
+    // Draws each color setting with Base's Color Picker, which shows its opacity alone when the image gives the color.
     function bindColorControls() {
         view.querySelectorAll('[data-color-field]').forEach(function (field) {
             var handle = bindColorField(field, function () { checkDirty(); schedulePreview(); });

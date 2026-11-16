@@ -10,7 +10,6 @@ import {
     createMediaPicker,
     createPreviewFrame,
     createSaveBar,
-    createSliderField,
     createSubTabs,
     confirmDialog,
     downloadJson,
@@ -169,25 +168,20 @@ export function createArtworkSaveBar(form, host, tracker, opts) {
     var bar = createSaveBar({
         fill: true,
         savedText: opts.savedText,
+        failedText: opts.failedText,
         onSave: function () {
             if (!validateAll(form)) {
                 revealInvalid(form);
-                return fail('Fix the fields marked in red.');
+                return Promise.reject(new Error('Fix the fields marked in red.'));
             }
             return Promise.resolve().then(opts.save).then(function () {
                 tracker.markClean();
-            }, fail);
+            }, function (reason) {
+                if (typeof reason === 'string') throw new Error(reason);
+                return errorText(reason, opts.failedText).then(function (sentence) { throw new Error(sentence); });
+            });
         }
     });
-
-    // The bar shows its own failed line when the promise rejects, so the reason replaces it once that has run.
-    function fail(reason) {
-        var text = typeof reason === 'string' ? Promise.resolve(reason) : errorText(reason, opts.failedText);
-        return text.then(function (sentence) {
-            setTimeout(function () { bar.setState('failed', sentence); }, 0);
-            throw new Error(sentence);
-        });
-    }
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -200,45 +194,15 @@ export function createArtworkSaveBar(form, host, tracker, opts) {
     return bar;
 }
 
-// alphaPercent
-// Reads the opacity of an ARGB color as a percent.
-//
-// Inputs
-// value [string]: A color as #AARRGGBB or #RRGGBB.
-//
-// Output
-// [number]: The opacity from 0 to 100.
-export function alphaPercent(value) {
-    var hex = String(value || '').replace('#', '');
-    if (hex.length !== 8) return 100;
-    return Math.round(parseInt(hex.substring(0, 2), 16) * 100 / 255);
-}
-
-// withAlpha
-// Gives an ARGB color a new opacity and keeps its red, green, and blue.
-//
-// Inputs
-// value [string]: A color as #AARRGGBB or #RRGGBB.
-// percent [number]: The opacity from 0 to 100.
-//
-// Output
-// [string]: The color as #AARRGGBB.
-export function withAlpha(value, percent) {
-    var hex = String(value || '').replace('#', '');
-    var rgb = hex.length === 8 ? hex.substring(2) : (hex.length === 6 ? hex : 'FFFFFF');
-    var alpha = Math.max(0, Math.min(255, Math.round(percent * 255 / 100)));
-    return ('#' + alpha.toString(16).padStart(2, '0') + rgb).toUpperCase();
-}
-
 // bindColorField
-// Draws one ARGB color setting with Base's Color Picker, and Base's slider for when only its opacity applies.
+// Draws one ARGB color setting with Base's Color Picker, which can show its opacity alone when the image gives the color.
 //
 // Inputs
 // field [HTMLElement]: The data-color-field element that holds the setting's hidden input.
 // onChange [function]: Called after the reader changes the color or the opacity.
 //
 // Output
-// [object]: A handle with sync, which redraws from the stored value, and setOpacityOnly, which shows the slider alone.
+// [object]: A handle with sync, which redraws from the stored value, and setOpacityOnly, which shows the opacity alone.
 export function bindColorField(field, onChange) {
     var input = field.querySelector('input[data-setting]');
     var fallback = input.getAttribute('data-fallback') || '#FFFFFFFF';
@@ -260,45 +224,21 @@ export function bindColorField(field, onChange) {
         }
     });
 
-    var opacity = createSliderField({
-        min: 0,
-        max: 100,
-        suffix: '%',
-        value: alphaPercent(current()),
-        label: 'Opacity',
-        onChange: function (percent) {
-            if (quiet) return;
-            input.value = withAlpha(current(), percent);
-            quiet = true;
-            picker.setValue(input.value);
-            quiet = false;
-            onChange();
-        }
-    });
-
+    var opacityInput = picker.element.querySelector('.base-color-alpha-input');
     picker.input.id = input.id + 'Color';
-    opacity.input.id = input.id + 'Opacity';
-
-    var full = document.createElement('div');
-    full.appendChild(picker.element);
-    var only = document.createElement('div');
-    only.className = 'hidden';
-    only.appendChild(opacity.element);
-    field.appendChild(full);
-    field.appendChild(only);
+    if (opacityInput) opacityInput.id = input.id + 'Opacity';
+    field.appendChild(picker.element);
     if (label) label.htmlFor = picker.input.id;
 
     return {
         sync: function () {
             quiet = true;
             picker.setValue(current());
-            opacity.setValue(alphaPercent(current()));
             quiet = false;
         },
         setOpacityOnly: function (on) {
-            full.classList.toggle('hidden', on);
-            only.classList.toggle('hidden', !on);
-            if (label) label.htmlFor = on ? opacity.input.id : picker.input.id;
+            picker.setOpacityOnly(on);
+            if (label) label.htmlFor = on && opacityInput ? opacityInput.id : picker.input.id;
         }
     };
 }

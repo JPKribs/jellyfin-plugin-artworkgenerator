@@ -46,7 +46,7 @@
 }
 
 /* ag-field */
-/* A color setting's label, Base Color Picker or slider, and help text. It sits outside inputContainer, whose server rule stretches every input inside it to full width. */
+/* A color setting's label, Base Color Picker, and help text. It sits outside inputContainer, whose server rule stretches every input inside it to full width. */
 /* Example: <div class="ag-field"><label for="txtColor">Text Color</label><div data-color-field></div><div class="fieldDescription">ARGB hex color.</div></div> */
 .ag-field {
     margin: 0 0 var(--base-gap-wide);
