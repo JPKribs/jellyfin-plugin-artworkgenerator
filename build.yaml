@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.4.4"
+version: "12.4.5.0"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: Generate artwork from your own video
@@ -36,7 +36,6 @@ changelog:
   - Color settings use the Base color picker with its opacity box. When Palette Colors or Color From sampling is on, only an opacity slider shows, in percent
   - Every Save is the same full width Save Bar, with any other actions in a full width row above it
   fixed:
-  - The arrows on collapsible sections are back to their usual size
   - Color settings keep their picker at its own size, with their label above
   developer:
   - Uses JPKribs.Jellyfin.Base 2026.11.19, whose record selector, buttons, Preview Frame, Media Picker, Media Card, List, Matrix Grid with disabled cells, Sub Tabs, Save Bar with its failed reason, Color Picker, Slider, validation, prompt and confirm dialogs, change tracker, indent, callout, and status text replace the hand built versions
