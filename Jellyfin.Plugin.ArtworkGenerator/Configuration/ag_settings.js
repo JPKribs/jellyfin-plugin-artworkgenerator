@@ -67,7 +67,7 @@ export default function (view) {
                 var entry = text[el.getAttribute('data-frame-setting')];
                 if (!entry) return;
 
-                var container = el.closest('.inputContainer, .checkboxContainer, .base-field');
+                var container = el.closest('.inputContainer, .checkboxContainer, .base-field, .ag-field');
                 if (!container) return;
 
                 var name = entry.label || entry.Label || '';

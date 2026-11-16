@@ -242,7 +242,7 @@ export function withAlpha(value, percent) {
 export function bindColorField(field, onChange) {
     var input = field.querySelector('input[data-setting]');
     var fallback = input.getAttribute('data-fallback') || '#FFFFFFFF';
-    var label = field.closest('.inputContainer').querySelector('label[for="' + input.id + '"]');
+    var label = field.closest('.ag-field').querySelector('label[for="' + input.id + '"]');
     var quiet = false;
 
     function current() {

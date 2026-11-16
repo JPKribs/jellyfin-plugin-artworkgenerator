@@ -136,7 +136,7 @@ export default function (view) {
             var text = logoSettingText[key];
             if (!text) return;
 
-            var container = el.closest('.inputContainer, .checkboxContainer, .base-field');
+            var container = el.closest('.inputContainer, .checkboxContainer, .base-field, .ag-field');
             if (!container) return;
 
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
@@ -365,7 +365,7 @@ export default function (view) {
             if (handle.field.contains(view.querySelector('#txtLogoColor'))) handle.setOpacityOnly(sampling);
         });
 
-        var colorLabel = view.querySelector('#txtLogoColor').closest('.inputContainer').querySelector('label[data-color-label]');
+        var colorLabel = view.querySelector('#txtLogoColor').closest('.ag-field').querySelector('label[data-color-label]');
         if (colorLabel) {
             colorLabel.textContent = colorLabel.getAttribute(sampling ? 'data-opacity-label' : 'data-color-label');
         }

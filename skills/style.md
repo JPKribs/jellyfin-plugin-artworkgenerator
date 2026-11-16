@@ -111,7 +111,7 @@ A placeholder shows an example of a valid value. It is never the only place an i
 
 * A verb, or a verb and a noun. **Save**, **New**, **Edit Series**.
 * Name the object when the page has more than one of that action. **Edit Series** and **Edit Movies** sit on the same page.
-* A primary Save is **Save**. Use **Save** and a noun only when one page has several saves.
+* Every Save reads **Save**, with no noun, even when a page has several saves.
 * An icon only button carries a `title` of one to three words, such as `Remove` or `Expand`. Never a sentence.
 * A button that runs for a while shows progress in place. See [Progress](#progress).
 
@@ -259,15 +259,19 @@ Every config page uses Jellyfin's page shell.
 
 ### Saving
 
-Pick one model per page and keep it.
+Every save is Base's `createSaveBar` with `fill: true`, drawn through `createArtworkSaveBar` in `ag_shared.js`. Its button reads **Save**.
 
-| Model | Use it when | Save button |
+| Model | Use it when | Where the Save Bar goes |
 | :--- | :--- | :--- |
-| One Save per page | Settings depend on each other | `raised base-button primary fill` at the bottom |
-| One Save per section | Sections are independent and long | `raised base-button primary small` in `base-collapsible-actions flush` |
+| One Save per page | Settings depend on each other | One bar at the bottom of the page |
+| One Save per section | Sections are independent and long | One bar at the bottom of each section's content |
 | Editor dialog | Each record is edited on its own | **Done** in `openEditorDialog` |
 
-* Draw the Save button with `createArtworkSaveBar` in `ag_shared.js`, which wraps Base's `createSaveBar`. It checks every shown field through `validateAll` first, and its line reports unsaved changes and the result.
+* The Save Bar is the last element of what it saves. Nothing sits beside it or below it in that section.
+* Other actions that belong with that save, such as Reset to Defaults, Clear, Test, Run Now, Refresh, or a select for Test, go in one `<div class="base-button-row">` directly above the Save Bar.
+* Each button in that row is `<button is="emby-button" type="button" class="raised base-button secondary fill">`, or `destructive fill` for one that deletes or resets data. A select in that row stays a normal emby select. No `small` buttons in that row.
+* Never hand place a Save button, use a `small` Save, a Save Bar without `fill`, a status line of its own beside the Save Bar, or plugin CSS that positions a save or its neighbours.
+* `createArtworkSaveBar` checks every shown field through `validateAll` first, wires `setDirty` from the change tracker, and its `onSave` returns the save promise. Its line reports unsaved changes and the result.
 * Track unsaved changes with `createChangeTracker`, and pass it to the Save Bar.
 * Guard leaving the page with `page.guardUnsaved`.
 * Use `shared.saveConfigWith` for get, change, save, and report.
@@ -311,11 +315,12 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | A secret | `bindSecretField`, `readSecretField`, and `clearSecretField` |
 | A template with `{name}` tokens | `placeholderHint` and `bindPlaceholders` |
 | Code or JSON, read only | `base-code-block` |
-| A color setting | `createColorPicker` with `format: 'argb'`, through `bindColorField` in `ag_shared.js` |
+| A color setting | `createColorPicker` with `format: 'argb'`, through `bindColorField` in `ag_shared.js`, in an `ag-field` with its `<label for>` and `fieldDescription` |
 | An opacity alone, or another number on a range | `createSliderField` |
 
 * Use `emby-select`, never `base-selector-dropdown`, for a field. `base-selector-dropdown` is only for the record picker.
 * Every input has a `<label for>`.
+* Never mount a Base component inside `inputContainer`. The server stretches every input there to full width, which turns checkboxes and radios into bars. Mount it in a plain wrapper, such as `ag-field`, with its label and `fieldDescription`.
 * A color setting whose color comes from the image, such as under **Palette Colors** or **Color From**, shows only its opacity on a slider. `bindColorField` swaps the picker for the slider.
 
 ### Buttons
@@ -325,7 +330,9 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | Primary action | `raised base-button primary` |
 | Destructive action | `raised base-button destructive` |
 | Secondary action | `raised base-button secondary` |
-| Compact action in a section | add `small` |
+| Compact action in a section | add `small`, never for a Save or the actions row above it |
+| Save | Base's Save Bar through `createArtworkSaveBar`, full width, reading **Save** |
+| Actions that belong with a Save | `raised base-button secondary fill`, or `destructive fill`, in one `base-button-row` directly above the Save Bar |
 | Icon and label in a toolbar | `raised base-button` holding a `material-icons` span and a label |
 | Icon only in a row | `base-row-btn`, with `.dirty` for unsaved and `.success` after saving |
 

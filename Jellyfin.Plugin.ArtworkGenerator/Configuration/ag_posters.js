@@ -475,7 +475,7 @@ export default function (view) {
             var text = textFor(el.getAttribute('data-setting'));
             if (!text) return;
 
-            var container = el.closest('.inputContainer, .checkboxContainer, .base-field');
+            var container = el.closest('.inputContainer, .checkboxContainer, .base-field, .ag-field');
             if (!container) return;
 
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
@@ -700,7 +700,7 @@ export default function (view) {
     function applyStyleRules(posterStyle) {
         view.querySelectorAll('[data-setting]').forEach(function (el) {
             var state = settingState(posterStyle, el.getAttribute('data-setting'));
-            var container = el.closest('.inputContainer, .checkboxContainer');
+            var container = el.closest('.inputContainer, .checkboxContainer, .ag-field');
 
             if (el.type === 'checkbox' && state === 'Required') {
                 el.checked = true;
@@ -777,7 +777,7 @@ export default function (view) {
             if (!handle.field.hasAttribute('data-palette-aware')) return;
             handle.setOpacityOnly(on);
 
-            var container = handle.field.closest('.inputContainer');
+            var container = handle.field.closest('.ag-field');
             if (!container) return;
 
             // A design may name the overlay for what it actually draws, such as the bloom or the
