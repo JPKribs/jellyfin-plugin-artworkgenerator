@@ -168,11 +168,29 @@ Use `##` for README headings. Keep the README under 40 lines.
 
 * Capture every tab, section, and dialog a docs page describes, including **Fonts** on the Settings tab.
 * Capture the dark theme only, which is Jellyfin's default.
-* Capture from the page harness described in [testing.md](testing.md#harness), with headless Chromium at 2x. Never capture a live server's data.
+* Capture with the [screenshot kit](#the-screenshot-kit), the page harness described in [testing.md](testing.md#harness), with headless Chromium at 2x. Never capture a live server's data.
 * Use generic data. Series such as `Northern Lights` and `Harbor Town`, designs `Default` and `Bold Title`, profiles `Default` and `Anime`, and a logo sample name such as `Northern Lights`.
 * Capture with designs and profiles filled in, so the previews, the **Assigned Items** list, and the **Images** grids show real choices.
 * Draw every preview with the plugin's own renderer and a bundled font, so the screenshot shows real output.
 * Hide nothing with editing. When a value is private, change the harness data instead.
+
+### The Screenshot Kit
+
+[`tools/screenshots/`](../tools/screenshots/README.md) holds everything the captures need. Its README lists each file, what the kit needs, and the commands to retake every shot or one.
+
+| File | Does |
+| :--- | :--- |
+| `server/` | The screenshot server. It serves the plugin pages, Base from the NuGet cache, and jellyfin-web's stylesheets, and answers the plugin's routes with the plugin's own code |
+| `www/index.html`, `www/upgrade.js`, `www/harness.js` | The page shell, the `emby-*` upgrades, and the stand-in `ApiClient` with the generic data |
+| `shoot.mjs` | Opens each page, sets it up, and writes every PNG to `docs/screenshots/` |
+
+```bash
+cd tools/screenshots
+dotnet run --project server &
+PLAYWRIGHT_CORE=/path/to/node_modules/playwright-core/index.mjs node shoot.mjs
+```
+
+`node shoot.mjs Designs Fonts` retakes only the named files. Look at every PNG it writes before committing it. New sample designs and profiles go in `server/Program.cs`, and new sample items go in `www/harness.js`.
 
 ### Sizes
 
@@ -198,7 +216,7 @@ The images under `docs/examples/` are the plugin's own output. The demo render d
 
 ### When to Retake
 
-Retake a screenshot in the same commit as any change that alters what it shows, including a label, a tab, a layout, or the Jellyfin version in the header. A new Base version changes how every component looks, so retake every screenshot when it is raised. A screenshot that shows a tab or label the plugin no longer has is a bug.
+Retake a screenshot in the same commit as any change that alters what it shows, including a label, a tab, a layout, or the Jellyfin version in the header. A new Base version changes how every component looks, so retake every screenshot with the kit when it is raised. A screenshot that shows a tab or label the plugin no longer has is a bug.
 
 ## Installing a Build by Hand
 

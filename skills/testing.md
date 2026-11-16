@@ -90,7 +90,7 @@ for f in Jellyfin.Plugin.ArtworkGenerator/Configuration/*.js; do node --check "$
 
 ### Harness
 
-A page can be checked in a harness before it goes to a test server, and the docs screenshots come from one. A harness proves little unless it renders the way the dashboard does.
+A page can be checked in a harness before it goes to a test server, and the docs screenshots come from one, the kit in [`tools/screenshots/`](../tools/screenshots/README.md). A harness proves little unless it renders the way the dashboard does.
 
 * Load Jellyfin's real stylesheets from its `jellyfin-web` folder. Load the two `index.html` links first, then the chunk stylesheets, then `themes/dark/theme.css`. Leave out the book player chunk, which sets the root font size to 82 percent, and the TV layout chunk, since the dashboard loads neither. Base's CSS alone hides real bugs.
 * Mimic the upgrades Jellyfin's `emby-input`, `emby-select`, `emby-checkbox`, and `emby-button` elements make when they attach, including the label and arrow they insert.
