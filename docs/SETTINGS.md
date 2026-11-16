@@ -27,6 +27,34 @@ How frames are taken from a video and cleaned up, for every poster and every bac
 * **Black Threshold**: brightness below which a pixel counts as black. Default 25.
 * **Detection Confidence (%)**: percent of pixels that must be black to count as letterboxing. Default 85.
 
+### Fonts
+
+The fonts every design and logo design can use, with an upload for more.
+
+The plugin bundles nine font families, so every server has good fonts even with none installed. They are always available, and they sit inside the plugin's own file, so nothing extra is installed.
+
+| Family | Styles |
+| :--- | :--- |
+| Anton | Regular |
+| Bebas Neue | Regular |
+| Lora | Regular, Italic, Bold, Bold Italic |
+| Montserrat | Regular, Italic, Bold, Bold Italic |
+| Noto Sans | Regular, Italic, Bold, Bold Italic |
+| Oswald | Regular, Bold |
+| Playfair Display | Regular, Italic, Bold, Bold Italic |
+| Poppins | Regular, Italic, Bold, Bold Italic |
+| Roboto | Regular, Italic, Bold, Bold Italic |
+
+* **Uploaded fonts**: the .ttf and .otf files in the fonts folder, each with its family, its style, and its file name. The family and style come from the font file, not from its name. Delete removes the file after asking.
+* **Upload**: drop or select one or more .ttf or .otf files of up to 20 MB each, then select **Upload**. A file that is not a TrueType or OpenType font, or that the plugin cannot read, is refused with the reason. A file with the same name replaces the one there.
+
+The fonts folder is `fonts` in the `artworkgenerator` folder under Jellyfin's data path. A font copied there by hand is listed too.
+
+The **Font** lists on **Designs** and **Logos** group the families under **Uploaded**, **Bundled**, and **Server**, and they show a new upload the next time the tab opens. A family name is looked up in that order, so an uploaded font replaces a bundled or installed font of the same name. A style a family lacks uses the nearest one it has. Italic keeps the slant before the weight, and a family with no italic uses its upright face of the nearest weight.
+
+!!! info "Font licenses"
+    The bundled fonts come from the [Google Fonts repository](https://github.com/google/fonts) and are licensed under the [SIL Open Font License 1.1](https://openfontlicense.org). Each family's license ships with its files in the plugin.
+
 ## Profiles
 
 The Profiles tab, with a design picked for each kind of item.
@@ -111,7 +139,7 @@ The logo is the one selected for the item, then its season, then its series. Wit
 * **Show Subtitle**: draw the subtitle, the smaller line beside the title. An episode shows its season and episode, a season shows which season it is, and a series has none. Default on.
 * **Long Subtitles**: what to do when the subtitle does not fit the width it has, which happens on a narrow portrait poster. Short code says the same thing as S12E07, Shrink to fit keeps the words and sets them smaller, and Ellipsis trims them. Whatever is chosen, the line is squeezed as a last resort rather than allowed over the edge. Default Short code.
 * **Hide a Repeated Subtitle**: drop the subtitle when it adds nothing the title has not already said. A season named "Staffel 12" or "Series 12" sits beside a "SEASON 12" label, which is one piece of information written twice. A season with a name of its own, such as "The Glump Saga", keeps both lines, and so does one named "12 Monkeys". A season named plainly "Season 12" never had a second line to drop, since its label is promoted into the title already. Default off.
-* **Font**: font family for the subtitle. Default Arial.
+* **Font**: font family for the subtitle, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
@@ -122,7 +150,7 @@ The logo is the one selected for the item, then its season, then its series. Wit
 
 * **Show Title**: draw the title, which is the item's own name: the episode name for an episode, a named season's name for a season, and the series or film name otherwise. Default on.
 * **Long Titles**: what to do when a title does not fit. Ellipsis trims it. Abbreviate shortens it in stages: first the text before a divider, then the first sentence, then the first letter of every word with periods such as L.O.T.R., keeping dividers and skipping middle initials if still too wide. Drop Name hides it. Default Ellipsis.
-* **Font**: font family for the title. Default Arial.
+* **Font**: font family for the title, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Arial.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
 * **Font Style**: weight or style such as Bold. Default Bold.
@@ -162,7 +190,7 @@ Logo designs are stored in their own file, `logos.json`, in the plugin's data di
 * **Remove Pattern**: an optional regular expression whose matches are removed. An invalid pattern is ignored.
 * **Letter Case**: how the letters are cased, whatever case the name arrives in. As written, uppercase, lowercase, or title case. Default as written.
 * **Line Limit**: the most lines a name may wrap onto, 1 to 4. An extra line is only used when it lets the lettering grow noticeably, so a short name stays on one line. Default 2.
-* **Font, Font Style, Use Custom Font, Font Path**: the typeface. Default Arial Bold.
+* **Font, Font Style, Use Custom Font, Font Path**: the typeface, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Arial Bold.
 * **Letters Filled With**: a color, or a frame from the show. A frame fill cuts the letters out of a picture, taken from the same shared set of frames the show's other images come from, and brightened so it still reads on a dark background. A heavy font shows more of the picture and an outline helps it stand out. With a frame fill, the Edit Images dialog offers several logos, each cut from a different frame. Default a color.
 * **Color From**: Chosen Color, or the main color of the item's own Top Level Poster or Top Level Backdrop, lifted to stay legible. Default Chosen Color.
 * **Text Color**: ARGB hex. When sampling, this is the fallback and its opacity still applies. Default #FFFFFFFF.

@@ -50,6 +50,8 @@
     <EmbeddedResource Include="Assets\Demo\demo-logo.png" />
     <EmbeddedResource Include="Assets\Demo\demo-graphic.png" />
     <EmbeddedResource Include="Assets\Demo\demo-poster.jpg" />
+    <EmbeddedResource Include="Fonts\**\*.ttf" />
+    <EmbeddedResource Include="Fonts\**\OFL.txt" />
   </ItemGroup>
 
 </Project>

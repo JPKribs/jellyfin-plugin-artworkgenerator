@@ -79,6 +79,15 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | Letterboxing | Black bars on a frame, cropped off by **Detect Letterboxing** | `EnableLetterboxDetection` | Black bars, borders |
 | Fixed Frame Seed | A number that makes frame choice repeat | `FixedExtractionSeed` | Random seed |
 
+## Fonts
+
+| Term | Meaning | In Code | Not |
+| :--- | :--- | :--- | :--- |
+| Bundled font | A font family that ships inside the plugin, always available | `BundledFonts` | Built-in font, included font |
+| Uploaded font | A .ttf or .otf file in the fonts folder, added with **Upload** on the **Settings** tab | `UploadedFontStore` | Custom font, user font |
+| Server font | A font family installed on the server, the **Server** group in a font list | `FontSource.System` | System font, local font |
+| Fonts folder | `fonts` in the plugin's data folder, which holds the uploaded fonts | `UploadedFontStore.Folder` | Font directory |
+
 ## Jellyfin
 
 | Term | Meaning | Not |

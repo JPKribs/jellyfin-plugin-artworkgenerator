@@ -11,6 +11,7 @@ import {
     generateGuid,
     disableHiddenFields,
     initCollapsibles,
+    loadFontFamilies,
     pickJsonFile,
     promptDialog,
     promptName
@@ -34,14 +35,24 @@ export default function (view) {
         },
 
         // Styles and fonts must be in the DOM before the first config is applied, otherwise a
-        // stored value would look like an option that no longer exists.
+        // stored value would look like an option that no longer exists. The fonts are read on
+        // every load, so a font uploaded on the Settings tab is offered here.
         load: function () {
-            loadStaticData().then(loadConfig);
+            Promise.all([loadStaticData(), loadFontFamilies(fontSelects())]).then(loadConfig);
         }
     });
     var shared = page.shared;
 
     var colorFields = [];
+
+    // fontSelects
+    // The title and subtitle font family selects.
+    //
+    // Output
+    // [Array<HTMLSelectElement>]: The selects.
+    function fontSelects() {
+        return Array.prototype.slice.call(view.querySelectorAll('#selectPrimaryFontFamily, #selectSecondaryFontFamily'));
+    }
 
     // snapshot
     // Serializes the designs, so the change tracker can tell an edit from the last load or save.
@@ -489,7 +500,7 @@ export default function (view) {
     }
 
     // Fills each bound <select> from the server's list. Font families are left alone: they have
-    // their own loader below, which keeps the markup list as a fallback.
+    // their own loader, loadFontFamilies, which keeps the markup list as a fallback.
     function populateSettingOptions() {
         // data-options is for a select whose choices come from the server but whose value is not
         // part of the design, such as the preview picker; data-setting covers the design's own.
@@ -511,42 +522,11 @@ export default function (view) {
         });
     }
 
-    // Replace the font dropdowns with the families actually installed on the server. The old
-    // hardcoded list was desktop fonts (Arial, Calibri, ...) that a container image does not
-    // ship, so picking one silently rendered in the fallback face instead.
-    function loadFontFamilies() {
-        return ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/Fonts'),
-            dataType: 'json'
-        }).then(function (families) {
-            if (!families || !families.length) return;
-
-            view.querySelectorAll('#selectSecondaryFontFamily, #selectPrimaryFontFamily').forEach(function (select) {
-                select.innerHTML = '';
-                families.forEach(function (family) {
-                    var option = document.createElement('option');
-                    option.value = family;
-                    option.textContent = family;
-                    select.appendChild(option);
-                });
-
-                // Keep a sensible default selectable when the server has no Arial.
-                if (families.indexOf(select.getAttribute('data-default')) === -1) {
-                    select.setAttribute('data-default', families[0]);
-                }
-            });
-        }).catch(function (error) {
-            // Non-fatal: fall back to the built-in list already in the markup.
-            console.error('Failed to load server font families:', error);
-        });
-    }
-
     // Static data shared by every config: loaded once, and always before the first config is
     // applied so a stored font or style is never treated as an unknown option.
     function loadStaticData() {
         if (!_staticDataPromise) {
-            _staticDataPromise = Promise.all([loadSettingOptions(), loadPosterStyles(), loadFontFamilies()]);
+            _staticDataPromise = Promise.all([loadSettingOptions(), loadPosterStyles()]);
         }
         return _staticDataPromise;
     }

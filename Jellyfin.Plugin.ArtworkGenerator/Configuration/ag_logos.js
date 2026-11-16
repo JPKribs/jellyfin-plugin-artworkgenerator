@@ -12,6 +12,7 @@ import {
     generateGuid,
     initCollapsibles,
     promptName,
+    loadFontFamilies,
     sameId
 } from './configurationpage?name=ag_shared.js';
 
@@ -21,7 +22,6 @@ export default function (view) {
     var fullConfig = null;
     var logoDesigns = [];
     var currentLogoId = null;
-    var _fontsPromise = null;
     var _preview = null;
     var logoSettingText = {};
     var logoSettingOptions = {};
@@ -107,7 +107,7 @@ export default function (view) {
     }
 
     // Choices come from the settings model too, so a value added to a logo enum in C# appears here.
-    // Font families are left alone: they are filled from the fonts installed on the server.
+    // Font families are left alone: loadFontFamilies fills them from the uploaded, bundled, and server fonts.
     function populateSettingOptions() {
         view.querySelectorAll('select[data-setting]').forEach(function (select) {
             var key = select.getAttribute('data-setting');
@@ -155,33 +155,6 @@ export default function (view) {
         });
     }
 
-    function loadFonts() {
-        if (_fontsPromise) return _fontsPromise;
-
-        _fontsPromise = ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/Fonts'),
-            dataType: 'json'
-        }).then(function (families) {
-            if (!families || !families.length) return;
-            var select = view.querySelector('#selectLogoFontFamily');
-            select.innerHTML = '';
-            families.forEach(function (family) {
-                var option = document.createElement('option');
-                option.value = family;
-                option.textContent = family;
-                select.appendChild(option);
-            });
-            if (families.indexOf(select.getAttribute('data-default')) === -1) {
-                select.setAttribute('data-default', families[0]);
-            }
-        }).catch(function (error) {
-            console.error('Failed to load server font families:', error);
-        });
-
-        return _fontsPromise;
-    }
-
     // Logo designs live in their own file on the server rather than in the plugin configuration,
     // so they come from their own endpoint. The configuration is still read, to name the profiles
     // that use a design being deleted.
@@ -194,7 +167,7 @@ export default function (view) {
     }
 
     function loadConfig() {
-        Promise.all([loadFonts(), fetchLogos(), shared.getConfig(), loadSettingMetadata()]).then(function (results) {
+        Promise.all([loadFontFamilies([view.querySelector('#selectLogoFontFamily')]), fetchLogos(), shared.getConfig(), loadSettingMetadata()]).then(function (results) {
             logoDesigns = results[1] || [];
             fullConfig = results[2] || {};
             fullConfig.Profiles = fullConfig.Profiles || [];

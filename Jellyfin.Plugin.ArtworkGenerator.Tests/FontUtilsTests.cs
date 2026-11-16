@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using SkiaSharp;
 using System.Linq;
@@ -63,16 +66,12 @@ public class FontUtilsTests
         }
     }
 
+    /// <summary>
+    /// A bundled family resolves to its own face and raises no missing font warning.
+    /// </summary>
     [Fact]
-    public void SetMissingFamilyReporter_StaysQuietForAnInstalledFamily()
+    public void SetMissingFamilyReporter_StaysQuietForABundledFamily()
     {
-        var installed = FontUtils.GetAvailableFontFamilies();
-        if (installed.Count == 0)
-        {
-            // A machine with no fonts at all has nothing to assert against.
-            return;
-        }
-
         FontUtils.ClearCache();
 
         var reported = new List<string>();
@@ -80,9 +79,10 @@ public class FontUtilsTests
 
         try
         {
-            var typeface = FontUtils.CreateTypeface(installed[0], SKFontStyle.Normal);
+            var typeface = FontUtils.CreateTypeface("Oswald", SKFontStyle.Bold);
 
-            Assert.Equal(installed[0], typeface.FamilyName, ignoreCase: true);
+            Assert.Equal("Oswald", typeface.FamilyName);
+            Assert.Equal(700, typeface.FontWeight);
             Assert.Empty(reported);
         }
         finally
@@ -92,14 +92,48 @@ public class FontUtilsTests
         }
     }
 
+    /// <summary>
+    /// Text drawn through CreateTypeface uses an uploaded font first, then a bundled one, then the server's.
+    /// </summary>
     [Fact]
-    public void GetAvailableFontFamilies_ReturnsSortedDistinctNames()
+    public void CreateTypeface_ResolvesUploadedThenBundledThenSystem()
     {
-        var families = FontUtils.GetAvailableFontFamilies();
+        var folder = Path.Combine(Path.GetTempPath(), "ag-fontutils-" + Guid.NewGuid().ToString("N"));
+        var original = FontUtils.Catalog;
+        var store = new UploadedFontStore(folder);
+        FontUtils.SetCatalog(new FontCatalog(store));
 
-        Assert.All(families, f => Assert.False(string.IsNullOrWhiteSpace(f)));
-        Assert.Equal(families.Count, new System.Collections.Generic.HashSet<string>(
-            families, System.StringComparer.OrdinalIgnoreCase).Count);
+        try
+        {
+            Assert.Same(BundledFonts.Faces.First(f => f.Family == "Roboto" && f.Style == "Regular").Typeface, FontUtils.CreateTypeface("Roboto", SKFontStyle.Normal));
+
+            var uploaded = store.Upload("roboto.ttf", UploadedFontStoreTests.FontBytes("Roboto.Roboto-Regular.ttf")).Face!;
+            Assert.Same(uploaded.Typeface, FontUtils.CreateTypeface("Roboto", SKFontStyle.Normal));
+
+            var system = SKFontManager.Default.FontFamilies.FirstOrDefault(f => !BundledFonts.Families.Contains(f, StringComparer.OrdinalIgnoreCase));
+            if (system != null)
+            {
+                Assert.Equal(system, FontUtils.CreateTypeface(system, SKFontStyle.Normal).FamilyName, ignoreCase: true);
+            }
+        }
+        finally
+        {
+            FontUtils.SetCatalog(original);
+            Directory.Delete(folder, true);
+        }
+    }
+
+    /// <summary>
+    /// The font list names each family once, with the bundled families always in it.
+    /// </summary>
+    [Fact]
+    public void GetFontFamilies_ListsEachFamilyOnceWithTheBundledOnes()
+    {
+        var families = FontUtils.GetFontFamilies();
+
+        Assert.All(families, f => Assert.False(string.IsNullOrWhiteSpace(f.Family)));
+        Assert.Equal(families.Count, families.Select(f => f.Family).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.All(BundledFonts.Families, b => Assert.Contains(families, f => f.Family == b));
     }
 
     [Theory]

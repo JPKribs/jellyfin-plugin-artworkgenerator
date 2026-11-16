@@ -1,9 +1,12 @@
 using System;
+using System.IO;
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Configuration;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
+using Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +19,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
     [Route("Plugins/ArtworkGenerator")]
     public class ConfigurationController : ControllerBase
     {
+        // A 20 MB font as base64, with room for the JSON around it.
+        private const int MaxFontRequestBytes = 28 * 1024 * 1024;
+
         private readonly ILogger<ConfigurationController> _logger;
 
         public ConfigurationController(ILogger<ConfigurationController> logger)
@@ -122,14 +128,122 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
         }
 
         // MARK: Fonts
-        // Returns the font families actually installed on the server. The configuration page uses
-        // this instead of a hardcoded list, which on a container image would offer fonts that are
-        // not present and silently fall back to the Skia default.
+        // Returns every font family a design can use, each once, uploaded first, then bundled,
+        // then the ones installed on the server. The family names come from the font files.
         [HttpGet("Fonts")]
         public IActionResult GetFonts()
         {
-            return Ok(FontUtils.GetAvailableFontFamilies());
+            return Ok(FontUtils.GetFontFamilies().Select(entry => new
+            {
+                family = entry.Family,
+                source = entry.Source.ToString()
+            }));
         }
+
+        // MARK: Fonts/Uploaded
+        // Lists the fonts in the plugin's fonts folder, with the family and style each file gives.
+        [HttpGet("Fonts/Uploaded")]
+        public IActionResult GetUploadedFonts()
+        {
+            var plugin = Plugin.Instance;
+            if (plugin == null)
+            {
+                _logger.LogError("Plugin instance was null in GET Fonts/Uploaded.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
+            }
+
+            return Ok(plugin.FontStore.List().Select(DescribeUploadedFont));
+        }
+
+        // MARK: Fonts/Uploaded POST
+        // Stores one .ttf or .otf font, sent as base64 so its name stays out of the URL. A refused
+        // font returns one sentence saying why.
+        [HttpPost("Fonts/Uploaded")]
+        [RequestSizeLimit(MaxFontRequestBytes)]
+        public IActionResult UploadFont([FromBody] FontUploadRequest request)
+        {
+            var plugin = Plugin.Instance;
+            if (plugin == null)
+            {
+                _logger.LogError("Plugin instance was null in POST Fonts/Uploaded.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
+            }
+
+            byte[]? data = null;
+            if (!string.IsNullOrEmpty(request?.Data))
+            {
+                var buffer = new byte[request.Data.Length * 3 / 4];
+                if (Convert.TryFromBase64String(request.Data, buffer, out var written))
+                {
+                    data = buffer.AsSpan(0, written).ToArray();
+                }
+            }
+
+            try
+            {
+                var result = plugin.FontStore.Upload(request?.FileName, data);
+                if (result.Face == null)
+                {
+                    return BadRequest(new { success = false, error = result.Error });
+                }
+
+                _logger.LogInformation("Font {FileName} uploaded.", FormatUtilities.SanitizeForLog(result.Face.FileName));
+                return Ok(DescribeUploadedFont(result.Face));
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex, "Failed to store an uploaded font.");
+                return BadRequest(new { success = false, error = "The font could not be saved." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "Failed to store an uploaded font.");
+                return BadRequest(new { success = false, error = "The font could not be saved." });
+            }
+        }
+
+        // MARK: Fonts/Uploaded DELETE
+        // Deletes one font from the plugin's fonts folder. The name travels in the body.
+        [HttpDelete("Fonts/Uploaded")]
+        public IActionResult DeleteFont([FromBody] FontDeleteRequest request)
+        {
+            var plugin = Plugin.Instance;
+            if (plugin == null)
+            {
+                _logger.LogError("Plugin instance was null in DELETE Fonts/Uploaded.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Plugin not initialized.");
+            }
+
+            try
+            {
+                if (!plugin.FontStore.Delete(request?.FileName))
+                {
+                    return NotFound(new { success = false, error = "The font does not exist." });
+                }
+
+                _logger.LogInformation("Font {FileName} deleted.", FormatUtilities.SanitizeForLog(request?.FileName));
+                return Ok(new { success = true });
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex, "Failed to delete a font.");
+                return BadRequest(new { success = false, error = "The font could not be deleted." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "Failed to delete a font.");
+                return BadRequest(new { success = false, error = "The font could not be deleted." });
+            }
+        }
+
+        // DescribeUploadedFont
+        // Shapes one uploaded font for the Settings tab's list.
+        private static object DescribeUploadedFont(FontFace face) => new
+        {
+            fileName = face.FileName,
+            family = face.Family,
+            style = face.Style
+        };
 
         // MARK: POST
         [HttpPost("Configuration")]

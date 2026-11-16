@@ -17,7 +17,12 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
+  added:
+  - Fonts on the Settings tab, which uploads .ttf and .otf fonts of up to 20 MB to the plugin fonts folder and lists them by family and style with Delete
+  - Nine bundled font families under the SIL Open Font License, Anton, Bebas Neue, Lora, Montserrat, Noto Sans, Oswald, Playfair Display, Poppins, and Roboto, available to every design and logo design on any server
   changed:
+  - The font lists on Designs and Logos group families under Uploaded, Bundled, and Server, and show a new upload the next time the tab opens
+  - A font family name is looked up in uploaded fonts first, then bundled fonts, then fonts installed on the server, and a missing style uses the nearest one the family has
   - The Designs tab no longer lists the sample images under the preview
   - Every tab takes the JPKribs.Jellyfin.Base 2026.11.19 look, and results show beside the Save button or the picker rather than in a popup
   - Remove replaces Delete on the Designs, Logos, and Profiles pickers, and Import comes before Export
@@ -38,4 +43,7 @@ changelog:
   - ag_shared.css holds only layout between Base components
   - ag_shared.js holds the tab list and is the one module that imports Base
   - Plugin classes carry the ag- prefix
+  - GET Fonts returns each family once with its source, Uploaded, Bundled, or System, in that order
+  - GET, POST, and DELETE Fonts/Uploaded list, upload, and delete fonts in the fonts folder. POST takes the file name and base64 data in the body, and DELETE takes the file name in the body
+  - The bundled fonts and their OFL.txt files are embedded resources, so the plugin stays one DLL
   - Adds starthere.md, agent.md, and the guides in skills

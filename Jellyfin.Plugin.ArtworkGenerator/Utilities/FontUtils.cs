@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
 using SkiaSharp;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Utilities;
@@ -36,19 +37,35 @@ public static class FontUtils
         return $"{fontFamily ?? "default"}_{style.Weight}_{style.Width}_{style.Slant}";
     }
 
-    // GetAvailableFontFamilies
-    // Returns the font families installed on this system, sorted for display.
-    public static IReadOnlyList<string> GetAvailableFontFamilies()
+    private static FontCatalog _catalog = new(null);
+
+    /// <summary>
+    /// Gets the font catalog every family name is resolved through.
+    /// </summary>
+    public static FontCatalog Catalog => _catalog;
+
+    /// <summary>
+    /// Sets the font catalog, which the plugin builds over its fonts folder at start.
+    /// </summary>
+    /// <param name="catalog">The catalog to resolve through.</param>
+    public static void SetCatalog(FontCatalog catalog)
     {
-        return SKFontManager.Default.FontFamilies
-            .Where(f => !string.IsNullOrWhiteSpace(f))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        ArgumentNullException.ThrowIfNull(catalog);
+        _catalog = catalog;
+    }
+
+    /// <summary>
+    /// Lists every font family once, uploaded first, then bundled, then the server's.
+    /// </summary>
+    /// <returns>The families and where each comes from.</returns>
+    public static IReadOnlyList<FontFamilyEntry> GetFontFamilies()
+    {
+        return _catalog.Families();
     }
 
     // CreateTypeface
-    // Creates or retrieves a cached typeface from a font family name and style.
+    // Resolves a family and style to a typeface. It tries an uploaded font, then a bundled font,
+    // then one installed on the server.
     //
     // MatchFamily does not report a miss: asked for a family the system does not have, it
     // quietly returns a substitute (on a container image, almost every desktop font name maps
@@ -57,6 +74,14 @@ public static class FontUtils
     // fallback is visible in the server log instead of silently changing every poster.
     public static SKTypeface CreateTypeface(string fontFamilyName, SKFontStyle style)
     {
+        // Uploaded and bundled faces are cached by their own store, and an upload or delete
+        // changes them, so only the server's fonts go through the cache below.
+        var catalogFace = _catalog.Resolve(fontFamilyName, style);
+        if (catalogFace != null)
+        {
+            return catalogFace.Typeface;
+        }
+
         var cacheKey = GetCacheKey(fontFamilyName, style);
 
         var typeface = TypefaceCache.GetOrAdd(

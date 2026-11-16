@@ -1,7 +1,15 @@
 // ag_settings.js
-// The Settings tab, which holds the plugin wide options and Frame Extraction.
+// The Settings tab, which holds the plugin wide options, Frame Extraction, and the uploaded fonts.
 
-import { createArtworkPage, createArtworkSaveBar, disableHiddenFields, initCollapsibles } from './configurationpage?name=ag_shared.js';
+import {
+    confirmDialog,
+    createArtworkPage,
+    createArtworkSaveBar,
+    createFilePicker,
+    createRecordList,
+    disableHiddenFields,
+    initCollapsibles
+} from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
     'use strict';
@@ -10,9 +18,22 @@ export default function (view) {
         bind: bindPage,
         load: function () {
             loadFrameText().then(loadConfig);
+            loadUploadedFonts();
         }
     });
     var shared = page.shared;
+
+    // The most bytes one font may have, the same cap the server keeps.
+    var MAX_FONT_BYTES = 20 * 1024 * 1024;
+    var FONTS_URL = 'Plugins/ArtworkGenerator/Fonts/Uploaded';
+    var fontPicker = null;
+    var fontList = null;
+    var fontBar = null;
+    var fontTracker = shared.createChangeTracker({
+        serialize: function () {
+            return fontPicker ? fontPicker.getValue().map(function (file) { return file.name; }).join('|') : '';
+        }
+    });
 
     // currentState
     // Serializes every field, so the change tracker can tell an edit from the last load or save.
@@ -170,8 +191,173 @@ export default function (view) {
         });
     }
 
+    // loadUploadedFonts
+    // Draws one row per font in the fonts folder, with its family, style, file name, and Delete.
+    //
+    // Output
+    // [Promise]: Resolves once the list is drawn.
+    function loadUploadedFonts() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl(FONTS_URL),
+            dataType: 'json'
+        }).then(function (fonts) {
+            fontList.setItems((fonts || []).map(function (font) {
+                return {
+                    id: font.fileName,
+                    title: font.family,
+                    secondary: font.style,
+                    tags: [{ label: font.fileName }],
+                    aside: deleteButton(font)
+                };
+            }));
+        }).catch(function (error) {
+            console.error('Failed to load uploaded fonts:', error);
+            fontBar.setState('failed', 'Could not load the uploaded fonts. Reload the page.');
+        });
+    }
+
+    // deleteButton
+    // Builds the Delete row button for one uploaded font.
+    //
+    // Inputs
+    // font [object]: The font, with fileName, family, and style.
+    //
+    // Output
+    // [HTMLButtonElement]: The button.
+    function deleteButton(font) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'base-row-btn';
+        button.title = 'Delete';
+        button.setAttribute('aria-label', 'Delete ' + font.fileName);
+        var icon = document.createElement('span');
+        icon.className = 'material-icons';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = 'delete';
+        button.appendChild(icon);
+        button.addEventListener('click', function () { deleteFont(font); });
+        return button;
+    }
+
+    // deleteFont
+    // Asks first, then deletes one font from the fonts folder and redraws the list.
+    //
+    // Inputs
+    // font [object]: The font, with fileName, family, and style.
+    function deleteFont(font) {
+        confirmDialog('Delete ' + font.fileName + '? Designs that use ' + font.family + ' ' + font.style + ' draw with the next font of that name.', {
+            title: 'Delete Font',
+            confirmText: 'Delete',
+            destructive: true
+        }).then(function (confirmed) {
+            if (!confirmed) return;
+            ApiClient.ajax({
+                type: 'DELETE',
+                url: ApiClient.getUrl(FONTS_URL),
+                data: JSON.stringify({ FileName: font.fileName }),
+                contentType: 'application/json'
+            }).then(function () {
+                fontBar.setState('saved', 'Font deleted.');
+                return loadUploadedFonts();
+            }, function (error) {
+                return shared.errorText(error, 'Could not delete the font.').then(function (text) {
+                    fontBar.setState('failed', text);
+                });
+            });
+        });
+    }
+
+    // readBase64
+    // Reads a picked file as base64, the form the upload route takes.
+    //
+    // Inputs
+    // file [File]: The picked font.
+    //
+    // Output
+    // [Promise<string>]: The file's bytes as base64.
+    function readBase64(file) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var url = String(reader.result || '');
+                resolve(url.slice(url.indexOf(',') + 1));
+            };
+            reader.onerror = function () { reject(new Error('Could not read ' + file.name + '.')); };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // uploadFonts
+    // Uploads each picked font in turn, then redraws the list. A refused font rejects with the server's sentence for it.
+    //
+    // Output
+    // [Promise]: Resolves once every font is stored.
+    function uploadFonts() {
+        var files = fontPicker.getValue();
+        if (!files.length) return Promise.reject('Select a font file.');
+
+        var refused = [];
+        return files.reduce(function (chain, file) {
+            return chain.then(function () {
+                return readBase64(file).then(function (data) {
+                    return ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl(FONTS_URL),
+                        data: JSON.stringify({ FileName: file.name, Data: data }),
+                        contentType: 'application/json'
+                    });
+                }).catch(function (error) {
+                    return shared.errorText(error, 'Could not upload the font.').then(function (text) {
+                        refused.push('Could not upload ' + file.name + '. ' + text);
+                    });
+                });
+            });
+        }, Promise.resolve()).then(function () {
+            fontPicker.clear();
+            return loadUploadedFonts();
+        }).then(function () {
+            // A sentence, not an Error, so the Upload bar shows it as written.
+            if (refused.length) throw refused.join(' ');
+        });
+    }
+
+    // bindFonts
+    // Draws the uploaded fonts list, the File Picker, and the Upload bar.
+    function bindFonts() {
+        fontList = createRecordList({
+            label: 'Uploaded fonts',
+            emptyText: 'No fonts uploaded.'
+        });
+        view.querySelector('#uploadedFontsHost').appendChild(fontList.element);
+
+        fontPicker = createFilePicker({
+            accept: '.ttf,.otf',
+            maxSize: MAX_FONT_BYTES,
+            multiple: true,
+            dropText: 'Drop .ttf or .otf fonts here or click to select.',
+            onChange: function () { fontBar.check(); }
+        });
+        view.querySelector('#fontPickerHost').appendChild(fontPicker.element);
+
+        fontBar = createArtworkSaveBar(view.querySelector('#AgFontsForm'), view.querySelector('#fontUploadBarHost'), fontTracker, {
+            save: uploadFonts,
+            saveText: 'Upload',
+            pendingText: 'Fonts not uploaded yet.',
+            savingText: 'Uploading…',
+            savedText: 'Fonts uploaded.',
+            failedText: 'Could not upload the fonts.'
+        });
+
+        page.addCleanup(function () {
+            fontPicker.destroy();
+            fontList.destroy();
+        });
+    }
+
     function bindPage() {
         initCollapsibles(view);
+        bindFonts();
         saveBar = createArtworkSaveBar(view.querySelector('#AgSettingsForm'), view.querySelector('#saveBarHost'), tracker, {
             save: savePluginSettings,
             savedText: 'Settings saved.',

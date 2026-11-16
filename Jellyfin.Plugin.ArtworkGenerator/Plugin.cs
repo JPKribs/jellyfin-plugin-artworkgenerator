@@ -7,6 +7,7 @@ using Jellyfin.Plugin.ArtworkGenerator.Configuration;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Artwork;
+using Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
 using JPKribs.Jellyfin.Base;
@@ -42,6 +43,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         private readonly PreviewService _previewService;
         private readonly GeneratedImageCache _generatedImageCache;
         private readonly GeneratedCandidateMemo _candidateMemo = new();
+        private readonly UploadedFontStore _fontStore;
 
         // Plugin
         // Initializes the plugin with all required services and dependencies.
@@ -58,6 +60,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             _logger = logger;
 
             var dataRoot = Path.Combine(applicationPaths.DataPath, "artworkgenerator");
+            _fontStore = new UploadedFontStore(Path.Combine(dataRoot, "fonts"));
+            FontUtils.SetCatalog(new FontCatalog(_fontStore));
             _posterConfigService = new PosterConfigurationService(
                 loggerFactory.CreateLogger<PosterConfigurationService>(),
                 new LogoDesignStore(Path.Combine(dataRoot, "logos.json")));
@@ -102,7 +106,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             // family often silently falls back to Skia's default. Surface it once per family.
             FontUtils.SetMissingFamilyReporter(family =>
                 _logger.LogWarning(
-                    "Font family '{Family}' is not installed on this server. Falling back to the default font. Install the font, or pick one offered by the configuration page.",
+                    "Font family '{Family}' is not uploaded, bundled, or installed on this server. Falling back to the default font. Upload the font on the Settings tab, or pick one the font list offers.",
                     family));
 
             _logger.LogInformation("Artwork Generator plugin initialized");
@@ -113,6 +117,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         public PosterConfigurationService PosterConfigService => _posterConfigService;
 
         public PreviewService PreviewService => _previewService;
+
+        /// <summary>
+        /// Gets the fonts folder in the plugin's data folder, which the Settings tab uploads to.
+        /// </summary>
+        public UploadedFontStore FontStore => _fontStore;
 
         /// <summary>
         /// Gets the short-lived store backing the generated image URLs handed to Jellyfin's remote

@@ -5,11 +5,13 @@ import {
     createColorPicker,
     createSliderField,
     createConfigPage,
+    createFilePicker,
     createList,
     createMatrixGrid,
     createMediaCard,
     createMediaPicker,
     createPreviewFrame,
+    createRecordList,
     createSaveBar,
     createSubTabs,
     confirmDialog,
@@ -24,11 +26,13 @@ import {
 } from './configurationpage?name=ag_jpkribs_shared.js';
 
 export {
+    createFilePicker,
     createList,
     createMatrixGrid,
     createMediaCard,
     createMediaPicker,
     createPreviewFrame,
+    createRecordList,
     createSubTabs,
     confirmDialog,
     downloadJson,
@@ -68,6 +72,56 @@ export function createArtworkPage(view, tabIndex, opts) {
         tabs: TABS,
         leaveMessage: 'Leave without saving your changes?'
     }, opts));
+}
+
+// FONT_GROUPS
+// The font list's groups, in the order a family name is looked up.
+var FONT_GROUPS = [
+    { source: 'Uploaded', label: 'Uploaded' },
+    { source: 'Bundled', label: 'Bundled' },
+    { source: 'System', label: 'Server' }
+];
+
+// loadFontFamilies
+// Fills each font family select from the server, grouped as uploaded, bundled, then installed on the server, each group under its own heading. The list is read again on every call, so a font uploaded on the Settings tab shows the next time a tab opens.
+//
+// Inputs
+// selects [Array<HTMLSelectElement>]: The font family selects to fill.
+//
+// Output
+// [Promise]: Resolves once the selects are filled, or left as they were when the list cannot be read.
+export function loadFontFamilies(selects) {
+    return ApiClient.ajax({
+        type: 'GET',
+        url: ApiClient.getUrl('Plugins/ArtworkGenerator/Fonts'),
+        dataType: 'json'
+    }).then(function (families) {
+        if (!families || !families.length) return;
+
+        selects.forEach(function (select) {
+            select.innerHTML = '';
+            FONT_GROUPS.forEach(function (group) {
+                var names = families.filter(function (f) { return f.source === group.source; });
+                if (!names.length) return;
+
+                var optgroup = document.createElement('optgroup');
+                optgroup.label = group.label;
+                names.forEach(function (f) {
+                    var option = document.createElement('option');
+                    option.value = f.family;
+                    option.textContent = f.family;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+            });
+
+            // Keep a sensible default selectable when the server has no font of the default's name.
+            var known = families.some(function (f) { return f.family === select.getAttribute('data-default'); });
+            if (!known) select.setAttribute('data-default', families[0].family);
+        });
+    }).catch(function (error) {
+        console.error('Failed to load font families:', error);
+    });
 }
 
 // sameId
@@ -161,13 +215,16 @@ function revealInvalid(root) {
 // form [HTMLFormElement]: The form whose fields are checked before a save. Enter in a field saves too.
 // host [HTMLElement]: Where the bar goes.
 // tracker [object]: The page's change tracker from shared.createChangeTracker.
-// opts [object]: save, a function returning a promise that rejects with a sentence or an error; savedText; failedText.
+// opts [object]: save, a function returning a promise that rejects with a sentence or an error; savedText; failedText; and saveText, pendingText, and savingText for a bar that does more than save.
 //
 // Output
 // [object]: The Save Bar handle, with check, which shows Unsaved changes while the tracker is dirty, and markClean, which clears it after a load.
 export function createArtworkSaveBar(form, host, tracker, opts) {
     var bar = createSaveBar({
         fill: true,
+        saveText: opts.saveText,
+        pendingText: opts.pendingText,
+        savingText: opts.savingText,
         savedText: opts.savedText,
         failedText: opts.failedText,
         onSave: function () {
