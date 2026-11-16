@@ -268,7 +268,7 @@ Every save is Base's `createSaveBar` with `fill: true`, drawn through `createArt
 | Editor dialog | Each record is edited on its own | **Done** in `openEditorDialog` |
 
 * The Save Bar is the last element of what it saves. Nothing sits beside it or below it in that section.
-* Other actions that belong with that save, such as Reset to Defaults, Clear, Test, Run Now, Refresh, or a select for Test, go in one `<div class="base-button-row">` directly above the Save Bar.
+* Other actions that belong with that save, such as Reset to Defaults, Clear, Test, Run Now, Refresh, or a select for Test, go in one `<div class="base-button-row">` directly above the Save Bar. Base spaces that row. Its buttons have no margin of their own, so their edges line up with the Save Bar's, the row sits one `--base-gap-narrow` above the Save Bar, and its buttons use the same font weight as Save. A plugin adds no margin, gap, or weight of its own. The Save Bar's element goes directly after the row, never inside a wrapper, since Base spaces them as siblings.
 * Each button in that row is `<button is="emby-button" type="button" class="raised base-button secondary fill">`, or `destructive fill` for one that deletes or resets data. A select in that row stays a normal emby select. No `small` buttons in that row.
 * Never hand place a Save button, use a `small` Save, a Save Bar without `fill`, a status line of its own beside the Save Bar, or plugin CSS that positions a save or its neighbours.
 * `createArtworkSaveBar` checks every shown field through `validateAll` first, wires `setDirty` from the change tracker, and its `onSave` returns the save promise. Its line reports unsaved changes and the result.

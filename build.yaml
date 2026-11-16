@@ -18,7 +18,7 @@ artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
   changed:
-  - Every tab takes the JPKribs.Jellyfin.Base 2026.11.18 look, and results show beside the Save button or the picker rather than in a popup
+  - Every tab takes the JPKribs.Jellyfin.Base 2026.11.19 look, and results show beside the Save button or the picker rather than in a popup
   - Remove replaces Delete on the Designs, Logos, and Profiles pickers, and Import comes before Export
   - Names are checked in the New and Rename dialogs before they close
   - The logo preview shows the logo over a Dark, Light, or Checkered background
@@ -33,7 +33,7 @@ changelog:
   - The arrows on collapsible sections are back to their usual size
   - Color settings keep their picker at its own size, with their label above
   developer:
-  - Uses JPKribs.Jellyfin.Base 2026.11.18, whose record selector, buttons, Preview Frame, Media Picker, Media Card, List, Matrix Grid with disabled cells, Sub Tabs, Save Bar with its failed reason, Color Picker with opacity only, validation, prompt and confirm dialogs, change tracker, indent, callout, and status text replace the hand built versions
+  - Uses JPKribs.Jellyfin.Base 2026.11.19, whose record selector, buttons, Preview Frame, Media Picker, Media Card, List, Matrix Grid with disabled cells, Sub Tabs, Save Bar with its failed reason, Color Picker with opacity only, validation, prompt and confirm dialogs, change tracker, indent, callout, and status text replace the hand built versions
   - Fields show and hide through Base's bindReveal and setVisible, and a hidden field is disabled so Base's validation skips it
   - ag_shared.css holds only layout between Base components
   - ag_shared.js holds the tab list and is the one module that imports Base
