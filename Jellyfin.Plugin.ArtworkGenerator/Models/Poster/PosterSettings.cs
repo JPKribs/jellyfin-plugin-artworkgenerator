@@ -123,7 +123,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public bool ShowSecondary { get; set; } = true;
 
         [Display(Name = "Font", Description = "Font family for the subtitle.")]
-        public string SecondaryFontFamily { get; set; } = "Arial";
+        public string SecondaryFontFamily { get; set; } = "Montserrat";
 
         [Display(Name = "Use Custom Font", Description = "Use a font file instead of a built in font.")]
         public bool SecondaryUseCustomFont { get; set; } = false;
@@ -144,7 +144,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public bool ShowPrimary { get; set; } = true;
 
         [Display(Name = "Font", Description = "Font family for the title text.")]
-        public string PrimaryFontFamily { get; set; } = "Arial";
+        public string PrimaryFontFamily { get; set; } = "Montserrat";
 
         [Display(Name = "Use Custom Font", Description = "Use a font file instead of a built in font.")]
         public bool PrimaryUseCustomFont { get; set; } = false;

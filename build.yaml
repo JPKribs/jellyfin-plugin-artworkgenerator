@@ -21,6 +21,7 @@ changelog:
   - Fonts on the Settings tab, which uploads .ttf and .otf fonts of up to 20 MB to the plugin fonts folder and lists them by family and style with Delete
   - Nine bundled font families under the SIL Open Font License, Anton, Bebas Neue, Lora, Montserrat, Noto Sans, Oswald, Playfair Display, Poppins, and Roboto, available to every design and logo design on any server
   changed:
+  - A new design or logo design starts with the bundled Montserrat font instead of Arial, which a server may not have. Saved designs keep their fonts
   - Whole libraries no longer get generated artwork, since it did not work
   - The font lists on Designs and Logos group families under Uploaded, Bundled, and Server, and show a new upload the next time the tab opens
   - A font family name is looked up in uploaded fonts first, then bundled fonts, then fonts installed on the server, and a missing style uses the nearest one the family has

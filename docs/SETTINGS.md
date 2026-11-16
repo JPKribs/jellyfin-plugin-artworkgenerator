@@ -163,7 +163,7 @@ Most designs wash the overlay across the whole frame, so the gradient and its se
 * **Long Titles**: what to do when a title does not fit. Ellipsis trims it. Abbreviate shortens it in stages. It tries the text before a divider, then the first sentence, then the first letter of every word with periods such as L.O.T.R., keeping dividers and skipping middle initials if still too wide. Drop Name hides it. Default Ellipsis.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
-* **Font**: font family for the title, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Arial.
+* **Font**: font family for the title, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Montserrat, a bundled font.
 * **Font Style**: Normal, Bold, Italic, or Bold Italic. Default Bold.
 * **Font Size**: text size as a percent of the poster's short side. Default 10.
 * **Font Color**: the title's color. Default #FFFFFFFF.
@@ -175,7 +175,7 @@ Most designs wash the overlay across the whole frame, so the gradient and its se
 * **Long Subtitles**: what to do when the subtitle does not fit the width it has, which happens on a narrow portrait poster. Short code says the same thing as S12E07, Shrink to fit keeps the words and sets them smaller, and Ellipsis trims them. Whatever is chosen, the line is squeezed as a last resort rather than allowed over the edge. Default Short code.
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
-* **Font**: font family for the subtitle, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Arial.
+* **Font**: font family for the subtitle, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Montserrat, a bundled font.
 * **Font Style**: Normal, Bold, Italic, or Bold Italic. Default Bold.
 * **Font Size**: subtitle size as a percent of the poster's short side. Default 7.
 * **Font Color**: the subtitle's color. Default #FFFFFFFF.
@@ -206,7 +206,7 @@ Logo designs are stored in their own file, `logos.json`, in the plugin's data di
 
 * **Use Custom Font**: use a font file instead of a family. Default off.
 * **Font Path**: path to the custom font file.
-* **Font**: the typeface, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Arial.
+* **Font**: the typeface, from the uploaded, bundled, and installed fonts in [Fonts](#fonts). Default Montserrat, a bundled font.
 * **Font Style**: Normal, Bold, Italic, or Bold Italic. Default Bold.
 
 ### Color

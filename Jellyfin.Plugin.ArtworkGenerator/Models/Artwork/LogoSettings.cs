@@ -36,7 +36,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public LogoCase LetterCase { get; set; }
 
         [Display(Name = "Font")]
-        public string FontFamily { get; set; } = "Arial";
+        public string FontFamily { get; set; } = "Montserrat";
 
         [Display(Name = "Font Style")]
         public string FontStyle { get; set; } = "Bold";
