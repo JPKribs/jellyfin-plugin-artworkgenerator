@@ -452,7 +452,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 * When Base has a defect that breaks a page, report it and add one marked stopgap rule under a comment that names the defect. Delete the rule in the commit that moves to the Base version with the fix.
 * Size a column in `rem` or `fr`. An `em` width changes with the font size of each row, so a smaller heading row falls out of line with its columns.
 * Never define a color token. Use Base's.
-* Watch for collisions with Jellyfin's own CSS. Jellyfin's global `.card` rule gives paint containment to any element with a bare `card` class, such as a row of Base's card Repeater. A Base component that draws a fixed popup, such as a select list or a color picker, must not sit inside an element with `contain`, `transform`, or `filter`, or its popup lands off screen.
+* Watch for collisions with Jellyfin's own CSS. Jellyfin's global `.card` rule gives paint containment to any element with a bare `card` class. A Base component that draws a fixed popup, such as a select list or a color picker, must not sit inside an element with `contain`, `transform`, or `filter`, or its popup lands off screen.
 
 ## Hand Built Pieces
 
