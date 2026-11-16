@@ -47,7 +47,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// <summary>A plain library folder, drawn from the videos beneath it.</summary>
         Folder,
 
-        /// <summary>A whole library, drawn from the videos it holds.</summary>
+        /// <summary>
+        /// A whole library. Kept only so a configuration saved with library cells still loads. A
+        /// library gets no generated artwork, and its stored cells are dropped on load.
+        /// </summary>
         Library
     }
 
@@ -197,7 +200,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// videos it holds.
         /// </summary>
         public static bool IsGroup(this ArtworkItemKind kind)
-            => kind is ArtworkItemKind.Collection or ArtworkItemKind.Folder or ArtworkItemKind.Library;
+            => kind is ArtworkItemKind.Collection or ArtworkItemKind.Folder;
 
         /// <summary>
         /// Whether the kind is assigned to a profile by its own id rather than by its series.

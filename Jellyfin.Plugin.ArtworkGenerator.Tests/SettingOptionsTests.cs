@@ -123,8 +123,8 @@ public class SettingOptionsTests
 
     /// <summary>
     /// The preview picker's kinds come from the item kinds themselves, so a new kind appears in the
-    /// picker without the page being edited. It is not a design setting, so it must never appear
-    /// among the defaults a new design is built from.
+    /// picker without the page being edited. A library gets no artwork, so it is left out. It is not
+    /// a design setting, so it must never appear among the defaults a new design is built from.
     /// </summary>
     [Fact]
     public void All_OffersThePreviewKindsWithoutMakingItASetting()
@@ -132,8 +132,9 @@ public class SettingOptionsTests
         var options = SettingOptions.All();
 
         Assert.True(options.ContainsKey("PreviewKind"));
-        Assert.Equal(Enum.GetNames<ArtworkItemKind>().Length, options["PreviewKind"].Count);
+        Assert.Equal(Enum.GetNames<ArtworkItemKind>().Length - 1, options["PreviewKind"].Count);
         Assert.Contains(nameof(ArtworkItemKind.Movie), options["PreviewKind"].Select(o => o.Value));
+        Assert.DoesNotContain(nameof(ArtworkItemKind.Library), options["PreviewKind"].Select(o => o.Value));
         Assert.False(SettingOptions.Defaults().ContainsKey("PreviewKind"));
     }
 }

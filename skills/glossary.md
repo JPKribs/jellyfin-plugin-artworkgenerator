@@ -11,7 +11,7 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 
 | Term | Meaning | In Code | Not |
 | :--- | :--- | :--- | :--- |
-| Item | A series, season, episode, film, video, collection, folder, or library the plugin draws for | `ArtworkSubject` | Media, entry |
+| Item | A series, season, episode, film, video, collection, or folder the plugin draws for. A whole library is never one | `ArtworkSubject` | Media, entry |
 | Kind | Which of those an item is, one row in the **Images** table | `ArtworkItemKind` | Type, category |
 | Film | A movie. The **Images** row and the assignment list read **Movies** | `ArtworkItemKind.Movie` | |
 | Video | A music video or home video that is neither an episode nor a film | `ArtworkItemKind.Video` | Clip, standalone file |
@@ -74,7 +74,7 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | Sampling Rate | How many frames are scored for each one kept, **Low**, **Medium**, or **High** | `SamplingRate` | Quality, sample size |
 | Frame pool | The shared set of frames every image of one item draws from | `FramePoolService` | Cache, frame cache |
 | Reuse Samples | Lets an item's images draw from overlapping frames | `ReuseSamples` | Share frames |
-| Videos Per Parent | The most videos a series, season, collection, folder, or library takes frames from | `VideosPerParent` | Video limit |
+| Videos Per Parent | The most videos a series, season, collection, or folder takes frames from | `VideosPerParent` | Video limit |
 | Media segments | Intros, outros, recaps, previews, and commercials a segment provider marks | `MediaSegmentType` | Chapters, markers |
 | Letterboxing | Black bars on a frame, cropped off by **Detect Letterboxing** | `EnableLetterboxDetection` | Black bars, borders |
 | Fixed Frame Seed | A number that makes frame choice repeat | `FixedExtractionSeed` | Random seed |

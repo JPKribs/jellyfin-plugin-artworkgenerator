@@ -27,12 +27,9 @@ public class GroupKindTests
         Assert.Equal(ArtworkItemKind.Folder, ArtworkService.GetKind(new Folder()));
     }
 
-    [Fact]
-    public void ALibraryIsALibrary()
-    {
-        Assert.Equal(ArtworkItemKind.Library, ArtworkService.GetKind(new CollectionFolder()));
-    }
-
+    /// <summary>
+    /// A whole library gets no generated artwork, whatever it holds, so it keeps the images Jellyfin gives it.
+    /// </summary>
     [Theory]
     [InlineData(null)]
     [InlineData(CollectionType.movies)]
@@ -41,26 +38,31 @@ public class GroupKindTests
     [InlineData(CollectionType.musicvideos)]
     [InlineData(CollectionType.boxsets)]
     [InlineData(CollectionType.folders)]
-    public void ALibraryThatCanHoldVideoIsDrawn(CollectionType? type)
+    [InlineData(CollectionType.music)]
+    [InlineData(CollectionType.photos)]
+    public void ALibraryGetsNoArtwork(CollectionType? type)
     {
-        Assert.Equal(ArtworkItemKind.Library, ArtworkService.GetKind(new CollectionFolder { CollectionType = type }));
+        var library = new CollectionFolder { CollectionType = type };
+
+        Assert.Null(ArtworkService.GetKind(library));
+        Assert.Empty(ArtworkSources.GetPlayableSources(library, 0));
     }
 
-    [Theory]
-    [InlineData(CollectionType.music)]
-    [InlineData(CollectionType.books)]
-    [InlineData(CollectionType.photos)]
-    [InlineData(CollectionType.livetv)]
-    [InlineData(CollectionType.playlists)]
-    public void ALibraryThatCannotHoldVideoIsNotDrawn(CollectionType type)
+    /// <summary>
+    /// No profile offers an image for a library, and a library is not a group of videos.
+    /// </summary>
+    [Fact]
+    public void ALibraryIsOfferedNoImage()
     {
-        Assert.Null(ArtworkService.GetKind(new CollectionFolder { CollectionType = type }));
+        Assert.DoesNotContain(ArtworkProfile.SupportedSlots, s => s.Kind == ArtworkItemKind.Library);
+        Assert.False(ArtworkItemKind.Library.IsGroup());
     }
 
     [Fact]
     public void FromItemAgreesWithGetKind()
     {
         Assert.Throws<ArgumentException>(() => ArtworkSubject.FromItem(new CollectionFolder { CollectionType = CollectionType.music }));
+        Assert.Throws<ArgumentException>(() => ArtworkSubject.FromItem(new CollectionFolder { CollectionType = CollectionType.movies }));
         Assert.Throws<ArgumentException>(() => ArtworkSubject.FromItem(new Playlist()));
     }
 
@@ -106,7 +108,6 @@ public class GroupKindTests
     [Theory]
     [InlineData(ArtworkItemKind.Collection)]
     [InlineData(ArtworkItemKind.Folder)]
-    [InlineData(ArtworkItemKind.Library)]
     public void GroupsAreAssignedByTheirOwnId(ArtworkItemKind kind)
     {
         Assert.True(kind.IsGroup());
@@ -159,7 +160,6 @@ public class GroupKindTests
     [Theory]
     [InlineData(ArtworkItemKind.Collection, ArtworkShape.Portrait)]
     [InlineData(ArtworkItemKind.Folder, ArtworkShape.Landscape)]
-    [InlineData(ArtworkItemKind.Library, ArtworkShape.Landscape)]
     public void GroupsHaveTheirOwnPrimaryShape(ArtworkItemKind kind, ArtworkShape expected)
     {
         Assert.Equal(expected, new ArtworkProfile().GetShape(kind, ArtworkSlot.Primary));
@@ -168,7 +168,6 @@ public class GroupKindTests
     [Theory]
     [InlineData(ArtworkItemKind.Collection)]
     [InlineData(ArtworkItemKind.Folder)]
-    [InlineData(ArtworkItemKind.Library)]
     public void AnAssignedGroupUsesItsProfile(ArtworkItemKind kind)
     {
         var config = new PluginConfiguration();
@@ -177,12 +176,7 @@ public class GroupKindTests
 
         var custom = new ArtworkProfile { Name = "Custom" };
         var id = Guid.NewGuid();
-        var assigned = kind switch
-        {
-            ArtworkItemKind.Collection => custom.CollectionIds,
-            ArtworkItemKind.Folder => custom.FolderIds,
-            _ => custom.LibraryIds
-        };
+        var assigned = kind == ArtworkItemKind.Collection ? custom.CollectionIds : custom.FolderIds;
         assigned.Add(id);
         config.Profiles.Add(custom);
         service.Initialize(config);
@@ -201,19 +195,39 @@ public class GroupKindTests
         var profile = config.Profiles.Single(p => p.IsDefault);
         var added = ArtworkProfile.SupportedSlots.Where(s => s.Kind.IsGroup()).ToList();
 
-        Assert.Equal(10, added.Count);
+        Assert.Equal(8, added.Count);
         Assert.All(added, s => Assert.False(profile.GetSlot(s.Kind, s.Slot)!.Enabled));
     }
 
+    /// <summary>
+    /// A configuration saved with library cells, an assigned library, and a library shape still loads, and the library cells are dropped.
+    /// </summary>
     [Fact]
-    public void ALibraryOffersPrimaryAndThumbOnly()
+    public void AConfigurationSavedWithLibraryEntriesStillLoads()
     {
-        var offered = ArtworkProfile.SupportedSlots
-            .Where(s => s.Kind == ArtworkItemKind.Library)
-            .Select(s => s.Slot)
-            .ToList();
+        var saved = new PluginConfiguration();
+        var profile = new ArtworkProfile { Name = "Anime" };
+        profile.Slots.Add(new SlotAssignment { Kind = ArtworkItemKind.Library, Slot = ArtworkSlot.Primary, Enabled = true });
+        profile.Slots.Add(new SlotAssignment { Kind = ArtworkItemKind.Library, Slot = ArtworkSlot.Thumb, Enabled = true });
+        saved.Profiles.Add(profile);
 
-        Assert.Equal(new[] { ArtworkSlot.Primary, ArtworkSlot.Thumb }, offered);
+        var serializer = new System.Xml.Serialization.XmlSerializer(typeof(PluginConfiguration));
+        using var writer = new System.IO.StringWriter();
+        serializer.Serialize(writer, saved);
+        var xml = writer.ToString().Replace(
+            "</ArtworkProfile>",
+            "<LibraryIds><guid>" + Guid.NewGuid() + "</guid></LibraryIds><LibraryPrimaryShape>Portrait</LibraryPrimaryShape></ArtworkProfile>",
+            StringComparison.Ordinal);
+        Assert.Contains("<Kind>Library</Kind>", xml, StringComparison.Ordinal);
+
+        using var reader = new System.IO.StringReader(xml);
+        var loaded = (PluginConfiguration)serializer.Deserialize(reader)!;
+        var service = new PosterConfigurationService(NullLogger<PosterConfigurationService>.Instance);
+        service.Initialize(loaded);
+
+        var anime = loaded.Profiles.Single(p => p.Name == "Anime");
+        Assert.DoesNotContain(anime.Slots, s => s.Kind == ArtworkItemKind.Library);
+        Assert.Contains(anime.Slots, s => s.Kind == ArtworkItemKind.Folder);
     }
 
     [Theory]
@@ -319,9 +333,9 @@ public class GroupKindTests
     [Theory]
     [InlineData(ArtworkItemKind.Series, 0, 1000)]
     [InlineData(ArtworkItemKind.Season, -5, 1000)]
-    [InlineData(ArtworkItemKind.Library, 0, 1000)]
+    [InlineData(ArtworkItemKind.Collection, 0, 1000)]
     [InlineData(ArtworkItemKind.Series, 5000, 1000)]
-    [InlineData(ArtworkItemKind.Library, 1, 1)]
+    [InlineData(ArtworkItemKind.Collection, 1, 1)]
     public void VideosPerParentAtZeroKeepsEveryVideo(ArtworkItemKind kind, int asked, int expected)
     {
         var path = System.IO.Path.GetTempFileName();

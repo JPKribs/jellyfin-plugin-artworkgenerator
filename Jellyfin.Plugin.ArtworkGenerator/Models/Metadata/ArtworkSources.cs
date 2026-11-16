@@ -49,7 +49,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 ArtworkItemKind.Season => SeasonEpisodes((Season)item),
                 ArtworkItemKind.Series => SafeRecursiveChildren((Series)item),
                 ArtworkItemKind.Collection => CollectionVideos((BoxSet)item),
-                ArtworkItemKind.Folder or ArtworkItemKind.Library => GroupVideos((Folder)item),
+                ArtworkItemKind.Folder => GroupVideos((Folder)item),
                 null => Array.Empty<Video>(),
                 _ => new[] { (Video)item }
             };
@@ -106,7 +106,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             Movie => ArtworkItemKind.Movie,
             Video => ArtworkItemKind.Video,
             BoxSet => ArtworkItemKind.Collection,
-            CollectionFolder library when CanHoldVideo(library.CollectionType) => ArtworkItemKind.Library,
             Folder folder when IsPlainFolder(folder) && CanHoldVideo(ContentTypeOf(folder)) => ArtworkItemKind.Folder,
             _ => null
         };

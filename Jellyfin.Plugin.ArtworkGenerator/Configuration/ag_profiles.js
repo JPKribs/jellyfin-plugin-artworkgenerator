@@ -34,8 +34,7 @@ export default function (view) {
         { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' },
         { kind: 'Video', label: 'Videos', shapeKey: 'VideoPrimaryShape', defaultShape: 'Portrait' },
         { kind: 'Collection', label: 'Collections', shapeKey: 'CollectionPrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Folder', label: 'Folders', shapeKey: 'FolderPrimaryShape', defaultShape: 'Landscape' },
-        { kind: 'Library', label: 'Libraries', shapeKey: 'LibraryPrimaryShape', defaultShape: 'Landscape' }
+        { kind: 'Folder', label: 'Folders', shapeKey: 'FolderPrimaryShape', defaultShape: 'Landscape' }
     ];
 
     // The image slots, in the order their tabs show.
@@ -50,8 +49,7 @@ export default function (view) {
         Movie: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
         Video: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
         Collection: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
-        Folder: ['Primary', 'Thumb', 'Logo', 'Backdrop'],
-        Library: ['Primary', 'Thumb']
+        Folder: ['Primary', 'Thumb', 'Logo', 'Backdrop']
     };
 
     var page = createArtworkPage(view, 2, {
@@ -558,29 +556,12 @@ export default function (view) {
             empty: 'No folders assigned.',
             missing: 'No folders found. Make sure you have folders in a mixed content or home videos library.',
             items: []
-        },
-        {
-            key: 'LibraryIds',
-            noun: 'libraries',
-            tab: 'Libraries',
-            label: 'Assigned Libraries',
-            search: 'Search libraries',
-            empty: 'No libraries assigned.',
-            missing: 'No libraries found.',
-            load: function () {
-                return ApiClient.getVirtualFolders().then(function (folders) {
-                    return (folders || []).map(function (folder) {
-                        return { Id: folder.ItemId, Name: folder.Name, Type: 'CollectionFolder' };
-                    });
-                });
-            },
-            items: []
         }
     ];
 
     function loadAssignableItems() {
         return Promise.all(TARGETS.map(function (target) {
-            var request = target.load ? target.load() : ApiClient.getItems(ApiClient.getCurrentUserId(), {
+            var request = ApiClient.getItems(ApiClient.getCurrentUserId(), {
                 IncludeItemTypes: target.itemType,
                 Recursive: true,
                 SortBy: 'SortName',
@@ -605,7 +586,7 @@ export default function (view) {
     }
 
     // Item types named on the second line of a picked item.
-    var TYPE_LABELS = { BoxSet: 'Collection', CollectionFolder: 'Library', MusicVideo: 'Music Video' };
+    var TYPE_LABELS = { BoxSet: 'Collection', MusicVideo: 'Music Video' };
 
     // destroyAssignments
     // Removes the assignment tabs and their pickers.

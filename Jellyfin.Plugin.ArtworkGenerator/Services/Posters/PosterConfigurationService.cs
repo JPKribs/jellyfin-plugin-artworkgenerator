@@ -95,9 +95,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 profile.VideoIds ??= new List<Guid>();
                 profile.CollectionIds ??= new List<Guid>();
                 profile.FolderIds ??= new List<Guid>();
-                profile.LibraryIds ??= new List<Guid>();
                 profile.Slots ??= new List<SlotAssignment>();
-                profile.Slots.RemoveAll(slot => slot == null);
+
+                // A library gets no artwork, so a stored library cell is dropped.
+                profile.Slots.RemoveAll(slot => slot == null || slot.Kind == ArtworkItemKind.Library);
                 profile.Backdrop ??= new BackdropSettings();
             }
         }
@@ -145,13 +146,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     }
                 }
 
-                // Films, standalone videos, collections, folders, and libraries are all assigned by
+                // Films, standalone videos, collections, and folders are all assigned by
                 // their own id, so they share one index rather than each having a near-identical copy.
                 var ownIds = profile.MovieIds
                     .Concat(profile.VideoIds)
                     .Concat(profile.CollectionIds)
-                    .Concat(profile.FolderIds)
-                    .Concat(profile.LibraryIds);
+                    .Concat(profile.FolderIds);
                 foreach (var ownId in ownIds)
                 {
                     if (!byOwnId.TryAdd(ownId, profile))

@@ -42,9 +42,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             (ArtworkItemKind.Folder, ArtworkSlot.Primary),
             (ArtworkItemKind.Folder, ArtworkSlot.Thumb),
             (ArtworkItemKind.Folder, ArtworkSlot.Logo),
-            (ArtworkItemKind.Folder, ArtworkSlot.Backdrop),
-            (ArtworkItemKind.Library, ArtworkSlot.Primary),
-            (ArtworkItemKind.Library, ArtworkSlot.Thumb)
+            (ArtworkItemKind.Folder, ArtworkSlot.Backdrop)
         };
 
         public ArtworkProfile()
@@ -56,7 +54,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             VideoIds = new List<Guid>();
             CollectionIds = new List<Guid>();
             FolderIds = new List<Guid>();
-            LibraryIds = new List<Guid>();
             Slots = new List<SlotAssignment>();
             Backdrop = new BackdropSettings();
         }
@@ -103,11 +100,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
         public List<Guid> FolderIds { get; set; }
 
-        /// <summary>Gets or sets the libraries assigned to this profile.</summary>
-        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
-        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
-        public List<Guid> LibraryIds { get; set; }
-
         /// <summary>Gets or sets the shape of series primary images.</summary>
         public ArtworkShape SeriesPrimaryShape { get; set; } = ArtworkShape.Portrait;
 
@@ -128,9 +120,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         /// <summary>Gets or sets the shape a library folder's primary image is drawn in.</summary>
         public ArtworkShape FolderPrimaryShape { get; set; } = ArtworkShape.Landscape;
-
-        /// <summary>Gets or sets the shape a library's primary image is drawn in.</summary>
-        public ArtworkShape LibraryPrimaryShape { get; set; } = ArtworkShape.Landscape;
 
         [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification = "List<T> required for XML serialization")]
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for XML serialization")]
@@ -165,7 +154,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
             ArtworkItemKind.Video => VideoPrimaryShape,
             ArtworkItemKind.Collection => CollectionPrimaryShape,
             ArtworkItemKind.Folder => FolderPrimaryShape,
-            ArtworkItemKind.Library => LibraryPrimaryShape,
             _ => EpisodePrimaryShape
         };
 
