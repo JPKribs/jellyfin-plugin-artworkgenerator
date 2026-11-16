@@ -1,12 +1,8 @@
 # Design Examples
 
-Every design ships with two worked examples: one showing it as it comes, and one pushed somewhere
-else with color, a gradient, the frame's own palette, a grid of frames, or the text moved to another
-edge. Each is a real configuration you can import and edit.
+Every design ships with two worked examples. One shows it as it comes, and one pushes it somewhere else with color, a gradient, the frame's own palette, a grid of frames, or the text moved to another edge. Each is a real configuration you can import and edit.
 
-Download a template, then import it from the plugin's **Designs** tab. Every image below was
-rendered by the plugin from the same public domain frames, so what differs between them is the
-design and nothing else.
+Download a template, then import it from the plugin's **Designs** tab. Every image below was rendered by the plugin from the same public domain frames, so what differs between them is the design and nothing else. Every template uses the bundled fonts, so an imported template draws the same on any server.
 
 | Design | | |
 |---|---|---|

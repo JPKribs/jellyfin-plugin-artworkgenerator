@@ -3,14 +3,14 @@
 Each design uses one of these styles. For the full set of worked examples and downloadable templates, see [Design Examples](EXAMPLES.md).
 
 ## Standard Style
-Simple screenshot with optional season/episode information.
+A full frame with the title and an optional season and episode code at the bottom.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
 | ![Standard Example 1](examples/Standard/Example1.png) | ![Standard Example 2](examples/Standard/Example2.png) | ![Standard Example 3](examples/Standard/Example3.png) |
 
 ## Brush Style
-Flat color with a transparent brush cutout revealing the screenshot beneath, with optional season/episode information to the side.
+Flat color with a transparent brush cutout revealing the screenshot beneath, with optional season and episode information to the side.
 
 | Example 1 | Example 2 | Example 3 |
 |-----------|-----------|-----------|
@@ -23,10 +23,10 @@ Large numbers displayed as transparent cutouts revealing the frame beneath, with
 |-----------|-----------|-----------|
 | ![Cutout Example 1](examples/Cutout/Example1.png) | ![Cutout Example 2](examples/Cutout/Example2.png) | ![Cutout Example 3](examples/Cutout/Example3.png) |
 
-**Cutout Types:**
+The cutout's **Type** is one of these.
 
-- **Code**: Displays episode in format "S01E03"
-- **Text**: Displays episode number as words (e.g., "THREE")
+- **Code**: the episode as a code, such as "S01E03".
+- **Text**: the episode number as a word, such as "THREE".
 
 ## Frame Style
 Decorative frame borders with the title and an optional subtitle.
@@ -98,8 +98,8 @@ Most styles let the title and subtitle sit at the top, the center, or the bottom
 |-----|--------|--------|
 | ![Text at the top](examples/StandardGradient/Example1.png) | ![Text centered](examples/GlassGradient/Example1.png) | ![Text at the bottom](examples/Standard/Example1.png) |
 
-## Palette Derived Colors
-Overlay colors sampled from the dominant color of each episode's frame instead of a fixed color. Works with every style. The configured alpha values are preserved.
+## Palette Colors
+**Palette Colors** sample the overlay colors from the dominant color of each frame instead of a fixed color, and work with every style. Only the opacity of the configured colors still applies, so the page shows each as a slider in percent.
 
 | Brush | Cutout | Fade |
 |-------|--------|------|

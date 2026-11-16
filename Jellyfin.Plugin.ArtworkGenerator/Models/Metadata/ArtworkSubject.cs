@@ -274,7 +274,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
                 ArtworkItemKind.Movie => FromMovie((Movie)item),
                 ArtworkItemKind.Video => FromStandalone((Video)item, ArtworkItemKind.Video),
                 { } group when group.IsGroup() => FromGroup((Folder)item, group),
-                _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, videos, collections, folders, and libraries that can hold video.", nameof(item))
+                _ => throw new ArgumentException("Artwork can only be generated for series, seasons, episodes, videos, collections, and folders that can hold video.", nameof(item))
             };
         }
 

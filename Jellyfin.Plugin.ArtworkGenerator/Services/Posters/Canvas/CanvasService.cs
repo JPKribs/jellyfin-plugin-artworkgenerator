@@ -87,7 +87,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
                 if (subject.Kind.IsGroup())
                 {
-                    _logger.LogDebug("No frames could be extracted for {Name}; a collection, folder, or library is left with the artwork it has", item.Name);
+                    _logger.LogDebug("No frames could be extracted for {Name}; a collection or folder is left with the artwork it has", item.Name);
                     return Array.Empty<SKBitmap>();
                 }
 

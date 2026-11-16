@@ -23,7 +23,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Configuration
         public FrameExtractionSettings FrameExtraction { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of alternates offered when replacing an image from the Edit Images
+        /// Gets or sets the number of choices offered when replacing an image from the Edit Images
         /// dialog, from 1 up to a safety ceiling of 1000. An automatic refresh, which keeps a single
         /// image of each type, renders only one, and only as many backdrops as the library keeps.
         /// </summary>

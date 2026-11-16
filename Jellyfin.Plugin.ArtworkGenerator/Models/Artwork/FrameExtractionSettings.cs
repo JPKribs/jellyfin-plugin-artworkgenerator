@@ -65,7 +65,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public SamplingRate SamplingRate { get; set; } = SamplingRate.Medium;
 
         /// <summary>Gets or sets the most videos a series, season, collection, folder, or library takes frames from, or 0 for all.</summary>
-        [Display(Name = "Videos Per Parent", Description = "Most videos a series, season, collection, or library takes frames from, or 0 for all. Lower is faster on network storage.")]
+        [Display(Name = "Videos Per Parent", Description = "Most videos a series, season, collection, or folder takes frames from, or 0 for all. Lower is faster on network storage.")]
         public int VideosPerParent { get; set; } = ArtworkSources.DefaultVideosPerParent;
 
         /// <summary>Gets or sets a value indicating whether image types draw from overlapping frames.</summary>
