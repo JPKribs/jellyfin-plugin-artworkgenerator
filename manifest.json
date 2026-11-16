@@ -2,7 +2,7 @@
   {
     "guid": "b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e",
     "name": "Artwork Generator",
-    "description": "Artwork Generator draws posters, thumbs, backdrops, and text logos for series, seasons, episodes, films, and any other video, extracting frames from the item itself and rendering them through designs you control.",
+    "description": "Artwork Generator draws posters, thumbs, backdrops, and text logos for series, seasons, episodes, films, any other video, collections, and folders, extracting frames from the item itself and rendering them through designs you control.",
     "overview": "Generate artwork from your own video",
     "imageUrl": "https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png",
     "owner": "JPKribs",

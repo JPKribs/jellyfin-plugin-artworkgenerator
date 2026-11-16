@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.5.0"
+version: "12.4.5.1"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: Generate artwork from your own video
@@ -17,34 +17,8 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
-  added:
-  - Fonts on the Settings tab, which uploads .ttf and .otf fonts of up to 20 MB to the plugin fonts folder and lists them by family and style with Delete
-  - Nine bundled font families under the SIL Open Font License, Anton, Bebas Neue, Lora, Montserrat, Noto Sans, Oswald, Playfair Display, Poppins, and Roboto, available to every design and logo design on any server
   changed:
   - A new design or logo design starts with the bundled Montserrat font instead of Arial, which a server may not have. Saved designs keep their fonts
-  - Whole libraries no longer get generated artwork, since it did not work
-  - The font lists on Designs and Logos group families under Uploaded, Bundled, and Server, and show a new upload the next time the tab opens
-  - A font family name is looked up in uploaded fonts first, then bundled fonts, then fonts installed on the server, and a missing style uses the nearest one the family has
-  - The Designs tab no longer lists the sample images under the preview
-  - Every tab takes the JPKribs.Jellyfin.Base 2026.11.19 look, and results show beside the Save button or the picker rather than in a popup
-  - Remove replaces Delete on the Designs, Logos, and Profiles pickers, and Import comes before Export
-  - Names are checked in the New and Rename dialogs before they close
-  - The logo preview shows the logo over a Dark, Light, or Checkered background
-  - Assigned items on the Profiles tab sit under a tab for each kind and are picked with a library search that shows their artwork
-  - The Images table on the Profiles tab is a grid for each image, under the tabs Primary, Thumb, Logo, and Backdrop. An image's design choices show grayed out until Generate is on, and the third design until a second is picked
-  - Every tab saves through the Base Save Bar, which says when there are unsaved changes and marks a field that is out of range
-  - The Logos tab names the Sample Name box and shows the artwork a sampled color comes from as a card under it
-  - Color settings use the Base color picker with its opacity box. When Palette Colors or Color From sampling is on, only an opacity slider shows, in percent
-  - Every Save is the same full width Save Bar, with any other actions in a full width row above it
-  fixed:
-  - Color settings keep their picker at its own size, with their label above
   developer:
-  - Uses JPKribs.Jellyfin.Base 2026.11.19, whose record selector, buttons, Preview Frame, Media Picker, Media Card, List, Matrix Grid with disabled cells, Sub Tabs, Save Bar with its failed reason, Color Picker, Slider, validation, prompt and confirm dialogs, change tracker, indent, callout, and status text replace the hand built versions
-  - Fields show and hide through Base's bindReveal and setVisible, and a hidden field is disabled so Base's validation skips it
-  - ag_shared.css holds only layout between Base components
-  - ag_shared.js holds the tab list and is the one module that imports Base
-  - Plugin classes carry the ag- prefix
-  - GET Fonts returns each family once with its source, Uploaded, Bundled, or System, in that order
-  - GET, POST, and DELETE Fonts/Uploaded list, upload, and delete fonts in the fonts folder. POST takes the file name and base64 data in the body, and DELETE takes the file name in the body
-  - The bundled fonts and their OFL.txt files are embedded resources, so the plugin stays one DLL
-  - Adds starthere.md, agent.md, and the guides in skills
+  - Uses JPKribs.Jellyfin.Base 2026.11.20. It replaced no local code, since the plugin has no Repeater, Copy Field, Definition List, or editor dialog footer button, and its section and collapsible titles are already written in Title Case
+  - The screenshot kit in tools/screenshots takes every docs screenshot from the plugin pages with jellyfin-web stylesheets
