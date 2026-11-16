@@ -27,13 +27,13 @@ changelog:
   - The Images table on the Profiles tab is a grid for each image, under the tabs Primary, Thumb, Logo, and Backdrop. An image's design choices show grayed out until Generate is on, and the third design until a second is picked
   - Every tab saves through the Base Save Bar, which says when there are unsaved changes and marks a field that is out of range
   - The Logos tab names the Sample Name box and shows the artwork a sampled color comes from as a card under it
-  - Color settings use the Base color picker with its opacity box. When Palette Colors or Color From sampling is on, only the opacity box shows, in percent
+  - Color settings use the Base color picker with its opacity box. When Palette Colors or Color From sampling is on, only an opacity slider shows, in percent
   - Every Save is the same full width Save Bar, with any other actions in a full width row above it
   fixed:
   - The arrows on collapsible sections are back to their usual size
   - Color settings keep their picker at its own size, with their label above
   developer:
-  - Uses JPKribs.Jellyfin.Base 2026.11.19, whose record selector, buttons, Preview Frame, Media Picker, Media Card, List, Matrix Grid with disabled cells, Sub Tabs, Save Bar with its failed reason, Color Picker with opacity only, validation, prompt and confirm dialogs, change tracker, indent, callout, and status text replace the hand built versions
+  - Uses JPKribs.Jellyfin.Base 2026.11.19, whose record selector, buttons, Preview Frame, Media Picker, Media Card, List, Matrix Grid with disabled cells, Sub Tabs, Save Bar with its failed reason, Color Picker, Slider, validation, prompt and confirm dialogs, change tracker, indent, callout, and status text replace the hand built versions
   - Fields show and hide through Base's bindReveal and setVisible, and a hidden field is disabled so Base's validation skips it
   - ag_shared.css holds only layout between Base components
   - ag_shared.js holds the tab list and is the one module that imports Base
