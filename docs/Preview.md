@@ -1,5 +1,5 @@
 # Live Preview
 
-A live preview at the top of the Designs page renders your current settings against sample artwork in both shapes at once, and updates as you change them. Choose whether it shows a series, a season, an episode, a film, a standalone video, a collection, a folder, or a library. The Logos page previews logos the same way, against a sample name you type, over a **Dark**, **Light**, or **Checkered** background. Select a preview to enlarge it, or select one of the **Sample Images** under it to see the artwork feeding it.
+A live preview at the top of the Designs page renders your current settings against sample artwork in both shapes at once, and updates as you change them. Choose whether it shows a series, a season, an episode, a film, a standalone video, a collection, a folder, or a library. The Logos page previews logos the same way, against a sample name you type, over a **Dark**, **Light**, or **Checkered** background. Select a preview to enlarge it.
 
 ![Preview Modal](screenshots/Preview-Modal.png)

@@ -5,15 +5,12 @@ import {
     bindColorField,
     createArtworkPage,
     createArtworkSaveBar,
-    createList,
-    createMediaCard,
     createPreviewFrame,
     confirmDialog,
     downloadJson,
     generateGuid,
     disableHiddenFields,
     initCollapsibles,
-    openImageDialog,
     pickJsonFile,
     promptDialog,
     promptName
@@ -24,10 +21,8 @@ export default function (view) {
 
     var fullConfig = null;
     var currentConfigId = null;
-    var _componentObjectUrls = [];
     var _staticDataPromise = null;
     var _previews = {};
-    var _samples = null;
 
     var page = createArtworkPage(view, 0, {
         bind: function () {
@@ -36,7 +31,6 @@ export default function (view) {
             buildPreviews();
             bindEventListeners();
             bindColorControls();
-            loadPreviewComponents();
         },
 
         // Styles and fonts must be in the DOM before the first config is applied, otherwise a
@@ -647,46 +641,6 @@ export default function (view) {
         Object.keys(_previews).forEach(function (shape) { _previews[shape].update(); });
     }
 
-    // The sample images the preview is drawn from.
-    var SAMPLES = [
-        { component: 'canvas', title: 'Canvas Image' },
-        { component: 'poster', title: 'Series Poster' },
-        { component: 'logo', title: 'Logo' }
-    ];
-
-    // loadPreviewComponents
-    // Lists the sample images as Base Media Cards. Each opens larger when selected.
-    function loadPreviewComponents() {
-        _samples = createList({
-            items: SAMPLES,
-            layout: 'rows',
-            label: 'Sample Images',
-            render: function (sample) {
-                return createMediaCard({
-                    shape: 'square',
-                    icon: 'image',
-                    title: sample.title,
-                    // Fetched through ApiClient rather than assigned straight to the image, since a bare
-                    // image request carries no auth header and the endpoint stays behind the admin policy.
-                    image: function () {
-                        return shared.fetchObjectUrl('Preview/Component/' + sample.component).then(function (objectUrl) {
-                            _componentObjectUrls.push(objectUrl);
-                            sample.url = objectUrl;
-                            return objectUrl;
-                        }, function (error) {
-                            console.error('Failed to load preview component "' + sample.component + '":', error);
-                            return '';
-                        });
-                    },
-                    onClick: function () {
-                        if (sample.url) openImageDialog(sample.title, sample.url);
-                    }
-                });
-            }
-        });
-        view.querySelector('#previewSamples').appendChild(_samples.element);
-    }
-
     // Which settings a style uses comes from the server, where each generator declares its own
     // rules, so a new style needs no change here. A required setting is switched on and its toggle
     // taken away; a hidden one is a setting the style ignores.
@@ -862,12 +816,8 @@ export default function (view) {
     }
 
     view.addEventListener('viewdestroy', function () {
-        // The frames free their own images. The component thumbnails are released here.
+        // The frames free their own images.
         Object.keys(_previews).forEach(function (shape) { _previews[shape].destroy(); });
         _previews = {};
-        if (_samples) _samples.destroy();
-        _samples = null;
-        _componentObjectUrls.forEach(URL.revokeObjectURL);
-        _componentObjectUrls = [];
     });
 }

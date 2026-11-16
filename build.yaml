@@ -18,6 +18,7 @@ artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
   changed:
+  - The Designs tab no longer lists the sample images under the preview
   - Every tab takes the JPKribs.Jellyfin.Base 2026.11.19 look, and results show beside the Save button or the picker rather than in a popup
   - Remove replaces Delete on the Designs, Logos, and Profiles pickers, and Import comes before Export
   - Names are checked in the New and Rename dialogs before they close
@@ -25,7 +26,6 @@ changelog:
   - Assigned items on the Profiles tab sit under a tab for each kind and are picked with a library search that shows their artwork
   - The Images table on the Profiles tab is a grid for each image, under the tabs Primary, Thumb, Logo, and Backdrop. An image's design choices show grayed out until Generate is on, and the third design until a second is picked
   - Every tab saves through the Base Save Bar, which says when there are unsaved changes and marks a field that is out of range
-  - The Designs tab lists its sample images under the previews, and each opens larger when selected
   - The Logos tab names the Sample Name box and shows the artwork a sampled color comes from as a card under it
   - Color settings use the Base color picker with its opacity box. When Palette Colors or Color From sampling is on, only the opacity box shows, in percent
   - Every Save is the same full width Save Bar, with any other actions in a full width row above it

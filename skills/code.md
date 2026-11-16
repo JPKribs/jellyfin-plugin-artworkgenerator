@@ -36,7 +36,7 @@ How to write, comment, and test code in this plugin. It covers C#, JavaScript, H
 | Names and other values from a dialog | `promptDialog`, through `promptName` in `ag_shared.js` |
 | Generated images beside their fields | `createPreviewFrame` |
 | Picking library items | `createMediaPicker` |
-| Sample images and other media | `createMediaCard` in a `createList` |
+| Media items in a list | `createMediaCard` in a `createList` |
 | A grid of choices by kind of item | `createMatrixGrid`, one per `createSubTabs` tab, with a cell that does not apply yet `disabled` |
 | Dialogs | `openDialog`, `confirmDialog`, `promptDialog`, `openEditorDialog` |
 | Lists and row editors | `createRepeater`, `createSortableCardList` |
