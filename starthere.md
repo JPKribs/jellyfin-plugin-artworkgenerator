@@ -65,6 +65,7 @@ Explain what you would change, why, and what it risks. Wait for an answer before
 | `Jellyfin.Plugin.ArtworkGenerator.Demo/` | The demo render, which draws every example template into `docs/examples/`. |
 | `docs/` | The documentation site, built with MkDocs. |
 | `docs/examples/` | One folder per example design, with its template and rendered images. |
+| `tools/` | The screenshot kit and the frame benchmark. Neither is part of the plugin build or the solution. |
 | `build.yaml` | The version, the artifacts, and the release notes. |
 | `build.sh` | Builds the release zip into `dist/`. |
 | `skills/` | The guides. |

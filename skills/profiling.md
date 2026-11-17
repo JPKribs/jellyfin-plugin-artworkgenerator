@@ -20,7 +20,7 @@ Without one of these, do not profile. Code that has no symptom and no change is 
 | :--- | :--- | :--- |
 | Edit Images | `ArtworkRemoteImageProvider.GetImages` | One render per choice and design, so **Choices In Edit Images** multiplies it |
 | Refresh | `ArtworkService.GenerateAsync` | One render for each image a profile turns on, for every item in the library |
-| Frame extraction | `FrameExtractionService.ExtractFrameCandidatesAsync` | One ffmpeg seek per sample, so **Sampling Rate** multiplies it |
+| Frame extraction | `FrameExtractionService.ExtractFrameCandidatesAsync` | One ffmpeg seek per sample, so **Samples Per Frame** multiplies it, and **Parallel Extractions** runs that many at once |
 | Frame pool | `FramePoolService.AcquireAsync` | Frames on disk shared by every image of one item, behind a gate per item |
 | Drawing | The generators in `Services/Posters/Types/` | SkiaSharp work per image, with text fitting in `TextUtils` |
 | Choice cache | `GeneratedImageCache` | Rendered choices held in memory, up to `DefaultMaxBytes` |
@@ -146,6 +146,16 @@ pgrep -f testhost
 dotnet-trace collect --process-id <pid> --duration 00:00:08 --format Speedscope -o ~/Desktop/method.nettrace
 ```
 
+### The Frame Benchmark
+
+A change to the frame pool or to frame extraction is timed with the benchmark in [tools/benchmark](../tools/benchmark/README.md) instead of a temporary test. It runs the plugin's frame pool against real video, with a stand-in for Jellyfin's media encoder that runs Jellyfin's own ffmpeg command, and prints the ffmpeg calls and the time for one **Edit Images** open on a baseline commit and on the working tree.
+
+```bash
+tools/benchmark/run.sh --media ~/bench-media --choices 6,10,20
+```
+
+It lives outside the plugin and the solution, so it never ships and the tests never run it. Keep its media and output outside the repository.
+
 ## Tier 2: Trace One Path
 
 The plugin runs in Jellyfin's process, so attach to that process on a test server you run yourself, with the plugin installed from a `Release` build. Never profile a server other people use.
@@ -219,9 +229,9 @@ Try these in order. Each is cheaper and safer than the next.
 
 ## What Not to Do
 
-* Never ship a profiler, a timing test, a `Stopwatch`, an allocation counter, or a timing log in the plugin.
+* Never ship a profiler, a timing test, a `Stopwatch`, an allocation counter, or a timing log in the plugin. The frame benchmark in `tools/benchmark` is the one timing tool kept in the repository, and only there.
 * Never commit trace files, gcdumps, or timing output.
-* Never lower **Sampling Rate**, **Choices In Edit Images**, or a default to hide a slow path.
+* Never lower **Samples Per Frame**, the sample minimum or maximum, **Choices In Edit Images**, or a default to hide a slow path.
 * Never profile a Debug build. Use `Release`.
 * Never change a [stop and ask](../starthere.md#stop-and-ask) item without approval, even when it is the cause.
 

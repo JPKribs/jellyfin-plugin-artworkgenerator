@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>frame-benchmark</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.ArtworkGenerator.Benchmark</RootNamespace>
+    <!-- Another checkout of the plugin can be measured by pointing this at its csproj, which is how
+         run.sh times the last commit against the working tree. -->
+    <PluginProject Condition="'$(PluginProject)' == ''">../../Jellyfin.Plugin.ArtworkGenerator/Jellyfin.Plugin.ArtworkGenerator.csproj</PluginProject>
+  </PropertyGroup>
+
+  <!-- The plugin keeps the Jellyfin packages private to its own build, so the benchmark, which runs
+       the frame pool outside a server, references them itself. -->
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="12.4.0" />
+    <PackageReference Include="Jellyfin.Model" Version="12.4.0" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
+  </ItemGroup>
+
+  <!-- Jellyfin supplies SkiaSharp's native library to the plugin, which leaves it out of its own
+       build. Outside a server the benchmark brings it, or every frame fails to decode. -->
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PluginProject)" />
+  </ItemGroup>
+
+</Project>
