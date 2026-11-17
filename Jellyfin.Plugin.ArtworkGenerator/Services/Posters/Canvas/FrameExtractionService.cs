@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
     /// Extracts high-quality video frames using Jellyfin's media encoder,
     /// scoring candidates by brightness and sharpness to select the best frames.
     /// </summary>
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The extraction gate is a SemaphoreSlim whose wait handle is never used, so it holds nothing to release. A gate replaced when the setting changes is left to the GC for the same reason.")]
     public class FrameExtractionService
     {
         // Failed extractions in a row after which the file is taken to be unreadable and the sweep
@@ -73,6 +75,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         private readonly IMediaSegmentManager _mediaSegmentManager;
         private readonly ILibraryManager _libraryManager;
         private readonly Func<FrameExtractionSettings?> _settings;
+        private readonly object _gateSync = new();
+        private SemaphoreSlim? _gate;
+        private int _gateSize;
 
         public FrameExtractionService(
             ILogger<FrameExtractionService> logger,
@@ -92,16 +97,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // How many frames are looked at before the best are kept. The scorer ranks rather than
         // gates, so it needs a field to choose from: sampling one frame and taking it, which is what
         // an early exit amounted to on real video, is the same as not scoring at all.
-        internal static int MaxAttempts(int count, SamplingRate rate)
+        //
+        // A video asked for one or two frames still gets a field of its own to choose from, unless
+        // the pool spreads over several videos. Their frames are then ranked against one another,
+        // so the field is the whole pool, and the floor would only double what the rate promises:
+        // a series pool asks each episode for one frame, and at the defaults spent eight seeks on it.
+        internal static int MaxAttempts(int count, int perFrame, int minimum, int maximum, bool spread = false)
         {
-            var (perCandidate, minimum, ceiling) = rate switch
-            {
-                SamplingRate.Low => (2, 4, 24),
-                SamplingRate.High => (8, 16, 64),
-                _ => (4, 8, 48)
-            };
+            return Math.Clamp(Math.Max(1, count) * perFrame, spread ? Math.Min(perFrame, maximum) : minimum, maximum);
+        }
 
-            return Math.Clamp(Math.Max(1, count) * perCandidate, minimum, ceiling);
+        internal static int MaxAttempts(int count, FrameExtractionSettings? settings, bool spread = false)
+        {
+            var (perFrame, minimum, maximum) = (settings ?? new FrameExtractionSettings()).Sampling();
+            return MaxAttempts(count, perFrame, minimum, maximum, spread);
         }
 
         /// <summary>
@@ -112,6 +121,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         /// so the same phase and offset always visit the same timestamps. The caller owns the
         /// returned files and is responsible for deleting them.
         /// </summary>
+        /// <param name="spread">
+        /// Whether the frames are ranked against frames from other videos, which drops the per-video
+        /// sampling floor. See <see cref="MaxAttempts"/>.
+        /// </param>
         public async Task<IReadOnlyList<ExtractedFrame>> ExtractFrameCandidatesAsync(
             Video episode,
             float windowStartPercent,
@@ -119,6 +132,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             int count,
             double seekPhase,
             int attemptOffset,
+            bool spread,
             CancellationToken cancellationToken = default)
         {
             if (episode == null || string.IsNullOrEmpty(episode.Path))
@@ -157,18 +171,28 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             // Candidates kept so far, never more than count of them.
             var candidates = new List<FrameCandidate>(count);
+            var sync = new object();
 
             // Every sample is taken before any is chosen. The old loop stopped at the first frame
             // over a pass mark, which on real video was almost always the very first one.
-            var maxAttempts = MaxAttempts(count, _settings()?.SamplingRate ?? SamplingRate.Medium);
+            var maxAttempts = MaxAttempts(count, _settings(), spread);
             var consecutiveFailures = 0;
+
+            // Attempts are independent seeks, so several run at once; a film's dozens of samples
+            // used to queue behind one another. Each extraction still goes through the shared
+            // limit, so this and the frame pool working on several videos never run more than
+            // Parallel Extractions between them.
+            using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = ParallelExtractions(),
+                CancellationToken = stop.Token
+            };
 
             try
             {
-                for (int attempt = 0; attempt < maxAttempts; attempt++)
+                await Parallel.ForEachAsync(Enumerable.Range(0, maxAttempts), options, async (attempt, token) =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     string? extractedPath = null;
                     bool keepFile = false;
 
@@ -177,14 +201,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                         var seekSeconds = GenerateSeekTime(seekRanges, attemptOffset + attempt, seekPhase);
                         var offset = TimeSpan.FromSeconds(seekSeconds);
 
-                        extractedPath = await _mediaEncoder.ExtractVideoImage(
-                            episode.Path,
-                            container,
-                            mediaSource,
-                            videoStream,
-                            null,
-                            offset,
-                            cancellationToken).ConfigureAwait(false);
+                        var gate = Gate();
+                        await gate.WaitAsync(token).ConfigureAwait(false);
+                        try
+                        {
+                            extractedPath = await _mediaEncoder.ExtractVideoImage(
+                                episode.Path,
+                                container,
+                                mediaSource,
+                                videoStream,
+                                null,
+                                offset,
+                                token).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            gate.Release();
+                        }
 
                         if (string.IsNullOrEmpty(extractedPath) || !File.Exists(extractedPath))
                         {
@@ -192,23 +225,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                             {
                                 _logger.LogWarning("ExtractVideoImage returned no output on first attempt");
                             }
-                            continue;
+
+                            return;
                         }
 
                         FrameQuality quality;
-                        using (var stream = File.OpenRead(extractedPath))
-                        using (var frameBitmap = SKBitmap.Decode(stream))
+                        using (var frameBitmap = DecodeForAnalysis(extractedPath))
                         {
                             if (frameBitmap == null)
                             {
-                                continue;
+                                return;
                             }
 
                             using var analysisBitmap = CreateAnalysisBitmap(frameBitmap);
                             quality = AnalyzeFrame(analysisBitmap);
                         }
-
-                        consecutiveFailures = 0;
 
                         // A fade or a blackout is not a picture, whatever else it measures well on.
                         var qualityScore = quality.Brightness > MinimumBrightness
@@ -219,7 +250,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                             "Attempt {Attempt}: brightness {Brightness:F3}, contrast {Contrast:F3}, sharpness {Sharpness:F0}, color {Color:F3}, headroom {Headroom:F2}, score {Score:F3}",
                             attempt + 1, quality.Brightness, quality.Contrast, quality.Sharpness, quality.Colorfulness, quality.Headroom, qualityScore);
 
-                        keepFile = TryAddCandidate(candidates, count, extractedPath, qualityScore);
+                        lock (sync)
+                        {
+                            consecutiveFailures = 0;
+                            keepFile = TryAddCandidate(candidates, count, new FrameCandidate(extractedPath, qualityScore, attempt));
+                        }
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
@@ -227,12 +262,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
                         // A run of failures means the file cannot be read, not that this timestamp
                         // was unlucky, so the sweep stops rather than working through every seek.
-                        if (++consecutiveFailures >= ConsecutiveFailureLimit)
+                        bool unreadable;
+                        lock (sync)
                         {
-                            break;
+                            unreadable = ++consecutiveFailures >= ConsecutiveFailureLimit;
                         }
 
-                        continue;
+                        if (unreadable)
+                        {
+                            await stop.CancelAsync().ConfigureAwait(false);
+                        }
                     }
                     finally
                     {
@@ -241,7 +280,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                             TryDeleteFile(extractedPath);
                         }
                     }
-                }
+                }).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // The sweep was stopped by a run of failures, not by the caller; keep what it found.
             }
             catch (OperationCanceledException)
             {
@@ -260,8 +303,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 return Array.Empty<ExtractedFrame>();
             }
 
+            // Attempts finish in any order, so ties fall back to the walk's order to keep a fixed
+            // seed reproducing the same ranks.
             var ordered = candidates
                 .OrderByDescending(c => c.Score)
+                .ThenBy(c => c.Attempt)
                 .Select(c => new ExtractedFrame(c.Path, c.Score))
                 .ToArray();
 
@@ -274,35 +320,65 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
         // TryAddCandidate
         // Keeps the frame if there is room or it beats the weakest candidate held so far.
         // Returns true when the file was retained (and so must not be deleted by the caller).
-        private static bool TryAddCandidate(
-            List<FrameCandidate> candidates,
-            int capacity,
-            string path,
-            double score)
+        // A tie goes to the earlier attempt, so the kept set does not depend on which of several
+        // concurrent attempts finished first.
+        internal static bool TryAddCandidate(List<FrameCandidate> candidates, int capacity, FrameCandidate candidate)
         {
             if (candidates.Count < capacity)
             {
-                candidates.Add(new FrameCandidate(path, score));
+                candidates.Add(candidate);
                 return true;
             }
 
             var weakestIndex = 0;
             for (int i = 1; i < candidates.Count; i++)
             {
-                if (candidates[i].Score < candidates[weakestIndex].Score)
+                if (Weaker(candidates[i], candidates[weakestIndex]))
                 {
                     weakestIndex = i;
                 }
             }
 
-            if (score <= candidates[weakestIndex].Score)
+            if (!Weaker(candidates[weakestIndex], candidate))
             {
                 return false;
             }
 
             TryDeleteFile(candidates[weakestIndex].Path);
-            candidates[weakestIndex] = new FrameCandidate(path, score);
+            candidates[weakestIndex] = candidate;
             return true;
+        }
+
+        // Weaker
+        // True when a ranks below b: a lower score, or the same score from a later attempt.
+        private static bool Weaker(FrameCandidate a, FrameCandidate b)
+            => a.Score < b.Score || (a.Score == b.Score && a.Attempt > b.Attempt);
+
+        // ParallelExtractions
+        // How many extractions may run at once, from the settings.
+        private int ParallelExtractions()
+            => Math.Clamp(
+                _settings()?.ParallelExtractions ?? FrameExtractionSettings.DefaultParallelExtractions,
+                1,
+                FrameExtractionSettings.MaxParallelExtractions);
+
+        // Gate
+        // The limit every extraction this service runs passes through, whichever video or pool it
+        // is for, sized to Parallel Extractions. A changed setting takes a new gate; extractions
+        // already holding the old one finish on it.
+        private SemaphoreSlim Gate()
+        {
+            var size = ParallelExtractions();
+            lock (_gateSync)
+            {
+                if (_gate == null || _gateSize != size)
+                {
+                    _gate = new SemaphoreSlim(size, size);
+                    _gateSize = size;
+                }
+
+                return _gate;
+            }
         }
 
         // GetSeekRangesAsync
@@ -455,6 +531,27 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
 
             return (int)ranges[^1].End;
+        }
+
+        // DecodeForAnalysis
+        // Decodes a sampled frame only as large as scoring needs. A JPEG can be decoded straight at
+        // an eighth, a quarter, or a half of its size, which is far cheaper than decoding a 4K frame
+        // whole only to shrink it to the analysis size. Twice the analysis size is kept, so the
+        // final resize to it, and the sharpness measured there, work from the same kind of source
+        // they always have.
+        internal static SKBitmap? DecodeForAnalysis(string path)
+        {
+            using var codec = SKCodec.Create(path);
+            if (codec == null)
+            {
+                return null;
+            }
+
+            var longSide = Math.Max(codec.Info.Width, codec.Info.Height);
+            var scale = longSide > 0 ? Math.Min(1f, 2f * AnalysisSize / longSide) : 1f;
+            var size = codec.GetScaledDimensions(scale);
+
+            return SKBitmap.Decode(codec, new SKImageInfo(size.Width, size.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
         }
 
         // CreateAnalysisBitmap
@@ -703,7 +800,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             catch (UnauthorizedAccessException) { }
         }
 
-        private readonly record struct FrameCandidate(string Path, double Score);
+        internal readonly record struct FrameCandidate(string Path, double Score, int Attempt);
 
         // SeekRange
         // A stretch of the video in seconds.

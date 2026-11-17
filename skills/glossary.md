@@ -71,8 +71,10 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | :--- | :--- | :--- | :--- |
 | Frame Extraction | How frames are taken from a video and cleaned up, on the **Settings** tab | `FrameExtractionSettings` | Capture settings |
 | Extraction window | The stretch of a video frames come from, set by **Extraction Start (%)** and **Extraction End (%)** | `ExtractWindowStart`, `ExtractWindowEnd` | Range, span |
-| Sampling Rate | How many frames are scored for each one kept, **Low**, **Medium**, or **High** | `SamplingRate` | Quality, sample size |
+| Samples Per Frame | How many frames are scored for each one kept | `SamplesPerFrame` | Quality, sampling rate |
+| Minimum Samples Per Video, Maximum Samples Per Video | The fewest and most frames scored from one video | `MinimumSamplesPerVideo`, `MaximumSamplesPerVideo` | Floor, ceiling |
 | Frame pool | The shared set of frames every image of one item draws from | `FramePoolService` | Cache, frame cache |
+| Parallel Extractions | How many frames are extracted at once, across every video | `ParallelExtractions` | Threads, workers |
 | Reuse Samples | Lets an item's images draw from overlapping frames | `ReuseSamples` | Share frames |
 | Videos Per Parent | The most videos a series, season, collection, or folder takes frames from | `VideosPerParent` | Video limit |
 | Media segments | Intros, outros, recaps, previews, and commercials a segment provider marks | `MediaSegmentType` | Chapters, markers |

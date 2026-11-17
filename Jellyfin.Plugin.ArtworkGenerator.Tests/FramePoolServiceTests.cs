@@ -151,4 +151,87 @@ public class FramePoolServiceTests
         Assert.Empty(FramePoolService.OrderSources(Array.Empty<string>(), 7));
         Assert.Equal(new[] { "only" }, FramePoolService.OrderSources(new[] { "only" }, 7));
     }
+
+    /// <summary>
+    /// The first round spreads over at least three episodes; a later round only tops up, from the
+    /// episodes after the ones already visited.
+    /// </summary>
+    [Fact]
+    public void PlanGrowth_TopsUpFromUnvisitedSources()
+    {
+        var first = FramePoolService.PlanGrowth(sourceCount: 40, nextSource: 0, missing: 1);
+        Assert.Equal(new[] { 0, 1, 2 }, first.Visits);
+        Assert.Equal(1, first.PerSource);
+
+        var topUp = FramePoolService.PlanGrowth(sourceCount: 40, nextSource: 10, missing: 2);
+        Assert.Equal(new[] { 10, 11 }, topUp.Visits);
+        Assert.Equal(1, topUp.PerSource);
+    }
+
+    /// <summary>A single video is asked for every missing frame in one visit.</summary>
+    [Fact]
+    public void PlanGrowth_AsksOneSourceForEverything()
+    {
+        var plan = FramePoolService.PlanGrowth(sourceCount: 1, nextSource: 3, missing: 12);
+
+        Assert.Equal(new[] { 3 }, plan.Visits);
+        Assert.Equal(12, plan.PerSource);
+    }
+
+    [Fact]
+    public void PlanGrowth_DoesNothingWhenNothingIsMissing()
+    {
+        Assert.Empty(FramePoolService.PlanGrowth(40, 0, 0).Visits);
+        Assert.Empty(FramePoolService.PlanGrowth(0, 0, 5).Visits);
+    }
+
+    /// <summary>
+    /// Opening Edit Images grows a series pool once per image type: the poster's choices, then the
+    /// backdrop, thumb, and logo a rank or a block further on. Each round used to visit as many
+    /// episodes as the whole pool needed, so a top-up of two frames re-sampled every episode again.
+    /// The work must stay in step with the frames kept.
+    /// </summary>
+    [Theory]
+    [InlineData(6, true)]
+    [InlineData(10, true)]
+    [InlineData(50, true)]
+    [InlineData(6, false)]
+    [InlineData(10, false)]
+    [InlineData(50, false)]
+    public void PlanGrowth_PickerWorkIsProportionalToFramesKept(int choices, bool reuseSamples)
+    {
+        const int Episodes = 500;
+        var offsets = reuseSamples
+            ? new[] { 0, 1, 2, 3 }
+            : new[] { 0, choices, 2 * choices, 3 * choices };
+
+        var held = 0;
+        var next = 0;
+        var visits = 0;
+        var largest = 0;
+        foreach (var needed in offsets.Select(offset => offset + choices))
+        {
+            largest = Math.Max(largest, needed);
+            var plan = FramePoolService.PlanGrowth(Episodes, next, needed - held);
+            visits += plan.Visits.Count;
+            next += plan.Visits.Count;
+            held += plan.Visits.Count * plan.PerSource;
+        }
+
+        Assert.True(held >= largest);
+        Assert.True(visits <= largest + 2, $"{visits} episode visits for {largest} frames");
+    }
+
+    /// <summary>
+    /// Extractions run side by side, so they can finish out of order. Only the unbroken run from the
+    /// start counts as visited; anything past a gap is visited again later.
+    /// </summary>
+    [Fact]
+    public void CompletedRun_StopsAtTheFirstGap()
+    {
+        Assert.Equal(0, FramePoolService.CompletedRun(new string?[] { null, "b", "c" }));
+        Assert.Equal(1, FramePoolService.CompletedRun(new string?[] { "a", null, "c" }));
+        Assert.Equal(3, FramePoolService.CompletedRun(new string?[] { "a", "b", "c" }));
+        Assert.Equal(0, FramePoolService.CompletedRun(Array.Empty<string?>()));
+    }
 }

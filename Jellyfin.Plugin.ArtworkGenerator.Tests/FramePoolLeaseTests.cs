@@ -44,6 +44,20 @@ public sealed class FramePoolLeaseTests : IDisposable
     private Task<FrameLease> Acquire(string key, Func<IReadOnlyList<Video>> sources, int needed)
         => _pools.AcquireAsync(key, sources, 20, 80, needed, CancellationToken.None);
 
+    /// <summary>
+    /// A round over several sources runs them side by side. When every one fails, the pool still
+    /// comes back empty and spent, as it did one source at a time.
+    /// </summary>
+    [Fact]
+    public async Task Acquire_GrowsOverSeveralSourcesAtOnce()
+    {
+        var sources = new[] { new Video { Name = "A" }, new Video { Name = "B" }, new Video { Name = "C" }, new Video { Name = "D" } };
+
+        using var lease = await Acquire("item", () => sources, 4);
+
+        Assert.Empty(lease.Paths);
+    }
+
     [Fact]
     public async Task Acquire_DoesNotLookForSourcesWhenNoFramesAreNeeded()
     {

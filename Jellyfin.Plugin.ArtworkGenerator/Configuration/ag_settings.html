@@ -57,9 +57,27 @@
                                 <div class="fieldDescription"></div>
                             </div>
 
-                            <div class="selectContainer inputContainer">
-                                <label for="selectSamplingRate"></label>
-                                <select is="emby-select" id="selectSamplingRate" data-frame-setting="SamplingRate"></select>
+                            <div class="inputContainer">
+                                <label for="txtSamplesPerFrame"></label>
+                                <input is="emby-input" type="number" id="txtSamplesPerFrame" min="1" max="8" step="1" data-frame-setting="SamplesPerFrame" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtMinimumSamplesPerVideo"></label>
+                                <input is="emby-input" type="number" id="txtMinimumSamplesPerVideo" min="1" max="64" step="1" data-frame-setting="MinimumSamplesPerVideo" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtMaximumSamplesPerVideo"></label>
+                                <input is="emby-input" type="number" id="txtMaximumSamplesPerVideo" min="1" max="64" step="1" data-frame-setting="MaximumSamplesPerVideo" data-type="number" />
+                                <div class="fieldDescription"></div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="txtParallelExtractions"></label>
+                                <input is="emby-input" type="number" id="txtParallelExtractions" min="1" max="8" step="1" data-frame-setting="ParallelExtractions" data-type="number" />
                                 <div class="fieldDescription"></div>
                             </div>
 

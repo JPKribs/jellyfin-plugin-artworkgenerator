@@ -82,7 +82,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 loggerFactory.CreateLogger<FramePoolService>(),
                 frameExtractionService,
                 Path.Combine(dataRoot, "frame-pool"),
-                () => Configuration?.FixedExtractionSeed);
+                () => Configuration?.FixedExtractionSeed,
+                () => Configuration?.FrameExtraction?.ParallelExtractions ?? FrameExtractionSettings.DefaultParallelExtractions);
 
             var canvasService = new CanvasService(
                 loggerFactory.CreateLogger<CanvasService>(),
@@ -187,7 +188,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
             var avoidedBefore = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
-            var samplingBefore = Configuration.FrameExtraction?.SamplingRate;
+            var samplingBefore = Configuration.FrameExtraction?.Sampling();
             var videosBefore = Configuration.FrameExtraction?.VideosPerParent;
 
             try
@@ -203,11 +204,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 throw;
             }
 
-            // A pool holds frames chosen under the old segment choices, sampling rate, and videos per
+            // A pool holds frames chosen under the old segment choices, sampling numbers, and videos per
             // parent, and would go on handing them out until it went idle.
             var avoidedAfter = FrameExtractionService.AvoidedSegmentTypes(Configuration.FrameExtraction);
             if (!avoidedBefore.SequenceEqual(avoidedAfter)
-                || samplingBefore != Configuration.FrameExtraction?.SamplingRate
+                || samplingBefore != Configuration.FrameExtraction?.Sampling()
                 || videosBefore != Configuration.FrameExtraction?.VideosPerParent)
             {
                 _framePool?.DiscardIdle();

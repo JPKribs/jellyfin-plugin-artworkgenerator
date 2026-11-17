@@ -38,7 +38,7 @@ These rules apply to every string a user can see. That includes HTML, JS, C# mes
 | :--- | :--- | :--- |
 | Tab | Title Case, one word | Designs |
 | Section and collapsible title | Title Case | Frame Extraction |
-| Field label | Title Case | Sampling Rate |
+| Field label | Title Case | Samples Per Frame |
 | Checkbox label | Title Case | Detect Letterboxing |
 | Button | Title Case, verb first | Edit Series |
 | Dialog title | Title Case | Remove Design |

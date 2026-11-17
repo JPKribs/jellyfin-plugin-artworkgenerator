@@ -111,14 +111,14 @@ One sentence that says what the page covers.
 List settings as bullets in the order the page shows them. Start each with the label in bold, then a colon, what it does, and its default.
 
 ```markdown
-* **Sampling Rate**: how many frames are scored for each one kept. Default Medium.
+* **Samples Per Frame**: how many frames are scored for each one kept. Default 4.
 ```
 
 When a page has many settings with defaults, use a table instead.
 
 | Setting | What it does | Default |
 | :--- | :--- | :--- |
-| **Sampling Rate** | Scores frames for each one kept | Medium |
+| **Samples Per Frame** | Scores frames for each one kept | 4 |
 
 Table cells have no closing period. Keep them to one sentence.
 

@@ -77,6 +77,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             ArgumentNullException.ThrowIfNull(config);
 
             config.FrameExtraction ??= new FrameExtractionSettings();
+            config.FrameExtraction.UpgradeLegacySampling();
             config.PosterConfigurations ??= new List<PosterConfiguration>();
             config.PosterConfigurations.RemoveAll(poster => poster == null);
             foreach (var poster in config.PosterConfigurations)

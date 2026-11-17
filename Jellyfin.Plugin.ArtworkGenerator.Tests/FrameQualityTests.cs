@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Services;
 using SkiaSharp;
 using Xunit;
@@ -139,5 +142,66 @@ public class FrameQualityTests
         var calm = FrameExtractionService.AnalyzeFrame(calmAnalysis).Headroom;
 
         Assert.True(calm > busy, $"calm {calm:F3} should beat busy {busy:F3}");
+    }
+
+    /// <summary>
+    /// A sampled frame is decoded only as large as scoring needs: a 4K or 1080p JPEG comes back at
+    /// twice the analysis size, and one already smaller than that is left whole.
+    /// </summary>
+    [Theory]
+    [InlineData(3840, 2160, 960)]
+    [InlineData(1920, 1080, 960)]
+    [InlineData(640, 360, 640)]
+    public void DecodeForAnalysis_DecodesOnlyAsLargeAsScoringNeeds(int width, int height, int expectedWidth)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ag-decode-{Guid.NewGuid():N}.jpg");
+        try
+        {
+            using (var frame = Frame(width, height, (x, y) => Gray((byte)((x ^ y) & 0xFF))))
+            using (var image = SKImage.FromBitmap(frame))
+            using (var data = image.Encode(SKEncodedImageFormat.Jpeg, 85))
+            using (var file = File.Create(path))
+            {
+                data.SaveTo(file);
+            }
+
+            using var decoded = FrameExtractionService.DecodeForAnalysis(path);
+
+            Assert.NotNull(decoded);
+            Assert.Equal(expectedWidth, decoded!.Width);
+            Assert.Equal(expectedWidth * height / width, decoded.Height);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// Samples finish in any order once they run side by side. Which ones are kept must not depend
+    /// on that: the best scores win, and a tie goes to the earlier attempt.
+    /// </summary>
+    [Fact]
+    public void TryAddCandidate_KeepsTheSameSetWhateverOrderAttemptsFinishIn()
+    {
+        var attempts = new[] { 0.4, 0.9, 0.4, 0.7, 0.1, 0.9, 0.4 }
+            .Select((score, attempt) => new FrameExtractionService.FrameCandidate($"/missing/{attempt}.jpg", score, attempt))
+            .ToArray();
+
+        string Kept(IEnumerable<FrameExtractionService.FrameCandidate> order)
+        {
+            var kept = new List<FrameExtractionService.FrameCandidate>();
+            foreach (var candidate in order)
+            {
+                FrameExtractionService.TryAddCandidate(kept, 4, candidate);
+            }
+
+            return string.Join(",", kept.Select(c => c.Attempt).OrderBy(a => a));
+        }
+
+        var expected = Kept(attempts);
+        Assert.Equal("0,1,3,5", expected);
+        Assert.Equal(expected, Kept(attempts.Reverse()));
+        Assert.Equal(expected, Kept(attempts.OrderBy(c => c.Path.GetHashCode(StringComparison.Ordinal))));
     }
 }

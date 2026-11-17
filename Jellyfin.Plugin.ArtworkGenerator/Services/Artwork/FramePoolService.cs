@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.ArtworkGenerator.Models;
 using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -33,8 +34,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         // candidates can return N different episodes.
         private const int MinSourcesPerPool = 3;
 
-        // Each growth round starts the extraction walk this many attempts further along, beyond the
-        // most a single extraction run can use, so asking for more frames never revisits one.
+        // Each pass a pool makes over its sources starts every source's extraction walk this many
+        // attempts further along, beyond the most a single extraction run can use, so coming back to
+        // a source for more frames never revisits one.
         private const int GrowthAttemptStride = 64;
 
         private static readonly TimeSpan IdleLifetime = TimeSpan.FromMinutes(10);
@@ -43,17 +45,24 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         private readonly FrameExtractionService _extractor;
         private readonly string _root;
         private readonly Func<int?> _fixedSeed;
+        private readonly Func<int> _parallelExtractions;
         private readonly Dictionary<string, FramePool> _pools = new(StringComparer.Ordinal);
         private readonly object _sync = new();
         private bool _disposed;
 
-        public FramePoolService(ILogger<FramePoolService> logger, FrameExtractionService extractor, string root, Func<int?> fixedSeed)
+        public FramePoolService(
+            ILogger<FramePoolService> logger,
+            FrameExtractionService extractor,
+            string root,
+            Func<int?> fixedSeed,
+            Func<int>? parallelExtractions = null)
         {
             ArgumentException.ThrowIfNullOrEmpty(root);
             _logger = logger;
             _extractor = extractor;
             _root = root;
             _fixedSeed = fixedSeed ?? (() => null);
+            _parallelExtractions = parallelExtractions ?? (() => FrameExtractionSettings.DefaultParallelExtractions);
 
             ResetRoot();
         }
@@ -240,6 +249,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         // Extracts more frames into a pool. Sources are drawn in a seeded order, so a season or
         // series pool samples the same episodes for the same seed. New frames are ranked among
         // themselves by score and appended after the frames already held.
+        //
+        // The pool grows several times while one item is drawn: the poster asks for its choices, then
+        // the thumb asks for a few ranks more, and so on. Each round extracts only what is missing,
+        // from the episodes the walk has not visited yet, so the work done for an item is in step
+        // with the frames it ends up holding however many rounds that takes.
         private async Task GrowAsync(
             FramePool pool,
             IReadOnlyList<Video> sources,
@@ -248,48 +262,135 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             int needed,
             CancellationToken cancellationToken)
         {
-            var chosen = OrderSources(sources, pool.Seed).Take(Math.Max(MinSourcesPerPool, needed)).ToList();
+            var ordered = OrderSources(sources, pool.Seed).ToList();
             var missing = needed - pool.Frames.Count;
-            var perSource = Math.Max(1, (int)Math.Ceiling(missing / (double)chosen.Count));
-            var attemptOffset = pool.Rounds * GrowthAttemptStride;
+            var (visits, perSource) = PlanGrowth(ordered.Count, pool.NextSource, missing);
             pool.Rounds++;
 
+            // One slot per visit, filled as each finishes. Several sources are extracted at once,
+            // but the batch is read back in visit order, so the ranks come out the same however
+            // the extractions happen to interleave and a fixed seed still reproduces them.
+            var results = new IReadOnlyList<(ExtractedFrame Frame, string Source)>?[visits.Count];
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Math.Clamp(_parallelExtractions(), 1, FrameExtractionSettings.MaxParallelExtractions),
+                CancellationToken = cancellationToken
+            };
+
             var batch = new List<(ExtractedFrame Frame, string Source)>();
+            var visited = 0;
 
             try
             {
-                for (int i = 0; i < chosen.Count; i++)
+                await Parallel.ForEachAsync(Enumerable.Range(0, visits.Count), options, async (slot, token) =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
+                    var visit = visits[slot];
+                    var source = ordered[visit % ordered.Count];
                     var frames = await _extractor.ExtractFrameCandidatesAsync(
-                        chosen[i],
+                        source,
                         windowStart,
                         windowEnd,
                         perSource,
-                        PhaseFor(pool.Seed, i),
-                        attemptOffset,
-                        cancellationToken).ConfigureAwait(false);
+                        PhaseFor(pool.Seed, visit % ordered.Count),
+                        (visit / ordered.Count) * GrowthAttemptStride,
+                        ordered.Count > 1,
+                        token).ConfigureAwait(false);
 
-                    var sourcePath = chosen[i].Path ?? string.Empty;
-                    batch.AddRange(frames.Select(f => (f, sourcePath)));
-                }
+                    var sourcePath = source.Path ?? string.Empty;
+                    results[slot] = frames.Select(f => (f, sourcePath)).ToArray();
+                }).ConfigureAwait(false);
             }
-            catch
+            finally
             {
-                // Frames extracted before a failure or cancellation must not be stranded on disk.
-                foreach (var (frame, _) in batch)
+                // Whatever was extracted before a failure or cancellation is kept. A request cut off
+                // by a proxy or a closed dialog would otherwise throw away every frame it had paid
+                // for, and the next attempt would start again from nothing and be cut off at the
+                // same point, so a large request could never finish.
+                //
+                // Only the unbroken run of finished visits from the start counts. The walk resumes
+                // after it, so a visit that finished beyond a gap will be made again, from the same
+                // timestamps, and its frames are dropped rather than held twice.
+                visited = CompletedRun(results);
+                for (var slot = 0; slot < results.Length; slot++)
                 {
-                    TryDeleteFile(frame.Path);
+                    if (results[slot] is not { } frames)
+                    {
+                        continue;
+                    }
+
+                    if (slot < visited)
+                    {
+                        batch.AddRange(frames);
+                    }
+                    else
+                    {
+                        foreach (var (frame, _) in frames)
+                        {
+                            TryDeleteFile(frame.Path);
+                        }
+                    }
                 }
 
-                throw;
+                pool.NextSource += visited;
+                AddToPool(pool, batch);
             }
 
             if (batch.Count == 0)
             {
                 pool.Exhausted = true;
                 _logger.LogWarning("Frame pool {Key} could not extract any more frames", pool.Key);
+                return;
+            }
+
+            _logger.LogDebug(
+                "Frame pool {Key} (seed {Seed}) now holds {Count} frame(s) after visiting {Sources} source(s)",
+                pool.Key,
+                pool.Seed,
+                pool.Frames.Count,
+                visited);
+        }
+
+        // PlanGrowth
+        // Which steps of the source walk a growth round visits, and how many frames it asks of each.
+        // Steps count on from where the last round stopped; step n is source n modulo the source
+        // count, and every pass over the sources starts a step further along each one's own
+        // extraction walk, so no step revisits a timestamp. The first round spreads over at least
+        // MinSourcesPerPool sources so even a single image is chosen from more than one episode;
+        // later rounds only top up, one source per missing frame.
+        internal static (IReadOnlyList<int> Visits, int PerSource) PlanGrowth(int sourceCount, int nextSource, int missing)
+        {
+            if (sourceCount <= 0 || missing <= 0)
+            {
+                return (Array.Empty<int>(), 0);
+            }
+
+            var wanted = nextSource == 0 ? Math.Max(MinSourcesPerPool, missing) : missing;
+            var take = Math.Min(sourceCount, wanted);
+            var perSource = Math.Max(1, (int)Math.Ceiling(missing / (double)take));
+
+            return (Enumerable.Range(nextSource, take).ToArray(), perSource);
+        }
+
+        // CompletedRun
+        // How many slots from the start are filled before the first empty one.
+        internal static int CompletedRun<T>(IReadOnlyList<T?> slots)
+            where T : class
+        {
+            var run = 0;
+            while (run < slots.Count && slots[run] != null)
+            {
+                run++;
+            }
+
+            return run;
+        }
+
+        // AddToPool
+        // Ranks a batch and moves its frames into the pool after the frames already held.
+        private void AddToPool(FramePool pool, List<(ExtractedFrame Frame, string Source)> batch)
+        {
+            if (batch.Count == 0)
+            {
                 return;
             }
 
@@ -310,13 +411,6 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                     TryDeleteFile(frame.Path);
                 }
             }
-
-            _logger.LogDebug(
-                "Frame pool {Key} (seed {Seed}) now holds {Count} frame(s) from {Sources} source(s)",
-                pool.Key,
-                pool.Seed,
-                pool.Frames.Count,
-                chosen.Count);
         }
 
         // InterleaveBySource
@@ -490,6 +584,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
         public DateTime LastUsed { get; set; } = DateTime.UtcNow;
 
         public int Rounds { get; set; }
+
+        // The next step of the source walk a growth round starts from.
+        public int NextSource { get; set; }
 
         public bool Exhausted { get; set; }
 
