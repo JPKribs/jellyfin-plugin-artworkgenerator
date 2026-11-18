@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.6.0"
+version: "12.4.6.1"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: Generate artwork from your own video
@@ -17,15 +17,7 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
-  added:
-  - Parallel Extractions, which sets how many frames are extracted at once, 1 to 8, across episodes and within one film. Default 2
-  - Samples Per Frame, Minimum Samples Per Video, and Maximum Samples Per Video, which set how many frames are scored for each one kept, down to one sample per frame
-  changed:
-  - Sampling Rate is replaced by Samples Per Frame, Minimum Samples Per Video, and Maximum Samples Per Video. A saved Low, Medium, or High becomes the numbers it stood for, so sampling is unchanged until they are edited
-  - A series, season, collection, or folder scores Samples Per Frame for each frame it takes from an episode, rather than the per video minimum, which doubled its samples at the default
-  - Edit Images opens about four to five times faster for a series, since each image type extracts only the frames it is missing
   fixed:
-  - Edit Images with many choices could take so long it never finished, because each image type sampled every episode again and a request cut off partway threw away every frame it had extracted. Frames extracted before a cancellation are kept, so the next attempt carries on
+  - Previews in Edit Images flickered as they first loaded, because the browser could download each one twice and show the card empty in between. Each preview is cached by the browser, so it loads once
   developer:
-  - tools/benchmark times the frame work of one Edit Images open on a baseline commit and the working tree, against real video, with a stand in for the media encoder that runs the ffmpeg command Jellyfin runs
-  - Sampled frames are decoded at reduced size for scoring, which moves no score by more than 0.003 on the frames checked
+  - GET Plugins/ArtworkGenerator/Generated/{token} answers with Cache-Control private, max-age=86400, immutable, since a token only ever names one image
