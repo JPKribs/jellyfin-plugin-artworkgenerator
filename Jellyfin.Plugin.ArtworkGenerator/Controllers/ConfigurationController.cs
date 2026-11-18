@@ -22,6 +22,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
         // A 20 MB font as base64, with room for the JSON around it.
         private const int MaxFontRequestBytes = 28 * 1024 * 1024;
 
+        // A generated image never changes under its token, so a browser may keep it for a day,
+        // the longest the server itself keeps one.
+        internal const string GeneratedImageCacheControl = "private, max-age=86400, immutable";
+
         private readonly ILogger<ConfigurationController> _logger;
 
         public ConfigurationController(ILogger<ConfigurationController> logger)
@@ -382,6 +386,10 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
         // generated here — the handler only resolves an unguessable, expiring token minted during
         // an authenticated provider call — so an unauthenticated caller has no work to trigger and
         // nothing to enumerate.
+        //
+        // A token only ever names one image, so the response is marked immutable. The picker loads
+        // each preview once ahead of time and again to paint it, and without this a browser can
+        // fetch the full image a second time, leaving the card empty while it fades in.
         [HttpGet("Generated/{token}")]
         [AllowAnonymous]
         public IActionResult GetGeneratedImage([FromRoute] string token)
@@ -397,6 +405,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
                 return NotFound();
             }
 
+            Response.Headers.CacheControl = GeneratedImageCacheControl;
             return File(imageBytes, contentType);
         }
     }
