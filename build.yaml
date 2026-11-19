@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.6.1"
+version: "12.4.6.2"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: Generate artwork from your own video
@@ -17,7 +17,7 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
-  fixed:
-  - Previews in Edit Images flickered as they first loaded, because the browser could download each one twice and show the card empty in between. Each preview is cached by the browser, so it loads once
   developer:
-  - GET Plugins/ArtworkGenerator/Generated/{token} answers with Cache-Control private, max-age=86400, immutable, since a token only ever names one image
+  - Uses JPKribs.Jellyfin.Base 2026.11.21, which keeps a scrolling Data Table's frame in view and an open card's body on the plain surface, with no local code to replace
+  - Raises Microsoft.NET.Test.Sdk to 18.12.0
+  - Pins every GitHub Action in the workflows to a commit digest
