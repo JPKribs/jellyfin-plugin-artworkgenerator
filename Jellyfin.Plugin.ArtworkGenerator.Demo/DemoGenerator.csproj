@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="12.4.0" />
     <PackageReference Include="Jellyfin.Model" Version="12.4.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.15" />
   </ItemGroup>
 
   <ItemGroup>
