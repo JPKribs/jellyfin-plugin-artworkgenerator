@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.4.6.3",
+        "changelog": "\n## Developer\n- Raises every GitHub Action in the workflows to its latest major version, pinned to a commit digest\n- Builds the docs with Python 3.15 and mkdocs-material 9.8.2\n- Renovate brings every update in one pull request, with Base on its own, and leaves the packages Jellyfin ships to the Jellyfin version",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.4.6.3/jellyfin-plugin-artworkgenerator-12.4.6.3.zip",
+        "checksum": "4b12643beba3120cf0bd6fbf43ec78b3",
+        "timestamp": "2026-11-19T21:56:44Z"
+      },
+      {
         "version": "12.4.6.2",
         "changelog": "\n## Developer\n- Uses JPKribs.Jellyfin.Base 2026.11.21, which keeps a scrolling Data Table's frame in view and an open card's body on the plain surface, with no local code to replace\n- Raises Microsoft.NET.Test.Sdk to 18.12.0\n- Pins every GitHub Action in the workflows to a commit digest",
         "targetAbi": "12.4.0.0",
