@@ -87,8 +87,7 @@ export function createArtworkPage(view, tabIndex, opts) {
         apiPrefix: 'Plugins/ArtworkGenerator',
         tabsKey: 'ag',
         tabIndex: tabIndex,
-        tabs: TABS,
-        leaveMessage: t.tr('ConfirmLeaveUnsaved')
+        tabs: TABS
     }, opts, {
         bind: function (shared, page) {
             t.apply(view);
@@ -253,7 +252,7 @@ export function createArtworkSaveBar(form, host, tracker, opts) {
         onSave: function () {
             if (!validateAll(form)) {
                 revealInvalid(form);
-                return Promise.reject(new Error(t.tr('ErrorFixFields')));
+                return Promise.reject(new Error(t.tr('Base.FixFields')));
             }
             return Promise.resolve().then(opts.save).then(function () {
                 tracker.markClean();
@@ -297,7 +296,7 @@ export function bindColorField(field, onChange) {
     var picker = createColorPicker({
         format: 'argb',
         value: current(),
-        label: label ? label.textContent : t.tr('OptionColor'),
+        label: label ? label.textContent : undefined,
         onChange: function (value) {
             if (quiet) return;
             input.value = String(value).toUpperCase();

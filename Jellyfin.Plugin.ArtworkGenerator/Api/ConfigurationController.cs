@@ -35,13 +35,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
 
         // MARK: GET
         [HttpGet("Configuration")]
-        public IActionResult GetConfiguration([FromQuery] string? language = null)
+        public IActionResult GetConfiguration()
         {
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in GET.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             return Ok(plugin.Configuration);
@@ -51,13 +51,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         // Logo designs live in their own file beside the configuration, so they are read and written
         // through their own endpoints rather than as part of the configuration payload.
         [HttpGet("Logos")]
-        public IActionResult GetLogos([FromQuery] string? language = null)
+        public IActionResult GetLogos()
         {
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in GET Logos.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             return Ok(plugin.PosterConfigService.GetLogoDesigns());
@@ -66,11 +66,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         // MARK: POST
         // MARK: Logos
         [HttpPost("Logos")]
-        public IActionResult SaveLogos([FromBody] LogoConfiguration[] logos, [FromQuery] string? language = null)
+        public IActionResult SaveLogos([FromBody] LogoConfiguration[] logos)
         {
             if (logos == null || logos.Length == 0)
             {
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorLogoDesignRequired, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorLogoDesignRequired, Language) });
             }
 
             try
@@ -79,7 +79,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 if (plugin == null)
                 {
                     _logger.LogError("Plugin instance was null in POST Logos.");
-                    return NotInitialized(language);
+                    return NotInitialized();
                 }
 
                 plugin.SaveLogoDesigns(logos);
@@ -88,12 +88,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             catch (ArgumentException ex)
             {
                 _logger.LogError(ex, "Failed to save logo designs.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorLogoDesignRequired, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorLogoDesignRequired, Language) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save logo designs.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorSaveLogoDesigns, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorSaveLogoDesigns, Language) });
             }
         }
 
@@ -101,9 +101,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         // Returns each poster style, its description, and the shapes it can lay out, read from the
         // generators themselves so the UI never hardcodes them. The words are in the viewer's language.
         [HttpGet("PosterStyles")]
-        public IActionResult GetPosterStyles([FromQuery] string? language = null)
+        public IActionResult GetPosterStyles()
         {
-            return Ok(SettingOptions.Styles(language));
+            return Ok(SettingOptions.Styles(Language));
         }
 
         // MARK: SettingOptions
@@ -111,16 +111,16 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         // themselves, so the configuration page never keeps its own copy of an enum or a default.
         // The labels and help text are in the viewer's language.
         [HttpGet("SettingOptions")]
-        public IActionResult GetSettingOptions([FromQuery] string? language = null)
+        public IActionResult GetSettingOptions()
         {
             return Ok(new
             {
-                options = SettingOptions.All(language),
+                options = SettingOptions.All(Language),
                 defaults = SettingOptions.Defaults(),
-                text = SettingOptions.Text(language),
-                backdropText = SettingOptions.BackdropText(language),
-                frameText = SettingOptions.FrameExtractionText(language),
-                frameOptions = SettingOptions.FrameExtractionOptions(language),
+                text = SettingOptions.Text(Language),
+                backdropText = SettingOptions.BackdropText(Language),
+                frameText = SettingOptions.FrameExtractionText(Language),
+                frameOptions = SettingOptions.FrameExtractionOptions(Language),
                 logoDefaults = SettingOptions.LogoDefaults()
             });
         }
@@ -154,13 +154,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         // MARK: Fonts/Uploaded
         // Lists the fonts in the plugin's fonts folder, with the family and style each file gives.
         [HttpGet("Fonts/Uploaded")]
-        public IActionResult GetUploadedFonts([FromQuery] string? language = null)
+        public IActionResult GetUploadedFonts()
         {
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in GET Fonts/Uploaded.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             return Ok(plugin.FontStore.List().Select(DescribeUploadedFont));
@@ -171,13 +171,13 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         // font returns one sentence in the viewer's language saying why.
         [HttpPost("Fonts/Uploaded")]
         [RequestSizeLimit(MaxFontRequestBytes)]
-        public IActionResult UploadFont([FromBody] FontUploadRequest request, [FromQuery] string? language = null)
+        public IActionResult UploadFont([FromBody] FontUploadRequest request)
         {
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in POST Fonts/Uploaded.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             byte[]? data = null;
@@ -195,7 +195,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 var result = plugin.FontStore.Upload(request?.FileName, data);
                 if (result.Face == null)
                 {
-                    return BadRequest(new { success = false, error = BaseTranslations.Get(result.Error ?? TranslationKeys.ErrorFontUnreadable, language) });
+                    return BadRequest(new { success = false, error = BaseTranslations.Get(result.Error ?? TranslationKeys.ErrorFontUnreadable, Language) });
                 }
 
                 _logger.LogInformation("Font {FileName} uploaded.", FormatUtilities.SanitizeForLog(result.Face.FileName));
@@ -204,32 +204,32 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             catch (IOException ex)
             {
                 _logger.LogError(ex, "Failed to store an uploaded font.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotSaved, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotSaved, Language) });
             }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogError(ex, "Failed to store an uploaded font.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotSaved, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotSaved, Language) });
             }
         }
 
         // MARK: Fonts/Uploaded DELETE
         // Deletes one font from the plugin's fonts folder. The name travels in the body.
         [HttpDelete("Fonts/Uploaded")]
-        public IActionResult DeleteFont([FromBody] FontDeleteRequest request, [FromQuery] string? language = null)
+        public IActionResult DeleteFont([FromBody] FontDeleteRequest request)
         {
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in DELETE Fonts/Uploaded.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             try
             {
                 if (!plugin.FontStore.Delete(request?.FileName))
                 {
-                    return NotFound(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontMissing, language) });
+                    return NotFound(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontMissing, Language) });
                 }
 
                 _logger.LogInformation("Font {FileName} deleted.", FormatUtilities.SanitizeForLog(request?.FileName));
@@ -238,19 +238,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             catch (IOException ex)
             {
                 _logger.LogError(ex, "Failed to delete a font.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotDeleted, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotDeleted, Language) });
             }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogError(ex, "Failed to delete a font.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotDeleted, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotDeleted, Language) });
             }
         }
 
+        // Language
+        // The page's language, from the language query value, the header Base's apiRequest sends, or Accept-Language.
+        private string Language => BaseTranslations.RequestLanguage(Request);
+
         // NotInitialized
-        // The answer for a request that arrives before the plugin has loaded, in the viewer's language.
-        private ObjectResult NotInitialized(string? language)
-            => StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPluginNotInitialized, language));
+        // The answer for a request that arrives before the plugin has loaded, in the page's language.
+        private ObjectResult NotInitialized()
+            => StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPluginNotInitialized, Language));
 
         // DescribeUploadedFont
         // Shapes one uploaded font for the Settings tab's list.
@@ -263,11 +267,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
 
         // MARK: POST
         [HttpPost("Configuration")]
-        public IActionResult UpdateConfiguration([FromBody] PluginConfiguration newConfig, [FromQuery] string? language = null)
+        public IActionResult UpdateConfiguration([FromBody] PluginConfiguration newConfig)
         {
             if (newConfig == null)
             {
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorConfigurationRequired, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorConfigurationRequired, Language) });
             }
 
             try
@@ -276,7 +280,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 if (plugin == null)
                 {
                     _logger.LogError("Plugin instance was null in POST.");
-                    return NotInitialized(language);
+                    return NotInitialized();
                 }
 
                 // Debug rather than Information: this fires on every save and expands the whole
@@ -294,7 +298,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update configuration.");
-                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorSaveConfiguration, language) });
+                return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorSaveConfiguration, Language) });
             }
         }
 
@@ -305,19 +309,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
         public IActionResult GeneratePreview(
             [FromBody] PosterSettings settings,
             [FromQuery] ArtworkItemKind kind = ArtworkItemKind.Series,
-            [FromQuery] ArtworkShape shape = ArtworkShape.Landscape,
-            [FromQuery] string? language = null)
+            [FromQuery] ArtworkShape shape = ArtworkShape.Landscape)
         {
             if (settings == null)
             {
-                return BadRequest(BaseTranslations.Get(TranslationKeys.ErrorPosterSettingsRequired, language));
+                return BadRequest(BaseTranslations.Get(TranslationKeys.ErrorPosterSettingsRequired, Language));
             }
 
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in Preview.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             try
@@ -325,7 +328,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 var imageBytes = plugin.PreviewService.GeneratePreview(settings, kind, shape);
                 if (imageBytes == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPreview, language));
+                    return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPreview, Language));
                 }
 
                 return File(imageBytes, "image/jpeg");
@@ -333,25 +336,25 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to generate poster preview.");
-                return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPreview, language));
+                return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPreview, Language));
             }
         }
 
         // MARK: Preview/Logo
         // Renders a logo design as a transparent PNG, for the sample series or a sample name.
         [HttpPost("Preview/Logo")]
-        public IActionResult GenerateLogoPreview([FromBody] LogoSettings settings, [FromQuery] string? name = null, [FromQuery] string? language = null)
+        public IActionResult GenerateLogoPreview([FromBody] LogoSettings settings, [FromQuery] string? name = null)
         {
             if (settings == null)
             {
-                return BadRequest(BaseTranslations.Get(TranslationKeys.ErrorLogoSettingsRequired, language));
+                return BadRequest(BaseTranslations.Get(TranslationKeys.ErrorLogoSettingsRequired, Language));
             }
 
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in logo Preview.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             try
@@ -359,7 +362,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 var imageBytes = plugin.PreviewService.GenerateLogoPreview(settings, name?.Length > 200 ? name[..200] : name);
                 if (imageBytes == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorLogoPreview, language));
+                    return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorLogoPreview, Language));
                 }
 
                 return File(imageBytes, "image/png");
@@ -367,19 +370,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to generate logo preview.");
-                return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorLogoPreview, language));
+                return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorLogoPreview, Language));
             }
         }
 
         // MARK: PreviewComponent
         [HttpGet("Preview/Component/{component}")]
-        public IActionResult GetPreviewComponent([FromRoute] string component, [FromQuery] string? language = null)
+        public IActionResult GetPreviewComponent([FromRoute] string component)
         {
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
                 _logger.LogError("Plugin instance was null in PreviewComponent.");
-                return NotInitialized(language);
+                return NotInitialized();
             }
 
             var result = plugin.PreviewService.GetComponentImage(component);
@@ -410,7 +413,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                return NotInitialized(null);
+                return NotInitialized();
             }
 
             if (!plugin.GeneratedImageCache.TryGet(token, out var imageBytes, out var contentType))

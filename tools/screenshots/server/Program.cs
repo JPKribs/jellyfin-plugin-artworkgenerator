@@ -74,7 +74,7 @@ void Handle(HttpListenerContext c)
                     SendJson(c, SettingOptions.Styles(q["language"]));
                     return;
                 case "Translations":
-                    SendJson(c, BaseTranslations.For(q["language"]));
+                    SendJson(c, new { language = BaseTranslations.NormalizeLanguage(q["language"]), strings = BaseTranslations.For(q["language"]), casing = TextCase.Exceptions });
                     return;
                 case "Fonts":
                     SendJson(c, FontUtils.GetFontFamilies().Select(e => new { family = e.Family, source = e.Source.ToString() }));

@@ -42,7 +42,7 @@ public class TranslationsTests
         var declared = Regex.Matches(File.ReadAllText(Path.Combine(project, "Jellyfin.Plugin.ArtworkGenerator.csproj")), @"<JellyfinString Include=""([^""]+)""")
             .Select(m => m.Groups[1].Value);
 
-        return local.Keys.Concat(declared).ToHashSet(StringComparer.Ordinal);
+        return local.Keys.Concat(declared).Concat(BaseTranslations.For(null).Keys.Where(key => key.StartsWith("Base.", StringComparison.Ordinal))).ToHashSet(StringComparer.Ordinal);
     }
 
     /// <summary>Every key a page names in its markup or script has a string.</summary>
