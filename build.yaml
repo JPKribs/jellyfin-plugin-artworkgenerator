@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.6.3"
+version: "12.4.7.0"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: "Generate artwork from your own video."
@@ -17,7 +17,13 @@ owner: JPKribs
 artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
+  added:
+  - The Designs, Logos, Profiles, and Settings tabs show in the language set in your display settings. Words Jellyfin already has come in every language Jellyfin has, and the words only this plugin uses are in US English until they are translated
+  changed:
+  - Every label, heading, button, tab, and choice is written in sentence case, as Jellyfin writes its own, such as Frame extraction and Samples per frame
+  - Messages the server sends back to a page, such as a refused font upload, follow the language of the page
   developer:
-  - Raises every GitHub Action in the workflows to its latest major version, pinned to a commit digest
-  - Builds the docs with Python 3.15 and mkdocs-material 9.8.2
-  - Renovate brings every update in one pull request, with Base on its own, and leaves the packages Jellyfin ships to the Jellyfin version
+  - Uses JPKribs.Jellyfin.Base 12.4.0 and then 12.4.1. Base builds the strings and its own text into the plugin, and its leave prompt and fix fields message replace the local ones
+  - GET Translations answers with language, strings, and casing. Every route reads the language with BaseTranslations.RequestLanguage, from the language query value, the X-Jellyfin-Plugin-Language header, or Accept-Language
+  - Localization/casing.json lists the words kept as written. Text color, Original title, and Sort title use Jellyfin strings
+  - The project is laid out as Api, Configuration, Web, Assets, Models, Services, Providers, and Utilities, with the pages, demo images, and fonts embedded by pattern
