@@ -46,17 +46,61 @@ export {
 export var PLUGIN_ID = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
 
 // t
-// The plugin's strings in the viewer's language, loaded once before any page draws. A failed load gives a handle with no strings.
-export var t = await loadTranslations('Plugins/ArtworkGenerator/Translations');
+// The plugin's strings in the viewer's language. It is set before startArtworkPage builds a page, and a failed load gives a handle with no strings.
+export var t = null;
 
-// TABS
+// strings
+// The one load of the plugin's strings, shared by every page.
+var strings = null;
+
+// loadStrings
+// Loads the plugin's strings once and sets t.
+//
+// Output
+// [Promise]: Resolves once t is set. It never rejects.
+function loadStrings() {
+    if (!strings) {
+        strings = loadTranslations('Plugins/ArtworkGenerator/Translations').then(function (handle) {
+            t = handle;
+        });
+    }
+    return strings;
+}
+
+// startArtworkPage
+// Builds a page once the strings have loaded. The dashboard can show the view before they arrive, so the page then gets that show once its handlers exist.
+//
+// Inputs
+// view [HTMLElement]: The page element.
+// build [function]: Takes the view and builds the page through createArtworkPage.
+export function startArtworkPage(view, build) {
+    var shown = false;
+    function onShow() { shown = true; }
+    function onHide() { shown = false; }
+    view.addEventListener('viewshow', onShow);
+    view.addEventListener('viewhide', onHide);
+
+    loadStrings().then(function () {
+        view.removeEventListener('viewshow', onShow);
+        view.removeEventListener('viewhide', onHide);
+        build(view);
+        if (shown) view.dispatchEvent(new CustomEvent('viewshow', { detail: {} }));
+    });
+}
+
+// tabs
 // The dashboard tabs, in the order they show.
-var TABS = [
-    { href: 'configurationpage?name=ag_posters', name: t.tr('TabDesigns') },
-    { href: 'configurationpage?name=ag_logos', name: t.tr('TabLogos') },
-    { href: 'configurationpage?name=ag_profiles', name: t.tr('TabProfiles') },
-    { href: 'configurationpage?name=ag_settings', name: t.tr('Settings') }
-];
+//
+// Output
+// [Array<object>]: Each tab's address and name.
+function tabs() {
+    return [
+        { href: 'configurationpage?name=ag_posters', name: t.tr('TabDesigns') },
+        { href: 'configurationpage?name=ag_logos', name: t.tr('TabLogos') },
+        { href: 'configurationpage?name=ag_profiles', name: t.tr('TabProfiles') },
+        { href: 'configurationpage?name=ag_settings', name: t.tr('Settings') }
+    ];
+}
 
 // withLanguage
 // Adds the viewer's language to a plugin route, so the server answers in it.
@@ -87,7 +131,7 @@ export function createArtworkPage(view, tabIndex, opts) {
         apiPrefix: 'Plugins/ArtworkGenerator',
         tabsKey: 'ag',
         tabIndex: tabIndex,
-        tabs: TABS
+        tabs: tabs()
     }, opts, {
         bind: function (shared, page) {
             t.apply(view);
@@ -96,13 +140,18 @@ export function createArtworkPage(view, tabIndex, opts) {
     }));
 }
 
-// FONT_GROUPS
+// fontGroups
 // The font list's groups, in the order a family name is looked up.
-var FONT_GROUPS = [
-    { source: 'Uploaded', label: t.tr('GroupUploaded') },
-    { source: 'Bundled', label: t.tr('LabelBundled') },
-    { source: 'System', label: t.tr('TabServer') }
-];
+//
+// Output
+// [Array<object>]: Each group's source and heading.
+function fontGroups() {
+    return [
+        { source: 'Uploaded', label: t.tr('GroupUploaded') },
+        { source: 'Bundled', label: t.tr('LabelBundled') },
+        { source: 'System', label: t.tr('TabServer') }
+    ];
+}
 
 // loadFontFamilies
 // Fills each font family select from the server, grouped as uploaded, bundled, then installed on the server, each group under its own heading. The list is read again on every call, so a font uploaded on the Settings tab shows the next time a tab opens.
@@ -122,7 +171,7 @@ export function loadFontFamilies(selects) {
 
         selects.forEach(function (select) {
             select.innerHTML = '';
-            FONT_GROUPS.forEach(function (group) {
+            fontGroups().forEach(function (group) {
                 var names = families.filter(function (f) { return f.source === group.source; });
                 if (!names.length) return;
 

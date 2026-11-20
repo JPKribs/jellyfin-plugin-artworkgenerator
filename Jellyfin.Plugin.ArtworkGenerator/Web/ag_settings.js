@@ -4,6 +4,7 @@
 import {
     confirmDialog,
     createArtworkPage,
+    startArtworkPage,
     createArtworkSaveBar,
     createFilePicker,
     createRecordList,
@@ -13,7 +14,17 @@ import {
     withLanguage
 } from './configurationpage?name=ag_shared.js';
 
+// The page's entry point, which builds the page once the strings have loaded.
 export default function (view) {
+    startArtworkPage(view, build);
+}
+
+// build
+// Builds the page and wires it through createArtworkPage.
+//
+// Inputs
+// view [HTMLElement]: The page element.
+function build(view) {
     'use strict';
 
     var page = createArtworkPage(view, 3, {

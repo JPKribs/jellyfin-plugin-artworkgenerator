@@ -16,6 +16,7 @@ How this plugin shows its text in the viewer's language. Base builds the strings
 ## How the Pages Get Them
 
 * `ag_shared.js` loads the strings once with `loadTranslations('Plugins/ArtworkGenerator/Translations')` and exports the handle as `t`. A page imports `t` from `ag_shared.js`.
+* `startArtworkPage` builds a page only once the strings have loaded, so `t` is set wherever a page reads it. A show that came first is given to the page once it is built.
 * `createArtworkPage` runs `t.apply(view)` before the page binds, so marked markup is translated first. Until then the markup's own English shows.
 * `SettingOptions`, `PosterStyles`, and every route that returns a sentence answer in the language `BaseTranslations.RequestLanguage(Request)` reads, from `language` in the query, the `X-Jellyfin-Plugin-Language` header, or `Accept-Language`. A page builds those addresses with `withLanguage`, so the server answers in the viewer's language.
 * A color field keeps its color wording in `data-str` and its opacity wording in `data-str-opacity`, and the page swaps them with `t.tr`.

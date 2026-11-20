@@ -218,7 +218,8 @@ Outside the plugin project, `Jellyfin.Plugin.ArtworkGenerator.Tests/` holds the 
 
 ## JavaScript Conventions
 
-* Each config page is an ES module whose default export calls `createArtworkPage`, which wraps Base's `createConfigPage` and holds the tab list.
+* Each config page is an ES module whose default export calls `startArtworkPage(view, build)`. `build` calls `createArtworkPage`, which wraps Base's `createConfigPage` and holds the tab list.
+* Never use a top level `await` in a page script or `ag_shared.js`. The dashboard shows the first page it opens before such a module finishes, and the page never runs.
 * Keep one handle for each Base component a page draws, such as a Preview Frame. Call `destroy` when the view is destroyed.
 * Track unsaved changes with one `createChangeTracker` per page, passed to `page.guardUnsaved` and to `createArtworkSaveBar`.
 * A save rejects with an Error or a sentence, and the Save Bar shows it as the failed line.
