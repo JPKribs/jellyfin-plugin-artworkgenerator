@@ -8,15 +8,15 @@ The foundation layer that provides the visual background for the poster.
 
 **Options:**
 
-- **Extract Frame from Video**: Extracts a frame from the video file using configurable extraction windows. A field of candidates is sampled at widely spaced points across the window and every one is scored before any is chosen, so the frame used is the best of the set rather than the first that was good enough. The sampling starts from a different point on each run, so refreshing offers a different frame rather than the same one.
+- **Extract frame from video**: Extracts a frame from the video file using configurable extraction windows. A field of candidates is sampled at widely spaced points across the window and every one is scored before any is chosen, so the frame used is the best of the set rather than the first that was good enough. The sampling starts from a different point on each run, so refreshing offers a different frame rather than the same one.
 - **Frame Scoring**: Each candidate is measured with its letterbox bars removed, since bars are not picture and scoring them drags every measurement toward black. Five things are weighed: tone, which favors a mid exposed frame and marks down the blown out as well as the crushed, fine detail, tonal range, colorfulness, which separates a striking frame from a flat gray one, and headroom, which prefers a frame with a calm band for the title to sit in.
-- **Grid of Extracted Frames**: Tiles several extracted frames into one canvas, with a configurable number of frames and gap between them.
-- **Use Series Backdrop**: Uses the series' own backdrop image as the poster background, falling back to a transparent canvas when the series has none.
-- **No Background**: Creates a transparent canvas, so only the overlay, graphic, and text are drawn.
+- **Grid of extracted frames**: Tiles several extracted frames into one canvas, with a configurable number of frames and gap between them.
+- **Use series backdrop**: Uses the series' own backdrop image as the poster background, falling back to a transparent canvas when the series has none.
+- **No background**: Creates a transparent canvas, so only the overlay, graphic, and text are drawn.
 
 **Processing:**
 
-- Optional brightening of the extracted frame, set by **Brighten Frame (%)**
+- Optional brightening of the extracted frame, set by **Brighten frame (%)**
 - Frames keep out of intros, credits, recaps, previews, and commercials where the server holds media segments for the item, with each kind optional
 - Letterbox and pillarbox detection and cropping
 - Aspect ratio adjustments and fill strategies
@@ -29,7 +29,7 @@ A translucent color layer applied over the canvas to enhance text readability an
 
 - Configurable ARGB hex colors, whose first pair is the opacity
 - Applied uniformly across the entire poster surface or use two colors blurred together
-- Optional **Palette Colors**, which sample the overlay color from the dominant color of each frame and keep only the configured opacity
+- Optional **Palette colors**, which sample the overlay color from the dominant color of each frame and keep only the configured opacity
 
 ## Layer 3: Graphics (Static Images)
 
@@ -53,10 +53,10 @@ The top layer containing all text elements, the subtitle, and logos.
 - The logo selected for the item, its season, or its series, with configurable positioning
 - Style specific typography, such as Roman numerals and cutout text
 - Drop shadows and contrasting outlines for enhanced readability
-- A **Text Position** setting that moves the title and subtitle to the top, center, or bottom on every style whose text is a block laid over the image
+- A **Text position** setting that moves the title and subtitle to the top, center, or bottom on every style whose text is a block laid over the image
 
 ## Rendering Pipeline
 
 Each poster style follows this exact four layer sequence. The modular approach allows for easy customization and additional poster styles.
 
-Elements that stack vertically, such as the logo, title, and subtitle, are measured before any of them are placed, so they keep a consistent gap and cannot overlap. That gap is the **Element Spacing** setting, applied the same way by every style.
+Elements that stack vertically, such as the logo, title, and subtitle, are measured before any of them are placed, so they keep a consistent gap and cannot overlap. That gap is the **Element spacing** setting, applied the same way by every style.

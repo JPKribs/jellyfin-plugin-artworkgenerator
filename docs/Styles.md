@@ -99,7 +99,7 @@ Most styles let the title and subtitle sit at the top, the center, or the bottom
 | ![Text at the top](examples/StandardGradient/Example1.png) | ![Text centered](examples/GlassGradient/Example1.png) | ![Text at the bottom](examples/Standard/Example1.png) |
 
 ## Palette Colors
-**Palette Colors** sample the overlay colors from the dominant color of each frame instead of a fixed color, and work with every style. Only the opacity of the configured colors still applies, so the page shows each as a slider in percent.
+**Palette colors** sample the overlay colors from the dominant color of each frame instead of a fixed color, and work with every style. Only the opacity of the configured colors still applies, so the page shows each as a slider in percent.
 
 | Brush | Cutout | Fade |
 |-------|--------|------|

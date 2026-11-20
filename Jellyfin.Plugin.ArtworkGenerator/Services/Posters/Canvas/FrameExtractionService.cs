@@ -181,7 +181,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             // Attempts are independent seeks, so several run at once; a film's dozens of samples
             // used to queue behind one another. Each extraction still goes through the shared
             // limit, so this and the frame pool working on several videos never run more than
-            // Parallel Extractions between them.
+            // Parallel extractions between them.
             using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var options = new ParallelOptions
             {
@@ -364,7 +364,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
         // Gate
         // The limit every extraction this service runs passes through, whichever video or pool it
-        // is for, sized to Parallel Extractions. A changed setting takes a new gate; extractions
+        // is for, sized to Parallel extractions. A changed setting takes a new gate; extractions
         // already holding the old one finish on it.
         private SemaphoreSlim Gate()
         {

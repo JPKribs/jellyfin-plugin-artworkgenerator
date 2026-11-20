@@ -14,8 +14,8 @@ Documentation describes the release it ships with. It reads as if this version w
 | :--- | :--- |
 | Logos now take their color from the poster. | Logos can take their color from the poster. |
 | The Light Background button was removed. | Leave it out. |
-| Fixed an issue where long titles overflowed. | A title that does not fit follows **Long Titles**. |
-| New in 12.4.4.0, Palette Colors take... | Palette Colors take... |
+| Fixed an issue where long titles overflowed. | A title that does not fit follows **Long titles**. |
+| New in 12.4.4.0, Palette colors take... | Palette colors take... |
 
 "Now" and "no longer" are fine when they describe state rather than history. "The design no longer exists" describes what a profile points at, so it stays.
 
@@ -50,7 +50,7 @@ Remove notes about Jellyfin versions the plugin no longer supports. The plugin r
 
 ### UI Names
 
-* Write a label exactly as the page shows it, in bold. **Edit Images Cache (minutes)**.
+* Write a label exactly as the page shows it, in bold. **Edit Images cache (minutes)**.
 * Write a path through the UI with `>` between the steps, in bold. **Dashboard > Plugins > Artwork Generator > Settings**.
 * Write a tab as its label, in bold. **Designs**, **Logos**, **Profiles**, **Settings**.
 * Quote on-screen messages in double quotes. "Designs saved."
@@ -111,14 +111,14 @@ One sentence that says what the page covers.
 List settings as bullets in the order the page shows them. Start each with the label in bold, then a colon, what it does, and its default.
 
 ```markdown
-* **Samples Per Frame**: how many frames are scored for each one kept. Default 4.
+* **Samples per frame**: how many frames are scored for each one kept. Default 4.
 ```
 
 When a page has many settings with defaults, use a table instead.
 
 | Setting | What it does | Default |
 | :--- | :--- | :--- |
-| **Samples Per Frame** | Scores frames for each one kept | 4 |
+| **Samples per frame** | Scores frames for each one kept | 4 |
 
 Table cells have no closing period. Keep them to one sentence.
 
@@ -170,7 +170,7 @@ Use `##` for README headings. Keep the README under 40 lines.
 * Capture the dark theme only, which is Jellyfin's default.
 * Capture with the [screenshot kit](#the-screenshot-kit), the page harness described in [testing.md](testing.md#harness), with headless Chromium at 2x. Never capture a live server's data.
 * Use generic data. Series such as `Northern Lights` and `Harbor Town`, designs `Default` and `Bold Title`, profiles `Default` and `Anime`, and a logo sample name such as `Northern Lights`.
-* Capture with designs and profiles filled in, so the previews, the **Assigned Items** list, and the **Images** grids show real choices.
+* Capture with designs and profiles filled in, so the previews, the **Assigned items** list, and the **Images** grids show real choices.
 * Draw every preview with the plugin's own renderer and a bundled font, so the screenshot shows real output.
 * Hide nothing with editing. When a value is private, change the harness data instead.
 
@@ -256,9 +256,9 @@ Release notes live in the `changelog` of `build.yaml`, under four keys. The publ
 ```yaml
 changelog:
   added:
-    - Palette Colors, which take the overlay colors from each image
+    - Palette colors, which take the overlay colors from each image
   fixed:
-    - A long subtitle ran off a portrait poster. Long Subtitles decides how it fits
+    - A long subtitle ran off a portrait poster. Long subtitles decides how it fits
 ```
 
 * This is the one place that may say "now", "no longer", and "was".

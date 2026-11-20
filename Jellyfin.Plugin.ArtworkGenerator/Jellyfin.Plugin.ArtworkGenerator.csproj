@@ -69,7 +69,10 @@
     <JellyfinString Include="LabelCollection" />
     <JellyfinString Include="LabelFolder" />
     <JellyfinString Include="LabelFont" />
+    <JellyfinString Include="LabelOriginalTitle" />
     <JellyfinString Include="LabelSize" />
+    <JellyfinString Include="LabelSortTitle" />
+    <JellyfinString Include="LabelTextColor" />
     <JellyfinString Include="LabelTitle" />
     <JellyfinString Include="LabelType" />
     <JellyfinString Include="LabelTypeText" />
@@ -95,7 +98,7 @@
     <JellyfinString Include="Thumb" />
     <JellyfinString Include="Upload" />
     <JellyfinString Include="Video" />
-    <JellyfinString Include="ViewLeftToRight" />
+    <JellyfinString Include="ViewLeftToRight" Case="sentence" />
     <JellyfinTextMatch Include="StyleSplit" />
   </ItemGroup>
 

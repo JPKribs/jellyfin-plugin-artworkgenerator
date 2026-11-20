@@ -56,13 +56,13 @@ public class OverlaySettingTests
     }
 
     /// <summary>
-    /// "Overlay Color" says nothing useful on a design where it is the bloom, the sash, or the fade,
+    /// "Overlay color" says nothing useful on a design where it is the bloom, the sash, or the fade,
     /// so each of those names it for what it actually draws.
     /// </summary>
     [Theory]
-    [InlineData(PosterStyle.Bloom, "Bloom Color")]
-    [InlineData(PosterStyle.Striped, "Band Color")]
-    [InlineData(PosterStyle.Fade, "Fade Color")]
+    [InlineData(PosterStyle.Bloom, "Bloom color")]
+    [InlineData(PosterStyle.Striped, "Band color")]
+    [InlineData(PosterStyle.Fade, "Fade color")]
     public void ADesignNamesTheOverlayForWhatItDraws(PosterStyle style, string label)
     {
         var text = Generator(style).SettingText;

@@ -59,7 +59,7 @@ public static class Program
         var supportsParallel = FramePoolSupportsParallelism();
         var parallels = supportsParallel ? options.Parallel : new[] { 1 };
 
-        Console.WriteLine($"Plugin: {options.Label}. ffmpeg slots: {encoder.Slots}. Sampling: {options.Sampling}. Reuse Samples: {(options.Reuse ? "on" : "off")}. Runs: {options.Runs}.");
+        Console.WriteLine($"Plugin: {options.Label}. ffmpeg slots: {encoder.Slots}. Sampling: {options.Sampling}. Reuse samples: {(options.Reuse ? "on" : "off")}. Runs: {options.Runs}.");
         Console.WriteLine();
         Console.WriteLine("| Build | Item | Videos | Choices | Parallel | ffmpeg calls | Peak at once | Frames held | Seconds |");
         Console.WriteLine("| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
@@ -102,7 +102,7 @@ public static class Program
 
         ApplySampling(settings, options.Sampling);
 
-        // Builds with Parallel Extractions read it from the settings too, for a single video's samples.
+        // Builds with Parallel extractions read it from the settings too, for a single video's samples.
         typeof(FrameExtractionSettings).GetProperty("ParallelExtractions")?.SetValue(settings, parallel);
 
         var extractor = new FrameExtractionService(
@@ -191,7 +191,7 @@ public static class Program
     }
 
     // FramePoolSupportsParallelism
-    // Builds before Parallel Extractions take no limit, so the benchmark measures them at 1.
+    // Builds before Parallel extractions take no limit, so the benchmark measures them at 1.
     private static bool FramePoolSupportsParallelism()
         => typeof(FramePoolService).GetConstructors().Any(c => c.GetParameters().Length >= 5);
 

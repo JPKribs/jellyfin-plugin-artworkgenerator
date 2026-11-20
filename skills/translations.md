@@ -8,7 +8,8 @@ How this plugin shows its text in the viewer's language. Base builds the strings
 | :--- | :--- |
 | Jellyfin's own | `<JellyfinString Include="Key" />` items in `Jellyfin.Plugin.ArtworkGenerator/Jellyfin.Plugin.ArtworkGenerator.csproj` |
 | This plugin's own | `Jellyfin.Plugin.ArtworkGenerator/Localization/en-us.json`, one file per language |
-| The endpoint pages load them from | `GET /Plugins/ArtworkGenerator/Translations`, which answers with `BaseTranslations.Serve` |
+| The endpoint pages load them from | `GET /Plugins/ArtworkGenerator/Translations`, which answers with `BaseTranslations.Serve` as `{ language, strings, casing }` |
+| Words kept as written | `Jellyfin.Plugin.ArtworkGenerator/Localization/casing.json` |
 | A setting's label, help text, and choices | Keys on the model, in `[Display(Name = TranslationKeys.X, Description = TranslationKeys.Y)]` and an enum member's `[Description(TranslationKeys.X)]` |
 | A style's description and its own wording | Keys on the generator in `Services/Posters/Types/` |
 
@@ -16,7 +17,7 @@ How this plugin shows its text in the viewer's language. Base builds the strings
 
 * `ag_shared.js` loads the strings once with `loadTranslations('Plugins/ArtworkGenerator/Translations')` and exports the handle as `t`. A page imports `t` from `ag_shared.js`.
 * `createArtworkPage` runs `t.apply(view)` before the page binds, so marked markup is translated first. Until then the markup's own English shows.
-* `SettingOptions`, `PosterStyles`, and every route that returns a sentence take `language`. A page builds those addresses with `withLanguage`, so the server answers in the viewer's language through `SettingOptions` and `BaseTranslations.Get`.
+* `SettingOptions`, `PosterStyles`, and every route that returns a sentence answer in the language `BaseTranslations.RequestLanguage(Request)` reads, from `language` in the query, the `X-Jellyfin-Plugin-Language` header, or `Accept-Language`. A page builds those addresses with `withLanguage`, so the server answers in the viewer's language.
 * A color field keeps its color wording in `data-str` and its opacity wording in `data-str-opacity`, and the page swaps them with `t.tr`.
 
 ## Rules
@@ -41,6 +42,14 @@ How this plugin shows its text in the viewer's language. Base builds the strings
     * A list of names in a sentence: `Intl.ListFormat` with `t.language`. Never join words with "or" or "and".
 5. Build. Fix every `JPKT` error and warning.
 
+## Casing
+
+Every string is in sentence case, mirroring Jellyfin, such as "Allow media playback". Sentences, labels, headings, buttons, tabs, and options alike start with one capital.
+
+* `Localization/casing.json` is a JSON array of the words and phrases this plugin writes with special casing, such as `"Edit Images"` and `"ARGB"`. Add a product name, format, or acronym there when a string starts to use it. Base's own list, such as `Jellyfin`, `TV`, and `URL`, is always included.
+* A Jellyfin string keeps Jellyfin's wording. Add `Case="sentence"` or `Case="title"` to its `JellyfinString` only when it reads wrong beside its neighbors.
+* Text built at runtime is cased with `ToSentenceCase` and `ToTitleCase` in C#, and `sentenceCase` and `titleCase` on a page, or `t.sentence(key)` and `t.title(key)`. Each keeps the words in the casing list.
+
 ## Add a Language
 
 Add `Localization/<code>.json`, such as `de.json` or `pt-br.json`, with only keys `en-us.json` has. A missing key falls back to the language's base and then to US English. Jellyfin's strings come in every language Jellyfin has, with no file.
@@ -50,4 +59,5 @@ Add `Localization/<code>.json`, such as `de.json` or `pt-br.json`, with only key
 * [ ] No English in a page, script, or server message outside `Localization/en-us.json`.
 * [ ] Jellyfin's string used wherever it has the words.
 * [ ] The build has no `JPKT` error or warning, and `TranslationsTests` passes.
+* [ ] Every label, heading, button, and option is in sentence case, with `casing.json` words as written.
 * [ ] The pages show the strings, checked once in another language such as `de`.

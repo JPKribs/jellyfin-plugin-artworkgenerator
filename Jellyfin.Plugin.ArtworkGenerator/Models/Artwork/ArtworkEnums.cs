@@ -121,11 +121,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         Title,
 
         /// <summary>The series' original-language title.</summary>
-        [Description(TranslationKeys.OptionOriginalTitle)]
+        [Description(TranslationKeys.LabelOriginalTitle)]
         OriginalTitle,
 
         /// <summary>The series sort title.</summary>
-        [Description(TranslationKeys.OptionSortTitle)]
+        [Description(TranslationKeys.LabelSortTitle)]
         SortTitle,
 
         /// <summary>The name of the series folder on disk.</summary>

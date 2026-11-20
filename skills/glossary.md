@@ -30,29 +30,29 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 | Default design | The design an image falls back to when its design is gone. It cannot be renamed or removed | `IsDefault` | Base design |
 | Style | The layout a design draws, such as Standard or Cutout | `PosterStyle` | Type, theme, mode |
 | Template | A design exported to JSON, to share or import | | Preset, export file |
-| Canvas | The picture under everything else, as set by **Canvas Background** | `CanvasSource` | Background layer |
+| Canvas | The picture under everything else, as set by **Canvas background** | `CanvasSource` | Background layer |
 | Frame | One still taken from a video | | Screenshot, snapshot |
 | Grid | A canvas tiled from several frames | `CanvasSource.Grid` | Collage, mosaic |
 | Overlay | The color washed over the canvas | `OverlayColor` | Tint, filter |
-| Palette Colors | Takes the overlay colors from each image instead of the chosen ones | `PaletteDerivedColors` | Palette-derived, auto color |
-| Static Graphic | An image file drawn on every poster of a design | `GraphicPath` | Watermark, overlay image |
+| Palette colors | Takes the overlay colors from each image instead of the chosen ones | `PaletteDerivedColors` | Palette-derived, auto color |
+| Static graphic | An image file drawn on every poster of a design | `GraphicPath` | Watermark, overlay image |
 | Title | The item's own name, the large line | `ShowPrimary`, `Primary*` | Primary text, heading |
 | Subtitle | The smaller line, such as S01E05 or SEASON 2 | `ShowSecondary`, `Secondary*` | Secondary text, episode info |
-| Safe Area | The margin kept clear on every edge | `PosterSafeArea` | Padding, bleed |
-| Element Spacing | The gap kept between the logo, title, and subtitle | `ElementSpacing` | Margin |
-| Live Preview | The images at the top of the **Designs** and **Logos** tabs, drawn from the settings on screen | `PreviewService` | Sample, demo |
-| Preview As | The kind of item the design previews are drawn for | `PreviewKind` | Preview type |
-| Component | A sample image a preview is drawn from, such as the sample poster shown under the logo preview when **Color From** samples it | | Asset, input image |
+| Safe area | The margin kept clear on every edge | `PosterSafeArea` | Padding, bleed |
+| Element spacing | The gap kept between the logo, title, and subtitle | `ElementSpacing` | Margin |
+| Live preview | The images at the top of the **Designs** and **Logos** tabs, drawn from the settings on screen | `PreviewService` | Sample, demo |
+| Preview as | The kind of item the design previews are drawn for | `PreviewKind` | Preview type |
+| Component | A sample image a preview is drawn from, such as the sample poster shown under the logo preview when **Color from** samples it | | Asset, input image |
 
 ## Logos
 
 | Term | Meaning | In Code | Not |
 | :--- | :--- | :--- | :--- |
 | Logo design | A named set of logo settings, edited on the **Logos** tab | `LogoConfiguration` | Logo config, logo template |
-| Logo Source | Which name of the item a logo shows | `TitleSource` | Name source |
+| Logo source | Which name of the item a logo shows | `TitleSource` | Name source |
 | Sample name | The text the logo preview draws. It is never saved | | Demo text, test name |
-| Letters Filled With | Whether the letters are a color or a frame from the show | `LogoFill` | Fill mode, texture |
-| Color From | Where a color fill takes its color, the chosen color or the item's own art | `LogoColorSource` | Color mode, sampling |
+| Letters filled with | Whether the letters are a color or a frame from the show | `LogoFill` | Fill mode, texture |
+| Color from | Where a color fill takes its color, the chosen color or the item's own art | `LogoColorSource` | Color mode, sampling |
 
 ## Profiles
 
@@ -69,17 +69,17 @@ The agreed name for every concept in this plugin. The UI, the docs, messages, an
 
 | Term | Meaning | In Code | Not |
 | :--- | :--- | :--- | :--- |
-| Frame Extraction | How frames are taken from a video and cleaned up, on the **Settings** tab | `FrameExtractionSettings` | Capture settings |
-| Extraction window | The stretch of a video frames come from, set by **Extraction Start (%)** and **Extraction End (%)** | `ExtractWindowStart`, `ExtractWindowEnd` | Range, span |
-| Samples Per Frame | How many frames are scored for each one kept | `SamplesPerFrame` | Quality, sampling rate |
-| Minimum Samples Per Video, Maximum Samples Per Video | The fewest and most frames scored from one video | `MinimumSamplesPerVideo`, `MaximumSamplesPerVideo` | Floor, ceiling |
+| Frame extraction | How frames are taken from a video and cleaned up, on the **Settings** tab | `FrameExtractionSettings` | Capture settings |
+| Extraction window | The stretch of a video frames come from, set by **Extraction start (%)** and **Extraction end (%)** | `ExtractWindowStart`, `ExtractWindowEnd` | Range, span |
+| Samples per frame | How many frames are scored for each one kept | `SamplesPerFrame` | Quality, sampling rate |
+| Minimum samples per video, maximum samples per video | The fewest and most frames scored from one video | `MinimumSamplesPerVideo`, `MaximumSamplesPerVideo` | Floor, ceiling |
 | Frame pool | The shared set of frames every image of one item draws from | `FramePoolService` | Cache, frame cache |
-| Parallel Extractions | How many frames are extracted at once, across every video | `ParallelExtractions` | Threads, workers |
-| Reuse Samples | Lets an item's images draw from overlapping frames | `ReuseSamples` | Share frames |
-| Videos Per Parent | The most videos a series, season, collection, or folder takes frames from | `VideosPerParent` | Video limit |
+| Parallel extractions | How many frames are extracted at once, across every video | `ParallelExtractions` | Threads, workers |
+| Reuse samples | Lets an item's images draw from overlapping frames | `ReuseSamples` | Share frames |
+| Videos per parent | The most videos a series, season, collection, or folder takes frames from | `VideosPerParent` | Video limit |
 | Media segments | Intros, outros, recaps, previews, and commercials a segment provider marks | `MediaSegmentType` | Chapters, markers |
-| Letterboxing | Black bars on a frame, cropped off by **Detect Letterboxing** | `EnableLetterboxDetection` | Black bars, borders |
-| Fixed Frame Seed | A number that makes frame choice repeat | `FixedExtractionSeed` | Random seed |
+| Letterboxing | Black bars on a frame, cropped off by **Detect letterboxing** | `EnableLetterboxDetection` | Black bars, borders |
+| Fixed frame seed | A number that makes frame choice repeat | `FixedExtractionSeed` | Random seed |
 
 ## Fonts
 

@@ -14,12 +14,12 @@ internal sealed class Options
 
           --media <folder>       Holds series/ (every video is an episode) and movie/ (the first video is the film).
           --items series,movie   Which items to open. Default both.
-          --choices 6,10         Choices In Edit Images to try. Default 6,10.
-          --parallel 1,2         Parallel Extractions to try. Ignored by builds without it. Default 1,2.
+          --choices 6,10         Choices in Edit Images to try. Default 6,10.
+          --parallel 1,2         Parallel extractions to try. Ignored by builds without it. Default 1,2.
           --slots primary,thumb,backdrop
                                  Image types the profile turns on, among primary, thumb, logo, backdrop.
                                  A color logo takes no frames, so logo is left out by default.
-          --reuse true|false     Reuse Samples. Default true.
+          --reuse true|false     Reuse samples. Default true.
           --sampling Medium      Low, Medium, or High, or per-frame/minimum/maximum such as 1/1/64.
                                  Numbers need a build with the three sampling settings. Default Medium.
           --runs 1               Opens per case, reporting the median. Default 1.

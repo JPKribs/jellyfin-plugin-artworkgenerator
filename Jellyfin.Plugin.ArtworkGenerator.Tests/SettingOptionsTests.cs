@@ -56,11 +56,11 @@ public class SettingOptionsTests
     [Theory]
     [InlineData("TextPosition", "Auto", "Design default")]
     [InlineData("TextAlignment", "Right", "Right")]
-    [InlineData("CanvasSource", "Extract", "Extract Frame from Video")]
-    [InlineData("OverlayGradient", "LeftToRight", "Left to Right")]
-    [InlineData("PosterStyle", "FrostedGlass", "Frosted Glass")]
+    [InlineData("CanvasSource", "Extract", "Extract frame from video")]
+    [InlineData("OverlayGradient", "LeftToRight", "Left to right")]
+    [InlineData("PosterStyle", "FrostedGlass", "Frosted glass")]
     [InlineData("PosterStyle", "Standard", "Standard")]
-    [InlineData("LongTextHandling", "DropName", "Drop Name")]
+    [InlineData("LongTextHandling", "DropName", "Drop name")]
     public void All_LabelsComeFromTheEnumItself(string setting, string value, string expected)
     {
         var option = Assert.Single(SettingOptions.All()[setting], o => o.Value == value);

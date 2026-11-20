@@ -57,7 +57,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public LogoColorSource ColorSource { get; set; } = LogoColorSource.Fixed;
 
         /// <summary>Gets or sets the ARGB text color, and the fallback when sampling fails.</summary>
-        [Display(Name = TranslationKeys.LabelLogoTextColor)]
+        [Display(Name = TranslationKeys.LabelTextColor)]
         public string Color { get; set; } = "#FFFFFFFF";
 
         [Display(Name = TranslationKeys.LabelOutline)]

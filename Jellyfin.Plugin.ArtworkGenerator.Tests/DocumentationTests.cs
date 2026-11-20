@@ -49,11 +49,11 @@ public class DocumentationTests
 
         foreach (var style in Enum.GetNames<PosterStyle>())
         {
-            // FrostedGlass reads as "Frosted Glass" in prose, as it does on the page.
+            // FrostedGlass reads as "Frosted glass" on the page and "Frosted Glass" in a heading.
             var spaced = string.Concat(style.Select((c, i) => i > 0 && char.IsUpper(c) ? " " + c : c.ToString()));
 
             Assert.True(
-                doc.Contains(style, StringComparison.Ordinal) || doc.Contains(spaced, StringComparison.Ordinal),
+                doc.Contains(style, StringComparison.Ordinal) || doc.Contains(spaced, StringComparison.OrdinalIgnoreCase),
                 $"docs/SETTINGS.md never mentions the {style} style.");
         }
     }

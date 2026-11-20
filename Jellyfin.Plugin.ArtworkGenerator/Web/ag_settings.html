@@ -13,27 +13,27 @@
                     <div class="fieldDescription ag-section-note" data-str="HeaderSettingsNote">Artwork Generator is turned on per library, under Image Fetchers in that library's settings. Profiles decide which images it makes.</div>
 
                     <div class="inputContainer">
-                        <label for="txtImageChoiceCount" data-str="LabelImageChoiceCount">Choices In Edit Images</label>
+                        <label for="txtImageChoiceCount" data-str="LabelImageChoiceCount">Choices in Edit Images</label>
                         <input is="emby-input" type="number" id="txtImageChoiceCount" min="1" max="1000" step="1" />
                         <div class="fieldDescription" data-str="HelpImageChoiceCount">Choices offered per image type in Edit Images. Each is a different frame, so a higher number is slower to open.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="txtImageCacheMinutes" data-str="LabelImageCacheMinutes">Edit Images Cache (minutes)</label>
+                        <label for="txtImageCacheMinutes" data-str="LabelImageCacheMinutes">Edit Images cache (minutes)</label>
                         <input is="emby-input" type="number" id="txtImageCacheMinutes" min="5" max="1440" step="1" />
                         <div class="fieldDescription" data-str="HelpImageCacheMinutes">How long the choices rendered for Edit Images stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="txtFixedSeed" data-str="LabelFixedFrameSeed">Fixed Frame Seed</label>
+                        <label for="txtFixedSeed" data-str="LabelFixedFrameSeed">Fixed frame seed</label>
                         <input is="emby-input" type="number" id="txtFixedSeed" step="1" placeholder="Random" data-str-placeholder="OptionRandom" />
                         <div class="fieldDescription" data-str="HelpFixedFrameSeed">Any whole number makes frame choice repeatable, so an item always gets the same frames. Empty picks new ones each refresh.</div>
                     </div>
 
-                    <!-- Frame Extraction -->
+                    <!-- Frame extraction -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="frameExtractionContent" data-target="frameExtractionContent">
-                            <span class="base-collapsible-title" data-str="HeaderFrameExtraction">Frame Extraction</span>
+                            <span class="base-collapsible-title" data-str="HeaderFrameExtraction">Frame extraction</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="frameExtractionContent" class="base-collapsible-content collapsed">

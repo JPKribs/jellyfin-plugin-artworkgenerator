@@ -96,7 +96,7 @@ A page can be checked in a harness before it goes to a test server, and the docs
 * Mimic the upgrades Jellyfin's `emby-input`, `emby-select`, `emby-checkbox`, and `emby-button` elements make when they attach, including the label and arrow they insert.
 * Answer the plugin's routes with the plugin's own code, such as `SettingOptions`, `PreviewService`, and `FontCatalog`, so labels and previews are real. Stub only Jellyfin's own calls, with generic data.
 * Click through like a user. Type real keystrokes into every picker, open every tab, every collapsible, and every dialog, at 1280 and 375 px wide, and look at each screenshot.
-* Type part of a real name into every lookup field, such as **Assigned Items**, and check the list finds it.
+* Type part of a real name into every lookup field, such as **Assigned items**, and check the list finds it.
 * Never call work done from a harness alone. Install the build on a test server and check every changed tab there after a hard reload.
 
 ## Demo Render

@@ -18,9 +18,9 @@ Without one of these, do not profile. Code that has no symptom and no change is 
 
 | Path | Entry | Cost |
 | :--- | :--- | :--- |
-| Edit Images | `ArtworkRemoteImageProvider.GetImages` | One render per choice and design, so **Choices In Edit Images** multiplies it |
+| Edit Images | `ArtworkRemoteImageProvider.GetImages` | One render per choice and design, so **Choices in Edit Images** multiplies it |
 | Refresh | `ArtworkService.GenerateAsync` | One render for each image a profile turns on, for every item in the library |
-| Frame extraction | `FrameExtractionService.ExtractFrameCandidatesAsync` | One ffmpeg seek per sample, so **Samples Per Frame** multiplies it, and **Parallel Extractions** runs that many at once |
+| Frame extraction | `FrameExtractionService.ExtractFrameCandidatesAsync` | One ffmpeg seek per sample, so **Samples per frame** multiplies it, and **Parallel extractions** runs that many at once |
 | Frame pool | `FramePoolService.AcquireAsync` | Frames on disk shared by every image of one item, behind a gate per item |
 | Drawing | The generators in `Services/Posters/Types/` | SkiaSharp work per image, with text fitting in `TextUtils` |
 | Choice cache | `GeneratedImageCache` | Rendered choices held in memory, up to `DefaultMaxBytes` |
@@ -231,7 +231,7 @@ Try these in order. Each is cheaper and safer than the next.
 
 * Never ship a profiler, a timing test, a `Stopwatch`, an allocation counter, or a timing log in the plugin. The frame benchmark in `tools/benchmark` is the one timing tool kept in the repository, and only there.
 * Never commit trace files, gcdumps, or timing output.
-* Never lower **Samples Per Frame**, the sample minimum or maximum, **Choices In Edit Images**, or a default to hide a slow path.
+* Never lower **Samples per frame**, the sample minimum or maximum, **Choices in Edit Images**, or a default to hide a slow path.
 * Never profile a Debug build. Use `Release`.
 * Never change a [stop and ask](../starthere.md#stop-and-ask) item without approval, even when it is the cause.
 

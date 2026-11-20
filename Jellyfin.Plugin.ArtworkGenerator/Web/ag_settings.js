@@ -1,5 +1,5 @@
 // ag_settings.js
-// The Settings tab, which holds the plugin wide options, Frame Extraction, and the uploaded fonts.
+// The Settings tab, which holds the plugin wide options, frame extraction, and the uploaded fonts.
 
 import {
     confirmDialog,

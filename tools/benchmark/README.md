@@ -49,11 +49,11 @@ BASELINE=v12.4.5.0 tools/benchmark/run.sh --media ~/bench-media
 | Option | Default | Sets |
 | :--- | :--- | :--- |
 | `--items` | `series,movie` | The items opened |
-| `--choices` | `6,10` | **Choices In Edit Images** |
-| `--parallel` | `1,2` | **Parallel Extractions**. A build without it is measured as `n/a` |
+| `--choices` | `6,10` | **Choices in Edit Images** |
+| `--parallel` | `1,2` | **Parallel extractions**. A build without it is measured as `n/a` |
 | `--slots` | `primary,thumb,backdrop` | The image types the profile turns on. A color logo takes no frames, so `logo` is off unless asked for |
-| `--reuse` | `true` | **Reuse Samples** |
-| `--sampling` | `Medium` | The sampling: `Low`, `Medium`, or `High` as the old **Sampling Rate** presets, or **Samples Per Frame**, **Minimum Samples Per Video**, and **Maximum Samples Per Video** as `1/1/64`. Numbers need a build that has them |
+| `--reuse` | `true` | **Reuse samples** |
+| `--sampling` | `Medium` | The sampling: `Low`, `Medium`, or `High` as the old **Sampling Rate** presets, or **Samples per frame**, **Minimum samples per video**, and **Maximum samples per video** as `1/1/64`. Numbers need a build that has them |
 | `--runs` | `1` | Opens per case. The median is reported |
 
 ## Reading the Table

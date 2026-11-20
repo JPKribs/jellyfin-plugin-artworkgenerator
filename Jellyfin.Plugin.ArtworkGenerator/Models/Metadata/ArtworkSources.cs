@@ -31,7 +31,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         // The videos with a readable media file that belong to an item: the video itself, a
         // season's episodes, a series' episodes, or the videos a collection, folder, or library
         // holds. Specials are left out of a series' or group's pool whenever regular episodes exist,
-        // since they are often recaps or extras. With Videos Per Parent above 0, a parent keeps at most
+        // since they are often recaps or extras. With Videos per parent above 0, a parent keeps at most
         // that many, spread across all of it, and checks at most ChecksPerVideo files on disk for
         // each one kept. A season or series keeps its sample in broadcast order. At 0 every video is used.
         public static IReadOnlyList<Video> GetPlayableSources(BaseItem item)

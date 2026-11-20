@@ -34,18 +34,22 @@ These rules apply to every string a user can see. That includes HTML, JS, C# mes
 
 ### Casing
 
-| Text | Case | Example |
-| :--- | :--- | :--- |
-| Tab | Title Case, one word | Designs |
-| Section and collapsible title | Title Case | Frame Extraction |
-| Field label | Title Case | Samples Per Frame |
-| Checkbox label | Title Case | Detect Letterboxing |
-| Button | Title Case, verb first | Edit Series |
-| Dialog title | Title Case | Remove Design |
-| Column header | Title Case | Primary |
-| Description, message, placeholder sentence | Sentence case | Crops black bars off an extracted frame. |
+Every string a person reads is in sentence case, mirroring Jellyfin, such as "Allow media playback". Only the first word, proper nouns, and the words in `Localization/casing.json` start with a capital.
 
-Title Case capitalizes every word except short articles, conjunctions, and prepositions in the middle, such as "a", "and", "of", "to", and "in". Keep acronyms as written, such as "ARGB", "JSON", and "HD".
+| Text | Example |
+| :--- | :--- |
+| Tab | Designs |
+| Section and collapsible title | Frame extraction |
+| Field label | Samples per frame |
+| Checkbox label | Detect letterboxing |
+| Button, verb first | Edit series |
+| Dialog title | Remove design |
+| Column header | Primary |
+| Description, message, placeholder sentence | Crops black bars off an extracted frame. |
+
+* Write the words in `Localization/casing.json` exactly as listed, such as "Edit Images" and "ARGB". Add a product name, format, or acronym there when the plugin starts to use it. See [translations.md](translations.md#casing).
+* A Jellyfin string keeps Jellyfin's wording.
+* Docs headings are Title Case, per [documentation.md](documentation.md#headings). Labels quoted in the docs keep the page's case.
 
 ### Words to Use
 
@@ -74,9 +78,9 @@ The control names its own result. "Remove" on a design takes it out of the confi
 ### Labels
 
 * Two to four words. Name the thing the field holds, not the action.
-* Put a unit at the end in lowercase parentheses, such as **Edit Images Cache (minutes)**. Use symbols for standard units, such as `%`, as in **Brighten Frame (%)**.
+* Put a unit at the end in lowercase parentheses, such as **Edit Images cache (minutes)**. Use symbols for standard units, such as `%`, as in **Brighten frame (%)**.
 * No colons, periods, or question marks.
-* A checkbox label names the feature it turns on, never "Enable X". Write **Detect Letterboxing**, not **Enable Letterbox Detection**. The one exception is the master switch at the top of a section, which reads **Enable** followed by the section name.
+* A checkbox label names the feature it turns on, never "Enable X". Write **Detect letterboxing**, not **Enable letterbox detection**. The one exception is the master switch at the top of a section, which reads **Enable** followed by the section name.
 
 ### Descriptions
 
@@ -109,8 +113,8 @@ A placeholder shows an example of a valid value. It is never the only place an i
 
 ### Buttons
 
-* A verb, or a verb and a noun. **Save**, **New**, **Edit Series**.
-* Name the object when the page has more than one of that action. **Edit Series** and **Edit Movies** sit on the same page.
+* A verb, or a verb and a noun. **Save**, **New**, **Edit series**.
+* Name the object when the page has more than one of that action. **Edit series** and **Edit movies** sit on the same page.
 * Every Save reads **Save**, with no noun, even when a page has several saves.
 * An icon only button carries a `title` of one to three words, such as `Remove` or `Expand`. Never a sentence.
 * A button that runs for a while shows progress in place. See [Progress](#progress).
@@ -140,14 +144,14 @@ A confirm asks one question and states the consequence.
 
 ```js
 confirmDialog('Remove Bold? Its images in Anime use the default design.', {
-    title: 'Remove Design',
+    title: 'Remove design',
     confirmText: 'Remove',
     destructive: true
 });
 ```
 
 * The message is a question, then one sentence on the consequence. "Remove Anime? Its assigned items use the default profile."
-* The title is the action in Title Case, such as **Remove Design**. Never leave the default **Confirm**.
+* The title is the action in sentence case, such as **Remove design**. Never leave the default **Confirm**.
 * The confirm button repeats the action verb, such as **Remove** or **Delete**. Never **OK** or **Yes**.
 * Set `destructive: true` for anything that loses data.
 * Never "Are you sure you want to". Ask the question directly.
@@ -197,10 +201,10 @@ A color means the same thing on every page and in every plugin.
 | Color | Means | States |
 | :--- | :--- | :--- |
 | Green | Done and healthy | Active, Synced, Downloaded, Succeeded |
-| Red | Failed, or about to lose data | Error, Errored, Failed, Deleting, Pending Deletion |
+| Red | Failed, or about to lose data | Error, Errored, Failed, Deleting, Pending deletion |
 | Orange | Waiting, or needs attention soon | Queued, Expired, Warning |
-| Purple | Working right now | Pending, Downloading, Locked, Pending Download |
-| Blue | Informational | Admin, Imported, Pending Replacement |
+| Purple | Working right now | Pending, Downloading, Locked, Pending download |
+| Blue | Informational | Admin, Imported, Pending replacement |
 | Gray | Off or not applicable | Disabled, Ignored, Skipped, Group |
 
 * Map a status to a color through `BADGE_STATES`. Never keep a second map in the plugin.
@@ -237,7 +241,7 @@ Every config page uses Jellyfin's page shell.
 ### Tabs
 
 * One registered page per tab, wired with `createConfigPage` and `setTabs`.
-* Tab names are one Title Case word.
+* Tab names are one word.
 * Keep the tab list in one place, the plugin's shared module, never copied into each page.
 * Order tabs from what is used most to what is set once. Artwork Generator is **Designs**, **Logos**, **Profiles**, **Settings**.
 
@@ -325,7 +329,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 * Every input has a `<label for>`.
 * A slider sets one number on a range, a color picker sets a color, and a copy field shows a code, path, or link. Never build any of them by hand.
 * Never mount a Base component that holds inputs inside `inputContainer`. Base keeps checkboxes and radios there at their own size, but the server still stretches every other input to full width. Mount it in a plain wrapper, such as `ag-field`, with its label and `fieldDescription`, unless the component's typings say otherwise.
-* A color setting whose color comes from the image, under **Palette Colors** or **Color From**, shows only its opacity. `bindColorField` hides the Color Picker and shows a `createSliderField` in percent in its place, and the label reads **Overlay Opacity**, **Secondary Overlay Opacity**, or **Text Opacity**.
+* A color setting whose color comes from the image, under **Palette colors** or **Color from**, shows only its opacity. `bindColorField` hides the Color Picker and shows a `createSliderField` in percent in its place, and the label reads **Overlay opacity**, **Secondary overlay opacity**, or **Text opacity**.
 
 ### Buttons
 
@@ -403,7 +407,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | One number with a label | `createStatCard` |
 
 * Pick the chart by the question it answers. A single used of total bar is a Usage Meter, never a Bar Chart.
-* Name each slice with a glossary term in Title Case, such as **Cached Links**.
+* Name each slice with a glossary term in sentence case, such as **Cached links**.
 * Take colors from Base's series colors. Set a color only when it carries a [meaning](#meaning).
 * Give every chart a `label`, and an `emptyText` sentence for when it has nothing to draw.
 * Scope a chart to what the page shows. A chart beside a server picker counts that server only.
@@ -425,7 +429,7 @@ grep -o "export function create[A-Za-z]*" ~/.nuget/packages/jpkribs.jellyfin.bas
 | A dialog already in the page markup | `bindDialog` |
 
 * Build dialogs in JS with `openDialog` and its wrappers. Use `bindDialog` only when the markup is large and static.
-* A dialog title is Title Case and names what the dialog does.
+* A dialog title is in sentence case and names what the dialog does.
 * Buttons read, from left to right, the destructive action, then **Cancel**, then the primary action.
 
 ## Layout
@@ -466,7 +470,7 @@ Run every new or changed string through this list.
 * [ ] No colon at the end of a label, and none in a sentence unless it introduces a list.
 * [ ] One sentence, or two when the second is the fix or the consequence.
 * [ ] Sentences end with a period. Labels, buttons, and titles do not.
-* [ ] Title Case for labels, buttons, titles, tabs, and badges. Sentence case for sentences.
+* [ ] Sentence case for every string, mirroring Jellyfin, with the words in `casing.json` as written.
 * [ ] No "please", "successfully", exclamation marks, ALL CAPS, "(s)", or contractions.
 * [ ] The word matches [Words to Use](#words-to-use).
 * [ ] Base's typings were searched before any markup was built by hand.

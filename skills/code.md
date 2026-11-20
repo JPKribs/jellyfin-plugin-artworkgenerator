@@ -147,7 +147,7 @@ export function createArtworkPage(view, tabIndex, opts) {
 ### HTML
 
 ```html
-<!-- Frame Extraction -->
+<!-- Frame extraction -->
 <!-- How frames are taken from a video and cleaned up. -->
 <div class="verticalSection">
 ```
@@ -236,7 +236,7 @@ Outside the plugin project, `Jellyfin.Plugin.ArtworkGenerator.Tests/` holds the 
 * Every route on `ConfigurationController` needs `[Authorize(Policy = "RequiresElevation")]`, which the controller carries. Two routes are anonymous. `GET Generated/{token}` serves a picked choice, since Jellyfin downloads it with no user. It only resolves an unguessable token that expires, and never renders. `GET Translations` serves the pages' strings, which are not secret.
 * Never add another anonymous route, and never let an anonymous route render, read a path, or list anything.
 * Load preview images through `shared.fetchObjectUrl` or `ApiClient`, so the admin's credentials go with them. A bare `img.src` to a plugin route sends none.
-* Treat **Font Path** and **Graphic File Path** as paths an admin typed. Read them only to draw, and never return their contents or list their folder.
+* Treat **Font path** and **Graphic file path** as paths an admin typed. Read them only to draw, and never return their contents or list their folder.
 * Keep files the plugin writes inside its data folder, `artworkgenerator` under Jellyfin's data path, with `PathContainment` and `FileNameSanitizer`.
 * Write `logos.json` through `JsonFileStore`, and copy a file that cannot be read to a `.bak` before anything replaces it.
 * Pass every value from a request or an item through `FormatUtilities.SanitizeForLog` before logging it.

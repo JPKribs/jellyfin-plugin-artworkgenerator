@@ -9,7 +9,7 @@
 }
 
 /* ag-preview */
-/* The Live Preview column: the Preview Frames, the note under them, the Preview As field, and the sample images. */
+/* The live preview column: the Preview Frames, the note under them, the Preview as field, and the sample images. */
 /* Example: <div class="ag-preview"><div class="ag-preview-pair"></div><div id="previewSamples"></div></div> */
 .ag-preview {
     display: flex;
@@ -47,7 +47,7 @@
 
 /* ag-field */
 /* A color setting's label, Base Color Picker, and help text. It sits outside inputContainer, whose server rule stretches every input inside it to full width. */
-/* Example: <div class="ag-field"><label for="txtColor">Text Color</label><div data-color-field></div><div class="fieldDescription">ARGB hex color.</div></div> */
+/* Example: <div class="ag-field"><label for="txtColor">Text color</label><div data-color-field></div><div class="fieldDescription">ARGB hex color.</div></div> */
 .ag-field {
     margin: 0 0 var(--base-gap-wide);
 }
