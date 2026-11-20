@@ -70,41 +70,41 @@ public sealed class UploadedFontStore
     /// </summary>
     /// <param name="fileName">The name the file was uploaded with.</param>
     /// <param name="data">The file's bytes.</param>
-    /// <returns>The stored face, or a sentence saying why the font was refused.</returns>
+    /// <returns>The stored face, or the translation key of a sentence saying why the font was refused.</returns>
     public FontUploadResult Upload(string? fileName, byte[]? data)
     {
         if (string.IsNullOrWhiteSpace(fileName) || data == null || data.Length == 0)
         {
-            return FontUploadResult.Refused("Select a font file.");
+            return FontUploadResult.Refused(TranslationKeys.ErrorSelectFontFile);
         }
 
         var safeName = FileNameSanitizer.Sanitize(Path.GetFileName(fileName.Replace('\\', '/')));
         if (!HasFontExtension(safeName))
         {
-            return FontUploadResult.Refused("Only .ttf and .otf fonts can be uploaded.");
+            return FontUploadResult.Refused(TranslationKeys.ErrorFontExtension);
         }
 
         if (data.Length > MaxFontBytes)
         {
-            return FontUploadResult.Refused("The font is larger than 20 MB.");
+            return FontUploadResult.Refused(TranslationKeys.ErrorFontTooLarge);
         }
 
         if (!HasFontHeader(data))
         {
-            return FontUploadResult.Refused("The file is not a TrueType or OpenType font.");
+            return FontUploadResult.Refused(TranslationKeys.ErrorNotAFont);
         }
 
         var path = Path.Combine(_folder, safeName);
         if (!PathContainment.IsStrictlyUnder(path, _folder))
         {
-            return FontUploadResult.Refused("The font name is not allowed.");
+            return FontUploadResult.Refused(TranslationKeys.ErrorFontName);
         }
 
         using (var check = Load(data))
         {
             if (check == null)
             {
-                return FontUploadResult.Refused("The font could not be read.");
+                return FontUploadResult.Refused(TranslationKeys.ErrorFontUnreadable);
             }
         }
 
@@ -118,7 +118,7 @@ public sealed class UploadedFontStore
 
         var face = List().FirstOrDefault(f => string.Equals(f.FileName, safeName, StringComparison.Ordinal));
         return face == null
-            ? FontUploadResult.Refused("The font could not be read.")
+            ? FontUploadResult.Refused(TranslationKeys.ErrorFontUnreadable)
             : FontUploadResult.Stored(face);
     }
 

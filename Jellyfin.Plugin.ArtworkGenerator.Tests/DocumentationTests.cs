@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
+using JPKribs.Jellyfin.Base;
 using Xunit;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
@@ -37,7 +38,8 @@ public class DocumentationTests
     {
         return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(p => p.GetCustomAttribute<DisplayAttribute>()?.Name)
-            .Where(name => !string.IsNullOrEmpty(name))!;
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Select(name => BaseTranslations.Get(name!));
     }
 
     [Fact]

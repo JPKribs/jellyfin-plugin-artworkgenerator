@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -15,19 +16,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum TextPosition
     {
         /// <summary>Wherever the chosen design naturally puts its text.</summary>
-        [Description("Design default")]
+        [Description(TranslationKeys.OptionDesignDefault)]
         Auto,
 
         /// <summary>Against the top of the safe area.</summary>
-        [Description("Top")]
+        [Description(TranslationKeys.OptionTop)]
         Top,
 
         /// <summary>Centered between the top and bottom of the safe area.</summary>
-        [Description("Center")]
+        [Description(TranslationKeys.OptionCenter)]
         Center,
 
         /// <summary>Against the bottom of the safe area.</summary>
-        [Description("Bottom")]
+        [Description(TranslationKeys.OptionBottom)]
         Bottom
     }
 }

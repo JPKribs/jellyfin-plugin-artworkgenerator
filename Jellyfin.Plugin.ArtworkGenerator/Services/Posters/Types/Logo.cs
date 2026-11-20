@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -15,18 +16,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Logo;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "The item's logo over the image. Puts branding first.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleLogoDescription;
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set at the bottom under the logo.";
+            => TranslationKeys.StyleLogoTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, set on the line above the title.";
+            => TranslationKeys.StyleLogoSubtitleHelp;
 
         // This style places the logo, so the logo settings are its own.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(

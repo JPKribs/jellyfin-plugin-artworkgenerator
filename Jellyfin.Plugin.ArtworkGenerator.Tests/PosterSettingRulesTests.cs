@@ -1,6 +1,7 @@
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
+using JPKribs.Jellyfin.Base;
 using Xunit;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
@@ -124,7 +125,8 @@ public class PosterSettingRulesTests
         // Only the position needs rewording: the lone line setting is this design's alone, so its
         // own words live on the setting itself.
         Assert.True(frame.SettingText.ContainsKey(PosterSettingRules.TextPosition));
-        Assert.Contains("edge", frame.SettingText[PosterSettingRules.TextPosition].Label, System.StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("subtitle sit", frame.SettingText[PosterSettingRules.TextPosition].Description, System.StringComparison.OrdinalIgnoreCase);
+        var text = SettingOptions.Translate(frame.SettingText[PosterSettingRules.TextPosition], null);
+        Assert.Contains("edge", text.Label, System.StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("subtitle sit", text.Description, System.StringComparison.OrdinalIgnoreCase);
     }
 }

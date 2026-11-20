@@ -11,7 +11,9 @@ import {
     generateGuid,
     initCollapsibles,
     promptName,
-    sameId
+    sameId,
+    t,
+    withLanguage
 } from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
@@ -28,17 +30,20 @@ export default function (view) {
     var EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
     var KINDS = [
-        { kind: 'Series', label: 'Series', shapeKey: 'SeriesPrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Season', label: 'Seasons', shapeKey: 'SeasonPrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Episode', label: 'Episodes', shapeKey: 'EpisodePrimaryShape', defaultShape: 'Landscape' },
-        { kind: 'Movie', label: 'Movies', shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Video', label: 'Videos', shapeKey: 'VideoPrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Collection', label: 'Collections', shapeKey: 'CollectionPrimaryShape', defaultShape: 'Portrait' },
-        { kind: 'Folder', label: 'Folders', shapeKey: 'FolderPrimaryShape', defaultShape: 'Landscape' }
+        { kind: 'Series', label: t.tr('Series'), shapeKey: 'SeriesPrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Season', label: t.tr('HeaderSeasons'), shapeKey: 'SeasonPrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Episode', label: t.tr('Episodes'), shapeKey: 'EpisodePrimaryShape', defaultShape: 'Landscape' },
+        { kind: 'Movie', label: t.tr('Movies'), shapeKey: 'MoviePrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Video', label: t.tr('HeaderVideos'), shapeKey: 'VideoPrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Collection', label: t.tr('Collections'), shapeKey: 'CollectionPrimaryShape', defaultShape: 'Portrait' },
+        { kind: 'Folder', label: t.tr('Folders'), shapeKey: 'FolderPrimaryShape', defaultShape: 'Landscape' }
     ];
 
     // The image slots, in the order their tabs show.
     var SLOTS = ['Primary', 'Thumb', 'Logo', 'Backdrop'];
+
+    // Each image's name, as the web client words it.
+    var SLOT_LABELS = { Primary: t.tr('Primary'), Thumb: t.tr('Thumb'), Logo: t.tr('Logo'), Backdrop: t.tr('Backdrop') };
 
     // Mirrors ArtworkProfile.SupportedSlots on the server: Jellyfin clients never show logos for
     // seasons or episodes, so those rows are not offered.
@@ -80,8 +85,8 @@ export default function (view) {
     function buildSaveBar() {
         saveBar = createArtworkSaveBar(view.querySelector('#AgProfilesForm'), view.querySelector('#saveBarHost'), tracker, {
             save: saveConfig,
-            savedText: 'Profiles saved.',
-            failedText: 'Could not save the profiles.'
+            savedText: t.tr('ToastProfilesSaved'),
+            failedText: t.tr('ErrorSaveProfiles')
         });
     }
 
@@ -98,7 +103,7 @@ export default function (view) {
     function loadBackdropText() {
         return ApiClient.ajax({
             type: 'GET',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
+            url: withLanguage('Plugins/ArtworkGenerator/SettingOptions'),
             dataType: 'json'
         }).then(function (payload) {
             backdropText = (payload && (payload.backdropText || payload.BackdropText)) || {};
@@ -162,7 +167,7 @@ export default function (view) {
             saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load profiles:', error);
-            saveBar.setState('failed', 'Could not load the profiles. Reload the page.');
+            saveBar.setState('failed', t.tr('ErrorLoadProfiles'));
         });
     }
 
@@ -182,7 +187,7 @@ export default function (view) {
         profiles.forEach(function (profile) {
             var option = document.createElement('option');
             option.value = profile.Id;
-            option.textContent = profile.Name || 'Unnamed Profile';
+            option.textContent = profile.Name || t.tr('UnnamedProfile');
             select.appendChild(option);
         });
 
@@ -235,11 +240,11 @@ export default function (view) {
     // Every design draws both shapes, so a slot may use any of them.
     function designOptions(currentId, deletedText) {
         var options = sortedDesigns().map(function (d) {
-            return { value: d.Id, label: d.Name || 'Unnamed Design' };
+            return { value: d.Id, label: d.Name || t.tr('UnnamedDesign') };
         });
 
         if (!findDesign(currentId) && currentId && !sameId(currentId, EMPTY_GUID)) {
-            options.unshift({ value: currentId, label: deletedText || 'Deleted design (uses the default)' });
+            options.unshift({ value: currentId, label: deletedText || t.tr('OptionDeletedDesign') });
         }
 
         return options;
@@ -248,14 +253,14 @@ export default function (view) {
     // A secondary or tertiary design is optional, and a deleted one is skipped rather than
     // replaced by the default.
     function extraDesignOptions(currentId) {
-        return [{ value: EMPTY_GUID, label: 'None' }].concat(designOptions(currentId, 'Deleted design (skipped)'));
+        return [{ value: EMPTY_GUID, label: t.tr('None') }].concat(designOptions(currentId, t.tr('OptionDeletedDesignSkipped')));
     }
 
     function logoOptions(currentId) {
-        var options = logoDesigns.map(function (l) { return { value: l.Id, label: l.Name || 'Unnamed Logo' }; });
+        var options = logoDesigns.map(function (l) { return { value: l.Id, label: l.Name || t.tr('UnnamedLogo') }; });
         var exists = logoDesigns.some(function (l) { return sameId(l.Id, currentId); });
         if (!exists && currentId && !sameId(currentId, EMPTY_GUID)) {
-            options.unshift({ value: currentId, label: 'Deleted logo (uses the default)' });
+            options.unshift({ value: currentId, label: t.tr('OptionDeletedLogo') });
         }
         return options;
     }
@@ -278,11 +283,11 @@ export default function (view) {
     };
 
     var COLUMNS = {
-        Enabled: { key: 'Enabled', label: 'Generate', icon: 'check' },
-        Shape: { key: 'Shape', label: 'Shape', icon: 'crop', type: 'select', options: ['Portrait', 'Landscape'] },
-        DesignId: { key: 'DesignId', label: 'Design', icon: 'brush', type: 'select', options: [] },
-        SecondaryDesignId: { key: 'SecondaryDesignId', label: 'Second Design', icon: 'filter_2', type: 'select', options: [] },
-        TertiaryDesignId: { key: 'TertiaryDesignId', label: 'Third Design', icon: 'filter_3', type: 'select', options: [] }
+        Enabled: { key: 'Enabled', label: t.tr('LabelGenerate'), icon: 'check' },
+        Shape: { key: 'Shape', label: t.tr('LabelShape'), icon: 'crop', type: 'select', options: [{ value: 'Portrait', label: t.tr('OptionPortrait') }, { value: 'Landscape', label: t.tr('OptionLandscape') }] },
+        DesignId: { key: 'DesignId', label: t.tr('LabelDesign'), icon: 'brush', type: 'select', options: [] },
+        SecondaryDesignId: { key: 'SecondaryDesignId', label: t.tr('LabelSecondDesign'), icon: 'filter_2', type: 'select', options: [] },
+        TertiaryDesignId: { key: 'TertiaryDesignId', label: t.tr('LabelThirdDesign'), icon: 'filter_3', type: 'select', options: [] }
     };
 
     // optionValue
@@ -357,7 +362,7 @@ export default function (view) {
     }
 
     // unsupportedNote
-    // Names the kinds of item Jellyfin clients never show this image for.
+    // Names the kinds of item Jellyfin clients never show this image for, listed the way the viewer's language lists them.
     //
     // Inputs
     // slot [string]: The image, such as Logo.
@@ -366,10 +371,9 @@ export default function (view) {
     // [string]: The note, or an empty string when every kind shows it.
     function unsupportedNote(slot) {
         var missing = KINDS.filter(function (k) { return SUPPORTED[k.kind].indexOf(slot) === -1; })
-            .map(function (k) { return k.label.toLowerCase(); });
+            .map(function (k) { return k.label; });
         if (!missing.length) return '';
-        var list = missing.length === 1 ? missing[0] : missing.slice(0, -1).join(', ') + ' or ' + missing[missing.length - 1];
-        return 'Jellyfin clients do not show this image for ' + list + '.';
+        return t.format('NoteImageNotShown', new Intl.ListFormat(t.language, { type: 'disjunction' }).format(missing));
     }
 
     // buildSlotGrid
@@ -387,8 +391,8 @@ export default function (view) {
             rows: built.rows,
             columns: SLOT_COLUMNS[slot].map(function (key) { return COLUMNS[key]; }),
             value: built.value,
-            rowHeader: 'Item',
-            label: slot + ' Images',
+            rowHeader: t.tr('LabelItem'),
+            label: t.format('LabelSlotImages', SLOT_LABELS[slot]),
             note: unsupportedNote(slot),
             onChange: function (value, kind, key) {
                 var assignment = getSlot(profile, kind, slot);
@@ -439,9 +443,9 @@ export default function (view) {
         SLOTS.forEach(function (slot) { slotRows(profile, slot); });
 
         _slotTabs = createSubTabs({
-            label: 'Images',
+            label: t.tr('Images'),
             value: selected,
-            tabs: SLOTS.map(function (slot) { return { id: slot, label: slot }; }),
+            tabs: SLOTS.map(function (slot) { return { id: slot, label: SLOT_LABELS[slot] }; }),
             render: function (tab) {
                 var grid = buildSlotGrid(profile, tab.id);
                 _grids.push(grid);
@@ -503,22 +507,24 @@ export default function (view) {
             key: 'SeriesIds',
             itemType: 'Series',
             noun: 'series',
-            tab: 'Series',
-            label: 'Assigned Series',
-            search: 'Search series',
-            empty: 'No series assigned.',
-            missing: 'No series found. Make sure you have TV series in your Jellyfin library.',
+            tab: t.tr('Series'),
+            label: t.tr('LabelAssignedSeries'),
+            search: t.tr('PlaceholderSearchSeries'),
+            empty: t.tr('EmptyAssignedSeries'),
+            missing: t.tr('EmptyFoundSeries'),
+            noMatch: t.tr('EmptyMatchSeries'),
             items: []
         },
         {
             key: 'MovieIds',
             itemType: 'Movie',
             noun: 'movies',
-            tab: 'Movies',
-            label: 'Assigned Movies',
-            search: 'Search movies',
-            empty: 'No movies assigned.',
-            missing: 'No movies found. Make sure you have movies in your Jellyfin library.',
+            tab: t.tr('Movies'),
+            label: t.tr('LabelAssignedMovies'),
+            search: t.tr('PlaceholderSearchMovies'),
+            empty: t.tr('EmptyAssignedMovies'),
+            missing: t.tr('EmptyFoundMovies'),
+            noMatch: t.tr('EmptyMatchMovies'),
             items: []
         },
         {
@@ -528,33 +534,36 @@ export default function (view) {
             // everything a library holds that is not part of a series and not a film.
             itemType: 'MusicVideo,Video',
             noun: 'videos',
-            tab: 'Videos',
-            label: 'Assigned Videos',
-            search: 'Search videos',
-            empty: 'No videos assigned.',
-            missing: 'No videos found. Make sure you have music videos or home videos in your Jellyfin library.',
+            tab: t.tr('HeaderVideos'),
+            label: t.tr('LabelAssignedVideos'),
+            search: t.tr('PlaceholderSearchVideos'),
+            empty: t.tr('EmptyAssignedVideos'),
+            missing: t.tr('EmptyFoundVideos'),
+            noMatch: t.tr('EmptyMatchVideos'),
             items: []
         },
         {
             key: 'CollectionIds',
             itemType: 'BoxSet',
             noun: 'collections',
-            tab: 'Collections',
-            label: 'Assigned Collections',
-            search: 'Search collections',
-            empty: 'No collections assigned.',
-            missing: 'No collections found. Make sure you have collections in your Jellyfin library.',
+            tab: t.tr('Collections'),
+            label: t.tr('LabelAssignedCollections'),
+            search: t.tr('PlaceholderSearchCollections'),
+            empty: t.tr('EmptyAssignedCollections'),
+            missing: t.tr('EmptyFoundCollections'),
+            noMatch: t.tr('EmptyMatchCollections'),
             items: []
         },
         {
             key: 'FolderIds',
             itemType: 'Folder',
             noun: 'folders',
-            tab: 'Folders',
-            label: 'Assigned Folders',
-            search: 'Search folders',
-            empty: 'No folders assigned.',
-            missing: 'No folders found. Make sure you have folders in a mixed content or home videos library.',
+            tab: t.tr('Folders'),
+            label: t.tr('LabelAssignedFolders'),
+            search: t.tr('PlaceholderSearchFolders'),
+            empty: t.tr('EmptyAssignedFolders'),
+            missing: t.tr('EmptyFoundFolders'),
+            noMatch: t.tr('EmptyMatchFolders'),
             items: []
         }
     ];
@@ -586,7 +595,7 @@ export default function (view) {
     }
 
     // Item types named on the second line of a picked item.
-    var TYPE_LABELS = { BoxSet: 'Collection', MusicVideo: 'Music Video' };
+    var TYPE_LABELS = { BoxSet: t.tr('LabelCollection'), MusicVideo: t.tr('MusicVideo') };
 
     // destroyAssignments
     // Removes the assignment tabs and their pickers.
@@ -607,7 +616,7 @@ export default function (view) {
         if (!profile) return;
 
         _assignmentTabs = createSubTabs({
-            label: 'Assigned Items',
+            label: t.tr('HeaderAssignedItems'),
             value: selected,
             tabs: TARGETS.map(function (target) { return { id: target.key, label: target.tab }; }),
             render: function (tab) {
@@ -650,7 +659,7 @@ export default function (view) {
             value: picked,
             placeholder: target.search,
             emptyText: target.empty,
-            noResultsText: target.items.length ? 'No ' + target.noun + ' match.' : target.missing,
+            noResultsText: target.items.length ? target.noMatch : target.missing,
             typeLabels: TYPE_LABELS,
             minChars: 1,
             searchFn: function (query) {
@@ -697,14 +706,14 @@ export default function (view) {
     // Output
     // [string|null]: The reason, or null.
     function checkName(name, exceptId) {
-        if (!name) return 'Enter a name.';
-        if (name.toLowerCase() === 'default') return 'Default is reserved for the default profile.';
-        if (nameIsTaken(name, exceptId)) return 'A profile with this name already exists.';
+        if (!name) return t.tr('ErrorEnterName');
+        if (name.toLowerCase() === 'default') return t.tr('ErrorDefaultNameReserved');
+        if (nameIsTaken(name, exceptId)) return t.tr('ErrorProfileNameTaken');
         return null;
     }
 
     function createNewProfile() {
-        promptName('New Profile', '', 'Anime', function (name) { return checkName(name); }).then(function (name) {
+        promptName(t.tr('HeaderNewProfile'), '', t.tr('Anime'), function (name) { return checkName(name); }).then(function (name) {
             if (!name) return;
 
             // Start from a copy of the profile on screen, so a new profile only needs its differences.
@@ -726,7 +735,7 @@ export default function (view) {
         var profile = getCurrentProfile();
         if (profile.IsDefault) return;
 
-        promptName('Rename Profile', profile.Name || '', '', function (name) { return checkName(name, profile.Id); }).then(function (name) {
+        promptName(t.tr('HeaderRenameProfile'), profile.Name || '', '', function (name) { return checkName(name, profile.Id); }).then(function (name) {
             if (!name) return;
 
             profile.Name = name;
@@ -739,9 +748,9 @@ export default function (view) {
         var profile = getCurrentProfile();
         if (profile.IsDefault) return;
 
-        confirmDialog('Remove ' + (profile.Name || 'this profile') + '? Its assigned items use the default profile.', {
-            title: 'Remove Profile',
-            confirmText: 'Remove',
+        confirmDialog(t.format('ConfirmRemoveProfile', profile.Name || t.tr('UnnamedProfile')), {
+            title: t.tr('HeaderRemoveProfile'),
+            confirmText: t.tr('ButtonRemove'),
             destructive: true
         }).then(function (confirmed) {
             if (!confirmed) return;
@@ -765,8 +774,8 @@ export default function (view) {
         });
 
         if (empty.length > 0) {
-            var names = empty.map(function (p) { return p.Name || 'Unnamed'; }).join(', ');
-            return Promise.reject('Could not save, since ' + names + ' has nothing assigned. Assign items or remove the profile.');
+            var names = empty.map(function (p) { return p.Name || t.tr('Unnamed'); }).join(', ');
+            return Promise.reject(t.format('ErrorProfileUnassigned', names));
         }
 
         // Read-modify-write: designs, logos, and plugin-wide settings live in the same

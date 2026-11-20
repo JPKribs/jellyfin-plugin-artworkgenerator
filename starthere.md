@@ -17,6 +17,7 @@ Each guide in [skills](skills/) covers one kind of work. Read the guide that mat
 | [skills/review.md](skills/review.md) | Call any change done. |
 | [skills/release.md](skills/release.md) | Cut a release. |
 | [skills/branches.md](skills/branches.md) | Pick a branch, sync the two, and promote unstable. |
+| [skills/translations.md](skills/translations.md) | Add or change a string a person reads. |
 
 A task that touches several areas needs every matching guide. A new setting, for example, needs the glossary, style, code, testing, documentation, and review guides.
 
@@ -47,7 +48,7 @@ Stop and ask before any of these, even when the task seems to call for it.
 
 * **Stored data.** A change to the shape of the configuration, whose file name is pinned to `Jellyfin.Plugin.EpisodePosterGenerator.xml`, of `logos.json`, or of an exported template, or anything that resets, moves, or deletes them or the `artworkgenerator` data folder.
 * **Media.** Anything that replaces or deletes an item's existing images, or changes when a refresh writes one.
-* **Security.** A change to the admin policy on `ConfigurationController`, to the anonymous `Generated/{token}` route or its tokens, or to how **Font Path** and **Graphic File Path** are read.
+* **Security.** A change to the admin policy on `ConfigurationController`, to the anonymous `Generated/{token}` route or its tokens, to the anonymous `Translations` route, or to how **Font Path** and **Graphic File Path** are read.
 * **Base.** Any change to Base, since every plugin takes it.
 * **Settings.** Renaming, removing, or changing the default of a setting, a design field, a profile field, or an enum value users already have stored.
 * **Releases.** Raising the version, publishing, or pushing to `master`.
@@ -63,6 +64,7 @@ Explain what you would change, why, and what it risks. Wait for an answer before
 | `Jellyfin.Plugin.ArtworkGenerator/Web/` | The dashboard pages, as HTML, JS, and CSS. |
 | `Jellyfin.Plugin.ArtworkGenerator/Configuration/` | The plugin configuration model. |
 | `Jellyfin.Plugin.ArtworkGenerator/Api/` | The plugin's routes, in `ConfigurationController`. |
+| `Jellyfin.Plugin.ArtworkGenerator/Localization/` | The plugin's own strings, in `en-us.json`. |
 | `Jellyfin.Plugin.ArtworkGenerator/Assets/` | The logo, the demo images, and the bundled fonts. |
 | `Jellyfin.Plugin.ArtworkGenerator/Services/Posters/Types/` | One generator for each poster style. |
 | `Jellyfin.Plugin.ArtworkGenerator.Tests/` | The xUnit tests, including the docs and template checks. |

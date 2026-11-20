@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -8,19 +9,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoCase
     {
         /// <summary>However the name is already written.</summary>
-        [Description("As written")]
+        [Description(TranslationKeys.OptionAsWritten)]
         AsWritten,
 
         /// <summary>Every letter capital.</summary>
-        [Description("Uppercase")]
+        [Description(TranslationKeys.OptionUppercase)]
         Uppercase,
 
         /// <summary>Every letter small.</summary>
-        [Description("Lowercase")]
+        [Description(TranslationKeys.OptionLowercase)]
         Lowercase,
 
         /// <summary>The first letter of each word capital.</summary>
-        [Description("Title case")]
+        [Description(TranslationKeys.OptionTitleCase)]
         TitleCase
     }
 }

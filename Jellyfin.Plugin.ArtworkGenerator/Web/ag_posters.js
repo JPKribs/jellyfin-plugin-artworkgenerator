@@ -14,7 +14,9 @@ import {
     loadFontFamilies,
     pickJsonFile,
     promptDialog,
-    promptName
+    promptName,
+    t,
+    withLanguage
 } from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
@@ -72,8 +74,8 @@ export default function (view) {
     function buildSaveBar() {
         saveBar = createArtworkSaveBar(view.querySelector('#AgPostersForm'), view.querySelector('#saveBarHost'), tracker, {
             save: saveConfig,
-            savedText: 'Designs saved.',
-            failedText: 'Could not save the designs.'
+            savedText: t.tr('ToastDesignsSaved'),
+            failedText: t.tr('ErrorSaveDesigns')
         });
     }
 
@@ -115,7 +117,7 @@ export default function (view) {
             saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
-            saveBar.setState('failed', 'Could not load the designs. Reload the page.');
+            saveBar.setState('failed', t.tr('ErrorLoadDesigns'));
         });
     }
 
@@ -133,7 +135,7 @@ export default function (view) {
         configs.forEach(function (config) {
             var option = document.createElement('option');
             option.value = config.Id;
-            option.textContent = config.Name || 'Unnamed Design';
+            option.textContent = config.Name || t.tr('UnnamedDesign');
             select.appendChild(option);
         });
 
@@ -208,7 +210,7 @@ export default function (view) {
             // silently rewriting the user's setting (e.g. a font that is not installed here).
             var preserved = document.createElement('option');
             preserved.value = val;
-            preserved.textContent = val + ' (unavailable)';
+            preserved.textContent = t.format('OptionUnavailable', val);
             el.insertBefore(preserved, el.firstChild);
             el.value = val;
             return;
@@ -247,16 +249,16 @@ export default function (view) {
     // Output
     // [string|null]: The reason, or null.
     function checkName(name, exceptId) {
-        if (!name) return 'Enter a name.';
-        if (name.toLowerCase() === 'default') return 'Default is reserved for the default design.';
+        if (!name) return t.tr('ErrorEnterName');
+        if (name.toLowerCase() === 'default') return t.tr('ErrorDefaultDesignNameReserved');
         var taken = fullConfig.PosterConfigurations.some(function (c) {
             return c.Id !== exceptId && c.Name && c.Name.toLowerCase() === name.toLowerCase();
         });
-        return taken ? 'A design with this name already exists.' : null;
+        return taken ? t.tr('ErrorDesignNameTaken') : null;
     }
 
     function createNewConfig() {
-        promptName('New Design', '', 'Bold Titles', function (name) { return checkName(name); }).then(function (name) {
+        promptName(t.tr('HeaderNewDesign'), '', t.tr('PlaceholderDesignName'), function (name) { return checkName(name); }).then(function (name) {
             if (!name) return;
 
             var newConfig = {
@@ -277,7 +279,7 @@ export default function (view) {
         var config = getCurrentConfig();
         if (config.IsDefault) return;
 
-        promptName('Rename Design', config.Name || '', '', function (name) { return checkName(name, config.Id); }).then(function (name) {
+        promptName(t.tr('HeaderRenameDesign'), config.Name || '', '', function (name) { return checkName(name, config.Id); }).then(function (name) {
             if (!name) return;
 
             config.Name = name;
@@ -290,12 +292,13 @@ export default function (view) {
         var config = getCurrentConfig();
         if (config.IsDefault) return;
 
-        var users = profilesUsingDesign(config.Id).map(function (p) { return p.Name || 'Unnamed'; });
+        var users = profilesUsingDesign(config.Id).map(function (p) { return p.Name || t.tr('Unnamed'); });
+        var name = config.Name || t.tr('UnnamedDesign');
         var message = users.length
-            ? 'Remove ' + (config.Name || 'this design') + '? Its images in ' + users.join(', ') + ' use the default design.'
-            : 'Remove ' + (config.Name || 'this design') + '?';
+            ? t.format('ConfirmRemoveDesignUsed', name, users.join(', '))
+            : t.format('ConfirmRemoveName', name);
 
-        confirmDialog(message, { title: 'Remove Design', confirmText: 'Remove', destructive: true }).then(function (confirmed) {
+        confirmDialog(message, { title: t.tr('HeaderRemoveDesign'), confirmText: t.tr('ButtonRemove'), destructive: true }).then(function (confirmed) {
             if (!confirmed) return;
             fullConfig.PosterConfigurations = fullConfig.PosterConfigurations.filter(function (c) {
                 return c.Id !== currentConfigId;
@@ -310,11 +313,11 @@ export default function (view) {
         pickJsonFile().then(function (template) {
             if (!template) return;
             if (!template.settings) {
-                shared.setStatus('designStatus', 'Could not import the file, since it holds no design settings.', true);
+                shared.setStatus('designStatus', t.tr('ErrorImportNoSettings'), true);
                 return;
             }
 
-            promptName('Import Design', template.name || 'Imported Design', '', function (name) { return checkName(name); }).then(function (name) {
+            promptName(t.tr('HeaderImportDesign'), template.name || t.tr('DefaultImportedDesignName'), '', function (name) { return checkName(name); }).then(function (name) {
                 if (!name) return;
 
                 fullConfig.PosterConfigurations.push({
@@ -328,12 +331,13 @@ export default function (view) {
                 populateConfigDropdown();
                 checkDirty();
 
-                var source = template.author ? ' by ' + template.author : '';
-                shared.setStatus('designStatus', name + source + ' imported. Select Save to keep it.');
+                shared.setStatus('designStatus', template.author
+                    ? t.format('ToastDesignImportedBy', name, template.author)
+                    : t.format('ToastDesignImported', name));
             });
         }).catch(function (error) {
             console.error('Import error:', error);
-            shared.setStatus('designStatus', 'Could not import the file. Select a design template in JSON.', true);
+            shared.setStatus('designStatus', t.tr('ErrorImportFile'), true);
         });
     }
 
@@ -342,9 +346,9 @@ export default function (view) {
         if (!config) return;
 
         promptDialog([
-            { name: 'author', label: 'Author', placeholder: 'Your name', required: true },
-            { name: 'description', label: 'Description', placeholder: 'Bold titles over a dark fade', required: true }
-        ], { title: 'Export Design', submitText: 'Export' }).then(function (values) {
+            { name: 'author', label: t.tr('Author'), placeholder: t.tr('PlaceholderAuthor'), required: true },
+            { name: 'description', label: t.tr('LabelDescription'), placeholder: t.tr('PlaceholderDesignDescription'), required: true }
+        ], { title: t.tr('HeaderExportDesign'), submitText: t.tr('ButtonExport') }).then(function (values) {
             if (!values) return;
 
             shared.getConfig().then(function (pluginConfig) {
@@ -358,10 +362,10 @@ export default function (view) {
                     settings: config.Settings
                 });
 
-                shared.setStatus('designStatus', 'Design exported.');
+                shared.setStatus('designStatus', t.tr('ToastDesignExported'));
             }).catch(function (error) {
                 console.error('Failed to get plugin version:', error);
-                shared.setStatus('designStatus', 'Could not export the design.', true);
+                shared.setStatus('designStatus', t.tr('ErrorExportDesign'), true);
             });
         });
     }
@@ -415,7 +419,7 @@ export default function (view) {
     function loadPosterStyles() {
         return ApiClient.ajax({
             type: 'GET',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/PosterStyles'),
+            url: withLanguage('Plugins/ArtworkGenerator/PosterStyles'),
             dataType: 'json'
         }).then(function (styles) {
             (styles || []).forEach(function (s) {
@@ -459,7 +463,7 @@ export default function (view) {
     function loadSettingOptions() {
         return ApiClient.ajax({
             type: 'GET',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
+            url: withLanguage('Plugins/ArtworkGenerator/SettingOptions'),
             dataType: 'json'
         }).then(function (payload) {
             posterSettingOptions = (payload && (payload.options || payload.Options)) || {};
@@ -486,14 +490,14 @@ export default function (view) {
             var label = container.querySelector('span.checkboxLabel') || container.querySelector('label');
 
             // The color fields swap their own wording between color and opacity, so they keep it.
-            if (label && !label.hasAttribute('data-color-label')) {
+            if (label && !label.hasAttribute('data-str-opacity')) {
                 var name = text.label || text.Label || '';
                 label.textContent = name;
             }
 
             var description = container.querySelector('.fieldDescription');
             var help = text.description || text.Description || '';
-            if (description && help && !description.hasAttribute('data-color-desc')) {
+            if (description && help && !description.hasAttribute('data-str-opacity')) {
                 description.textContent = help;
             }
         });
@@ -566,9 +570,10 @@ export default function (view) {
             return !styleSupportsShape(style, shape);
         });
 
-        note.textContent = missing.length
-            ? 'This style cannot lay out ' + missing.join(' or ').toLowerCase() + ' images, so those are drawn with Standard instead.'
-            : '';
+        var notes = { Landscape: t.tr('NoteStyleNoLandscape'), Portrait: t.tr('NoteStyleNoPortrait') };
+        note.textContent = missing.length === 2
+            ? t.tr('NoteStyleNoShapes')
+            : (missing.length ? notes[missing[0]] : '');
         shared.setVisible(note, missing.length > 0);
     }
 
@@ -577,7 +582,7 @@ export default function (view) {
     function buildPreviews() {
         ['Landscape', 'Portrait'].forEach(function (shape) {
             _previews[shape] = createPreviewFrame({
-                label: shape + ' Preview',
+                label: shape === 'Landscape' ? t.tr('LabelLandscapePreview') : t.tr('LabelPortraitPreview'),
                 delay: 500,
                 backgrounds: false,
                 render: function () { return renderPreviewShape(shape); }
@@ -606,11 +611,11 @@ export default function (view) {
         // Without a dataType ApiClient.ajax resolves to the raw Response, so the JPEG can be read as a blob.
         return ApiClient.ajax({
             type: 'POST',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/Preview', { kind: kind, shape: shape }),
+            url: withLanguage('Plugins/ArtworkGenerator/Preview', { kind: kind, shape: shape }),
             data: JSON.stringify(config.Settings),
             contentType: 'application/json'
         }).then(function (response) {
-            if (!response.ok) throw new Error('Preview failed: ' + response.status);
+            if (!response.ok) throw new Error(t.tr('ErrorPreview'));
             return response.blob();
         });
     }
@@ -668,9 +673,7 @@ export default function (view) {
         // nothing there and is taken off screen rather than left to be set and ignored.
         var landscapeRatioApplies = posterFill !== 'Original';
         shared.setVisible('landscapeRatioField', landscapeRatioApplies);
-        view.querySelector('#ratioNote').textContent = landscapeRatioApplies
-            ? 'The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.'
-            : 'Portrait images always crop to the portrait ratio. Landscape images keep the frame\'s own shape.';
+        view.querySelector('#ratioNote').textContent = landscapeRatioApplies ? t.tr('HelpAspectRatios') : t.tr('HelpPortraitRatioOnly');
 
         shared.setVisible('gridOptions', canvasSource === 'Grid');
 
@@ -719,25 +722,25 @@ export default function (view) {
             var field = container.querySelector('[data-setting]');
             var own = field ? textFor(field.getAttribute('data-setting')) : null;
 
-            var label = container.querySelector('label[data-color-label]');
+            var label = container.querySelector('label[data-str-opacity]');
             if (label) {
-                var key = on ? 'data-opacity-label' : 'data-color-label';
+                var key = on ? 'data-str-opacity' : 'data-str';
                 var ownLabel = !on && own && (own.label || own.Label);
                 if (ownLabel) {
                     label.textContent = ownLabel;
                 } else if (label.getAttribute(key)) {
-                    label.textContent = label.getAttribute(key);
+                    label.textContent = t.tr(label.getAttribute(key));
                 }
             }
 
             var desc = container.querySelector('.fieldDescription');
             if (desc) {
-                var dkey = on ? 'data-opacity-desc' : 'data-color-desc';
+                var dkey = on ? 'data-str-opacity' : 'data-str';
                 var ownDesc = !on && own && (own.description || own.Description);
                 if (ownDesc) {
                     desc.textContent = ownDesc;
                 } else if (desc.getAttribute(dkey)) {
-                    desc.textContent = desc.getAttribute(dkey);
+                    desc.textContent = t.tr(desc.getAttribute(dkey));
                 }
             }
         });

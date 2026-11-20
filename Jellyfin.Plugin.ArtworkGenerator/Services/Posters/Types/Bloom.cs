@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -32,8 +33,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Bloom;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "A soft bloom of color in the center with the text set over it.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleBloomDescription;
 
         // SettingText
         // The bloom is a pool of color with its own falloff, so a wash direction means nothing here and
@@ -42,11 +43,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             = new Dictionary<string, SettingText>(StringComparer.Ordinal)
             {
                 [PosterSettingRules.OverlayColor] = new(
-                    "Bloom Color",
-                    "The color pooled in the middle of the frame."),
+                    TranslationKeys.LabelBloomColor,
+                    TranslationKeys.BloomColorHelp),
                 [PosterSettingRules.OverlaySecondaryColor] = new(
-                    "Rim Color",
-                    "The color the bloom fades out to at the edges.")
+                    TranslationKeys.LabelRimColor,
+                    TranslationKeys.RimColorHelp)
             };
 
         // SettingRules
@@ -64,12 +65,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, centered over the bloom.";
+            => TranslationKeys.StyleBloomTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, centered over the bloom just above the title.";
+            => TranslationKeys.StyleBloomSubtitleHelp;
 
         // BloomPosterGenerator
         // Initializes a new instance of the bloom poster generator with logging support.

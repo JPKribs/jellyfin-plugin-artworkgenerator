@@ -8,7 +8,9 @@ import {
     createFilePicker,
     createRecordList,
     disableHiddenFields,
-    initCollapsibles
+    initCollapsibles,
+    t,
+    withLanguage
 } from './configurationpage?name=ag_shared.js';
 
 export default function (view) {
@@ -66,7 +68,7 @@ export default function (view) {
     function loadFrameText() {
         return ApiClient.ajax({
             type: 'GET',
-            url: ApiClient.getUrl('Plugins/ArtworkGenerator/SettingOptions'),
+            url: withLanguage('Plugins/ArtworkGenerator/SettingOptions'),
             dataType: 'json'
         }).then(function (payload) {
             var text = (payload && (payload.frameText || payload.FrameText)) || {};
@@ -138,7 +140,7 @@ export default function (view) {
             saveBar.markClean();
         }).catch(function (error) {
             console.error('Failed to load config:', error);
-            saveBar.setState('failed', 'Could not load the settings. Reload the page.');
+            saveBar.setState('failed', t.tr('ErrorLoadSettings'));
         });
     }
 
@@ -213,7 +215,7 @@ export default function (view) {
             }));
         }).catch(function (error) {
             console.error('Failed to load uploaded fonts:', error);
-            fontBar.setState('failed', 'Could not load the uploaded fonts. Reload the page.');
+            fontBar.setState('failed', t.tr('ErrorLoadUploadedFonts'));
         });
     }
 
@@ -229,8 +231,8 @@ export default function (view) {
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'base-row-btn';
-        button.title = 'Delete';
-        button.setAttribute('aria-label', 'Delete ' + font.fileName);
+        button.title = t.tr('Delete');
+        button.setAttribute('aria-label', t.format('DeleteName', font.fileName));
         var icon = document.createElement('span');
         icon.className = 'material-icons';
         icon.setAttribute('aria-hidden', 'true');
@@ -246,22 +248,22 @@ export default function (view) {
     // Inputs
     // font [object]: The font, with fileName, family, and style.
     function deleteFont(font) {
-        confirmDialog('Delete ' + font.fileName + '? Designs that use ' + font.family + ' ' + font.style + ' draw with the next font of that name.', {
-            title: 'Delete Font',
-            confirmText: 'Delete',
+        confirmDialog(t.format('ConfirmDeleteFont', font.fileName, font.family, font.style), {
+            title: t.tr('HeaderDeleteFont'),
+            confirmText: t.tr('Delete'),
             destructive: true
         }).then(function (confirmed) {
             if (!confirmed) return;
             ApiClient.ajax({
                 type: 'DELETE',
-                url: ApiClient.getUrl(FONTS_URL),
+                url: withLanguage(FONTS_URL),
                 data: JSON.stringify({ FileName: font.fileName }),
                 contentType: 'application/json'
             }).then(function () {
-                fontBar.setState('saved', 'Font deleted.');
+                fontBar.setState('saved', t.tr('ToastFontDeleted'));
                 return loadUploadedFonts();
             }, function (error) {
-                return shared.errorText(error, 'Could not delete the font.').then(function (text) {
+                return shared.errorText(error, t.tr('ErrorDeleteFont')).then(function (text) {
                     fontBar.setState('failed', text);
                 });
             });
@@ -283,7 +285,7 @@ export default function (view) {
                 var url = String(reader.result || '');
                 resolve(url.slice(url.indexOf(',') + 1));
             };
-            reader.onerror = function () { reject(new Error('Could not read ' + file.name + '.')); };
+            reader.onerror = function () { reject(new Error(t.format('ErrorReadFile', file.name))); };
             reader.readAsDataURL(file);
         });
     }
@@ -295,7 +297,7 @@ export default function (view) {
     // [Promise]: Resolves once every font is stored.
     function uploadFonts() {
         var files = fontPicker.getValue();
-        if (!files.length) return Promise.reject('Select a font file.');
+        if (!files.length) return Promise.reject(t.tr('ErrorSelectFontFile'));
 
         var refused = [];
         return files.reduce(function (chain, file) {
@@ -303,13 +305,13 @@ export default function (view) {
                 return readBase64(file).then(function (data) {
                     return ApiClient.ajax({
                         type: 'POST',
-                        url: ApiClient.getUrl(FONTS_URL),
+                        url: withLanguage(FONTS_URL),
                         data: JSON.stringify({ FileName: file.name, Data: data }),
                         contentType: 'application/json'
                     });
                 }).catch(function (error) {
-                    return shared.errorText(error, 'Could not upload the font.').then(function (text) {
-                        refused.push('Could not upload ' + file.name + '. ' + text);
+                    return shared.errorText(error, t.tr('ErrorUploadFont')).then(function (text) {
+                        refused.push(t.format('ErrorUploadFontNamed', file.name) + ' ' + text);
                     });
                 });
             });
@@ -326,8 +328,8 @@ export default function (view) {
     // Draws the uploaded fonts list, the File Picker, and the Upload bar.
     function bindFonts() {
         fontList = createRecordList({
-            label: 'Uploaded fonts',
-            emptyText: 'No fonts uploaded.'
+            label: t.tr('LabelUploadedFonts'),
+            emptyText: t.tr('EmptyUploadedFonts')
         });
         view.querySelector('#uploadedFontsHost').appendChild(fontList.element);
 
@@ -335,18 +337,18 @@ export default function (view) {
             accept: '.ttf,.otf',
             maxSize: MAX_FONT_BYTES,
             multiple: true,
-            dropText: 'Drop .ttf or .otf fonts here or click to select.',
+            dropText: t.tr('HelpDropFonts'),
             onChange: function () { fontBar.check(); }
         });
         view.querySelector('#fontPickerHost').appendChild(fontPicker.element);
 
         fontBar = createArtworkSaveBar(view.querySelector('#AgFontsForm'), view.querySelector('#fontUploadBarHost'), fontTracker, {
             save: uploadFonts,
-            saveText: 'Upload',
-            pendingText: 'Fonts not uploaded yet.',
-            savingText: 'Uploading…',
-            savedText: 'Fonts uploaded.',
-            failedText: 'Could not upload the fonts.'
+            saveText: t.tr('Upload'),
+            pendingText: t.tr('StatusFontsPending'),
+            savingText: t.tr('StatusUploading'),
+            savedText: t.tr('ToastFontsUploaded'),
+            failedText: t.tr('ErrorUploadFonts')
         });
 
         page.addCleanup(function () {
@@ -360,8 +362,8 @@ export default function (view) {
         bindFonts();
         saveBar = createArtworkSaveBar(view.querySelector('#AgSettingsForm'), view.querySelector('#saveBarHost'), tracker, {
             save: savePluginSettings,
-            savedText: 'Settings saved.',
-            failedText: 'Could not save the settings.'
+            savedText: t.tr('SettingsSaved'),
+            failedText: t.tr('ErrorSaveSettings')
         });
 
         view.querySelector('#txtImageChoiceCount').addEventListener('input', saveBar.check);

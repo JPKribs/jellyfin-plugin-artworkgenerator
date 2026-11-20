@@ -184,6 +184,7 @@ The plugin project, `Jellyfin.Plugin.ArtworkGenerator/`, keeps one kind of file 
 | `Api/` | `ConfigurationController` and the request bodies only it reads. | `.Api` |
 | `Configuration/` | `PluginConfiguration` only. No web files. | `.Configuration` |
 | `Web/` | The dashboard pages, as `ag_<page>.html`, `ag_<page>.js`, and `ag_shared.css`. Each is an embedded resource. | none |
+| `Localization/` | `en-us.json`, the plugin's own strings. Jellyfin's strings are `JellyfinString` items in the csproj. See [translations.md](translations.md). | none |
 | `Assets/` | `Logo.png`, the demo images in `Assets/Demo/`, and the bundled fonts in `Assets/Fonts/<Family>/`. | none |
 | `Models/` | Data classes, records, and enums, grouped in `Artwork/`, `Metadata/`, and `Poster/`. | `.Models` |
 | `Services/` | The work, grouped in `Artwork/`, `Fonts/`, and `Posters/`, with one generator for each poster style in `Posters/Types/`. | `.Services` |
@@ -221,18 +222,19 @@ Outside the plugin project, `Jellyfin.Plugin.ArtworkGenerator.Tests/` holds the 
 * Keep one handle for each Base component a page draws, such as a Preview Frame. Call `destroy` when the view is destroyed.
 * Track unsaved changes with one `createChangeTracker` per page, passed to `page.guardUnsaved` and to `createArtworkSaveBar`.
 * A save rejects with an Error or a sentence, and the Save Bar shows it as the failed line.
-* Read the server's choices, defaults, labels, and help text from `Plugins/ArtworkGenerator/SettingOptions`, so a setting's wording lives on its model in C#.
+* Read the server's choices, defaults, labels, and help text from `Plugins/ArtworkGenerator/SettingOptions`, so a setting's wording lives on its model in C#, as translation keys the server gives back in the viewer's language.
 * Keep a stored value the page does not offer selectable, marked unavailable, rather than rewriting it.
 * Save with a read, change, and write of the configuration, so a page never overwrites what another tab edits.
 * Use `const` and `let` in new code, never `var` in a new file. Arrow functions are fine for callbacks.
 * Escape every value placed in HTML with `escapeHtml`, or set it with `textContent`.
 * Report results with `shared.setStatus`, and errors with `shared.errorText`.
+* Take every word a person reads from `t` in `ag_shared.js`, per [translations.md](translations.md). Build a plugin route that returns words with `withLanguage`.
 * Register every poller and observer with the page handle so `viewhide` stops it.
 
 ## Security
 
-* Every route on `ConfigurationController` needs `[Authorize(Policy = "RequiresElevation")]`, which the controller carries. `GET Generated/{token}` is the one anonymous route, since Jellyfin downloads a picked choice with no user. It only resolves an unguessable token that expires, and never renders.
-* Never add an anonymous route, and never let the anonymous route render, read a path, or list anything.
+* Every route on `ConfigurationController` needs `[Authorize(Policy = "RequiresElevation")]`, which the controller carries. Two routes are anonymous. `GET Generated/{token}` serves a picked choice, since Jellyfin downloads it with no user. It only resolves an unguessable token that expires, and never renders. `GET Translations` serves the pages' strings, which are not secret.
+* Never add another anonymous route, and never let an anonymous route render, read a path, or list anything.
 * Load preview images through `shared.fetchObjectUrl` or `ApiClient`, so the admin's credentials go with them. A bare `img.src` to a plugin route sends none.
 * Treat **Font Path** and **Graphic File Path** as paths an admin typed. Read them only to draw, and never return their contents or list their folder.
 * Keep files the plugin writes inside its data folder, `artworkgenerator` under Jellyfin's data path, with `PathContainment` and `FileNameSanitizer`.

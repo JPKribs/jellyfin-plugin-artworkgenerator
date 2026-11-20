@@ -4,6 +4,7 @@ using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
+using JPKribs.Jellyfin.Base;
 using Xunit;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
@@ -151,7 +152,7 @@ public class TextPositionTests
     {
         foreach (var generator in PreviewService.GetStyleCatalog())
         {
-            foreach (var sentence in new[] { generator.PrimaryDescription, generator.SecondaryDescription })
+            foreach (var sentence in new[] { generator.PrimaryDescription, generator.SecondaryDescription }.Select(key => BaseTranslations.Get(key)))
             {
                 Assert.False(string.IsNullOrWhiteSpace(sentence));
                 Assert.EndsWith(".", sentence, System.StringComparison.Ordinal);

@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -40,63 +41,63 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public const int MaxParallelExtractions = 8;
 
         /// <summary>Gets or sets how far into each episode extraction begins.</summary>
-        [Display(Name = "Extraction Start (%)", Description = "How far into each episode extraction begins.")]
+        [Display(Name = TranslationKeys.LabelExtractionStartPercent, Description = TranslationKeys.ExtractWindowStartHelp)]
         public float ExtractWindowStart { get; set; } = 20.0f;
 
         /// <summary>Gets or sets how far into each episode extraction stops.</summary>
-        [Display(Name = "Extraction End (%)", Description = "How far into each episode extraction stops.")]
+        [Display(Name = TranslationKeys.LabelExtractionEndPercent, Description = TranslationKeys.ExtractWindowEndHelp)]
         public float ExtractWindowEnd { get; set; } = 80.0f;
 
         /// <summary>Gets or sets a value indicating whether frames are kept out of the item's media segments.</summary>
-        [Display(Name = "Avoid Media Segments", Description = "Take no frame from inside the media segments ticked below. Segments come from a media segment provider, so an item without any is unaffected.")]
+        [Display(Name = TranslationKeys.LabelAvoidMediaSegments, Description = TranslationKeys.AvoidMediaSegmentsHelp)]
         public bool AvoidMediaSegments { get; set; } = true;
 
         /// <summary>Gets or sets a value indicating whether intro segments are avoided.</summary>
-        [Display(Name = "Intros", Description = "Opening titles.")]
+        [Display(Name = TranslationKeys.LabelIntros, Description = TranslationKeys.AvoidIntrosHelp)]
         public bool AvoidIntros { get; set; } = true;
 
         /// <summary>Gets or sets a value indicating whether outro segments are avoided.</summary>
-        [Display(Name = "Outros", Description = "Closing credits.")]
+        [Display(Name = TranslationKeys.LabelOutros, Description = TranslationKeys.AvoidOutrosHelp)]
         public bool AvoidOutros { get; set; } = true;
 
         /// <summary>Gets or sets a value indicating whether recap segments are avoided.</summary>
-        [Display(Name = "Recaps", Description = "Footage from earlier episodes.")]
+        [Display(Name = TranslationKeys.LabelRecaps, Description = TranslationKeys.AvoidRecapsHelp)]
         public bool AvoidRecaps { get; set; } = true;
 
         /// <summary>Gets or sets a value indicating whether preview segments are avoided.</summary>
-        [Display(Name = "Previews", Description = "Footage from the next episode.")]
+        [Display(Name = TranslationKeys.LabelPreviews, Description = TranslationKeys.AvoidPreviewsHelp)]
         public bool AvoidPreviews { get; set; } = true;
 
         /// <summary>Gets or sets a value indicating whether commercial segments are avoided.</summary>
-        [Display(Name = "Commercials", Description = "Advertising breaks.")]
+        [Display(Name = TranslationKeys.LabelCommercials, Description = TranslationKeys.AvoidCommercialsHelp)]
         public bool AvoidCommercials { get; set; } = true;
 
         /// <summary>Gets or sets the percent every extracted frame is brightened by.</summary>
-        [Display(Name = "Brighten Frame (%)", Description = "How much every extracted frame is brightened.")]
+        [Display(Name = TranslationKeys.LabelBrightenFramePercent, Description = TranslationKeys.BrightenFrameHelp)]
         public float BrightenFrame { get; set; }
 
         /// <summary>Gets or sets a value indicating whether black bars are cropped away first.</summary>
-        [Display(Name = "Detect Letterboxing", Description = "Detect and crop black bars from the frame first.")]
+        [Display(Name = TranslationKeys.LabelDetectLetterboxing, Description = TranslationKeys.EnableLetterboxDetectionHelp)]
         public bool EnableLetterboxDetection { get; set; } = true;
 
         /// <summary>Gets or sets the brightness at or below which a pixel counts as black.</summary>
-        [Display(Name = "Black Threshold", Description = "Brightness below which a pixel counts as black.")]
+        [Display(Name = TranslationKeys.LabelBlackThreshold, Description = TranslationKeys.LetterboxBlackThresholdHelp)]
         public int LetterboxBlackThreshold { get; set; } = 25;
 
         /// <summary>Gets or sets the percent of a row that must be black to count as letterboxing.</summary>
-        [Display(Name = "Detection Confidence (%)", Description = "Percent of pixels that must be black to count as letterboxing.")]
+        [Display(Name = TranslationKeys.LabelDetectionConfidencePercent, Description = TranslationKeys.LetterboxConfidenceHelp)]
         public float LetterboxConfidence { get; set; } = 85.0f;
 
         /// <summary>Gets or sets how many frames are scored for each one kept.</summary>
-        [Display(Name = "Samples Per Frame", Description = "How many frames are scored for each one kept, 1 to 8. Higher picks better frames but takes longer, since every sample is its own extraction. 1 keeps every frame it takes, with no choosing.")]
+        [Display(Name = TranslationKeys.LabelSamplesPerFrame, Description = TranslationKeys.SamplesPerFrameHelp)]
         public int SamplesPerFrame { get; set; } = DefaultSamplesPerFrame;
 
         /// <summary>Gets or sets the fewest frames scored from a single video.</summary>
-        [Display(Name = "Minimum Samples Per Video", Description = "The fewest frames scored from a film, video, or episode on its own, 1 to 64, so even a single image is chosen from several. A series, season, collection, or folder compares its videos' frames with each other instead, so it is not held to this.")]
+        [Display(Name = TranslationKeys.LabelMinimumSamplesPerVideo, Description = TranslationKeys.MinimumSamplesPerVideoHelp)]
         public int MinimumSamplesPerVideo { get; set; } = DefaultMinimumSamplesPerVideo;
 
         /// <summary>Gets or sets the most frames scored from one video in one go.</summary>
-        [Display(Name = "Maximum Samples Per Video", Description = "The most frames scored from one video in one go, 1 to 64. It caps how long a film with many choices takes.")]
+        [Display(Name = TranslationKeys.LabelMaximumSamplesPerVideo, Description = TranslationKeys.MaximumSamplesPerVideoHelp)]
         public int MaximumSamplesPerVideo { get; set; } = DefaultMaximumSamplesPerVideo;
 
         /// <summary>
@@ -107,15 +108,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         public SamplingRate? SamplingRate { get; set; }
 
         /// <summary>Gets or sets the most videos a series, season, collection, folder, or library takes frames from, or 0 for all.</summary>
-        [Display(Name = "Videos Per Parent", Description = "Most videos a series, season, collection, or folder takes frames from, or 0 for all. Lower is faster on network storage.")]
+        [Display(Name = TranslationKeys.LabelVideosPerParent, Description = TranslationKeys.VideosPerParentHelp)]
         public int VideosPerParent { get; set; } = ArtworkSources.DefaultVideosPerParent;
 
         /// <summary>Gets or sets how many frames are extracted at once.</summary>
-        [Display(Name = "Parallel Extractions", Description = "How many frames are extracted at once, 1 to 8. Higher is faster on local storage. Lower it on slow network storage.")]
+        [Display(Name = TranslationKeys.LabelParallelExtractions, Description = TranslationKeys.ParallelExtractionsHelp)]
         public int ParallelExtractions { get; set; } = DefaultParallelExtractions;
 
         /// <summary>Gets or sets a value indicating whether image types draw from overlapping frames.</summary>
-        [Display(Name = "Reuse Samples", Description = "Let an item's poster, thumb, backdrop, and logo draw from overlapping frames. Off gives every image type its own frames, at the cost of extracting more.")]
+        [Display(Name = TranslationKeys.LabelReuseSamples, Description = TranslationKeys.ReuseSamplesHelp)]
         public bool ReuseSamples { get; set; } = true;
     
         /// <summary>The samples per frame, minimum, and maximum each old preset stood for.</summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -14,18 +15,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Numeral;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Large Roman numeral as the focal element. Minimal and distinctive.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleNumeralDescription;
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set under the numeral, and it takes the numeral's place when the item has no number.";
+            => TranslationKeys.StyleNumeralTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the item's number, drawn as the large Roman numeral rather than as a line of text.";
+            => TranslationKeys.StyleNumeralSubtitleHelp;
 
         // The numeral is the poster and is sized to fill it, so it is always drawn and its size
         // setting would do nothing.

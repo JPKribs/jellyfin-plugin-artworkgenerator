@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -12,15 +13,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LongSubtitleHandling
     {
         /// <summary>Say the same thing in its short form, such as S12E07.</summary>
-        [Description("Short code")]
+        [Description(TranslationKeys.OptionShortCode)]
         ShortCode,
 
         /// <summary>Keep the words and set them smaller.</summary>
-        [Description("Shrink to fit")]
+        [Description(TranslationKeys.OptionShrinkToFit)]
         Shrink,
 
         /// <summary>Trim the words with an ellipsis.</summary>
-        [Description("Ellipsis")]
+        [Description(TranslationKeys.OptionEllipsis)]
         Ellipsis
     }
 }

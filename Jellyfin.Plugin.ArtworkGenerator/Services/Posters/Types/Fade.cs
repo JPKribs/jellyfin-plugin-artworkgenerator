@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -39,8 +40,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Fade;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "One sided fade with a big number and a vertical title. Editorial and bold.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleFadeDescription;
 
         // SettingText
         // The fade is this design's own one sided wash from a single color, so the gradient direction
@@ -49,8 +50,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             = new Dictionary<string, SettingText>(StringComparer.Ordinal)
             {
                 [PosterSettingRules.OverlayColor] = new(
-                    "Fade Color",
-                    "The color that fades in from one side of the frame.")
+                    TranslationKeys.LabelFadeColor,
+                    TranslationKeys.FadeColorHelp)
             };
 
         // SettingRules
@@ -64,12 +65,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set sideways so it runs up the edge of the image.";
+            => TranslationKeys.StyleFadeTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the item's number, drawn as the big number at the foot of the image.";
+            => TranslationKeys.StyleFadeSubtitleHelp;
 
         // FadePosterGenerator
         // Initializes a new instance of the fade poster generator with logging support.

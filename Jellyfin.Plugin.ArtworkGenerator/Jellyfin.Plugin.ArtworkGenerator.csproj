@@ -40,4 +40,63 @@
     <EmbeddedResource Include="Assets\Fonts\**\*" />
   </ItemGroup>
 
+
+
+
+  <!-- The pages' strings. Base builds in Localization/*.json and these Jellyfin strings, in every language Jellyfin has. -->
+  <ItemGroup>
+    <JellyfinString Include="Anime" />
+    <JellyfinString Include="AspectRatio" />
+    <JellyfinString Include="Author" />
+    <JellyfinString Include="Backdrop" />
+    <JellyfinString Include="Backdrops" />
+    <JellyfinString Include="Bold" />
+    <JellyfinString Include="ButtonArrowLeft" />
+    <JellyfinString Include="ButtonArrowRight" />
+    <JellyfinString Include="ButtonRemove" />
+    <JellyfinString Include="ButtonRename" />
+    <JellyfinString Include="Collections" />
+    <JellyfinString Include="Delete" />
+    <JellyfinString Include="DeleteName" />
+    <JellyfinString Include="DropShadow" />
+    <JellyfinString Include="Episode" />
+    <JellyfinString Include="Episodes" />
+    <JellyfinString Include="Folders" />
+    <JellyfinString Include="HeaderSeasons" />
+    <JellyfinString Include="HeaderVideos" />
+    <JellyfinString Include="Images" />
+    <JellyfinString Include="LabelBundled" />
+    <JellyfinString Include="LabelCollection" />
+    <JellyfinString Include="LabelFolder" />
+    <JellyfinString Include="LabelFont" />
+    <JellyfinString Include="LabelSize" />
+    <JellyfinString Include="LabelTitle" />
+    <JellyfinString Include="LabelType" />
+    <JellyfinString Include="LabelTypeText" />
+    <JellyfinString Include="Logo" />
+    <JellyfinString Include="Movie" />
+    <JellyfinString Include="Movies" />
+    <JellyfinString Include="MusicVideo" />
+    <JellyfinString Include="Name" />
+    <JellyfinString Include="New" />
+    <JellyfinString Include="None" />
+    <JellyfinString Include="Normal" />
+    <JellyfinString Include="OptionRandom" />
+    <JellyfinString Include="Original" />
+    <JellyfinString Include="Poster" />
+    <JellyfinString Include="Primary" />
+    <JellyfinString Include="Profile" />
+    <JellyfinString Include="Season" />
+    <JellyfinString Include="Series" />
+    <JellyfinString Include="Settings" />
+    <JellyfinString Include="SettingsSaved" />
+    <JellyfinString Include="Subtitle" />
+    <JellyfinString Include="TabServer" />
+    <JellyfinString Include="Thumb" />
+    <JellyfinString Include="Upload" />
+    <JellyfinString Include="Video" />
+    <JellyfinString Include="ViewLeftToRight" />
+    <JellyfinTextMatch Include="StyleSplit" />
+  </ItemGroup>
+
 </Project>

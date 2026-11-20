@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -13,19 +14,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum TextAlignment
     {
         /// <summary>Whichever side the chosen design naturally pulls its text to.</summary>
-        [Description("Design default")]
+        [Description(TranslationKeys.OptionDesignDefault)]
         Auto,
 
         /// <summary>Against the left of the safe area.</summary>
-        [Description("Left")]
+        [Description(TranslationKeys.ButtonArrowLeft)]
         Left,
 
         /// <summary>Centered between the two sides.</summary>
-        [Description("Center")]
+        [Description(TranslationKeys.OptionCenter)]
         Center,
 
         /// <summary>Against the right of the safe area.</summary>
-        [Description("Right")]
+        [Description(TranslationKeys.ButtonArrowRight)]
         Right
     }
 }

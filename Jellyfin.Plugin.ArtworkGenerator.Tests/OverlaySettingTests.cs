@@ -1,6 +1,7 @@
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
+using JPKribs.Jellyfin.Base;
 using Xunit;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
@@ -67,7 +68,7 @@ public class OverlaySettingTests
         var text = Generator(style).SettingText;
 
         Assert.True(text.ContainsKey(PosterSettingRules.OverlayColor));
-        Assert.Equal(label, text[PosterSettingRules.OverlayColor].Label);
+        Assert.Equal(label, BaseTranslations.Get(text[PosterSettingRules.OverlayColor].Label));
     }
 
     /// <summary>

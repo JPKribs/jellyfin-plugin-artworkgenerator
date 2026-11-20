@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -15,18 +16,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Cutout;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Large text cut out of the image. Bold and minimal.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleCutoutDescription;
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set below the cutout, and it becomes the cutout itself when the item has no number to cut.";
+            => TranslationKeys.StyleCutoutTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode number or code, and this style cuts it out of the image rather than drawing it as a line of text.";
+            => TranslationKeys.StyleCutoutSubtitleHelp;
 
         // The cutout letters are the poster, so the code or number is always drawn, and its size and
         // color come from the cutout itself rather than the text settings.

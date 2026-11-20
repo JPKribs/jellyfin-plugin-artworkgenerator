@@ -19,6 +19,7 @@ import {
     errorText,
     generateGuid,
     initCollapsibles,
+    loadTranslations,
     openDialog,
     pickJsonFile,
     promptDialog,
@@ -44,17 +45,34 @@ export {
 
 export var PLUGIN_ID = 'b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e';
 
+// t
+// The plugin's strings in the viewer's language, loaded once before any page draws. A failed load gives a handle with no strings.
+export var t = await loadTranslations('Plugins/ArtworkGenerator/Translations');
+
 // TABS
 // The dashboard tabs, in the order they show.
 var TABS = [
-    { href: 'configurationpage?name=ag_posters', name: 'Designs' },
-    { href: 'configurationpage?name=ag_logos', name: 'Logos' },
-    { href: 'configurationpage?name=ag_profiles', name: 'Profiles' },
-    { href: 'configurationpage?name=ag_settings', name: 'Settings' }
+    { href: 'configurationpage?name=ag_posters', name: t.tr('TabDesigns') },
+    { href: 'configurationpage?name=ag_logos', name: t.tr('TabLogos') },
+    { href: 'configurationpage?name=ag_profiles', name: t.tr('TabProfiles') },
+    { href: 'configurationpage?name=ag_settings', name: t.tr('Settings') }
 ];
 
+// withLanguage
+// Adds the viewer's language to a plugin route, so the server answers in it.
+//
+// Inputs
+// path [string]: The route, such as Plugins/ArtworkGenerator/SettingOptions.
+// query [object]: Any other query values.
+//
+// Output
+// [string]: The full address.
+export function withLanguage(path, query) {
+    return ApiClient.getUrl(path, Object.assign({ language: t.language }, query || {}));
+}
+
 // createArtworkPage
-// Wires a page through Base's createConfigPage with this plugin's id, route prefix, and tabs.
+// Wires a page through Base's createConfigPage with this plugin's id, route prefix, and tabs, and translates the page's marked markup before it binds.
 //
 // Inputs
 // view [HTMLElement]: The page element.
@@ -70,16 +88,21 @@ export function createArtworkPage(view, tabIndex, opts) {
         tabsKey: 'ag',
         tabIndex: tabIndex,
         tabs: TABS,
-        leaveMessage: 'Leave without saving your changes?'
-    }, opts));
+        leaveMessage: t.tr('ConfirmLeaveUnsaved')
+    }, opts, {
+        bind: function (shared, page) {
+            t.apply(view);
+            if (opts.bind) opts.bind(shared, page);
+        }
+    }));
 }
 
 // FONT_GROUPS
 // The font list's groups, in the order a family name is looked up.
 var FONT_GROUPS = [
-    { source: 'Uploaded', label: 'Uploaded' },
-    { source: 'Bundled', label: 'Bundled' },
-    { source: 'System', label: 'Server' }
+    { source: 'Uploaded', label: t.tr('GroupUploaded') },
+    { source: 'Bundled', label: t.tr('LabelBundled') },
+    { source: 'System', label: t.tr('TabServer') }
 ];
 
 // loadFontFamilies
@@ -151,7 +174,7 @@ export function sameId(a, b) {
 export function promptName(title, value, placeholder, check) {
     return promptDialog([{
         name: 'name',
-        label: 'Name',
+        label: t.tr('Name'),
         value: value || '',
         placeholder: placeholder || '',
         required: true,
@@ -230,7 +253,7 @@ export function createArtworkSaveBar(form, host, tracker, opts) {
         onSave: function () {
             if (!validateAll(form)) {
                 revealInvalid(form);
-                return Promise.reject(new Error('Fix the fields marked in red.'));
+                return Promise.reject(new Error(t.tr('ErrorFixFields')));
             }
             return Promise.resolve().then(opts.save).then(function () {
                 tracker.markClean();
@@ -274,7 +297,7 @@ export function bindColorField(field, onChange) {
     var picker = createColorPicker({
         format: 'argb',
         value: current(),
-        label: label ? label.textContent : 'Color',
+        label: label ? label.textContent : t.tr('OptionColor'),
         onChange: function (value) {
             if (quiet) return;
             input.value = String(value).toUpperCase();
@@ -290,7 +313,7 @@ export function bindColorField(field, onChange) {
         max: 100,
         suffix: '%',
         value: alphaPercent(current()),
-        label: 'Opacity',
+        label: t.tr('LabelOpacity'),
         onChange: function (percent) {
             if (quiet) return;
             input.value = withAlpha(current(), percent);

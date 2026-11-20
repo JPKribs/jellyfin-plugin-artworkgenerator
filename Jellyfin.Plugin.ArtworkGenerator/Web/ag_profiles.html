@@ -7,49 +7,49 @@
                 <div class="verticalSection verticalSection-extrabottompadding">
 
                     <div class="sectionTitleContainer flex align-items-center">
-                        <h1 class="sectionTitle">Profiles</h1>
+                        <h1 class="sectionTitle" data-str="TabProfiles">Profiles</h1>
                     </div>
 
                     <!-- Profile Selector -->
                     <div class="base-selector">
-                        <select is="emby-select" id="selectProfile" class="base-selector-dropdown" aria-label="Profile"></select>
+                        <select is="emby-select" id="selectProfile" class="base-selector-dropdown" aria-label="Profile" data-str-label="Profile"></select>
                         <div class="base-selector-actions">
-                            <button is="emby-button" type="button" id="btnNewProfile" class="raised base-button primary" title="New">
+                            <button is="emby-button" type="button" id="btnNewProfile" class="raised base-button primary" title="New" data-str-title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
-                                <span>New</span>
+                                <span data-str="New">New</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnRenameProfile" class="raised base-button secondary" title="Rename">
+                            <button is="emby-button" type="button" id="btnRenameProfile" class="raised base-button secondary" title="Rename" data-str-title="ButtonRename">
                                 <span class="material-icons" aria-hidden="true">edit</span>
-                                <span>Rename</span>
+                                <span data-str="ButtonRename">Rename</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnDeleteProfile" class="raised base-button destructive" title="Remove">
+                            <button is="emby-button" type="button" id="btnDeleteProfile" class="raised base-button destructive" title="Remove" data-str-title="ButtonRemove">
                                 <span class="material-icons" aria-hidden="true">delete</span>
-                                <span>Remove</span>
+                                <span data-str="ButtonRemove">Remove</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Assignment -->
                     <div id="assignmentSection" class="base-section hidden">
-                        <div class="base-section-title">Assigned Items</div>
+                        <div class="base-section-title" data-str="HeaderAssignedItems">Assigned Items</div>
                         <div class="base-section-content">
-                            <div class="fieldDescription ag-section-note">Pick the items this profile draws. Anything not picked uses the default profile.</div>
+                            <div class="fieldDescription ag-section-note" data-str="HeaderAssignedItemsNote">Pick the items this profile draws. Anything not picked uses the default profile.</div>
                             <div id="assignmentTabs"></div>
                         </div>
                     </div>
 
                     <!-- Images -->
                     <div class="base-section">
-                        <div class="base-section-title">Images</div>
+                        <div class="base-section-title" data-str="Images">Images</div>
                         <div class="base-section-content">
-                            <div class="fieldDescription ag-section-note">Pick which images each kind of item gets and the designs they use. A second and third design add choices to Edit Images.</div>
+                            <div class="fieldDescription ag-section-note" data-str="HeaderImagesNote">Pick which images each kind of item gets and the designs they use. A second and third design add choices to Edit Images.</div>
                             <div id="slotTabs"></div>
                         </div>
                     </div>
 
                     <!-- Backdrops -->
                     <div class="base-section">
-                        <div class="base-section-title">Backdrops</div>
+                        <div class="base-section-title" data-str="Backdrops">Backdrops</div>
                         <div id="backdropContent" class="base-section-content">
 
                             <div class="inputContainer">

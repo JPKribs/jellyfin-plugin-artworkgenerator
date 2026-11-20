@@ -7,32 +7,32 @@
                 <div class="verticalSection verticalSection-extrabottompadding">
 
                     <div class="sectionTitleContainer flex align-items-center">
-                        <h1 class="sectionTitle">Poster Designs</h1>
+                        <h1 class="sectionTitle" data-str="HeaderPosterDesigns">Poster Designs</h1>
                     </div>
 
                     <!-- Config Selector -->
                     <div class="base-selector">
-                        <select is="emby-select" id="selectPosterConfig" class="base-selector-dropdown" aria-label="Design"></select>
+                        <select is="emby-select" id="selectPosterConfig" class="base-selector-dropdown" aria-label="Design" data-str-label="LabelDesign"></select>
                         <div class="base-selector-actions">
-                            <button is="emby-button" type="button" id="btnNewConfig" class="raised base-button primary" title="New">
+                            <button is="emby-button" type="button" id="btnNewConfig" class="raised base-button primary" title="New" data-str-title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
-                                <span>New</span>
+                                <span data-str="New">New</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnRenameConfig" class="raised base-button secondary" title="Rename">
+                            <button is="emby-button" type="button" id="btnRenameConfig" class="raised base-button secondary" title="Rename" data-str-title="ButtonRename">
                                 <span class="material-icons" aria-hidden="true">edit</span>
-                                <span>Rename</span>
+                                <span data-str="ButtonRename">Rename</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnDeleteConfig" class="raised base-button destructive" title="Remove">
+                            <button is="emby-button" type="button" id="btnDeleteConfig" class="raised base-button destructive" title="Remove" data-str-title="ButtonRemove">
                                 <span class="material-icons" aria-hidden="true">delete</span>
-                                <span>Remove</span>
+                                <span data-str="ButtonRemove">Remove</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnImportConfig" class="raised base-button secondary" title="Import">
+                            <button is="emby-button" type="button" id="btnImportConfig" class="raised base-button secondary" title="Import" data-str-title="ButtonImport">
                                 <span class="material-icons" aria-hidden="true">upload</span>
-                                <span>Import</span>
+                                <span data-str="ButtonImport">Import</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnExportConfig" class="raised base-button secondary" title="Export">
+                            <button is="emby-button" type="button" id="btnExportConfig" class="raised base-button secondary" title="Export" data-str-title="ButtonExport">
                                 <span class="material-icons" aria-hidden="true">download</span>
-                                <span>Export</span>
+                                <span data-str="ButtonExport">Export</span>
                             </button>
                         </div>
                     </div>
@@ -40,22 +40,22 @@
 
                     <!-- Live Preview -->
                     <div class="base-section">
-                        <div class="base-section-title">Live Preview</div>
+                        <div class="base-section-title" data-str="HeaderLivePreview">Live Preview</div>
                         <div class="base-section-content">
                             <div class="ag-preview">
                                 <div class="ag-preview-pair">
                                     <div class="ag-preview-shape">
                                         <div id="posterPreviewLandscape"></div>
-                                        <div class="fieldDescription">Landscape</div>
+                                        <div class="fieldDescription" data-str="OptionLandscape">Landscape</div>
                                     </div>
                                     <div class="ag-preview-shape ag-portrait">
                                         <div id="posterPreviewPortrait"></div>
-                                        <div class="fieldDescription">Portrait</div>
+                                        <div class="fieldDescription" data-str="OptionPortrait">Portrait</div>
                                     </div>
                                 </div>
                                 <div id="posterShapeNote" class="base-warn hidden" role="status"></div>
                                 <div class="inputContainer">
-                                    <label for="selectPreviewKind">Preview As</label>
+                                    <label for="selectPreviewKind" data-str="LabelPreviewAs">Preview As</label>
                                     <select is="emby-select" id="selectPreviewKind" data-options="PreviewKind"></select>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
 
                     <!-- Poster: always open, since the style picker drives everything below it -->
                     <div class="base-section">
-                        <div class="base-section-title">Poster</div>
+                        <div class="base-section-title" data-str="Poster">Poster</div>
                         <div id="posterContent" class="base-section-content">
 
                             <div class="inputContainer">
@@ -137,7 +137,7 @@
                     <!-- Canvas -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="canvasContent" data-target="canvasContent">
-                            <span class="base-collapsible-title">Canvas</span>
+                            <span class="base-collapsible-title" data-str="HeaderCanvas">Canvas</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="canvasContent" class="base-collapsible-content collapsed">
@@ -174,7 +174,7 @@
                             <div class="inputContainer">
                                 <label for="txtPortraitDimensionRatio"></label>
                                 <input is="emby-input" type="text" id="txtPortraitDimensionRatio" placeholder="2:3" data-setting="PortraitDimensionRatio" />
-                                <div id="ratioNote" class="fieldDescription">The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.</div>
+                                <div id="ratioNote" class="fieldDescription" data-str="HelpAspectRatios">The shape each image is cropped to, such as 16:9 for landscape and 2:3 for portrait.</div>
                             </div>
 
                             <div class="inputContainer">
@@ -195,7 +195,7 @@
                     <!-- Overlay -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="overlayContent" data-target="overlayContent">
-                            <span class="base-collapsible-title">Overlay</span>
+                            <span class="base-collapsible-title" data-str="HeaderOverlay">Overlay</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="overlayContent" class="base-collapsible-content collapsed">
@@ -209,11 +209,11 @@
                             </div>
 
                             <div class="ag-field">
-                                <label for="txtOverlayColor" data-color-label="Overlay Color" data-opacity-label="Overlay Opacity">Overlay Color</label>
+                                <label for="txtOverlayColor" data-str-opacity="LabelOverlayOpacity" data-str="LabelOverlayColor">Overlay Color</label>
                                 <div data-color-field data-palette-aware>
                                         <input type="hidden" id="txtOverlayColor" data-setting="OverlayColor" data-fallback="#66000000" />
                                     </div>
-                                <div id="descOverlayColor" class="fieldDescription" data-color-desc="ARGB hex color for the overlay." data-opacity-desc="How strongly the episode's dominant color tints the poster. The color itself comes from the image.">ARGB hex color for the overlay.</div>
+                                <div id="descOverlayColor" class="fieldDescription" data-str-opacity="HelpOverlayOpacity" data-str="HelpOverlayColor">ARGB hex color for the overlay.</div>
                             </div>
 
                             <div class="inputContainer">
@@ -224,11 +224,11 @@
 
                             <div id="secondaryOverlay" class="base-indent">
                                 <div class="ag-field">
-                                    <label for="txtOverlaySecondaryColor" data-color-label="Secondary Overlay Color" data-opacity-label="Secondary Overlay Opacity">Secondary Overlay Color</label>
+                                    <label for="txtOverlaySecondaryColor" data-str-opacity="LabelSecondaryOverlayOpacity" data-str="LabelSecondaryOverlayColor">Secondary Overlay Color</label>
                                     <div data-color-field data-palette-aware>
                                         <input type="hidden" id="txtOverlaySecondaryColor" data-setting="OverlaySecondaryColor" data-fallback="#66000000" />
                                     </div>
-                                    <div id="descOverlaySecondaryColor" class="fieldDescription" data-color-desc="ARGB hex color for the gradient end." data-opacity-desc="Opacity of the gradient end, drawn as a darker shade of the same dominant color.">ARGB hex color for the gradient end.</div>
+                                    <div id="descOverlaySecondaryColor" class="fieldDescription" data-str-opacity="HelpGradientEndOpacity" data-str="HelpGradientEndColor">ARGB hex color for the gradient end.</div>
                                 </div>
                             </div>
 
@@ -238,7 +238,7 @@
                     <!-- Static Graphic -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="graphicContent" data-target="graphicContent">
-                            <span class="base-collapsible-title">Static Graphic</span>
+                            <span class="base-collapsible-title" data-str="HeaderStaticGraphic">Static Graphic</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="graphicContent" class="base-collapsible-content collapsed">
@@ -273,7 +273,7 @@
                     <!-- Title -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeTitleContent" data-target="episodeTitleContent">
-                            <span class="base-collapsible-title">Title</span>
+                            <span class="base-collapsible-title" data-str="LabelTitle">Title</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="episodeTitleContent" class="base-collapsible-content collapsed">
@@ -364,7 +364,7 @@
                                 <div data-color-field>
                                         <input type="hidden" id="txtPrimaryFontColor" data-setting="PrimaryFontColor" data-fallback="#FFFFFFFF" />
                                     </div>
-                                <div id="descPrimaryFontColor" class="fieldDescription">ARGB hex color for the title text.</div>
+                                <div id="descPrimaryFontColor" class="fieldDescription" data-str="HelpTitleColor">ARGB hex color for the title text.</div>
                             </div>
                             </div>
 
@@ -374,7 +374,7 @@
                     <!-- Subtitle -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="episodeInfoContent" data-target="episodeInfoContent">
-                            <span class="base-collapsible-title">Subtitle</span>
+                            <span class="base-collapsible-title" data-str="Subtitle">Subtitle</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="episodeInfoContent" class="base-collapsible-content collapsed">
@@ -473,7 +473,7 @@
                                 <div data-color-field>
                                         <input type="hidden" id="txtSecondaryFontColor" data-setting="SecondaryFontColor" data-fallback="#FFFFFFFF" />
                                     </div>
-                                <div id="descSecondaryFontColor" class="fieldDescription">ARGB hex color for the subtitle.</div>
+                                <div id="descSecondaryFontColor" class="fieldDescription" data-str="HelpSubtitleColor">ARGB hex color for the subtitle.</div>
                             </div>
                             </div>
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -14,8 +15,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Brush;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Brush strokes reveal the image through a flat overlay. Painted, editorial look.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleBrushDescription;
 
         // NaturalTextAlignment
         // Left rather than the center most designs use: its text sits in a left hand column over the strokes.
@@ -24,12 +25,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set left aligned at the foot of the image over the brush strokes.";
+            => TranslationKeys.StyleBrushTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, set on the left just above the title.";
+            => TranslationKeys.StyleBrushSubtitleHelp;
 
         // The stroke carries the title and the code, so both are always drawn, and the stroke can
         // take the same outline the cutout uses.

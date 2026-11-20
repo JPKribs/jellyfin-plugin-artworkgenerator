@@ -9,6 +9,7 @@ using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Posters;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging.Abstractions;
 
 var here = KitFolder();
@@ -64,10 +65,16 @@ void Handle(HttpListenerContext c)
             switch (route)
             {
                 case "SettingOptions":
-                    SendJson(c, new { options = SettingOptions.All(), defaults = SettingOptions.Defaults(), text = SettingOptions.Text(), backdropText = SettingOptions.BackdropText(), frameText = SettingOptions.FrameExtractionText(), frameOptions = SettingOptions.FrameExtractionOptions(), logoDefaults = SettingOptions.LogoDefaults() });
+                {
+                    var language = q["language"];
+                    SendJson(c, new { options = SettingOptions.All(language), defaults = SettingOptions.Defaults(), text = SettingOptions.Text(language), backdropText = SettingOptions.BackdropText(language), frameText = SettingOptions.FrameExtractionText(language), frameOptions = SettingOptions.FrameExtractionOptions(language), logoDefaults = SettingOptions.LogoDefaults() });
                     return;
+                }
                 case "PosterStyles":
-                    SendJson(c, PreviewService.GetStyleCatalog().Select(g => new { value = g.Style.ToString(), description = g.Description, primaryDescription = g.PrimaryDescription, secondaryDescription = g.SecondaryDescription, portrait = g.Supports(ArtworkShape.Portrait), landscape = g.Supports(ArtworkShape.Landscape), settings = g.SettingRules.ToDictionary(r => r.Key, r => r.Value.ToString()), text = g.SettingText }));
+                    SendJson(c, SettingOptions.Styles(q["language"]));
+                    return;
+                case "Translations":
+                    SendJson(c, BaseTranslations.For(q["language"]));
                     return;
                 case "Fonts":
                     SendJson(c, FontUtils.GetFontFamilies().Select(e => new { family = e.Family, source = e.Source.ToString() }));

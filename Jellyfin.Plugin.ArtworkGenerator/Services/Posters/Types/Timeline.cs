@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -14,8 +15,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Timeline;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Progress bar with the subtitle, the position, and an optional title. Clean and data driven.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleTimelineDescription;
 
         // NaturalTextAlignment
         // Left rather than the center most designs use: its title and labels line up with the progress bar below them.
@@ -24,12 +25,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set left aligned above the progress bar.";
+            => TranslationKeys.StyleTimelineTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code beside the bar, marking where the episode falls in its season.";
+            => TranslationKeys.StyleTimelineSubtitleHelp;
 
         // The bar and its labels are the style, so the code line is always drawn.
         public override IReadOnlyDictionary<string, PosterSettingState> SettingRules => PosterSettingRules.Build(

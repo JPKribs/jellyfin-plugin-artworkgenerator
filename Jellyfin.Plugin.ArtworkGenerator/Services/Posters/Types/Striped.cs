@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -27,8 +28,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Striped;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Tilted pinstriped sash carrying the title, with the subtitle in the corner. Sporty and graphic.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleStripedDescription;
 
         // SettingText
         // The sash is drawn from the two colors directly, one for the band and one for its stripes, so
@@ -37,11 +38,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             = new Dictionary<string, SettingText>(StringComparer.Ordinal)
             {
                 [PosterSettingRules.OverlayColor] = new(
-                    "Band Color",
-                    "The color of the sash."),
+                    TranslationKeys.LabelBandColor,
+                    TranslationKeys.BandColorHelp),
                 [PosterSettingRules.OverlaySecondaryColor] = new(
-                    "Pinstripe Color",
-                    "The color of the stripes running along the sash.")
+                    TranslationKeys.LabelPinstripeColor,
+                    TranslationKeys.PinstripeColorHelp)
             };
 
         // SettingRules
@@ -55,12 +56,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set along the tilted sash.";
+            => TranslationKeys.StyleStripedTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, set in the corner, or on the sash itself when there is no title.";
+            => TranslationKeys.StyleStripedSubtitleHelp;
 
         // StripedPosterGenerator
         // Initializes a new instance of the striped poster generator with logging support.

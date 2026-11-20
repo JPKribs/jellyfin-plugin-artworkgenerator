@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -24,27 +25,34 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum ArtworkItemKind
     {
         /// <summary>A TV series.</summary>
+        [Description(TranslationKeys.Series)]
         Series,
 
         /// <summary>A season of a TV series.</summary>
+        [Description(TranslationKeys.Season)]
         Season,
 
         /// <summary>A single episode.</summary>
+        [Description(TranslationKeys.Episode)]
         Episode,
 
         /// <summary>A film.</summary>
+        [Description(TranslationKeys.Movie)]
         Movie,
 
         /// <summary>
         /// A video that stands on its own rather than belonging to a series: a music video, a home
         /// video, or anything else a library holds as a plain video.
         /// </summary>
+        [Description(TranslationKeys.Video)]
         Video,
 
         /// <summary>A collection, drawn from the videos it holds.</summary>
+        [Description(TranslationKeys.LabelCollection)]
         Collection,
 
         /// <summary>A plain library folder, drawn from the videos beneath it.</summary>
+        [Description(TranslationKeys.LabelFolder)]
         Folder,
 
         /// <summary>
@@ -109,18 +117,19 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoTitleSource
     {
         /// <summary>The series title as shown in the library.</summary>
+        [Description(TranslationKeys.LabelTitle)]
         Title,
 
         /// <summary>The series' original-language title.</summary>
-        [Description("Original Title")]
+        [Description(TranslationKeys.OptionOriginalTitle)]
         OriginalTitle,
 
         /// <summary>The series sort title.</summary>
-        [Description("Sort Title")]
+        [Description(TranslationKeys.OptionSortTitle)]
         SortTitle,
 
         /// <summary>The name of the series folder on disk.</summary>
-        [Description("Folder Name")]
+        [Description(TranslationKeys.OptionFolderName)]
         FolderName
     }
 
@@ -130,15 +139,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoColorSource
     {
         /// <summary>The configured color.</summary>
-        [Description("Chosen Color")]
+        [Description(TranslationKeys.OptionChosenColor)]
         Fixed,
 
         /// <summary>The dominant color of the top level poster: a series' own, or a film's.</summary>
-        [Description("Top Level Poster")]
+        [Description(TranslationKeys.OptionTopLevelPoster)]
         SeriesPoster,
 
         /// <summary>The dominant color of the top level backdrop: a series' own, or a film's.</summary>
-        [Description("Top Level Backdrop")]
+        [Description(TranslationKeys.OptionTopLevelBackdrop)]
         SeriesBackdrop
     }
 
@@ -148,23 +157,23 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoSubtitleMode
     {
         /// <summary>The whole name, as written.</summary>
-        [Description("Draw the whole name")]
+        [Description(TranslationKeys.OptionDrawTheWholeName)]
         Keep,
 
         /// <summary>Only the part before the colon or dash.</summary>
-        [Description("Title only")]
+        [Description(TranslationKeys.OptionTitleOnly)]
         TitleOnly,
 
         /// <summary>Only the part after the colon or dash.</summary>
-        [Description("Subtitle only")]
+        [Description(TranslationKeys.OptionSubtitleOnly)]
         SubtitleOnly,
 
         /// <summary>The title large, with the subtitle small beneath it.</summary>
-        [Description("Title large, subtitle small below")]
+        [Description(TranslationKeys.OptionTitleLargeSubtitleSmallBelow)]
         TitleLarge,
 
         /// <summary>The subtitle large, with the title small above it.</summary>
-        [Description("Subtitle large, title small above")]
+        [Description(TranslationKeys.OptionSubtitleLargeTitleSmallAbove)]
         SubtitleLarge
     }
 
@@ -174,11 +183,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public enum LogoFill
     {
         /// <summary>A solid color.</summary>
-        [Description("Color")]
+        [Description(TranslationKeys.OptionColor)]
         Color,
 
         /// <summary>A frame from the series, as if the letters were cut out of a photo.</summary>
-        [Description("Frame")]
+        [Description(TranslationKeys.StyleFrame)]
         Photo
     }
 

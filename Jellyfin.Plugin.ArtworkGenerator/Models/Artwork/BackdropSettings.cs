@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -9,7 +10,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
     public class BackdropSettings
     {
         /// <summary>Gets or sets the backdrop aspect ratio, such as 16:9.</summary>
-        [Display(Name = "Aspect Ratio", Description = "The ratio the frame is cropped to, such as 16:9.")]
+        [Display(Name = TranslationKeys.AspectRatio, Description = TranslationKeys.AspectRatioHelp)]
         public string AspectRatio { get; set; } = "16:9";
     }
 }

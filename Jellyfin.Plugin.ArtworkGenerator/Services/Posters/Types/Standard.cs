@@ -1,5 +1,6 @@
 using System;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -12,8 +13,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Standard;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Full frame image with text at the bottom. Clean and versatile.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleStandardDescription;
 
         // StandardPosterGenerator
         // Initializes a new instance of the standard poster generator with logging support.

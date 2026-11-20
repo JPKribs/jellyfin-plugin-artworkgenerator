@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
+using JPKribs.Jellyfin.Base;
 using Xunit;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
@@ -66,7 +67,7 @@ public sealed class UploadedFontStoreTests : IDisposable
     {
         var result = new UploadedFontStore(Folder).Upload(name, FontBytes());
 
-        Assert.Equal("Only .ttf and .otf fonts can be uploaded.", result.Error);
+        Assert.Equal(TranslationKeys.ErrorFontExtension, result.Error);
         Assert.False(Directory.Exists(Folder));
     }
 
@@ -78,7 +79,7 @@ public sealed class UploadedFontStoreTests : IDisposable
     {
         var result = new UploadedFontStore(Folder).Upload("font.ttf", "<html>not a font</html>"u8.ToArray());
 
-        Assert.Equal("The file is not a TrueType or OpenType font.", result.Error);
+        Assert.Equal(TranslationKeys.ErrorNotAFont, result.Error);
     }
 
     /// <summary>
@@ -107,7 +108,7 @@ public sealed class UploadedFontStoreTests : IDisposable
 
         var result = new UploadedFontStore(Folder).Upload("big.ttf", data);
 
-        Assert.Equal("The font is larger than 20 MB.", result.Error);
+        Assert.Equal(TranslationKeys.ErrorFontTooLarge, result.Error);
     }
 
     /// <summary>
@@ -118,8 +119,8 @@ public sealed class UploadedFontStoreTests : IDisposable
     {
         var store = new UploadedFontStore(Folder);
 
-        Assert.Equal("Select a font file.", store.Upload("font.ttf", Array.Empty<byte>()).Error);
-        Assert.Equal("Select a font file.", store.Upload(null, FontBytes()).Error);
+        Assert.Equal(TranslationKeys.ErrorSelectFontFile, store.Upload("font.ttf", Array.Empty<byte>()).Error);
+        Assert.Equal(TranslationKeys.ErrorSelectFontFile, store.Upload(null, FontBytes()).Error);
     }
 
     /// <summary>
@@ -151,7 +152,7 @@ public sealed class UploadedFontStoreTests : IDisposable
 
         var result = new UploadedFontStore(Folder).Upload("broken.ttf", data);
 
-        Assert.Equal("The font could not be read.", result.Error);
+        Assert.Equal(TranslationKeys.ErrorFontUnreadable, result.Error);
         Assert.False(File.Exists(Path.Combine(Folder, "broken.ttf")));
     }
 

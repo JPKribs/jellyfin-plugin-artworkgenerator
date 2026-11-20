@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -20,18 +21,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.FrostedGlass;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Text on a frosted glass panel that blurs the image behind it.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleFrostedGlassDescription;
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, centered on the frosted panel.";
+            => TranslationKeys.StyleFrostedGlassTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, centered on the panel above the title.";
+            => TranslationKeys.StyleFrostedGlassSubtitleHelp;
 
         // The base canvas bitmap, captured during the canvas layer so the typography layer
         // can re-draw a blurred copy of it inside the panel. A generator renders one poster at a

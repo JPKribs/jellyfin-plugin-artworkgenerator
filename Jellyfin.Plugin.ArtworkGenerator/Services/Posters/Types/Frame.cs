@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -15,8 +16,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Frame;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Image inside a decorative border. Polished gallery look.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleFrameDescription;
 
         // NaturalTextPosition
         // The border's top edge, which is where this design has always put the title.
@@ -25,12 +26,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set into the top or bottom edge of the border.";
+            => TranslationKeys.StyleFrameTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is the episode code, set into whichever border edge the title does not take.";
+            => TranslationKeys.StyleFrameSubtitleHelp;
 
         // The frame is drawn around the title, so the title is always there, and this style is the
         // one that decides which edge holds it.
@@ -50,8 +51,8 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             = new Dictionary<string, SettingText>(StringComparer.Ordinal)
             {
                 [PosterSettingRules.TextPosition] = new(
-                    "Title Edge",
-                    "Which edge of the border the title takes. The subtitle takes the other one.")
+                    TranslationKeys.LabelTitleEdge,
+                    TranslationKeys.TitleEdgeHelp)
             };
 
         // Border geometry at the 1080 pixel reference; scaled to the poster being drawn.

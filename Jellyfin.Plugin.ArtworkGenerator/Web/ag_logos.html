@@ -7,24 +7,24 @@
                 <div class="verticalSection verticalSection-extrabottompadding">
 
                     <div class="sectionTitleContainer flex align-items-center">
-                        <h1 class="sectionTitle">Logo Designs</h1>
+                        <h1 class="sectionTitle" data-str="HeaderLogoDesigns">Logo Designs</h1>
                     </div>
 
                     <!-- Logo Selector -->
                     <div class="base-selector">
-                        <select is="emby-select" id="selectLogo" class="base-selector-dropdown" aria-label="Logo design"></select>
+                        <select is="emby-select" id="selectLogo" class="base-selector-dropdown" aria-label="Logo design" data-str-label="LabelLogoDesign"></select>
                         <div class="base-selector-actions">
-                            <button is="emby-button" type="button" id="btnNewLogo" class="raised base-button primary" title="New">
+                            <button is="emby-button" type="button" id="btnNewLogo" class="raised base-button primary" title="New" data-str-title="New">
                                 <span class="material-icons" aria-hidden="true">add</span>
-                                <span>New</span>
+                                <span data-str="New">New</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnRenameLogo" class="raised base-button secondary" title="Rename">
+                            <button is="emby-button" type="button" id="btnRenameLogo" class="raised base-button secondary" title="Rename" data-str-title="ButtonRename">
                                 <span class="material-icons" aria-hidden="true">edit</span>
-                                <span>Rename</span>
+                                <span data-str="ButtonRename">Rename</span>
                             </button>
-                            <button is="emby-button" type="button" id="btnDeleteLogo" class="raised base-button destructive" title="Remove">
+                            <button is="emby-button" type="button" id="btnDeleteLogo" class="raised base-button destructive" title="Remove" data-str-title="ButtonRemove">
                                 <span class="material-icons" aria-hidden="true">delete</span>
-                                <span>Remove</span>
+                                <span data-str="ButtonRemove">Remove</span>
                             </button>
                         </div>
                     </div>
@@ -32,14 +32,14 @@
 
                     <!-- Live Preview -->
                     <div class="base-section">
-                        <div class="base-section-title">Live Preview</div>
+                        <div class="base-section-title" data-str="HeaderLivePreview">Live Preview</div>
                         <div class="base-section-content">
                             <div class="ag-preview ag-logo-preview">
                                 <div id="logoPreviewHost"></div>
                                 <div class="inputContainer">
-                                    <label for="txtSampleName">Sample Name</label>
-                                    <input is="emby-input" type="text" id="txtSampleName" placeholder="Demo Logo Text" />
-                                    <div class="fieldDescription">The name the preview draws. It is not saved.</div>
+                                    <label for="txtSampleName" data-str="LabelSampleName">Sample Name</label>
+                                    <input is="emby-input" type="text" id="txtSampleName" placeholder="Demo Logo Text" data-str-placeholder="PlaceholderSampleName" />
+                                    <div class="fieldDescription" data-str="HelpSampleName">The name the preview draws. It is not saved.</div>
                                 </div>
                                 <div id="logoColorSource" class="hidden"></div>
                             </div>
@@ -48,7 +48,7 @@
 
                     <!-- Text -->
                     <div class="base-section">
-                        <div class="base-section-title">Text</div>
+                        <div class="base-section-title" data-str="LabelTypeText">Text</div>
                         <div class="base-section-content">
                             <div class="inputContainer">
                                 <label for="selectTitleSource"></label>
@@ -100,7 +100,7 @@
                     <!-- Font -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="logoFontContent" data-target="logoFontContent">
-                            <span class="base-collapsible-title">Font</span>
+                            <span class="base-collapsible-title" data-str="LabelFont">Font</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="logoFontContent" class="base-collapsible-content collapsed">
@@ -136,7 +136,7 @@
                     <!-- Color -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="logoColorContent" data-target="logoColorContent">
-                            <span class="base-collapsible-title">Color</span>
+                            <span class="base-collapsible-title" data-str="OptionColor">Color</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="logoColorContent" class="base-collapsible-content collapsed">
@@ -154,11 +154,11 @@
                             </div>
 
                             <div class="ag-field">
-                                <label for="txtLogoColor" data-color-label="Text Color" data-opacity-label="Text Opacity">Text Color</label>
+                                <label for="txtLogoColor" data-str-opacity="LabelTextOpacity" data-str="LabelLogoTextColor">Text Color</label>
                                 <div data-color-field>
                                         <input type="hidden" id="txtLogoColor" data-setting="Color" data-fallback="#FFFFFFFF" />
                                     </div>
-                                <div id="descLogoColor" class="fieldDescription" data-color-desc="ARGB hex color for the text." data-opacity-desc="How solid the sampled color is drawn. The color itself comes from the item's own artwork, and this color is only used if that artwork cannot be read.">ARGB hex color for the text.</div>
+                                <div id="descLogoColor" class="fieldDescription" data-str-opacity="HelpLogoTextOpacity" data-str="HelpTextColor">ARGB hex color for the text.</div>
                             </div>
                             </div>
 
@@ -195,7 +195,7 @@
                     <!-- Size -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="logoSizeContent" data-target="logoSizeContent">
-                            <span class="base-collapsible-title">Size</span>
+                            <span class="base-collapsible-title" data-str="LabelSize">Size</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="logoSizeContent" class="base-collapsible-content collapsed">

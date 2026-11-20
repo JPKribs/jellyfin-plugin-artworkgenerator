@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -24,17 +25,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         PosterStyle Style { get; }
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
+        // The translation key of a short description of this style, shown in the configuration UI.
         string Description { get; }
 
         // PrimaryDescription
-        // One sentence saying what the title is and where this style puts it, shown at the top of
-        // the Title section so the settings below it read in context.
+        // The translation key of one sentence saying what the title is and where this style puts it,
+        // shown at the top of the Title section so the settings below it read in context.
         string PrimaryDescription { get; }
 
         // SecondaryDescription
-        // One sentence saying what the subtitle is and where this style puts it, shown at the top
-        // of the Subtitle section.
+        // The translation key of one sentence saying what the subtitle is and where this style puts
+        // it, shown at the top of the Subtitle section.
         string SecondaryDescription { get; }
 
         // SupportedShapes
@@ -53,7 +54,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         // SettingText
         // A style's own wording for a shared setting. Text position means "where the text sits" on
         // most designs and "which border edge the title takes" on a framed one; rather than word it
-        // vaguely enough to cover both, a style that reads differently says so here.
+        // vaguely enough to cover both, a style that reads differently says so here, as translation keys.
         IReadOnlyDictionary<string, SettingText> SettingText { get; }
     }
 
@@ -80,20 +81,20 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public abstract PosterStyle Style { get; }
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
+        // The translation key of a short description of this style, shown in the configuration UI.
         public abstract string Description { get; }
 
         // PrimaryDescription
         // Most styles set the title in a text block at the foot of the image, so that is the
         // default; a style that treats it differently says so.
         public virtual string PrimaryDescription
-            => "The title is the item's own name, set at the bottom of the image under the subtitle.";
+            => TranslationKeys.StyleTitleHelp;
 
         // SecondaryDescription
         // What fills the subtitle never changes, only where a style puts it, so the default names
         // the content and the usual place.
         public virtual string SecondaryDescription
-            => "The subtitle is an episode's numbers, a season's label, or a film's year, set above the title.";
+            => TranslationKeys.StyleSubtitleHelp;
 
         // SupportedShapes
         // Every style lays out both shapes unless it says otherwise.

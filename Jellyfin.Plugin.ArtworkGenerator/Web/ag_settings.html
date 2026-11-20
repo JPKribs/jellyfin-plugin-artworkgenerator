@@ -7,38 +7,38 @@
                 <div class="verticalSection verticalSection-extrabottompadding">
 
                     <div class="sectionTitleContainer flex align-items-center">
-                        <h1 class="sectionTitle">Settings</h1>
+                        <h1 class="sectionTitle" data-str="Settings">Settings</h1>
                     </div>
 
-                    <div class="fieldDescription ag-section-note">Artwork Generator is turned on per library, under Image Fetchers in that library's settings. Profiles decide which images it makes.</div>
+                    <div class="fieldDescription ag-section-note" data-str="HeaderSettingsNote">Artwork Generator is turned on per library, under Image Fetchers in that library's settings. Profiles decide which images it makes.</div>
 
                     <div class="inputContainer">
-                        <label for="txtImageChoiceCount">Choices In Edit Images</label>
+                        <label for="txtImageChoiceCount" data-str="LabelImageChoiceCount">Choices In Edit Images</label>
                         <input is="emby-input" type="number" id="txtImageChoiceCount" min="1" max="1000" step="1" />
-                        <div class="fieldDescription">Choices offered per image type in Edit Images. Each is a different frame, so a higher number is slower to open.</div>
+                        <div class="fieldDescription" data-str="HelpImageChoiceCount">Choices offered per image type in Edit Images. Each is a different frame, so a higher number is slower to open.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="txtImageCacheMinutes">Edit Images Cache (minutes)</label>
+                        <label for="txtImageCacheMinutes" data-str="LabelImageCacheMinutes">Edit Images Cache (minutes)</label>
                         <input is="emby-input" type="number" id="txtImageCacheMinutes" min="5" max="1440" step="1" />
-                        <div class="fieldDescription">How long the choices rendered for Edit Images stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones.</div>
+                        <div class="fieldDescription" data-str="HelpImageCacheMinutes">How long the choices rendered for Edit Images stay available, 5 to 1440. Until then, reopening the dialog or switching image type shows the same choices instead of rendering new ones.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="txtFixedSeed">Fixed Frame Seed</label>
-                        <input is="emby-input" type="number" id="txtFixedSeed" step="1" placeholder="Random" />
-                        <div class="fieldDescription">Any whole number makes frame choice repeatable, so an item always gets the same frames. Empty picks new ones each refresh.</div>
+                        <label for="txtFixedSeed" data-str="LabelFixedFrameSeed">Fixed Frame Seed</label>
+                        <input is="emby-input" type="number" id="txtFixedSeed" step="1" placeholder="Random" data-str-placeholder="OptionRandom" />
+                        <div class="fieldDescription" data-str="HelpFixedFrameSeed">Any whole number makes frame choice repeatable, so an item always gets the same frames. Empty picks new ones each refresh.</div>
                     </div>
 
                     <!-- Frame Extraction -->
                     <div class="base-collapsible-section">
                         <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="frameExtractionContent" data-target="frameExtractionContent">
-                            <span class="base-collapsible-title">Frame Extraction</span>
+                            <span class="base-collapsible-title" data-str="HeaderFrameExtraction">Frame Extraction</span>
                             <span class="base-collapsible-icon"></span>
                         </button>
                         <div id="frameExtractionContent" class="base-collapsible-content collapsed">
 
-                            <div class="fieldDescription ag-section-note">How frames are taken from a video and cleaned up, for every poster and every backdrop.</div>
+                            <div class="fieldDescription ag-section-note" data-str="HeaderFrameExtractionNote">How frames are taken from a video and cleaned up, for every poster and every backdrop.</div>
 
                             <div class="inputContainer">
                                 <label for="txtExtractWindowStart"></label>
@@ -175,12 +175,12 @@
             <form id="AgFontsForm">
                 <div class="base-collapsible-section">
                     <button type="button" class="base-collapsible-header collapsed" aria-expanded="false" aria-controls="fontsContent" data-target="fontsContent">
-                        <span class="base-collapsible-title">Fonts</span>
+                        <span class="base-collapsible-title" data-str="HeaderFonts">Fonts</span>
                         <span class="base-collapsible-icon"></span>
                     </button>
                     <div id="fontsContent" class="base-collapsible-content collapsed">
 
-                        <div class="fieldDescription ag-section-note">The bundled fonts are always available, and uploaded .ttf and .otf fonts join them in every font list.</div>
+                        <div class="fieldDescription ag-section-note" data-str="HeaderFontsNote">The bundled fonts are always available, and uploaded .ttf and .otf fonts join them in every font list.</div>
 
                         <div id="uploadedFontsHost"></div>
                         <div id="fontPickerHost"></div>

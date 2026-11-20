@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
@@ -18,15 +19,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [JsonIgnore]
         public string? EffectivePrimaryFontPath => PrimaryUseCustomFont ? PrimaryFontPath : null;
 
-        [Display(Name = "Canvas Background", Description = "Determine where the poster background should come from.")]
+        [Display(Name = TranslationKeys.LabelCanvasBackground, Description = TranslationKeys.CanvasSourceHelp)]
         public CanvasSource CanvasSource { get; set; } = CanvasSource.Extract;
 
         /// <summary>Gets or sets how many frames a grid canvas holds.</summary>
-        [Display(Name = "Grid Frames", Description = "How many frames the grid holds.")]
+        [Display(Name = TranslationKeys.LabelGridFrames, Description = TranslationKeys.GridFramesHelp)]
         public int GridFrames { get; set; } = 4;
 
         /// <summary>Gets or sets the gap between grid cells, as a percent of the short side.</summary>
-        [Display(Name = "Grid Gap (%)", Description = "Space between the frames, as a percent of the short side.")]
+        [Display(Name = TranslationKeys.LabelGridGapPercent, Description = TranslationKeys.GridGapHelp)]
         public float GridGap { get; set; } = 2.0f;
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
 
         public float ExtractWindowEnd { get; set; } = 80.0f;
 
-        [Display(Name = "Style")]
+        [Display(Name = TranslationKeys.LabelStyle)]
         public PosterStyle PosterStyle { get; set; } = PosterStyle.Standard;
 
         /// <summary>
@@ -56,21 +57,21 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         [JsonIgnore]
         public ArtworkShape Shape { get; set; } = ArtworkShape.Landscape;
 
-        [Display(Name = "Type", Description = "Show the episode as a code like S01E01 or as a word like ONE.")]
+        [Display(Name = TranslationKeys.LabelType, Description = TranslationKeys.CutoutTypeHelp)]
         public CutoutType CutoutType { get; set; } = CutoutType.Code;
 
         /// <summary>
         /// Gets or sets where the title and subtitle sit inside the safe area. Left on its default,
         /// each design keeps the placement it was drawn around.
         /// </summary>
-        [Display(Name = "Text Position", Description = "Where the title and subtitle sit.")]
+        [Display(Name = TranslationKeys.LabelTextPosition, Description = TranslationKeys.TextPositionHelp)]
         public TextPosition TextPosition { get; set; } = TextPosition.Auto;
 
         /// <summary>
         /// Gets or sets which side the title and subtitle are pulled to. Left on its default, each
         /// design keeps the side it was drawn around.
         /// </summary>
-        [Display(Name = "Text Alignment", Description = "Which side the title and subtitle are pulled to.")]
+        [Display(Name = TranslationKeys.LabelTextAlignment, Description = TranslationKeys.TextAlignmentHelp)]
         public TextAlignment TextAlignment { get; set; } = TextAlignment.Auto;
 
         /// <summary>
@@ -78,36 +79,36 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// it where the title goes. Off, the title's place is left empty and the lone subtitle stays
         /// in its own.
         /// </summary>
-        [Display(Name = "Lone Subtitle Takes the Title Edge", Description = "An item with no title puts its subtitle on the title edge.")]
+        [Display(Name = TranslationKeys.LabelLoneSubtitleTakesTheTitleEdge, Description = TranslationKeys.LoneLineFollowsTitleHelp)]
         public bool LoneLineFollowsTitle { get; set; } = true;
 
-        [Display(Name = "Outline", Description = "Draw a contrasting outline around the cut-out shape.")]
+        [Display(Name = TranslationKeys.LabelOutline, Description = TranslationKeys.CutoutBorderHelp)]
         public bool CutoutBorder { get; set; } = true;
 
-        [Display(Name = "Logo Position", Description = "Vertical position of the logo on the poster.")]
+        [Display(Name = TranslationKeys.LabelLogoPosition, Description = TranslationKeys.LogoPositionHelp)]
         public Position LogoPosition { get; set; } = Position.Center;
 
-        [Display(Name = "Logo Alignment", Description = "Horizontal alignment of the logo on the poster.")]
+        [Display(Name = TranslationKeys.LabelLogoAlignment, Description = TranslationKeys.LogoAlignmentHelp)]
         public Alignment LogoAlignment { get; set; } = Alignment.Center;
 
-        [Display(Name = "Logo Height", Description = "Logo height as a percent of the poster's short side, 1 to 100.")]
+        [Display(Name = TranslationKeys.LabelLogoHeight, Description = TranslationKeys.LogoHeightHelp)]
         public float LogoHeight { get; set; } = 30.0f;
 
         public float BrightenHDR { get; set; }
 
-        [Display(Name = "Fill Strategy", Description = "How the image is resized to fit the poster.")]
+        [Display(Name = TranslationKeys.LabelFillStrategy, Description = TranslationKeys.PosterFillHelp)]
         public PosterFill PosterFill { get; set; } = PosterFill.Original;
 
-        [Display(Name = "Landscape Aspect Ratio")]
+        [Display(Name = TranslationKeys.LabelLandscapeAspectRatio)]
         public string PosterDimensionRatio { get; set; } = "16:9";
 
         /// <summary>
         /// Gets or sets the aspect ratio for portrait renders, such as series and season posters.
         /// </summary>
-        [Display(Name = "Portrait Aspect Ratio")]
+        [Display(Name = TranslationKeys.LabelPortraitAspectRatio)]
         public string PortraitDimensionRatio { get; set; } = "2:3";
 
-        [Display(Name = "Safe Area", Description = "Margin kept clear around all edges, as a percent of the short side.")]
+        [Display(Name = TranslationKeys.LabelSafeArea, Description = TranslationKeys.PosterSafeAreaHelp)]
         public float PosterSafeArea { get; set; } = 5.0f;
 
         /// <summary>
@@ -116,100 +117,100 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Models
         /// the single knob every style uses to keep elements apart, so raising it pushes them
         /// further from each other everywhere rather than in one style.
         /// </summary>
-        [Display(Name = "Element Spacing", Description = "Gap between stacked elements, as a percent of the short side.")]
+        [Display(Name = TranslationKeys.LabelElementSpacing, Description = TranslationKeys.ElementSpacingHelp)]
         public float ElementSpacing { get; set; } = 2.0f;
 
-        [Display(Name = "Show Subtitle", Description = "Draw the subtitle, the smaller line.")]
+        [Display(Name = TranslationKeys.LabelShowSubtitle, Description = TranslationKeys.ShowSecondaryHelp)]
         public bool ShowSecondary { get; set; } = true;
 
-        [Display(Name = "Font", Description = "Font family for the subtitle.")]
+        [Display(Name = TranslationKeys.LabelFont, Description = TranslationKeys.SecondaryFontFamilyHelp)]
         public string SecondaryFontFamily { get; set; } = "Montserrat";
 
-        [Display(Name = "Use Custom Font", Description = "Use a font file instead of a built in font.")]
+        [Display(Name = TranslationKeys.LabelUseCustomFont, Description = TranslationKeys.SecondaryUseCustomFontHelp)]
         public bool SecondaryUseCustomFont { get; set; } = false;
 
-        [Display(Name = "Font Path", Description = "Path to a TTF, OTF, or TTC font file readable by the server.")]
+        [Display(Name = TranslationKeys.LabelFontPath, Description = TranslationKeys.SecondaryFontPathHelp)]
         public string SecondaryFontPath { get; set; } = string.Empty;
 
-        [Display(Name = "Font Style", Description = "Font style for the subtitle.")]
+        [Display(Name = TranslationKeys.LabelFontStyle, Description = TranslationKeys.SecondaryFontStyleHelp)]
         public string SecondaryFontStyle { get; set; } = "Bold";
 
-        [Display(Name = "Font Size", Description = "Text size as a percent of the poster's short side, 1 to 100.")]
+        [Display(Name = TranslationKeys.LabelFontSize, Description = TranslationKeys.SecondaryFontSizeHelp)]
         public float SecondaryFontSize { get; set; } = 7.0F;
 
-        [Display(Name = "Font Color")]
+        [Display(Name = TranslationKeys.LabelFontColor)]
         public string SecondaryFontColor { get; set; } = "#FFFFFFFF";
 
-        [Display(Name = "Show Title", Description = "Draw the title, the larger line.")]
+        [Display(Name = TranslationKeys.LabelShowTitle, Description = TranslationKeys.ShowPrimaryHelp)]
         public bool ShowPrimary { get; set; } = true;
 
-        [Display(Name = "Font", Description = "Font family for the title text.")]
+        [Display(Name = TranslationKeys.LabelFont, Description = TranslationKeys.PrimaryFontFamilyHelp)]
         public string PrimaryFontFamily { get; set; } = "Montserrat";
 
-        [Display(Name = "Use Custom Font", Description = "Use a font file instead of a built in font.")]
+        [Display(Name = TranslationKeys.LabelUseCustomFont, Description = TranslationKeys.SecondaryUseCustomFontHelp)]
         public bool PrimaryUseCustomFont { get; set; } = false;
 
-        [Display(Name = "Font Path", Description = "Path to a TTF, OTF, or TTC font file readable by the server.")]
+        [Display(Name = TranslationKeys.LabelFontPath, Description = TranslationKeys.SecondaryFontPathHelp)]
         public string PrimaryFontPath { get; set; } = string.Empty;
 
-        [Display(Name = "Font Style", Description = "Font style for the title text.")]
+        [Display(Name = TranslationKeys.LabelFontStyle, Description = TranslationKeys.PrimaryFontStyleHelp)]
         public string PrimaryFontStyle { get; set; } = "Bold";
 
-        [Display(Name = "Font Size", Description = "Title size as a percent of the poster's short side, 1 to 100.")]
+        [Display(Name = TranslationKeys.LabelFontSize, Description = TranslationKeys.PrimaryFontSizeHelp)]
         public float PrimaryFontSize { get; set; } = 10.0F;
 
-        [Display(Name = "Font Color")]
+        [Display(Name = TranslationKeys.LabelFontColor)]
         public string PrimaryFontColor { get; set; } = "#FFFFFFFF";
 
         /// <summary>
         /// How to handle episode titles that do not fit the poster's text area.
         /// </summary>
-        [Display(Name = "Long Titles", Description = "What to do when the title does not fit.")]
+        [Display(Name = TranslationKeys.LabelLongTitles, Description = TranslationKeys.LongTextHandlingHelp)]
         public LongTextHandling LongTextHandling { get; set; } = LongTextHandling.Ellipsis;
 
         /// <summary>
         /// Gets or sets what a subtitle does when it does not fit the width it has.
         /// </summary>
-        [Display(Name = "Long Subtitles", Description = "What to do when the subtitle does not fit.")]
+        [Display(Name = TranslationKeys.LabelLongSubtitles, Description = TranslationKeys.LongSubtitleHandlingHelp)]
         public LongSubtitleHandling LongSubtitleHandling { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the subtitle is dropped when it says the same
         /// thing as the title, such as a season named "Season 12" whose label is also "Season 12".
         /// </summary>
-        [Display(Name = "Hide a Repeated Subtitle", Description = "Drop the subtitle when it says the same thing as the title.")]
+        [Display(Name = TranslationKeys.LabelHideARepeatedSubtitle, Description = TranslationKeys.HideRepeatedSubtitleHelp)]
         public bool HideRepeatedSubtitle { get; set; }
 
-        [Display(Name = "Overlay Color")]
+        [Display(Name = TranslationKeys.LabelOverlayColor)]
         public string OverlayColor { get; set; } = "#66000000";
 
-        [Display(Name = "Overlay Gradient", Description = "Gradient direction from the overlay color to the secondary color.")]
+        [Display(Name = TranslationKeys.LabelOverlayGradient, Description = TranslationKeys.OverlayGradientHelp)]
         public OverlayGradient OverlayGradient { get; set; } = OverlayGradient.None;
 
-        [Display(Name = "Secondary Overlay Color")]
+        [Display(Name = TranslationKeys.LabelSecondaryOverlayColor)]
         public string OverlaySecondaryColor { get; set; } = "#66000000";
 
         /// <summary>
         /// When enabled, the overlay color channels are replaced per episode by the dominant
         /// color sampled from the canvas image. The configured alpha values are preserved.
         /// </summary>
-        [Display(Name = "Palette Colors", Description = "Take the overlay colors from each image.")]
+        [Display(Name = TranslationKeys.LabelPaletteColors, Description = TranslationKeys.PaletteDerivedColorsHelp)]
         public bool PaletteDerivedColors { get; set; }
 
-        [Display(Name = "Graphic File Path", Description = "A graphic drawn above the image and below the text.")]
+        [Display(Name = TranslationKeys.LabelGraphicFilePath, Description = TranslationKeys.GraphicPathHelp)]
         public string GraphicPath { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the graphic's size as a percent of the poster's short side. The graphic is
         /// fitted inside a box that size, so it always keeps its own proportions.
         /// </summary>
-        [Display(Name = "Graphic Size (%)", Description = "Size of the graphic as a percent of the short side.")]
+        [Display(Name = TranslationKeys.LabelGraphicSizePercent, Description = TranslationKeys.GraphicSizeHelp)]
         public float GraphicSize { get; set; } = 25.0f;
 
-        [Display(Name = "Graphic Position", Description = "Where the graphic sits, top to bottom.")]
+        [Display(Name = TranslationKeys.LabelGraphicPosition, Description = TranslationKeys.GraphicPositionHelp)]
         public Position GraphicPosition { get; set; } = Position.Center;
 
-        [Display(Name = "Graphic Alignment", Description = "Which side the graphic is pulled to.")]
+        [Display(Name = TranslationKeys.LabelGraphicAlignment, Description = TranslationKeys.GraphicAlignmentHelp)]
         public Alignment GraphicAlignment { get; set; } = Alignment.Center;
 
         /// <summary>

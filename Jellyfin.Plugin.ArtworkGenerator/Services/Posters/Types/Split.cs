@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Jellyfin.Plugin.ArtworkGenerator.Models;
 using Jellyfin.Plugin.ArtworkGenerator.Utilities;
+using JPKribs.Jellyfin.Base;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -14,18 +15,18 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
         public override PosterStyle Style => PosterStyle.Split;
 
         // Description
-        // A short, user facing description of this style shown in the configuration UI.
-        public override string Description => "Series poster beside the frame with text. Magazine layout.";
+        // The translation key of a short description of this style, shown in the configuration UI.
+        public override string Description => TranslationKeys.StyleSplitDescription;
 
         // PrimaryDescription
         // One sentence on what the title is and where this style puts it.
         public override string PrimaryDescription
-            => "The title is the item's own name, set at the bottom of the panel beside the frame.";
+            => TranslationKeys.StyleSplitTitleHelp;
 
         // SecondaryDescription
         // One sentence on what the subtitle is and where this style puts it.
         public override string SecondaryDescription
-            => "The subtitle is an episode's numbers, a season's label, or a film's year, set above the title in that panel.";
+            => TranslationKeys.StyleSplitSubtitleHelp;
 
         // SupportedShapes
         // The layout puts a portrait series poster beside a frame, which needs a wide canvas.

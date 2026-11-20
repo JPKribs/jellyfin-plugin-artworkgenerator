@@ -1,17 +1,19 @@
 using System.ComponentModel;
+using JPKribs.Jellyfin.Base;
 
 namespace Jellyfin.Plugin.ArtworkGenerator.Models
 {
     public enum OverlayGradient
     {
+        [Description(TranslationKeys.None)]
         None,
-        [Description("Left to Right")]
+        [Description(TranslationKeys.ViewLeftToRight)]
         LeftToRight,
-        [Description("Bottom to Top")]
+        [Description(TranslationKeys.OptionBottomToTop)]
         BottomToTop,
-        [Description("Top Left Corner to Bottom Right Corner")]
+        [Description(TranslationKeys.OptionTopLeftCornerToBottomRightCorner)]
         TopLeftCornerToBottomRightCorner,
-        [Description("Top Right Corner to Bottom Left Corner")]
+        [Description(TranslationKeys.OptionTopRightCornerToBottomLeftCorner)]
         TopRightCornerToBottomLeftCorner
     }
 }
