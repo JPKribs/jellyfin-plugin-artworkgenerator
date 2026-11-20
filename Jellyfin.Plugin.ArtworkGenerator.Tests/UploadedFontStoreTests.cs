@@ -31,7 +31,7 @@ public sealed class UploadedFontStoreTests : IDisposable
     /// </summary>
     internal static byte[] FontBytes(string resource = "Lora.Lora-Bold.ttf")
     {
-        using var stream = typeof(BundledFonts).Assembly.GetManifestResourceStream("Jellyfin.Plugin.ArtworkGenerator.Fonts." + resource)!;
+        using var stream = typeof(BundledFonts).Assembly.GetManifestResourceStream("Jellyfin.Plugin.ArtworkGenerator.Assets.Fonts." + resource)!;
         using var copy = new MemoryStream();
         stream.CopyTo(copy);
         return copy.ToArray();

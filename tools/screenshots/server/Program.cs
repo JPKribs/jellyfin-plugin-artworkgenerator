@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 var here = KitFolder();
 var repo = Path.GetFullPath(Path.Combine(here, "..", ".."));
 var plugin = Path.Combine(repo, "Jellyfin.Plugin.ArtworkGenerator");
-var conf = Path.Combine(plugin, "Configuration");
+var conf = Path.Combine(plugin, "Web");
 var baseDir = BaseAssets(Path.Combine(plugin, "Jellyfin.Plugin.ArtworkGenerator.csproj"));
 var web = Environment.GetEnvironmentVariable("JELLYFIN_WEB") is { Length: > 0 } w ? w : "/Applications/Jellyfin.app/Contents/Resources/jellyfin-web";
 if (!File.Exists(Path.Combine(web, "index.html"))) Fail($"jellyfin-web not found at {web}. Set JELLYFIN_WEB to a jellyfin-web folder.");

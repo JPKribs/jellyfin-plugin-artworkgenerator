@@ -15,12 +15,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Tests;
 /// </summary>
 public class SettingTextTests
 {
-    private static string ConfigurationDirectory()
+    private static string WebDirectory()
     {
         var dir = AppContext.BaseDirectory;
         while (dir != null)
         {
-            var candidate = Path.Combine(dir, "Jellyfin.Plugin.ArtworkGenerator", "Configuration");
+            var candidate = Path.Combine(dir, "Jellyfin.Plugin.ArtworkGenerator", "Web");
             if (Directory.Exists(candidate))
             {
                 return candidate;
@@ -29,12 +29,12 @@ public class SettingTextTests
             dir = Path.GetDirectoryName(dir);
         }
 
-        throw new DirectoryNotFoundException("Could not locate the Configuration folder above the test assembly.");
+        throw new DirectoryNotFoundException("Could not locate the Web folder above the test assembly.");
     }
 
     private static IEnumerable<(string Page, string Setting)> RenderedSettings()
     {
-        foreach (var page in Directory.GetFiles(ConfigurationDirectory(), "ag_*.html"))
+        foreach (var page in Directory.GetFiles(WebDirectory(), "ag_*.html"))
         {
             var markup = File.ReadAllText(page);
             foreach (Match match in Regex.Matches(markup, @"data-setting=""([A-Za-z]+)"""))
@@ -134,7 +134,7 @@ public class SettingTextTests
     [Fact]
     public void EveryBackdropSettingThePageShowsHasTextOnTheModel()
     {
-        var page = File.ReadAllText(Path.Combine(ConfigurationDirectory(), "ag_profiles.html"));
+        var page = File.ReadAllText(Path.Combine(WebDirectory(), "ag_profiles.html"));
         var rendered = Regex.Matches(page, "data-backdrop-setting=\"(\\w+)\"")
             .Select(m => m.Groups[1].Value)
             .Distinct()

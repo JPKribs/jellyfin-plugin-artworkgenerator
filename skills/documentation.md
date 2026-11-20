@@ -157,7 +157,7 @@ Give every admonition a short title.
 The README is a landing page. The docs site holds the detail.
 
 1. The icon, `<img src="docs/assets/icon.png" alt="Artwork Generator" width="96" align="left">`, then a one paragraph pitch and `<br clear="left">`.
-2. `## Documentation`. One sentence on what the docs cover, a bold link to the site, then the repository URL for Jellyfin in a code block. It closes with one sentence that credits the bundled fonts, naming each family and the SIL Open Font License 1.1, and says each family's license sits beside its files in `Jellyfin.Plugin.ArtworkGenerator/Fonts/`.
+2. `## Documentation`. One sentence on what the docs cover, a bold link to the site, then the repository URL for Jellyfin in a code block. It closes with one sentence that credits the bundled fonts, naming each family and the SIL Open Font License 1.1, and says each family's license sits beside its files in `Jellyfin.Plugin.ArtworkGenerator/Assets/Fonts/`.
 3. `## AI Disclaimer`. The owner's note on how the project is made. Leave its words as they are.
 
 Use `##` for README headings. Keep the README under 40 lines.

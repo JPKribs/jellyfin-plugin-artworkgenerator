@@ -14,7 +14,7 @@ Plugin repository URL for Jellyfin:
 https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/master/manifest.json
 ```
 
-The bundled fonts, Anton, Bebas Neue, Lora, Montserrat, Noto Sans, Oswald, Playfair Display, Poppins, and Roboto, are by their authors and licensed under the SIL Open Font License 1.1, with each family's license beside its files in `Jellyfin.Plugin.ArtworkGenerator/Fonts/`.
+The bundled fonts, Anton, Bebas Neue, Lora, Montserrat, Noto Sans, Oswald, Playfair Display, Poppins, and Roboto, are by their authors and licensed under the SIL Open Font License 1.1, with each family's license beside its files in `Jellyfin.Plugin.ArtworkGenerator/Assets/Fonts/`.
 
 ## AI Disclaimer
 

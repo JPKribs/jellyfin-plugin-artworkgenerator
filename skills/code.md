@@ -174,6 +174,24 @@ export function createArtworkPage(view, tabIndex, opts) {
 * A shell script opens with a comment saying what it does and how to run it.
 * A YAML file opens with a comment saying what it is for. Comment a step only when its reason is not obvious.
 
+## Layout
+
+The plugin project, `Jellyfin.Plugin.ArtworkGenerator/`, keeps one kind of file in each folder. The namespace matches the folder.
+
+| Path | Holds | Namespace |
+| :--- | :--- | :--- |
+| `Plugin.cs` | The plugin class, which builds the services and lists the pages. | root |
+| `Api/` | `ConfigurationController` and the request bodies only it reads. | `.Api` |
+| `Configuration/` | `PluginConfiguration` only. No web files. | `.Configuration` |
+| `Web/` | The dashboard pages, as `ag_<page>.html`, `ag_<page>.js`, and `ag_shared.css`. Each is an embedded resource. | none |
+| `Assets/` | `Logo.png`, the demo images in `Assets/Demo/`, and the bundled fonts in `Assets/Fonts/<Family>/`. | none |
+| `Models/` | Data classes, records, and enums, grouped in `Artwork/`, `Metadata/`, and `Poster/`. | `.Models` |
+| `Services/` | The work, grouped in `Artwork/`, `Fonts/`, and `Posters/`, with one generator for each poster style in `Posters/Types/`. | `.Services` |
+| `Providers/` | The Jellyfin image providers. | `.Providers` |
+| `Utilities/` | Static helpers for drawing, text, color, and layout. | `.Utilities` |
+
+Outside the plugin project, `Jellyfin.Plugin.ArtworkGenerator.Tests/` holds the xUnit tests, `Jellyfin.Plugin.ArtworkGenerator.Demo/` the demo render, `docs/` the MkDocs site, `skills/` the guides, and `tools/` the screenshot kit and frame benchmark, which never ship.
+
 ## C# Conventions
 
 * Target `net10.0` with `Nullable` on, `TreatWarningsAsErrors` on, and `AnalysisMode` set to `AllEnabledByDefault`.
@@ -193,7 +211,7 @@ export function createArtworkPage(view, tabIndex, opts) {
 ### Fonts
 
 * A font family name resolves through `FontCatalog`, uploaded first, then bundled, then the server's, with the nearest style when one is missing. Never call `SKFontManager` for a family directly.
-* Bundled fonts sit in `Fonts/<Family>/` as embedded resources, each family with its `OFL.txt`. Add only fonts under the SIL Open Font License, and only static instances, since SkiaSharp 3.119 cannot vary a variable font.
+* Bundled fonts sit in `Assets/Fonts/<Family>/` as embedded resources, each family with its `OFL.txt`. Add only fonts under the SIL Open Font License, and only static instances, since SkiaSharp 3.119 cannot vary a variable font.
 * A new bundled family goes in `BundledFontsTests`, the README credit line, and the bundled fonts table in `docs/SETTINGS.md`, in the same commit.
 * Uploaded fonts live in `fonts` in the `artworkgenerator` data folder, through `UploadedFontStore`. An upload is a .ttf or .otf of at most 20 MB with a font header that Skia can load. It is named with `FileNameSanitizer`, kept in the folder with `PathContainment`, and written with `AtomicFile`. A refused upload returns one sentence that says why.
 

@@ -58,8 +58,11 @@ Explain what you would change, why, and what it risks. Wait for an answer before
 
 | Path | What it holds |
 | :--- | :--- |
-| `Jellyfin.Plugin.ArtworkGenerator/` | The plugin source. |
-| `Jellyfin.Plugin.ArtworkGenerator/Configuration/` | The dashboard pages, as HTML, JS, and CSS, and the plugin configuration model. |
+| `Jellyfin.Plugin.ArtworkGenerator/` | The plugin source, laid out as in [skills/code.md](skills/code.md#layout). |
+| `Jellyfin.Plugin.ArtworkGenerator/Web/` | The dashboard pages, as HTML, JS, and CSS. |
+| `Jellyfin.Plugin.ArtworkGenerator/Configuration/` | The plugin configuration model. |
+| `Jellyfin.Plugin.ArtworkGenerator/Api/` | The plugin's routes, in `ConfigurationController`. |
+| `Jellyfin.Plugin.ArtworkGenerator/Assets/` | The logo, the demo images, and the bundled fonts. |
 | `Jellyfin.Plugin.ArtworkGenerator/Services/Posters/Types/` | One generator for each poster style. |
 | `Jellyfin.Plugin.ArtworkGenerator.Tests/` | The xUnit tests, including the docs and template checks. |
 | `Jellyfin.Plugin.ArtworkGenerator.Demo/` | The demo render, which draws every example template into `docs/examples/`. |

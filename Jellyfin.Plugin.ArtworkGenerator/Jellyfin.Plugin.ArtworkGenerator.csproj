@@ -35,23 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Configuration\ag_posters.html" />
-    <EmbeddedResource Include="Configuration\ag_posters.js" />
-    <EmbeddedResource Include="Configuration\ag_settings.html" />
-    <EmbeddedResource Include="Configuration\ag_settings.js" />
-    <EmbeddedResource Include="Configuration\ag_logos.html" />
-    <EmbeddedResource Include="Configuration\ag_logos.js" />
-    <EmbeddedResource Include="Configuration\ag_profiles.html" />
-    <EmbeddedResource Include="Configuration\ag_profiles.js" />
-    <EmbeddedResource Include="Configuration\ag_shared.css" />
-    <EmbeddedResource Include="Configuration\ag_shared.js" />
-    <EmbeddedResource Include="Assets\Demo\demo-base.png" />
-    <EmbeddedResource Include="Assets\Demo\demo-base-alt.png" />
-    <EmbeddedResource Include="Assets\Demo\demo-logo.png" />
-    <EmbeddedResource Include="Assets\Demo\demo-graphic.png" />
-    <EmbeddedResource Include="Assets\Demo\demo-poster.jpg" />
-    <EmbeddedResource Include="Fonts\**\*.ttf" />
-    <EmbeddedResource Include="Fonts\**\OFL.txt" />
+    <EmbeddedResource Include="Web\*" />
+    <EmbeddedResource Include="Assets\Demo\*" />
+    <EmbeddedResource Include="Assets\Fonts\**\*" />
   </ItemGroup>
 
 </Project>

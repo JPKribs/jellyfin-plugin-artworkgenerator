@@ -145,7 +145,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             yield return new PluginPageInfo
             {
                 Name = "ag_posters",
-                EmbeddedResourcePath = $"{ns}.Configuration.ag_posters.html",
+                EmbeddedResourcePath = $"{ns}.Web.ag_posters.html",
                 MenuSection = "plugin",
                 DisplayName = "Artwork Generator",
                 MenuIcon = "image"
@@ -157,7 +157,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
                 yield return new PluginPageInfo
                 {
                     Name = name,
-                    EmbeddedResourcePath = $"{ns}.Configuration.{file}"
+                    EmbeddedResourcePath = $"{ns}.Web.{file}"
                 };
             }
 

@@ -89,7 +89,7 @@ public class BundledFontsTests
 
         foreach (var folder in folders)
         {
-            using var stream = assembly.GetManifestResourceStream("Jellyfin.Plugin.ArtworkGenerator.Fonts." + folder + ".OFL.txt");
+            using var stream = assembly.GetManifestResourceStream("Jellyfin.Plugin.ArtworkGenerator.Assets.Fonts." + folder + ".OFL.txt");
             Assert.NotNull(stream);
             using var reader = new StreamReader(stream!);
             Assert.Contains("SIL Open Font License", reader.ReadToEnd(), StringComparison.Ordinal);

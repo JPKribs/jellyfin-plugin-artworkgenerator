@@ -81,7 +81,7 @@ dotnet test
 There is no JavaScript test suite. Check every changed page script parses, then load the page.
 
 ```bash
-for f in Jellyfin.Plugin.ArtworkGenerator/Configuration/*.js; do node --check "$f"; done
+for f in Jellyfin.Plugin.ArtworkGenerator/Web/*.js; do node --check "$f"; done
 ```
 
 * Confirm every name a page imports from `ag_shared.js` is exported there, and every name `ag_shared.js` imports is in Base's typings, `assets/jpkribs_shared.d.ts` in the package.

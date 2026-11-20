@@ -1,4 +1,4 @@
-namespace Jellyfin.Plugin.ArtworkGenerator.Models;
+namespace Jellyfin.Plugin.ArtworkGenerator.Api;
 
 /// <summary>
 /// Names one font in the fonts folder to delete.

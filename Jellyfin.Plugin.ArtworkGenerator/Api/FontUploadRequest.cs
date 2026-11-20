@@ -1,4 +1,4 @@
-namespace Jellyfin.Plugin.ArtworkGenerator.Models;
+namespace Jellyfin.Plugin.ArtworkGenerator.Api;
 
 /// <summary>
 /// One font sent from the Settings tab to be stored in the fonts folder.

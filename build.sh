@@ -70,16 +70,16 @@ validate_resources() {
     
     local missing_files=()
     local config_files=(
-        "$PROJECT_DIR/Configuration/ag_posters.html"
-        "$PROJECT_DIR/Configuration/ag_posters.js"
-        "$PROJECT_DIR/Configuration/ag_settings.html"
-        "$PROJECT_DIR/Configuration/ag_settings.js"
-        "$PROJECT_DIR/Configuration/ag_logos.html"
-        "$PROJECT_DIR/Configuration/ag_logos.js"
-        "$PROJECT_DIR/Configuration/ag_profiles.html"
-        "$PROJECT_DIR/Configuration/ag_profiles.js"
-        "$PROJECT_DIR/Configuration/ag_shared.css"
-        "$PROJECT_DIR/Configuration/ag_shared.js"
+        "$PROJECT_DIR/Web/ag_posters.html"
+        "$PROJECT_DIR/Web/ag_posters.js"
+        "$PROJECT_DIR/Web/ag_settings.html"
+        "$PROJECT_DIR/Web/ag_settings.js"
+        "$PROJECT_DIR/Web/ag_logos.html"
+        "$PROJECT_DIR/Web/ag_logos.js"
+        "$PROJECT_DIR/Web/ag_profiles.html"
+        "$PROJECT_DIR/Web/ag_profiles.js"
+        "$PROJECT_DIR/Web/ag_shared.css"
+        "$PROJECT_DIR/Web/ag_shared.js"
     )
     
     for file in "${config_files[@]}"; do

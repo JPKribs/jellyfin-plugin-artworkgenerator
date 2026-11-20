@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.ArtworkGenerator.Controllers
+namespace Jellyfin.Plugin.ArtworkGenerator.Api
 {
     [ApiController]
     [Authorize(Policy = "RequiresElevation")]

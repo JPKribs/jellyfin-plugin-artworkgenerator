@@ -11,7 +11,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Fonts;
 /// </summary>
 public static class BundledFonts
 {
-    private const string ResourcePrefix = "Jellyfin.Plugin.ArtworkGenerator.Fonts.";
+    private const string ResourcePrefix = "Jellyfin.Plugin.ArtworkGenerator.Assets.Fonts.";
 
     private static readonly Lazy<IReadOnlyList<FontFace>> LoadedFaces = new(Load, LazyThreadSafetyMode.ExecutionAndPublication);
 
