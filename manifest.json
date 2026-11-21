@@ -9,6 +9,14 @@
     "category": "MoviesAndShows",
     "versions": [
       {
+        "version": "12.4.8.0",
+        "changelog": "\n## Developer\n- Uses JPKribs.Jellyfin.Base 12.4.3, which writes the labels it fills into its own text in sentence case, such as a screen reader name\n- Sync Branches also runs when the release draft or publish workflow finishes, so the commits they push to master reach unstable at once",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/JPKribs/jellyfin-plugin-artworkgenerator/releases/download/v12.4.8.0/jellyfin-plugin-artworkgenerator-12.4.8.0.zip",
+        "checksum": "8393d77d88a1502be333260fe8cde7ac",
+        "timestamp": "2026-11-21T02:15:23Z"
+      },
+      {
         "version": "12.4.7.0",
         "changelog": "\n## Added\n- The Designs, Logos, Profiles, and Settings tabs show in the language set in your display settings. Words Jellyfin already has come in every language Jellyfin has, and the words only this plugin uses are in US English until they are translated\n\n## Changed\n- Every label, heading, button, tab, and choice is written in sentence case, as Jellyfin writes its own, such as Frame extraction and Samples per frame\n- Messages the server sends back to a page, such as a refused font upload, follow the language of the page\n\n## Developer\n- Uses JPKribs.Jellyfin.Base 12.4.0 and then 12.4.1. Base builds the strings and its own text into the plugin, and its leave prompt and fix fields message replace the local ones\n- GET Translations answers with language, strings, and casing. Every route reads the language with BaseTranslations.RequestLanguage, from the language query value, the X-Jellyfin-Plugin-Language header, or Accept-Language\n- Localization/casing.json lists the words kept as written. Text color, Original title, and Sort title use Jellyfin strings\n- The project is laid out as Api, Configuration, Web, Assets, Models, Services, Providers, and Utilities, with the pages, demo images, and fonts embedded by pattern",
         "targetAbi": "12.4.0.0",
