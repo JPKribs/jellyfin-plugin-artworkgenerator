@@ -18,5 +18,5 @@ artifacts:
 - Jellyfin.Plugin.ArtworkGenerator.dll
 changelog:
   developer:
-  - Uses JPKribs.Jellyfin.Base 12.4.2, which writes the labels it fills into its own text in sentence case, such as a screen reader name
+  - Uses JPKribs.Jellyfin.Base 12.4.3, which writes the labels it fills into its own text in sentence case, such as a screen reader name
   - Sync Branches also runs when the release draft or publish workflow finishes, so the commits they push to master reach unstable at once
