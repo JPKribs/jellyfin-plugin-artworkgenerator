@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to brighten bitmap");
+                _logger.LogWarning(ex, "Failed to brighten bitmap");
             }
         }
     }

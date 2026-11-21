@@ -207,7 +207,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             if (newWidth < minWidth || newHeight < minHeight)
             {
-                _logger.LogWarning("Detected crop too aggressive, skipping: {NewWidth}x{NewHeight} vs minimum {MinWidth}x{MinHeight}",
+                _logger.LogDebug("Detected crop too aggressive, skipping: {NewWidth}x{NewHeight} vs minimum {MinWidth}x{MinHeight}",
                     newWidth, newHeight, minWidth, minHeight);
                 return source;
             }

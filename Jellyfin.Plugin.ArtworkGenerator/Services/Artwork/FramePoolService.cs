@@ -338,7 +338,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
             if (batch.Count == 0)
             {
                 pool.Exhausted = true;
-                _logger.LogWarning("Frame pool {Key} could not extract any more frames", pool.Key);
+                _logger.LogDebug("Frame pool {Key} could not extract any more frames", pool.Key);
                 return;
             }
 

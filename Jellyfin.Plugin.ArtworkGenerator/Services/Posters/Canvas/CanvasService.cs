@@ -71,7 +71,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                         return grids;
                     }
 
-                    _logger.LogInformation("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
+                    _logger.LogDebug("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
                 }
 
                 if (settings.CanvasSource == CanvasSource.Extract)
@@ -82,7 +82,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                         return extracted;
                     }
 
-                    _logger.LogInformation("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
+                    _logger.LogDebug("No frames could be extracted for {Name}; falling back to the series backdrop", item.Name);
                 }
 
                 if (subject.Kind.IsGroup())

@@ -82,7 +82,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (bytes == null)
             {
-                _logger.LogWarning("Preview generation returned no output for style {Style}", settings.PosterStyle);
+                _logger.LogDebug("Preview generation returned no output for style {Style}", settings.PosterStyle);
             }
 
             return bytes;

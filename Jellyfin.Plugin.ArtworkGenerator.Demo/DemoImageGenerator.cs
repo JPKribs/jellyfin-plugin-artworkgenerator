@@ -57,11 +57,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
 
         public async Task GenerateAllDemosAsync()
         {
-            _logger.LogInformation("Starting demo image generation...");
+            _logger.LogInformation("Starting demo image generation");
 
             // Find all template files
             var templateFiles = Directory.GetFiles(ExamplesDirectory, "Template.json", SearchOption.AllDirectories);
-            _logger.LogInformation($"Found {templateFiles.Length} template(s) to process");
+            _logger.LogInformation("Found {Count} template(s) to process", templateFiles.Length);
 
             foreach (var templateFile in templateFiles)
             {
@@ -69,14 +69,14 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
                 {
                     var templateDir = Path.GetDirectoryName(templateFile);
                     var exampleName = Path.GetFileName(templateDir);
-                    _logger.LogInformation($"Processing template: {exampleName}");
+                    _logger.LogInformation("Processing template {Template}", exampleName);
 
                     // Ten landscape episodes, then the same design as the portrait posters a
                     // profile asks it for, since every design draws every kind.
                     for (int episodeNumber = 1; episodeNumber <= 10; episodeNumber++)
                     {
                         await GenerateDemoForTemplateAsync(templateFile, templateDir!, ArtworkItemKind.Episode, episodeNumber);
-                        _logger.LogInformation($"  ✓ Generated Example{episodeNumber}.png");
+                        _logger.LogInformation("  ✓ Generated Example{Number}.png", episodeNumber);
                     }
 
                     await GenerateDemoForTemplateAsync(templateFile, templateDir!, ArtworkItemKind.Season, null);
@@ -88,15 +88,15 @@ namespace Jellyfin.Plugin.ArtworkGenerator.DemoGenerator
                     await GenerateDemoForTemplateAsync(templateFile, templateDir!, ArtworkItemKind.Movie, null);
                     _logger.LogInformation("  ✓ Generated Movie.png");
 
-                    _logger.LogInformation($"✓ Generated all demos for: {exampleName}");
+                    _logger.LogInformation("✓ Generated all demos for {Template}", exampleName);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Failed to generate demo for template: {templateFile}");
+                    _logger.LogError(ex, "Failed to generate demo for template {Template}", templateFile);
                 }
             }
 
-            _logger.LogInformation("Demo generation complete!");
+            _logger.LogInformation("Demo generation complete");
         }
 
         // GenerateDemoForTemplateAsync

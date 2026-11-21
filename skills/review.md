@@ -55,6 +55,7 @@ The check to run on your own changes before you call them done. People and AI as
 * [ ] Inline comments sit only above branches and say why.
 * [ ] No commented out code, TODO, or debug output.
 * [ ] The [security](code.md#security) rules hold.
+* [ ] Every activity entry and server log line passes the [logging checklist](logging.md#checklist).
 * [ ] `dotnet build` shows no warnings.
 
 ## Tests

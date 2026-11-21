@@ -324,7 +324,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
 
             if (!File.Exists(settings.GraphicPath))
             {
-                LogError(new FileNotFoundException("Graphic file not found"), settings.GraphicPath);
+                Logger.LogWarning("Graphic file {Path} was not found, so the poster is drawn without it", settings.GraphicPath);
                 return;
             }
 
@@ -346,9 +346,9 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
                 using var graphicPaint = new SKPaint { IsAntialias = true };
                 PaintFactory.DrawBitmap(skCanvas, graphicBitmap, graphicRect, graphicPaint);
             }
-            catch
+            catch (Exception ex)
             {
-                LogError(new InvalidDataException("Failed to load or render graphic"), settings.GraphicPath);
+                Logger.LogWarning(ex, "Could not draw graphic file {Path}", settings.GraphicPath);
             }
         }
 

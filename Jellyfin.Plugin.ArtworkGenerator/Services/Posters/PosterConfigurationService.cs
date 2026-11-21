@@ -262,7 +262,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             if (defaults.Count == 0)
             {
-                _logger.LogInformation("No default design found, creating one in memory");
+                _logger.LogDebug("No default design found, creating one in memory");
                 var created = new PosterConfiguration { Name = DefaultName, IsDefault = true };
                 config.PosterConfigurations.Insert(0, created);
                 return created;
@@ -292,11 +292,11 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                 var backup = _logoStore.PreserveUnreadable();
                 if (backup != null)
                 {
-                    _logger.LogError("The logo design file could not be read and has not been overwritten; a copy was kept at {Backup}. The default logo design is used until it is fixed", backup);
+                    _logger.LogError("The logo design file could not be read, so the default logo design is used and a copy was kept at {Backup}", backup);
                 }
                 else
                 {
-                    _logger.LogError("The logo design file could not be read and has not been overwritten. The default logo design is used until it is fixed");
+                    _logger.LogError("The logo design file could not be read, so the default logo design is used");
                 }
             }
 
@@ -364,7 +364,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
             if (config.Profiles.Count == 0)
             {
                 config.Profiles.Add(CreateProfile(DefaultProfileId, DefaultName, true, design, design, logo));
-                _logger.LogInformation("Created the default profile");
+                _logger.LogDebug("Created the default profile");
             }
 
             var defaults = config.Profiles.Where(p => p.IsDefault).ToList();

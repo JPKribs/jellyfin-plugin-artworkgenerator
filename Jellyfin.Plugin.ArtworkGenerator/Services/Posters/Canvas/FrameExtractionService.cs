@@ -223,7 +223,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                         {
                             if (attempt == 0)
                             {
-                                _logger.LogWarning("ExtractVideoImage returned no output on first attempt");
+                                _logger.LogDebug("Frame extraction returned no output for {Path} on the first attempt", episode.Path);
                             }
 
                             return;
@@ -258,7 +258,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
-                        _logger.LogWarning(ex, "Frame extraction failed on attempt {Attempt}", attempt + 1);
+                        _logger.LogDebug(ex, "Frame extraction failed for {Path} on attempt {Attempt}", episode.Path, attempt + 1);
 
                         // A run of failures means the file cannot be read, not that this timestamp
                         // was unlucky, so the sweep stops rather than working through every seek.
@@ -299,7 +299,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services
 
             if (candidates.Count == 0)
             {
-                _logger.LogError("Failed to extract any usable frames after {Attempts} attempts", maxAttempts);
+                _logger.LogWarning("Failed to extract any usable frames from {Path} after {Attempts} attempts", episode.Path, maxAttempts);
                 return Array.Empty<ExtractedFrame>();
             }
 

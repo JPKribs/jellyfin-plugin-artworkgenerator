@@ -40,7 +40,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in GET.");
+                _logger.LogError("Plugin instance was null in GET");
                 return NotInitialized();
             }
 
@@ -56,7 +56,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in GET Logos.");
+                _logger.LogError("Plugin instance was null in GET Logos");
                 return NotInitialized();
             }
 
@@ -78,7 +78,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 var plugin = Plugin.Instance;
                 if (plugin == null)
                 {
-                    _logger.LogError("Plugin instance was null in POST Logos.");
+                    _logger.LogError("Plugin instance was null in POST Logos");
                     return NotInitialized();
                 }
 
@@ -87,12 +87,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             }
             catch (ArgumentException ex)
             {
-                _logger.LogError(ex, "Failed to save logo designs.");
+                _logger.LogError(ex, "Failed to save logo designs");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorLogoDesignRequired, Language) });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save logo designs.");
+                _logger.LogError(ex, "Failed to save logo designs");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorSaveLogoDesigns, Language) });
             }
         }
@@ -159,7 +159,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in GET Fonts/Uploaded.");
+                _logger.LogError("Plugin instance was null in GET Fonts/Uploaded");
                 return NotInitialized();
             }
 
@@ -176,7 +176,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in POST Fonts/Uploaded.");
+                _logger.LogError("Plugin instance was null in POST Fonts/Uploaded");
                 return NotInitialized();
             }
 
@@ -198,17 +198,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                     return BadRequest(new { success = false, error = BaseTranslations.Get(result.Error ?? TranslationKeys.ErrorFontUnreadable, Language) });
                 }
 
-                _logger.LogInformation("Font {FileName} uploaded.", FormatUtilities.SanitizeForLog(result.Face.FileName));
+                _logger.LogInformation("Font {FileName} uploaded", FormatUtilities.SanitizeForLog(result.Face.FileName));
                 return Ok(DescribeUploadedFont(result.Face));
             }
             catch (IOException ex)
             {
-                _logger.LogError(ex, "Failed to store an uploaded font.");
+                _logger.LogError(ex, "Failed to store an uploaded font");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotSaved, Language) });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Failed to store an uploaded font.");
+                _logger.LogError(ex, "Failed to store an uploaded font");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotSaved, Language) });
             }
         }
@@ -221,7 +221,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in DELETE Fonts/Uploaded.");
+                _logger.LogError("Plugin instance was null in DELETE Fonts/Uploaded");
                 return NotInitialized();
             }
 
@@ -232,17 +232,17 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                     return NotFound(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontMissing, Language) });
                 }
 
-                _logger.LogInformation("Font {FileName} deleted.", FormatUtilities.SanitizeForLog(request?.FileName));
+                _logger.LogInformation("Font {FileName} deleted", FormatUtilities.SanitizeForLog(request?.FileName));
                 return Ok(new { success = true });
             }
             catch (IOException ex)
             {
-                _logger.LogError(ex, "Failed to delete a font.");
+                _logger.LogError(ex, "Failed to delete a font");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotDeleted, Language) });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Failed to delete a font.");
+                _logger.LogError(ex, "Failed to delete a font");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorFontNotDeleted, Language) });
             }
         }
@@ -279,7 +279,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 var plugin = Plugin.Instance;
                 if (plugin == null)
                 {
-                    _logger.LogError("Plugin instance was null in POST.");
+                    _logger.LogError("Plugin instance was null in POST");
                     return NotInitialized();
                 }
 
@@ -292,12 +292,12 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
                 // it runs the plugin's override that rebuilds the design lookups and the frame pool.
                 plugin.UpdateConfiguration(newConfig);
 
-                _logger.LogInformation("Configuration saved successfully.");
+                _logger.LogInformation("Configuration saved");
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to update configuration.");
+                _logger.LogError(ex, "Failed to update configuration");
                 return BadRequest(new { success = false, error = BaseTranslations.Get(TranslationKeys.ErrorSaveConfiguration, Language) });
             }
         }
@@ -319,7 +319,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in Preview.");
+                _logger.LogError("Plugin instance was null in Preview");
                 return NotInitialized();
             }
 
@@ -335,7 +335,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to generate poster preview.");
+                _logger.LogError(ex, "Failed to generate poster preview");
                 return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorPreview, Language));
             }
         }
@@ -353,7 +353,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in logo Preview.");
+                _logger.LogError("Plugin instance was null in logo Preview");
                 return NotInitialized();
             }
 
@@ -369,7 +369,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to generate logo preview.");
+                _logger.LogError(ex, "Failed to generate logo preview");
                 return StatusCode(StatusCodes.Status500InternalServerError, BaseTranslations.Get(TranslationKeys.ErrorLogoPreview, Language));
             }
         }
@@ -381,7 +381,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Api
             var plugin = Plugin.Instance;
             if (plugin == null)
             {
-                _logger.LogError("Plugin instance was null in PreviewComponent.");
+                _logger.LogError("Plugin instance was null in PreviewComponent");
                 return NotInitialized();
             }
 

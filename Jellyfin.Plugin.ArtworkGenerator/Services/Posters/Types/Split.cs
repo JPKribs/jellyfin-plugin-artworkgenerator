@@ -78,7 +78,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Posters
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Failed to load series poster: {Path}", seriesPosterPath);
+                Logger.LogWarning(ex, "Failed to load series poster: {Path}", seriesPosterPath);
                 DrawFallbackPoster(skCanvas, posterWidth, height);
             }
         }

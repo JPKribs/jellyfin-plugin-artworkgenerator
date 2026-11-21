@@ -107,7 +107,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator
             // family often silently falls back to Skia's default. Surface it once per family.
             FontUtils.SetMissingFamilyReporter(family =>
                 _logger.LogWarning(
-                    "Font family '{Family}' is not uploaded, bundled, or installed on this server. Falling back to the default font. Upload the font on the Settings tab, or pick one the font list offers.",
+                    "Font family {Family} is not uploaded, bundled, or installed on this server, so the default font is used",
                     family));
 
             _logger.LogInformation("Artwork Generator plugin initialized");

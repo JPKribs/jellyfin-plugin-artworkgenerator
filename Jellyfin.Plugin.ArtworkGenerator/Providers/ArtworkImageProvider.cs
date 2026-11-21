@@ -78,7 +78,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Providers
                 var results = await plugin.ArtworkService.GenerateAsync(item, type, 1, false, cancellationToken).ConfigureAwait(false);
                 if (results.Count == 0)
                 {
-                    _logger.LogWarning("No {Type} image could be generated for {Name}", type, item.Name);
+                    _logger.LogDebug("No {Type} image could be generated for {Name}", type, item.Name);
                     return NoImage();
                 }
 

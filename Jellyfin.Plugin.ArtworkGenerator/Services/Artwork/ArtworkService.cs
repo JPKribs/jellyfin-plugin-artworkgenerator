@@ -291,7 +291,7 @@ namespace Jellyfin.Plugin.ArtworkGenerator.Services.Artwork
                     var bytes = generator.Generate(canvas, subject, settings);
                     if (bytes == null)
                     {
-                        _logger.LogWarning("Rendering failed for {Name}", DescribeItem(item));
+                        _logger.LogDebug("Rendering failed for {Name}", DescribeItem(item));
                         continue;
                     }
 
