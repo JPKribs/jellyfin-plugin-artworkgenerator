@@ -6,7 +6,7 @@
 name: Artwork Generator
 guid: b8715e44-6b77-4c88-9c74-2b6f4c7b9a1e
 imageUrl: https://raw.githubusercontent.com/JPKribs/jellyfin-plugin-artworkgenerator/refs/heads/master/Jellyfin.Plugin.ArtworkGenerator/Assets/Logo.png
-version: "12.4.8.0"
+version: "12.4.8.1"
 targetAbi: 12.4.0.0
 framework: net10.0
 overview: "Generate artwork from your own video."
@@ -20,5 +20,4 @@ changelog:
   changed:
   - The server log stays quieter, with per item steps such as frame extraction retries and backdrop fallbacks written at Debug
   developer:
-  - Uses JPKribs.Jellyfin.Base 12.4.3, which writes the labels it fills into its own text in sentence case, such as a screen reader name
-  - Sync Branches also runs when the release draft or publish workflow finishes, so the commits they push to master reach unstable at once
+  - skills/logging.md sets how activity entries and server log lines are written
